@@ -1,10 +1,10 @@
 using DemoHello_Client.Properties;
 using OpenbusAPI;
 using OpenbusAPI.Logger;
-using openbusidl.rs;
 using scs.core;
 using System;
 using demoidl.hello;
+using tecgraf.openbus.core.v1_05.registry_service;
 
 namespace DemoHello_Client
 {

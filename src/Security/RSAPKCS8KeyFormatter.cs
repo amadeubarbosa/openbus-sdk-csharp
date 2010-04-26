@@ -41,7 +41,7 @@ namespace OpenbusAPI.Security
     /// <summary>
     /// Decodifica a chave RSA PKCS#8.
     /// </summary>
-    /// <param name="pemstr">A chave em formato texto.</param>
+    /// <param name="pemText">A chave em formato texto.</param>
     /// <returns>Uma instância de RSACryptoServiceProvider.</returns>
     public static RSACryptoServiceProvider DecodePEMKey(String pemText) {
       if (!pemText.StartsWith(pemHeader) || !pemText.EndsWith(pemFooter)) {
