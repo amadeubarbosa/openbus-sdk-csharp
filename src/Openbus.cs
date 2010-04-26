@@ -108,13 +108,10 @@ namespace OpenbusAPI
 
     #region Consts
 
-    private const String ACCESS_CONTROL_SERVICE_KEY = "ACS";
-    private const String LEASE_PROVIDER_KEY = "LP";
     /// <summary>
-    /// Chave CORBALOC responsável pela faceta IComponent do serviço de 
-    /// controle de acesso.
+    /// Representa a chave para obtenção do barramento.
     /// </summary>
-    private const String ICOMPONENT_KEY = "IC";
+    private const String OPENBUS_KEY = "openbus_v1_05";
 
     /// <summary>
     /// Nome do receptáculo do Serviço de Registro.
@@ -182,28 +179,30 @@ namespace OpenbusAPI
     /// Se conecta ao AccessControlServer por meio do endereço e da porta.
     /// </summary>
     private void FetchACS() {
-      this.acs = RemotingServices.Connect(typeof(IAccessControlService),
-          "corbaloc::1.0@" + host + ":" + port + "/" + ACCESS_CONTROL_SERVICE_KEY) as IAccessControlService;
-      if (this.acs == null) {
-        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
-        throw new ACSUnavailableException();
-      }
-
-      this.leaseProvider = RemotingServices.Connect(typeof(ILeaseProvider),
-          "corbaloc::1.0@" + host + ":" + port + "/" + LEASE_PROVIDER_KEY) as
-          ILeaseProvider;
-      if (this.leaseProvider == null) {
-        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
-        throw new ACSUnavailableException();
-      }
-
       this.acsComponent = RemotingServices.Connect(typeof(IComponent),
-          "corbaloc::1.0@" + host + ":" + port + "/" + ICOMPONENT_KEY) as
+          "corbaloc::1.0@" + host + ":" + port + "/" + OPENBUS_KEY) as
           IComponent;
       if (this.acsComponent == null) {
         Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
       }
+
+      String acsID = Repository.GetRepositoryID(typeof(IAccessControlService));
+      MarshalByRefObject acsObjRef = this.acsComponent.getFacet(acsID);
+      if (acsObjRef == null) {
+        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
+        return;
+      }
+      this.acs = acsObjRef as IAccessControlService;
+
+      String leaseProviderID = Repository.GetRepositoryID(typeof(ILeaseProvider));
+      MarshalByRefObject lpObjRef = this.acsComponent.getFacet(leaseProviderID);
+      if (lpObjRef == null) {
+        Log.COMMON.Error(
+          "O serviço de controle de acesso não possui a faceta ILeaseProvider");
+        return;
+      }
+      this.leaseProvider = lpObjRef as ILeaseProvider;
     }
 
     #endregion
