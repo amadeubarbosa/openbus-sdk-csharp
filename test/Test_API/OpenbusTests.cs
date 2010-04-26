@@ -416,7 +416,7 @@ namespace Test_API
       IRegistryService registryService = openbus.Connect(userLogin, userPassword);
       Assert.NotNull(registryService);
       LeaseExpiredCallbackImpl callback = new LeaseExpiredCallbackImpl();
-      openbus.AddLeaseExpiredCallback(callback);
+      openbus.SetLeaseExpiredCallback(callback);
       IAccessControlService acs = openbus.GetAccessControlService();
       Assert.True(acs.logout(openbus.Credential));
       while (!callback.isExpired()) {
@@ -434,7 +434,7 @@ namespace Test_API
     public void AddLeaseExpiredCbBeforeConnect() {
       Openbus openbus = Openbus.GetInstance();
       LeaseExpiredCbReconnect callback = new LeaseExpiredCbReconnect(userLogin, userPassword);
-      openbus.AddLeaseExpiredCallback(callback);
+      openbus.SetLeaseExpiredCallback(callback);
       IRegistryService registryService = openbus.Connect(userLogin, userPassword);
       Credential credential = openbus.Credential;
       Assert.IsNotNullOrEmpty(credential.identifier);
@@ -461,7 +461,7 @@ namespace Test_API
       Credential credential = openbus.Credential;
       Assert.IsNotNullOrEmpty(credential.identifier);
       LeaseExpiredCbReconnect callback = new LeaseExpiredCbReconnect(userLogin, userPassword);
-      openbus.AddLeaseExpiredCallback(callback);
+      openbus.SetLeaseExpiredCallback(callback);
       Assert.NotNull(registryService);
       IAccessControlService acs = openbus.GetAccessControlService();
       Assert.True(acs.logout(openbus.Credential));

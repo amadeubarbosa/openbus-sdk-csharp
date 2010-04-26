@@ -519,7 +519,7 @@ namespace OpenbusAPI
     /// Atribui o observador para receber eventos de expiração do <i>lease</i>.
     /// </summary>
     /// <param name="leaseExpiredCallback">O observador.</param>
-    public void AddLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
+    public void SetLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
       this.leaseExpiredCb = leaseExpiredCallback;
     }
 
