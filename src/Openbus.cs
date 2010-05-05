@@ -182,6 +182,7 @@ namespace OpenbusAPI
       this.acsComponent = RemotingServices.Connect(typeof(IComponent),
           "corbaloc::1.0@" + host + ":" + port + "/" + OPENBUS_KEY) as
           IComponent;
+
       if (this.acsComponent == null) {
         Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
@@ -285,7 +286,7 @@ namespace OpenbusAPI
       catch (InvalidName e) {
         Log.COMMON.Error("Erro ao obter o RegistryServiceReceptacle.", e);
       }
-      if (connections == null) {
+      if (connections == null || connections.Length == 0) {
         Log.COMMON.Fatal("Não existem conexões no receptáculo.");
         return null;
       }
@@ -421,11 +422,19 @@ namespace OpenbusAPI
       FetchACS();
       byte[] challenge = this.acs.getChallenge(name);
       if (challenge.Length == 0)
-        throw new ACSLoginFailureException("Desafio inválido.");
+        throw new ACSLoginFailureException(String.Format("Não foi possível" +
+            "realizar a autenticação no barramento. Provavelmente, a " +
+            "entidade {0} não está cadastrada.", name));
 
-      byte[] answer;
-      //try -- SecurityException
-      answer = Crypto.GenerateAnswer(challenge, privateKey, acsCertificate);
+      byte[] answer = new byte[0];
+      try {
+        answer = Crypto.GenerateAnswer(challenge, privateKey, acsCertificate);
+      }
+      catch (CryptographicException) {
+        throw new ACSLoginFailureException("Ocorreu um erro ao realizar a " +
+          "autenticação no barramento. Verifique se a chave privada " + 
+          "utilizada corresponde ao certificado digital cadastrado.");
+      }
 
       int leaseTime = -1;
       bool connect = this.acs.loginByCertificate(name, answer,
