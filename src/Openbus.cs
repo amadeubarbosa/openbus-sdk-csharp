@@ -512,7 +512,7 @@ namespace OpenbusAPI
     /// <param name="credencial"> Credencial a ser usada nas requisições a 
     /// serem realizadas.
     /// </param>
-    public void setThreadCredential(Credential credencial) {
+    public void SetThreadCredential(Credential credencial) {
       currentCredential = credencial;
     }
 
@@ -520,7 +520,7 @@ namespace OpenbusAPI
     /// Informa o estado de conexão com o barramento.
     /// </summary>
     /// <returns></returns>
-    public bool isConnected() {
+    public bool IsConnected() {
       return (!String.IsNullOrEmpty(this.credential.identifier));
     }
 

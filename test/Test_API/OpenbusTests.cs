@@ -348,11 +348,11 @@ namespace Test_API
     [Test]
     public void IsConnected() {
       Openbus openbus = Openbus.GetInstance();
-      Assert.False(openbus.isConnected());
+      Assert.False(openbus.IsConnected());
       Assert.NotNull(openbus.Connect(userLogin, userPassword));
-      Assert.True(openbus.isConnected());
+      Assert.True(openbus.IsConnected());
       Assert.True(openbus.Disconnect());
-      Assert.False(openbus.isConnected());
+      Assert.False(openbus.IsConnected());
     }
 
     /// <summary>

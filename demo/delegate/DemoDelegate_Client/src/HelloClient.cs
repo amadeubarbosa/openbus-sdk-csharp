@@ -1,15 +1,12 @@
 using DemoDelegate_Client.Properties;
 using OpenbusAPI;
 using OpenbusAPI.Logger;
-using openbusidl.rs;
 using scs.core;
 using System;
 using demoidl.demoDelegate;
 using System.Threading;
-using openbusidl.acs;
-using OpenbusAPI.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
+using tecgraf.openbus.core.v1_05.registry_service;
+using tecgraf.openbus.core.v1_05.access_control_service;
 
 namespace DemoDelegate_Client
 {
@@ -84,7 +81,7 @@ namespace DemoDelegate_Client
 
       Credential credential = openbus.Credential;
       credential._delegate = name;
-      openbus.setThreadCredential(credential);
+      openbus.SetThreadCredential(credential);
 
       for (int i = 0; i < 10; i++) {
         hello.sayHello(name);

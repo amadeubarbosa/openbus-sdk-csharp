@@ -2,9 +2,9 @@ using OpenbusAPI.Logger;
 using OpenbusAPI;
 using OpenbusAPI.Security;
 using System.Security.Cryptography.X509Certificates;
-using openbusidl.rs;
 using DemoDelegate_Server.Properties;
 using System.Security.Cryptography;
+using tecgraf.openbus.core.v1_05.registry_service;
 
 
 namespace DemoDelegate_Server
