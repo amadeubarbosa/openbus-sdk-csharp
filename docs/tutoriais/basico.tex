@@ -15,13 +15,13 @@
 \setlength{\parskip}{6mm}
 \textheight=8.2in
 
-%% Redefines the label 'Listing' to ..                                            
-\def\lstlistingname{Código}                                                       
-\lstset{inputencoding=latin1}                                                     
-\codestyle{colorful}                                                              
-%% Removes hyperlinks borders                                                     
-\hypersetup{                                                                      
-  pdfborder = {0 0 0},                                                            
+%% Redefines the label 'Listing' to ..
+\def\lstlistingname{Código}
+\lstset{inputencoding=latin1}
+\codestyle{colorful}
+%% Removes hyperlinks borders
+\hypersetup{
+  pdfborder = {0 0 0},
 }
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -80,7 +80,10 @@
 
 \section{Introdução}
 
-Este documento é destinado aos usuários desenvolvedores de aplicações .NET que desejem utilizar o OpenBus. O processo de \emph{deployment} do barramento não é coberto neste tutorial. Considera-se como pré-requisito para um bom entendimento deste documento o conhecimento básico dos seguintes assuntos:
+Este documento é destinado aos usuários desenvolvedores de aplicações .NET que
+ desejem utilizar o OpenBus. O processo de \emph{deployment} do barramento não
+ é coberto neste tutorial. Considera-se como pré-requisito para um bom
+ entendimento deste documento o conhecimento básico dos seguintes assuntos:
 
 \begin{itemize}
 	\item Linguagem de programação C\#.
@@ -91,23 +94,50 @@ Este documento é destinado aos usuários desenvolvedores de aplicações .NET que d
 
 \section{Preparação do Ambiente}
 
-O OpenBus utiliza o mecanismo de interceptação de CORBA no processo de controle de acesso aos serviços. Após a chamada de requisição de \emph{login} no barramento, todas as chamadas seguintes devem estar com a credencial de acesso anexada. Sendo assim, faz-se necessário a habilitação dos interceptadores frente ao ORB que será utilizado. No OpenBus-C\# a comunicação será feira utilizando o IIOP.NET, e a API se encarregará de registrar os interceptadores em sua inicialização. Não sendo necessária nenhuma ação por parte do usuário nesse aspecto.
-	
+O OpenBus utiliza o mecanismo de interceptação de CORBA no processo de controle
+ de acesso aos serviços. Após a chamada de requisição de \emph{login} no
+ barramento, todas as chamadas seguintes devem estar com a credencial de acesso
+ anexada. Sendo assim, faz-se necessário a habilitação dos interceptadores
+ frente ao ORB que será utilizado. No OpenBus-C\# a comunicação será feira
+ utilizando o IIOP.NET, e a API se encarregará de registrar os interceptadores
+ em sua inicialização. Não sendo necessária nenhuma ação por parte do usuário
+ nesse aspecto.
+
 \subsection{Teste}
 
-Antes de começar a programação, é aconselhável que o usuário coloque em funcionamento a demo Hello que acompanha o pacote. O correto funcionamento da demo elimina uma série de possíveis problemas que o desenvolvedor possa enfrentar durante o seu projeto, como por exemplo: problemas de comunicação com o barramento, serviços básicos não disponíveis e ausência de bibliotecas externas.
-A API C\# possui apenas o lado cliente. Por conta disso, para executar o demo, é necessário que o barramento e um demo hello servidor esteja em operação. A demo pode ser executada seguindo os seguintes passos:
+Antes de começar a programação, é aconselhável que o usuário coloque em
+ funcionamento a demo Hello que acompanha o pacote. O correto funcionamento
+ da demo elimina uma série de possíveis problemas que o desenvolvedor possa
+ enfrentar durante o seu projeto, como por exemplo: problemas de comunicação
+ com o barramento, serviços básicos não disponíveis e ausência de bibliotecas
+ externas.
+
+A API C\# possui apenas o lado cliente. Por conta disso, para executar o demo,
+ é necessário que o barramento e um demo hello servidor esteja em operação. A
+ demo pode ser executada seguindo os seguintes passos:
 
 \begin{itemize}
-  \item Entrar no diretório \$OPENBUS\_HOME/demo/hello/c\#/DemoHello\_Client/Properties/ e configurar a localização do barramento no arquivo DemoConfig.settings.
-  \item Executar o processo cliente da classe \$OPENBUS\_HOME/demo/hello/c\#/DemoHello\_Client/src/HelloClient.cs. Após a execução do cliente, no terminal do processo servidor a seguinte mensagem deve ser exibida: "Hello !!!"
+  \item Entrar no diretório.\linebreak
+    \$OPENBUS\_HOME/demo/hello/c\#/DemoHello\_Client/Properties/ 
+    e configurar a localização do barramento no arquivo DemoConfig.settings.
+  \item Executar o processo cliente da classe \linebreak
+    \$OPENBUS\_HOME/demo/hello/c\#/DemoHello\_Client/src/HelloClient.cs. 
 \end{itemize}
+
+    Após a execução do cliente, no terminal do processo servidor a seguinte
+    mensagem deve ser exibida: "Hello !!!"
 
 \section{Desenvolvimento}
 
 \subsection{API}\label{api}
 
-A API é composta pela classe Openbus e pelos \emph{stubs} do serviços básicos - Serviço de Controle de Acesso, Serviço de Registro e Serviço de Sessão. A classe Openbus atualmente é implementada como o padrão \emph{singleton}, pois suporta apenas um barramento. A API C\# só possui os facilitadores para auxiliar o cliente, ainda não disponibilizamos o Openbus-C\# para servidores. Para obter a instância do barramento e (re)inicializá-la, deve-se utilizar o Código~\ref{lst:barramento}.
+A API é composta pela classe Openbus e pelos \emph{stubs} do serviços básicos
+ - Serviço de Controle de Acesso, Serviço de Registro e Serviço de Sessão. A
+ classe Openbus atualmente é implementada como o padrão \emph{singleton}, pois
+ suporta apenas um barramento. A API C\# só possui os facilitadores para
+ auxiliar o cliente, pois ainda não disponibilizamos o Openbus-C\# para servidores.
+ Para obter a instância do barramento e inicializá-la, deve-se utilizar o
+ Código~\ref{lst:barramento}.
 
 \begin{labeledcode}[CSharp]{barramento}{Obtenção da Instância do Barramento}
 using OpenbusAPI;
@@ -123,7 +153,7 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
 \begin{itemize}
   \item \code{Openbus GetInstance()}: Fornece a instancia do barramento.
   \item \code{void Init(...)}: Inicializa a biblioteca.
-  \item \code{IRegistryService Connect(String user, String password}: Realiza uma tentativa de conexão com o barramento. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, duas exceções além das de CORBA podem ser lançadas:
+  \item \code{IRegistryService Connect(String user, String password)}: Realiza uma tentativa de conexão com o barramento. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, duas exceções além das de CORBA podem ser lançadas:
     \subitem \code{ACSLoginFailureException}: O par nome de usuário e senha não foram validados.
     \subitem \code{ArgumentException}: Caso o método receba argumentos inválidos.
   \item \code{IRegistryService Connect(String name, RSACryptoServiceProvider privateKey, X509Certificate2 acsCertificate)}: Realiza uma tentativa de conexão com o barramento, utilizando o mecanismo de certificação para o processo de autenticação. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, três exceções além das de CORBA podem ser lançadas:
