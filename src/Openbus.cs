@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v1_05.registry_service;
 using tecgraf.openbus.session_service.v1_05;
+using System.Collections.Generic;
 
 
 namespace OpenbusAPI
@@ -104,6 +105,11 @@ namespace OpenbusAPI
     /// </summary>
     private ISessionService sessionService;
 
+    /// <summary>
+    /// Mantém a lista de métodos a serem liberados no interceptador servidor.
+    /// </summary>
+    private Dictionary<String, List<String>> interceptableMethods;
+
     #endregion
 
     #region Consts
@@ -172,6 +178,7 @@ namespace OpenbusAPI
       this.host = String.Empty;
       this.port = -1;
       this.leaseExpiredCb = null;
+      this.interceptableMethods = new Dictionary<String, List<String>>();
       Reset();
     }
 
@@ -432,7 +439,7 @@ namespace OpenbusAPI
       }
       catch (CryptographicException) {
         throw new ACSLoginFailureException("Ocorreu um erro ao realizar a " +
-          "autenticação no barramento. Verifique se a chave privada " + 
+          "autenticação no barramento. Verifique se a chave privada " +
           "utilizada corresponde ao certificado digital cadastrado.");
       }
 
@@ -503,6 +510,55 @@ namespace OpenbusAPI
     public void Destroy() {
       ChannelServices.UnregisterChannel(channel);
       ResetInstance();
+    }
+
+    /// <summary>
+    /// Controla se o método deve ou não ser interceptado pelo servidor.
+    /// </summary>
+    /// <param name="iface">RepID da interface</param>
+    /// <param name="method">Nome do método.</param>
+    /// <param name="interceptable">Indica se o método deve ser inteceptado 
+    /// ou não.</param>
+    private void SetInterceptable(String iface, String method,
+      bool interceptable) {
+      if ((String.IsNullOrEmpty(iface)) || (String.IsNullOrEmpty(method))) {
+        Log.COMMON.Error("Os parâmetros não podem ser vazios ou nulos.");
+        return;
+      }
+
+      if (!interceptable) {
+        if (interceptableMethods.ContainsKey(iface)) {
+          List<String> methods = interceptableMethods[iface];
+          if (methods == null)
+            methods = new List<String>();
+          if (method.Contains(method))
+            return;
+          methods.Add(method);
+        }
+        else {
+          List<String> methods = new List<String>();
+          methods.Add(method);
+          interceptableMethods.Add(iface, methods);
+        }
+      }
+      else {
+        List<String> methods = interceptableMethods[iface];
+        if (methods != null)
+          methods.Remove(method);
+      }
+    }
+
+    /// <summary>
+    /// Indica se o método da interface dever interceptado.
+    /// </summary>
+    /// <param name="iface">RepID da interface.</param>
+    /// <param name="method">Nome do método a ser testado.</param>        
+    /// <returns><code>True</code> se o método de ver interceptado, caso 
+    /// contrário <code>false</code>. </returns>
+    /// <summary>
+    private bool IsInterceptable(String iface, String method) {
+      List<String> methods = interceptableMethods[iface];
+      return (methods == null) || !methods.Contains(method);
     }
 
     /// <summary>
