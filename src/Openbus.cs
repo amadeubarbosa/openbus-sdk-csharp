@@ -110,6 +110,11 @@ namespace OpenbusAPI
     /// </summary>
     private Dictionary<String, List<String>> interceptableMethods;
 
+    /// <summary>
+    /// Gerencia a lista de réplicas.
+    /// </summary>
+    private FaultToleranceManager ftManager;
+
     #endregion
 
     #region Consts
@@ -117,12 +122,24 @@ namespace OpenbusAPI
     /// <summary>
     /// Representa a chave para obtenção do barramento.
     /// </summary>
-    private const String OPENBUS_KEY = "openbus_v1_05";
+    internal const String OPENBUS_KEY = "openbus_v1_05";
 
     /// <summary>
     /// Nome do receptáculo do Serviço de Registro.
     /// </summary>
-    private const String REGISTRY_SERVICE_RECEPTACLE_NAME = "RegistryServiceReceptacle";
+    internal const String REGISTRY_SERVICE_RECEPTACLE_NAME = "RegistryServiceReceptacle";
+
+    /// <summary>
+    /// Conjunto de Object Keys do Serviço de Controle de Acesso.
+    /// </summary>
+    internal const String ACCESS_CONTROL_SERVICE_KEY = "ACS_v1_05";
+    internal const String LEASE_PROVIDER_KEY = "LP_v1_05";
+    internal const String FAULT_TOLERANT_ACS_KEY = "FTACS_v1_05";
+
+    /// <summary>
+    /// Conjunto de Object Keys do Serviço de Registro.
+    /// </summary>
+    internal const String REGISTRY_SERVICE_KEY = "RS_v1_05";
 
     #endregion
 
@@ -179,13 +196,14 @@ namespace OpenbusAPI
       this.port = -1;
       this.leaseExpiredCb = null;
       this.interceptableMethods = new Dictionary<String, List<String>>();
+      this.ftManager = null;
       Reset();
     }
 
     /// <summary>
     /// Se conecta ao AccessControlServer por meio do endereço e da porta.
     /// </summary>
-    private void FetchACS() {
+    internal void FetchACS() {
       this.acsComponent = RemotingServices.Connect(typeof(IComponent),
           "corbaloc::1.0@" + host + ":" + port + "/" + OPENBUS_KEY) as
           IComponent;
@@ -213,6 +231,44 @@ namespace OpenbusAPI
       this.leaseProvider = lpObjRef as ILeaseProvider;
     }
 
+    /// <summary>
+    /// Fornece o componente do Serviço de Controle de Acesso.
+    /// </summary>
+    /// <returns>
+    /// A faceta IComponent do Serviço de Controle de Acesso.
+    /// </returns>
+    internal IComponent GetACSComponent() {
+      return this.acsComponent;
+    }
+
+    /// <summary>
+    /// Fornece a faceta ILeaseProvider do Serviço de Controle de Acesso.
+    /// </summary>
+    /// <returns>
+    /// A faceta ILeaseProvider do Serviço de Controle de Acesso.
+    /// </returns>
+    internal ILeaseProvider GetLeaseProvider() {
+      return this.leaseProvider;
+    }
+
+    /// <summary>
+    /// Fornece o gerente de réplicas.
+    /// </summary>
+    /// <returns>O gerente de réplicas</returns>
+    internal FaultToleranceManager GetFaultToleranceManager() {
+      return this.ftManager;
+    }
+
+    /// <summary>
+    /// Define o endereço do serviço de controle de acesso.
+    /// </summary>
+    /// <param name="host">O endereço do Serviço de Controle de Acesso.</param>
+    /// <param name="port">A porta do Serviço de Controle de Acess.</param>
+    internal void SetACSAdress(String host, int port) {
+      this.host = host;
+      this.port = port;
+    }
+
     #endregion
 
     #region OpenbusAPI Implemented
@@ -235,10 +291,13 @@ namespace OpenbusAPI
       this.host = host;
       this.port = port;
 
+      bool isFaultTolerant = (this.ftManager != null);
+
       //Adicionando os interceptadores
       if (this.orb == null) {
         this.orb = OrbServices.GetSingleton();
-        this.orb.RegisterPortableInterceptorInitalizer(new ClientInitializer());
+        this.orb.RegisterPortableInterceptorInitalizer(
+            new ClientInitializer(isFaultTolerant));
         //TODO Adicionar interceptador servidor.
         this.orb.CompleteInterceptorRegistration();
       }
@@ -246,6 +305,23 @@ namespace OpenbusAPI
       //Registrando um canal
       this.channel = new IiopClientChannel();
       ChannelServices.RegisterChannel(channel, false);
+    }
+
+    /// <summary>
+    /// Retorna o barramento para o seu estado inicial, ou seja, desfaz as
+    /// definições de atributos realizadas. Em seguida, inicializa o Orb.
+    /// </summary>
+    /// <param name="host">O endereço do serviço de controle de acesso.</param>
+    /// <param name="port">A porta do serviço de controle de acesso.</param>
+    /// <param name="ftConfigPath">O caminho para o arquivo de configuração do
+    ///  tolerância a falha</param>
+    public void Init(String host, int port, String ftConfigPath) {
+      if (String.IsNullOrEmpty(ftConfigPath))
+        throw new ArgumentException(
+            "O campo 'ftConfigPath' não pode ser nulo ou vazio.");
+
+      this.ftManager = new FaultToleranceManager(ftConfigPath);
+      Init(host, port);
     }
 
     /// <summary>
@@ -554,7 +630,7 @@ namespace OpenbusAPI
     /// <param name="iface">RepID da interface.</param>
     /// <param name="method">Nome do método a ser testado.</param>        
     /// <returns><code>True</code> se o método de ver interceptado, caso 
-    /// contrário <code>false</code>. </returns>
+    /// contrário <code>false</code>.</returns>
     /// <summary>
     private bool IsInterceptable(String iface, String method) {
       List<String> methods = interceptableMethods[iface];
@@ -575,7 +651,8 @@ namespace OpenbusAPI
     /// <summary>
     /// Informa o estado de conexão com o barramento.
     /// </summary>
-    /// <returns></returns>
+    /// <returns><code>True</code> se estiver conectado ao barramento, caso 
+    /// contrário <code>false</code>.</returns>
     public bool IsConnected() {
       return (!String.IsNullOrEmpty(this.credential.identifier));
     }

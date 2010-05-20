@@ -13,15 +13,6 @@ namespace OpenbusAPI.Interceptors
   /// </summary>
   class ClientInterceptor : InterceptorImpl, ClientRequestInterceptor
   {
-    #region Fields
-
-    /// <summary>
-    /// Instância do barramento.
-    /// </summary>
-    private Openbus bus;
-
-    #endregion
-
     #region Contructor
 
     /// <summary>
@@ -30,7 +21,6 @@ namespace OpenbusAPI.Interceptors
     /// <param name="codec">Codificador</param>
     public ClientInterceptor(Codec codec)
       : base("ClientInterceptor", codec) {
-      this.bus = Openbus.GetInstance();
     }
 
     #endregion
@@ -45,7 +35,8 @@ namespace OpenbusAPI.Interceptors
       Log.INTERCEPTORS.Debug("executando método: " + ri.operation);
 
       /* Verifica se existe uma credencial para envio */
-      Credential credential = bus.Credential;
+      Openbus openbus = Openbus.GetInstance();
+      Credential credential = openbus.Credential;
       if (string.IsNullOrEmpty(credential.identifier)) {
         Log.INTERCEPTORS.Info("Sem Credencial!");
         return;
@@ -68,19 +59,19 @@ namespace OpenbusAPI.Interceptors
 
     #region ClientRequestInterceptor Not Implemented
 
-    public void receive_exception(ClientRequestInfo ri) {
+    public virtual void receive_exception(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
-    public void receive_other(ClientRequestInfo ri) {
+    public virtual void receive_other(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
-    public void receive_reply(ClientRequestInfo ri) {
+    public virtual void receive_reply(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
-    public void send_poll(ClientRequestInfo ri) {
+    public virtual void send_poll(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 

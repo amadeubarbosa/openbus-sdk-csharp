@@ -29,6 +29,10 @@ namespace OpenbusAPI.Logger
     /// Log do mecanismo de criptografia.
     /// </summary>
     public static readonly ILogger CRYPTO = new ApacheLog("Openbus-Crypto");
+    /// <summary>
+    /// Log do mecanismo de tolerância a falha.
+    /// </summary>
+    public static readonly ILogger FAULT_TOLERANCE = new ApacheLog("Openbus-Fault_Tolerance");
 
 
     #endregion
@@ -45,6 +49,7 @@ namespace OpenbusAPI.Logger
       LEASE.SetLevel(level);
       INTERCEPTORS.SetLevel(level);
       CRYPTO.SetLevel(level);
+      FAULT_TOLERANCE.SetLevel(level);
     }
 
     #endregion
