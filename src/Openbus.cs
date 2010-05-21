@@ -214,7 +214,16 @@ namespace OpenbusAPI
       }
 
       String acsID = Repository.GetRepositoryID(typeof(IAccessControlService));
-      MarshalByRefObject acsObjRef = this.acsComponent.getFacet(acsID);
+
+      MarshalByRefObject acsObjRef;
+      try {
+        acsObjRef = this.acsComponent.getFacet(acsID);
+      }
+      catch(AbstractCORBASystemException e) {
+        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado",e);
+        throw new ACSUnavailableException();
+      }
+
       if (acsObjRef == null) {
         Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
         return;
