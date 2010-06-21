@@ -176,9 +176,17 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
   \item \code{boolean RemoveLeaseExpiredCallback(LeaseExpiredCallback lec)}: Remove uma callback previamente registrada para a notificação de lease expirado.
   \item \code{boolean IsConnected()}: Informa o estado de conexão com o barramento.
 \end{itemize}
-	
+
 A explicação dos métodos dos serviços básicos podem ser encontrados na documentação referente às idls.
 
+A API utiliza o log provido pela Apache (log4Net), que possui os níveis de log 
+ descritos na classe \emph{OpenbusAPI.Logger.Level}. Para alterar o nível de log
+ da API deve-se chamar o método \emph{SetLogsLevel()} enviando o nível desejado
+ como parâmetro. Este método se encontra na classe \emph{OpenbusAPI.Logger.Log}.
+ 
+A configuração do log4Net pode ser feita num arquivo xml que deve ter o nome 
+Openbus.config e estar na mesma pasta da biblioteca. Caso nenhuma configuração 
+ seja fornecida, a biblioteca utilizará a configuração padrão.
 
 \subsection{Primeiros Passos}
 
