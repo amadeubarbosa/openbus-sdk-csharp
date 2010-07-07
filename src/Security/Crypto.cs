@@ -36,6 +36,8 @@ namespace OpenbusAPI.Security
     /// </summary>
     /// <param name="certificateFile">O arquivo.</param>
     /// <returns>O certificado formatado em X509.</returns>
+    /// <exception cref="System.Security.Cryptography.CryptographicException">
+    /// Caso o arquivo não exista, esteja incorreto ou inválido.</exception>
     public static X509Certificate2 ReadCertificate(String certificateFile) {
       return new X509Certificate2(certificateFile);
     }

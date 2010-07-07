@@ -203,6 +203,8 @@ namespace OpenbusAPI
     /// <summary>
     /// Se conecta ao AccessControlServer por meio do endereço e da porta.
     /// </summary>
+    /// <exception cref="ACSUnavailableException"> Erro ao obter o serviço de 
+    /// controle de acesso.</exception>
     internal void FetchACS() {
       this.acsComponent = RemotingServices.Connect(typeof(IComponent),
           "corbaloc::1.0@" + host + ":" + port + "/" + OPENBUS_KEY) as
@@ -219,8 +221,8 @@ namespace OpenbusAPI
       try {
         acsObjRef = this.acsComponent.getFacet(acsID);
       }
-      catch(AbstractCORBASystemException e) {
-        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado",e);
+      catch (AbstractCORBASystemException e) {
+        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado", e);
         throw new ACSUnavailableException();
       }
 
@@ -288,6 +290,12 @@ namespace OpenbusAPI
     /// </summary>
     /// <param name="host">O endereço do serviço de controle de acesso.</param>
     /// <param name="port">A porta do serviço de controle de acesso.</param>
+    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
+    /// inicializado.</exception>
+    /// <exception cref="ArgumentException">Caso os argumentos estejam
+    /// incorretos</exception>
+    /// <exception cref="System.Security.SecurityException">Caso não possua
+    /// permissão para configurar um canal.</exception>
     public void Init(String host, int port) {
       if (this.host != String.Empty)
         throw new OpenbusAlreadyInitialized();
@@ -324,6 +332,12 @@ namespace OpenbusAPI
     /// <param name="port">A porta do serviço de controle de acesso.</param>
     /// <param name="ftConfigPath">O caminho para o arquivo de configuração do
     ///  tolerância a falha</param>
+    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
+    /// inicializado.</exception>
+    /// <exception cref="ArgumentException">Caso os argumentos estejam
+    /// incorretos</exception>
+    /// <exception cref="System.Security.SecurityException">Caso não possua
+    /// permissão para configurar um canal.</exception>
     public void Init(String host, int port, String ftConfigPath) {
       if (String.IsNullOrEmpty(ftConfigPath))
         throw new ArgumentException(
@@ -466,6 +480,12 @@ namespace OpenbusAPI
     /// <param name="user">O nome do usuário.</param>
     /// <param name="password">A senha.</param>
     /// <returns>O serviço de registro.</returns>
+    /// <exception cref="System.ArgumentException">Caso os argumentos estejam
+    /// incorretos.</exception>
+    /// <exception cref="ACSLoginFailureException">Falha ao tentar estabelecer
+    /// conexão com o barramento.</exception>
+    /// <exception cref="ACSUnavailableException"> Erro ao obter o serviço de
+    /// controle de acesso.</exception>
     public IRegistryService Connect(String user, String password) {
       if ((String.IsNullOrEmpty(user)) || (String.IsNullOrEmpty(password)))
         throw new ArgumentException(
@@ -502,6 +522,12 @@ namespace OpenbusAPI
     /// <param name="acsCertificate">O certificado do serviço de controle 
     /// de acesso.</param>
     /// <returns>O serviço de registro.</returns>
+    /// <exception cref="System.ArgumentException">Caso os argumentos estejam
+    /// incorretos.</exception>
+    /// <exception cref="ACSLoginFailureException">Falha ao tentar estabelecer
+    /// conexão com o barramento.</exception>
+    /// <exception cref="ACSUnavailableException"> Erro ao obter o serviço de
+    /// controle de acesso.</exception>
     public IRegistryService Connect(String name,
       RSACryptoServiceProvider privateKey, X509Certificate2 acsCertificate) {
       if ((String.IsNullOrEmpty(name)) || (acsCertificate == null) ||
@@ -553,6 +579,12 @@ namespace OpenbusAPI
     /// </summary>
     /// <param name="credential">A credencial</param>
     /// <returns>O serviço de registro.</returns>
+    /// <exception cref="System.ArgumentException">Caso os argumentos estejam
+    /// incorretos.</exception>
+    /// <exception cref="InvalidCredentialException">Caso a credencial seja
+    /// inválida.</exception>
+    /// <exception cref="ACSUnavailableException"> Erro ao obter o serviço de
+    /// controle de acesso.</exception>
     public IRegistryService Connect(Credential credential) {
       if (String.IsNullOrEmpty(credential.identifier))
         throw new ArgumentException(
@@ -651,8 +683,7 @@ namespace OpenbusAPI
     /// Útil para fornecer uma credencial com o campo delegate preenchido.
     /// </summary>
     /// <param name="credencial"> Credencial a ser usada nas requisições a 
-    /// serem realizadas.
-    /// </param>
+    /// serem realizadas.</param>
     public void SetThreadCredential(Credential credencial) {
       currentCredential = credencial;
     }

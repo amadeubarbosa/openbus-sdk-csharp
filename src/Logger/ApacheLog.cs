@@ -164,7 +164,7 @@ namespace OpenbusAPI.Logger
     #region Internal Methods
 
     /// <summary>
-    /// Carrega o arquivo de configuraçãod o Log.
+    /// Carrega o arquivo de configuração do Log.
     /// </summary>
     /// <returns>O XmlDocument carregado com o arquivo.</returns>
     private XmlDocument LoadLoggerConfiguration() {
