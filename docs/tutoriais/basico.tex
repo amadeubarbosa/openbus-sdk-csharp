@@ -168,7 +168,6 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
   \item \code{void Run()}: \emph{Loop} que processa requisições remotas.
   \item \code{IAccessControlService GetAccessControlService()}: Fornece o \emph{stub} do Serviço de Controle de Acesso.
   \item \code{IRegistryService GetRegistryService()}: Fornece o \emph{stub} do Serviço de Registro.
-  \item \code{ISessionService GetSessionService()}: Fornece o \emph{stub} do Serviço de Sessão.
   \item \code{Credential}: Fornece a credencial de identificação do usuário frente ao barramento.
   \item \code{Credential GetInterceptedCredential()}: Fornece a credencial interceptada pelo interceptador servidor. Esta operação somente deve ser chamada durante o tratamento de alguma requisição à aplicação do usuário.
   \item \code{void SetThreadCredential(Credential credential)}: Define uma credencial a ser utilizada no lugar da credencial corrente. Útil para fornecer uma credencial com o campo delegate preenchido.
