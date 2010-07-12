@@ -15,7 +15,6 @@ using OpenbusAPI.Logger;
 using System.Security.Cryptography;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v1_05.registry_service;
-using tecgraf.openbus.session_service.v1_05;
 using System.Collections.Generic;
 
 
@@ -100,10 +99,6 @@ namespace OpenbusAPI
     /// A faceta IRegistryService do serviço de registro.
     /// </summary>
     private IRegistryService registryService;
-    /// <summary>
-    /// A faceta ISessionService do serviço de sessão
-    /// </summary>
-    private ISessionService sessionService;
 
     /// <summary>
     /// Mantém a lista de métodos a serem liberados no interceptador servidor.
@@ -183,7 +178,6 @@ namespace OpenbusAPI
       this.requestCredentialSlot = -1;
 
       this.registryService = null;
-      this.sessionService = null;
     }
 
     /// <summary>
@@ -411,41 +405,6 @@ namespace OpenbusAPI
       this.registryService = objReg as IRegistryService;
 
       return this.registryService;
-    }
-
-    /// <summary>
-    /// Fornece o serviço de sessão
-    /// </summary>
-    /// <returns>A faceta ISessionService do serviço de sessão</returns>
-    public ISessionService GetSessionService() {
-      if (this.sessionService != null)
-        return this.sessionService;
-
-      IRegistryService registryService = this.GetRegistryService();
-      if (registryService == null) {
-        Log.COMMON.Fatal("Não foi possível acessar o RegistryService");
-        return null;
-      }
-      String sessionServiceID = Repository.GetRepositoryID(
-        typeof(ISessionService));
-      String[] facets = new String[] { sessionServiceID };
-      ServiceOffer[] offers = registryService.find(facets);
-
-      if (offers.Length < 1) {
-        Log.COMMON.Error("Não foi possível acessar o SessionService");
-        return null;
-      }
-      if (offers.Length > 1)
-        Log.COMMON.Warn("Existe mais de um " + sessionServiceID + " conectado.");
-
-      IComponent component = offers[0].member;
-      MarshalByRefObject ssObjRef = component.getFacet(sessionServiceID);
-      if (ssObjRef == null)
-        Log.COMMON.Error("Erro ao obter o SessionServiceReceptacle.");
-
-      this.sessionService = ssObjRef as ISessionService;
-
-      return this.sessionService;
     }
 
     /// <summary>
