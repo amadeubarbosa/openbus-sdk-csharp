@@ -394,19 +394,6 @@ namespace Test_API
     }
 
     /// <summary>
-    /// Testa o GetSessionService
-    /// </summary>
-    [Test]
-    public void GetSessionService() {
-      Openbus openbus = Openbus.GetInstance();
-      Assert.Null(openbus.GetSessionService());
-      Assert.NotNull(openbus.Connect(userLogin, userPassword));
-      Assert.NotNull(openbus.GetSessionService());
-      Assert.True(openbus.Disconnect());
-      Assert.Null(openbus.GetSessionService());
-    }
-
-    /// <summary>
     /// Teste o expiredCallback 
     /// </summary>
     [Test]
