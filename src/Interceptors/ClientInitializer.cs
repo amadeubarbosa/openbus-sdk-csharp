@@ -8,7 +8,7 @@ namespace OpenbusAPI.Interceptors
   /// Classe responsável por inicializar o interceptador cliente.
   /// Implementa ProtableInterceptor.ORBInitializer.
   /// </summary>
-  public class ClientInitializer : omg.org.PortableInterceptor.ORBInitializer
+  internal class ClientInitializer : omg.org.PortableInterceptor.ORBInitializer
   {
     #region Field
 
@@ -58,6 +58,7 @@ namespace OpenbusAPI.Interceptors
 
     #region ORBInitializer Not Implemented
 
+    /// <inheritdoc />
     public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
       //Nada a fazer
     }

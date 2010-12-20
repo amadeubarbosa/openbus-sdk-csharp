@@ -46,9 +46,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus-idl-iiopNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Openbus-idl-iiopNet, Version=1.6.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\scs\csharp\trunk\lib\Scs.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -69,8 +77,11 @@
     <Compile Include="src\FaultToleranceManager.cs" />
     <Compile Include="src\Interceptors\ClientInitializer.cs" />
     <Compile Include="src\Interceptors\ClientInterceptor.cs" />
+    <Compile Include="src\Interceptors\CredentialValidatorServerInterceptor.cs" />
     <Compile Include="src\Interceptors\FTClientInterceptor.cs" />
     <Compile Include="src\Interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\Interceptors\ServerInitializer.cs" />
+    <Compile Include="src\Interceptors\ServerInterceptor.cs" />
     <Compile Include="src\Lease\LeaseExpiredCallback.cs" />
     <Compile Include="src\Lease\LeaseRenewer.cs" />
     <Compile Include="src\Lease\RenewerTask.cs" />

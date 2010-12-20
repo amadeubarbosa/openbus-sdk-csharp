@@ -1,21 +1,22 @@
 using System;
-using Ch.Elca.Iiop;
-using OpenbusAPI.Interceptors;
+using System.Collections.Generic;
 using System.Runtime.Remoting;
-using OpenbusAPI.Lease;
-using scs.core;
+using System.Runtime.Remoting.Channels;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
+using omg.org.PortableInterceptor;
 using OpenbusAPI.Exception;
-using System.Security.Cryptography.X509Certificates;
-using OpenbusAPI.Security;
-using System.Runtime.Remoting.Channels;
+using OpenbusAPI.Interceptors;
+using OpenbusAPI.Lease;
 using OpenbusAPI.Logger;
-using System.Security.Cryptography;
+using OpenbusAPI.Security;
+using scs.core;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v1_05.registry_service;
-using System.Collections.Generic;
 
 
 namespace OpenbusAPI
@@ -66,7 +67,7 @@ namespace OpenbusAPI
     /// <summary>
     /// O canal IIOP responsável pela troca de mensagens com o barramento.
     /// </summary>
-    private IiopClientChannel channel;
+    private IiopChannel channel;
 
     /// <summary>
     /// Credencial recebida ao se conectar ao barramento.
@@ -309,12 +310,13 @@ namespace OpenbusAPI
         this.orb = OrbServices.GetSingleton();
         this.orb.RegisterPortableInterceptorInitalizer(
             new ClientInitializer(isFaultTolerant));
-        //TODO Adicionar interceptador servidor.
+        this.orb.RegisterPortableInterceptorInitalizer(
+            new ServerInitializer());
         this.orb.CompleteInterceptorRegistration();
       }
 
       //Registrando um canal
-      this.channel = new IiopClientChannel();
+      this.channel = new IiopChannel(0);
       ChannelServices.RegisterChannel(channel, false);
     }
 
@@ -387,16 +389,16 @@ namespace OpenbusAPI
         Log.COMMON.Error("Erro ao obter o RegistryServiceReceptacle.", e);
       }
       if (connections == null || connections.Length == 0) {
-        Log.COMMON.Fatal("Não existem conexões no receptáculo.");
+        Log.COMMON.Fatal("O Serviço de Registro não está no ar.");
         return null;
       }
       if (connections.Length != 1)
-        Log.COMMON.Warn("Existe mais de um RegistryService conectado.");
+        Log.COMMON.Debug("Existe mais de um Serviço de Registro no ar.");
 
       MarshalByRefObject objRef = connections[0].objref;
       IComponent registryComponent = objRef as IComponent;
       if (registryComponent == null) {
-        Log.COMMON.Warn("A referência recebida não é um IComponent");
+        Log.COMMON.Warn("Erro ao acessar a faceta 'IComponent' do Serviço de Registro");
         return null;
       }
 
@@ -412,24 +414,18 @@ namespace OpenbusAPI
     /// </summary>
     /// <returns></returns>
     public Credential GetInterceptedCredential() {
-      //TODO try
       omg.org.PortableInterceptor.Current pic = (omg.org.PortableInterceptor.Current)orb.resolve_initial_references("PICurrent");
-      Any requestCredentialValue = (Any)pic.get_slot(this.requestCredentialSlot);
-      if (requestCredentialValue.Type.kind().Equals(TCKind.tk_null)) {
-        //Log
-        return new Credential(); //TODO invalidCredential
+
+      Object requestCredentialValue;
+      try {
+        requestCredentialValue = pic.get_slot(this.requestCredentialSlot);
+      }
+      catch (InvalidSlot e) {
+        Log.COMMON.Fatal("Erro ao obter a credencial interceptada.", e);
+        return new Credential();
       }
 
-      /*
-      catch (org.omg.CORBA.UserException e)
-      {
-         Log.COMMON.severe("Erro ao obter a credencial da requisição,", e);
-         return InvalidTypes.CREDENTIAL;
-      */
-
-      //TODO -- Testar esse método. Verificar o que get_slot retorna. é um any mesmo?
-
-      throw new System.Exception("método não implementado");
+      return (Credential)requestCredentialValue;
     }
 
     /// <summary>
@@ -631,7 +627,6 @@ namespace OpenbusAPI
     /// <param name="method">Nome do método a ser testado.</param>        
     /// <returns><code>True</code> se o método de ver interceptado, caso 
     /// contrário <code>false</code>.</returns>
-    /// <summary>
     private bool IsInterceptable(String iface, String method) {
       List<String> methods = interceptableMethods[iface];
       return (methods == null) || !methods.Contains(method);
