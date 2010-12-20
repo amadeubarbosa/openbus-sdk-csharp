@@ -21,7 +21,7 @@ namespace Server
   {
 
     static void Main(string[] args) {
-
+      AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
@@ -57,5 +57,10 @@ namespace Server
       openbus.Run();
     }
 
+    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+      Openbus openbus = Openbus.GetInstance();
+      openbus.Disconnect();
+      openbus.Destroy();
+    }
   }
 }

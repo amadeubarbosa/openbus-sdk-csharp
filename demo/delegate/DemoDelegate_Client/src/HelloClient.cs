@@ -1,14 +1,17 @@
-using DemoDelegate_Client.Properties;
+using System;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using Client.Properties;
+using demoidl.demoDelegate;
 using OpenbusAPI;
 using OpenbusAPI.Logger;
+using OpenbusAPI.Security;
 using scs.core;
-using System;
-using demoidl.demoDelegate;
-using System.Threading;
-using tecgraf.openbus.core.v1_05.registry_service;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v1_05.registry_service;
 
-namespace DemoDelegate_Client
+namespace Client
 {
   /// <summary>
   /// Cliente do demo delegate.
@@ -28,11 +31,19 @@ namespace DemoDelegate_Client
       openbus = Openbus.GetInstance();
       openbus.Init(hostName, hostPort);
 
-      string userLogin = DemoConfig.Default.login;
-      string userPassword = DemoConfig.Default.password;
       string entityName = DemoConfig.Default.entityName;
+      string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
+      string acsCertificateFile = DemoConfig.Default.acsCertificateFileName;
 
-      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(privaKeyFile);
+      X509Certificate2 acsCertificate =
+        Crypto.ReadCertificate(acsCertificateFile);
+
+      IRegistryService registryService =
+      openbus.Connect(entityName, privateKey, acsCertificate);
+
+      Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
+      Console.ReadLine();
 
       string[] facets = new string[] { "IHello" };
       ServiceOffer[] offers = registryService.find(facets);
@@ -69,6 +80,10 @@ namespace DemoDelegate_Client
       Console.ReadLine();
     }
 
+    /// <summary>
+    /// Método principal da thread.
+    /// </summary>
+    /// <param name="state"></param>
     static void DoWork(Object state) {
       DoWorkData data = (DoWorkData)state;
 
