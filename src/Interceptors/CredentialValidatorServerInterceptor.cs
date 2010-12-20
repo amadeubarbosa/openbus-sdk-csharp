@@ -26,9 +26,6 @@ namespace OpenbusAPI.Interceptors
       //isInterptable
 
       Credential interceptedCredential = openbus.GetInterceptedCredential();
-      if (String.IsNullOrEmpty(interceptedCredential.owner)) {
-        throw new NO_PERMISSION(100, CompletionStatus.Completed_No);
-      }
 
       IAccessControlService acs = openbus.GetAccessControlService();
       bool isValid = false;

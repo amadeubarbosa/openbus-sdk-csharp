@@ -7,7 +7,7 @@ namespace OpenbusAPI.Interceptors
   /// <summary>
   /// Implementa um interceptador.
   /// </summary>
-  class InterceptorImpl : omg.org.PortableInterceptor.Interceptor
+  internal class InterceptorImpl : omg.org.PortableInterceptor.Interceptor
   {
 
     #region Fields

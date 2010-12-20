@@ -424,6 +424,8 @@ namespace OpenbusAPI
         Log.COMMON.Fatal("Erro ao obter a credencial interceptada.", e);
         return new Credential();
       }
+      if (requestCredentialValue == null)
+        return new Credential();
 
       return (Credential)requestCredentialValue;
     }

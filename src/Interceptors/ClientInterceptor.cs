@@ -11,7 +11,7 @@ namespace OpenbusAPI.Interceptors
   /// Representa o interceptador cliente.
   /// Implementa PortableInterceptor.ClientRequestInterceptor.
   /// </summary>
-  class ClientInterceptor : InterceptorImpl, ClientRequestInterceptor
+  internal class ClientInterceptor : InterceptorImpl, ClientRequestInterceptor
   {
     #region Contructor
 
@@ -59,18 +59,22 @@ namespace OpenbusAPI.Interceptors
 
     #region ClientRequestInterceptor Not Implemented
 
+    /// <inheritdoc />
     public virtual void receive_exception(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
+    /// <inheritdoc />
     public virtual void receive_other(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
+    /// <inheritdoc />
     public virtual void receive_reply(ClientRequestInfo ri) {
       //Nada a ser feito;
     }
 
+    /// <inheritdoc />
     public virtual void send_poll(ClientRequestInfo ri) {
       //Nada a ser feito;
     }

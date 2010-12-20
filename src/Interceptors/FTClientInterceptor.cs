@@ -7,7 +7,7 @@ using OpenbusAPI.Logger;
 
 namespace OpenbusAPI.Interceptors
 {
-  class FTClientInterceptor : ClientInterceptor
+  internal class FTClientInterceptor : ClientInterceptor
   {
 
     #region Contructor
@@ -24,6 +24,7 @@ namespace OpenbusAPI.Interceptors
 
     #region ClientRequestInterceptor Members
 
+    /// <inheritdoc />
     public override void receive_exception(ClientRequestInfo ri) {
 
       bool fetch =
@@ -38,7 +39,7 @@ namespace OpenbusAPI.Interceptors
 
       Openbus openbus = Openbus.GetInstance();
       FaultToleranceManager ftManager = openbus.GetFaultToleranceManager();
-      String key = getObjectKey(ri);
+      String key = GetObjectKey(ri);
 
       Log.INTERCEPTORS.Fatal(key);
 
@@ -74,7 +75,16 @@ namespace OpenbusAPI.Interceptors
       }
     }
 
-    private string getObjectKey(ClientRequestInfo ri) {
+    #endregion
+
+    #region Internal Members
+
+    /// <summary>
+    /// Fornece o ObjectKey da chamada requisitada.
+    /// </summary>
+    /// <param name="ri"></param>
+    /// <returns></returns>
+    private string GetObjectKey(ClientRequestInfo ri) {
       ORB orb = omg.org.CORBA.OrbServices.GetSingleton();
       String objString = orb.object_to_string(ri.target);
       Ior ior = new Ior(objString);

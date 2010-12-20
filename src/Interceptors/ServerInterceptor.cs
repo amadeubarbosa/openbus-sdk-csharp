@@ -47,7 +47,15 @@ namespace OpenbusAPI.Interceptors
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
       Openbus openbus = Openbus.GetInstance();
-      ServiceContext serviceContext = ri.get_request_service_context(CONTEXT_ID);
+      ServiceContext serviceContext;
+      try {
+        serviceContext = ri.get_request_service_context(CONTEXT_ID);
+      }
+      catch (BAD_PARAM) {
+        Log.INTERCEPTORS.Fatal(String.Format(
+          "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
+        return;
+      }
 
       if (serviceContext.context_data == null) {
         Log.INTERCEPTORS.Fatal(String.Format(
