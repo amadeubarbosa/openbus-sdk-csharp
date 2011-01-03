@@ -341,6 +341,16 @@ namespace Test_API
         Assert.True(openbus.Disconnect());
       }
     }
+           
+    /// <summary>
+    /// Verifica se uma credencial nula é retornada como credencial interceptada
+    /// quando não estamos na thread de uma chamada remota.
+    /// </summary>
+    [Test]
+    public void GetInterceptedCredential() {
+      Openbus openbus = Openbus.GetInstance();
+      Assert.AreEqual(openbus.GetInterceptedCredential(), new Credential());
+    }
 
     /// <summary>
     /// Testa o IsConnected
