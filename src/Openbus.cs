@@ -15,8 +15,8 @@ using OpenbusAPI.Lease;
 using OpenbusAPI.Logger;
 using OpenbusAPI.Security;
 using scs.core;
-using tecgraf.openbus.core.v1_05.access_control_service;
-using tecgraf.openbus.core.v1_05.registry_service;
+using tecgraf.openbus.core.v1_06.access_control_service;
+using tecgraf.openbus.core.v1_06.registry_service;
 
 
 namespace OpenbusAPI
@@ -116,9 +116,14 @@ namespace OpenbusAPI
     #region Consts
 
     /// <summary>
+    /// Versão atual do Openbus
+    /// </summary>
+    internal const String OPENBUS_VERSION = "1_06";
+
+    /// <summary>
     /// Representa a chave para obtenção do barramento.
     /// </summary>
-    internal const String OPENBUS_KEY = "openbus_v1_05";
+    internal const String OPENBUS_KEY = "openbus_v" + OPENBUS_VERSION;
 
     /// <summary>
     /// Nome do receptáculo do Serviço de Registro.
@@ -128,14 +133,14 @@ namespace OpenbusAPI
     /// <summary>
     /// Conjunto de Object Keys do Serviço de Controle de Acesso.
     /// </summary>
-    internal const String ACCESS_CONTROL_SERVICE_KEY = "ACS_v1_05";
-    internal const String LEASE_PROVIDER_KEY = "LP_v1_05";
-    internal const String FAULT_TOLERANT_ACS_KEY = "FTACS_v1_05";
+    internal const String ACCESS_CONTROL_SERVICE_KEY = "ACS_v" + OPENBUS_VERSION;
+    internal const String LEASE_PROVIDER_KEY = "LP_v" + OPENBUS_VERSION;
+    internal const String FAULT_TOLERANT_ACS_KEY = "FTACS_v" + OPENBUS_VERSION;
 
     /// <summary>
     /// Conjunto de Object Keys do Serviço de Registro.
     /// </summary>
-    internal const String REGISTRY_SERVICE_KEY = "RS_v1_05";
+    internal const String REGISTRY_SERVICE_KEY = "RS_v" + OPENBUS_VERSION;
 
     #endregion
 
