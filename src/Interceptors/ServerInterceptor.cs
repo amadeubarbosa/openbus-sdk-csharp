@@ -19,7 +19,6 @@ namespace OpenbusAPI.Interceptors
 
     #endregion
 
-
     #region Constructors
 
 
@@ -77,7 +76,6 @@ namespace OpenbusAPI.Interceptors
 
         int openbusRequestCredentialSlot = this.credentialSlot;
         ri.set_slot(openbusRequestCredentialSlot, requestCredential);
-
       }
       catch (System.Exception e) {
         Log.INTERCEPTORS.Fatal("Erro na validação da credencial", e);

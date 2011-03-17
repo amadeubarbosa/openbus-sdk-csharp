@@ -285,8 +285,7 @@ namespace OpenbusAPI
     #region OpenbusAPI Implemented
 
     /// <summary>
-    /// Retorna o barramento para o seu estado inicial, ou seja, desfaz as
-    /// definições de atributos realizadas. Em seguida, inicializa o Orb.
+    /// Inicializa o Orb.
     /// </summary>
     /// <param name="host">O endereço do serviço de controle de acesso.</param>
     /// <param name="port">A porta do serviço de controle de acesso.</param>
@@ -297,6 +296,47 @@ namespace OpenbusAPI
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
     public void Init(String host, int port) {
+      Init(host, port, CredentialValidationPolicy.ALWAYS);
+    }
+
+    /// <summary>
+    /// Inicializa o Orb.
+    /// </summary>
+    /// <param name="host">O endereço do serviço de controle de acesso.</param>
+    /// <param name="port">A porta do serviço de controle de acesso.</param>
+    /// <param name="ftConfigPath">O caminho para o arquivo de configuração do
+    /// tolerância a falha</param>
+    /// <param name="policy">A política de validação de credenciais obtidas pelo
+    /// interceptador servidor.</param>
+    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
+    /// inicializado.</exception>
+    /// <exception cref="ArgumentException">Caso os argumentos estejam
+    /// incorretos</exception>
+    /// <exception cref="System.Security.SecurityException">Caso não possua
+    /// permissão para configurar um canal.</exception>
+    public void Init(String host, int port, String ftConfigPath, CredentialValidationPolicy policy) {
+      if (String.IsNullOrEmpty(ftConfigPath))
+        throw new ArgumentException(
+            "O campo 'ftConfigPath' não pode ser nulo ou vazio.");
+
+      this.ftManager = new FaultToleranceManager(ftConfigPath);
+      Init(host, port, policy);
+    }
+
+    /// <summary>
+    /// Inicializa o Orb.
+    /// </summary>
+    /// <param name="host">O endereço do serviço de controle de acesso.</param>
+    /// <param name="port">A porta do serviço de controle de acesso.</param>
+    /// <param name="policy">A política de validação de credenciais obtidas pelo
+    /// interceptador servidor.</param>
+    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
+    /// inicializado.</exception>
+    /// <exception cref="ArgumentException">Caso os argumentos estejam
+    /// incorretos</exception>
+    /// <exception cref="System.Security.SecurityException">Caso não possua
+    /// permissão para configurar um canal.</exception>
+    public void Init(String host, int port, CredentialValidationPolicy policy) {
       if (this.host != String.Empty)
         throw new OpenbusAlreadyInitialized();
 
@@ -316,36 +356,13 @@ namespace OpenbusAPI
         this.orb.RegisterPortableInterceptorInitalizer(
             new ClientInitializer(isFaultTolerant));
         this.orb.RegisterPortableInterceptorInitalizer(
-            new ServerInitializer());
+            new ServerInitializer(policy));
         this.orb.CompleteInterceptorRegistration();
       }
 
       //Registrando um canal
       this.channel = new IiopChannel(0);
       ChannelServices.RegisterChannel(channel, false);
-    }
-
-    /// <summary>
-    /// Retorna o barramento para o seu estado inicial, ou seja, desfaz as
-    /// definições de atributos realizadas. Em seguida, inicializa o Orb.
-    /// </summary>
-    /// <param name="host">O endereço do serviço de controle de acesso.</param>
-    /// <param name="port">A porta do serviço de controle de acesso.</param>
-    /// <param name="ftConfigPath">O caminho para o arquivo de configuração do
-    ///  tolerância a falha</param>
-    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
-    /// inicializado.</exception>
-    /// <exception cref="ArgumentException">Caso os argumentos estejam
-    /// incorretos</exception>
-    /// <exception cref="System.Security.SecurityException">Caso não possua
-    /// permissão para configurar um canal.</exception>
-    public void Init(String host, int port, String ftConfigPath) {
-      if (String.IsNullOrEmpty(ftConfigPath))
-        throw new ArgumentException(
-            "O campo 'ftConfigPath' não pode ser nulo ou vazio.");
-
-      this.ftManager = new FaultToleranceManager(ftConfigPath);
-      Init(host, port);
     }
 
     /// <summary>

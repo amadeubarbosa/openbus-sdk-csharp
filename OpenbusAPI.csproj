@@ -52,7 +52,7 @@
     </Reference>
     <Reference Include="Scs, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\scs\csharp\trunk\lib\Scs.dll</HintPath>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\Scs.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -60,6 +60,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -75,8 +77,10 @@
     <Compile Include="src\Exception\InvalidCredentialException.cs" />
     <Compile Include="src\Exception\OpenbusException.cs" />
     <Compile Include="src\FaultToleranceManager.cs" />
+    <Compile Include="src\Interceptors\CachedCredentialValidatorServerInterceptor.cs" />
     <Compile Include="src\Interceptors\ClientInitializer.cs" />
     <Compile Include="src\Interceptors\ClientInterceptor.cs" />
+    <Compile Include="src\Interceptors\CredentialValidationPolicy.cs" />
     <Compile Include="src\Interceptors\CredentialValidatorServerInterceptor.cs" />
     <Compile Include="src\Interceptors\FTClientInterceptor.cs" />
     <Compile Include="src\Interceptors\InterceptorImpl.cs" />
@@ -91,6 +95,7 @@
     <Compile Include="src\Openbus.cs" />
     <Compile Include="src\Security\Crypto.cs" />
     <Compile Include="src\Security\RSAPKCS8KeyFormatter.cs" />
+    <Compile Include="src\Utils\LRUCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
