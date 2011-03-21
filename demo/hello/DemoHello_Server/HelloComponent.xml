@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 
-<component xmlns="tecgraf.scs.core"
+<scs:component xmlns:scs="tecgraf.scs.core"
            xmlns:xi="http://www.w3.org/2001/XMLSchema-instance">
   <id>
     <name>Hello</name>
@@ -14,5 +14,4 @@
       <facetImpl assembly="DemoHello.Server">Server.HelloImpl</facetImpl>
     </facet>
   </facets>
-</component>
-
+</scs:component>
