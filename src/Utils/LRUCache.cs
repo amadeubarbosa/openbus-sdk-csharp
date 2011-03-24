@@ -101,7 +101,7 @@ namespace OpenbusAPI.Utils
       if (arrayIndex < 0) {
         throw new ArgumentOutOfRangeException("arrayIndex");
       }
-      if (array.Length < (cache.Count - arrayIndex) + 1) {
+      if (array.Length < (cache.Count - arrayIndex)) {
         throw new ArgumentException(
             "O tamanho do array não é suficiente para a quantidade de elementos");
       }

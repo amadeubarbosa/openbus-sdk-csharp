@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v1_06.access_control_service;
-using OpenbusAPI.Utils;
 using System.Timers;
-using OpenbusAPI.Logger;
 using omg.org.CORBA;
+using omg.org.PortableInterceptor;
+using OpenbusAPI.Logger;
+using OpenbusAPI.Utils;
+using tecgraf.openbus.core.v1_06.access_control_service;
 
 namespace OpenbusAPI.Interceptors
 {
@@ -53,13 +51,14 @@ namespace OpenbusAPI.Interceptors
     public CachedCredentialValidatorServerInterceptor() {
       this.cache = new LRUCache<Credential>(MAXIMUM_CREDENTIALS_CACHE_SIZE);
       this.timer = new Timer(TASK_INTERVAL);
-      timer.Elapsed += new ElapsedEventHandler(CredentialValidator);     
+      timer.Elapsed += new ElapsedEventHandler(CredentialValidator);
+      timer.Start();
 
       Log.INTERCEPTORS.Debug(String.Format(
-          "Cache de credenciais com capacidade máxima de {} credenciais.",
+          "Cache de credenciais com capacidade máxima de {0} credenciais.",
           MAXIMUM_CREDENTIALS_CACHE_SIZE));
       Log.INTERCEPTORS.Debug(String.Format(
-          "Revalidação do cache realizada a cada {} milisegundos.",
+          "Revalidação do cache realizada a cada {0} milisegundos.",
           TASK_INTERVAL));
     }
 
@@ -138,36 +137,41 @@ namespace OpenbusAPI.Interceptors
     #region Timer
 
     void CredentialValidator(object sender, ElapsedEventArgs e) {
-      Log.INTERCEPTORS.Debug("Executando a tarefa de validação de credenciais.");
-
-      if (cache.Count <= 0) {
-        Log.INTERCEPTORS.Debug("Não existem credenciais na cache.");
-        return;
-      }
-      Credential[] credentialArray = new Credential[cache.Count];
-      cache.CopyTo(credentialArray, 0);
-
-      Openbus openbus = Openbus.GetInstance();
-      IAccessControlService acs = openbus.GetAccessControlService();
-      Boolean[] results;
       try {
-        results = acs.areValid(credentialArray);
-      }
-      catch (AbstractCORBASystemException ex) {
-        Log.INTERCEPTORS.Error("Erro ao tentar validar as credenciais.", ex);
-        return;
-      }
-      for (int i = 0; i < results.Length; i++) {
-        Credential credential = credentialArray[i];
-        if (results[i] == false) {
-          Log.INTERCEPTORS.Debug(String.Format("A credencial {0}:{1} não é mais válida.",
-            credential.identifier, credential.owner));
-          cache.Remove(credential);
+        Log.INTERCEPTORS.Debug("Executando a tarefa de validação de credenciais.");
+
+        if (cache.Count <= 0) {
+          Log.INTERCEPTORS.Debug("Não existem credenciais na cache.");
+          return;
         }
-        else {
-          Log.INTERCEPTORS.Debug(String.Format("A credencial {0}:{1} ainda é válida.",
-            credential.identifier, credential.owner));
+        Credential[] credentialArray = new Credential[cache.Count];
+        cache.CopyTo(credentialArray, 0);
+
+        Openbus openbus = Openbus.GetInstance();
+        IAccessControlService acs = openbus.GetAccessControlService();
+        Boolean[] results;
+        try {
+          results = acs.areValid(credentialArray);
         }
+        catch (AbstractCORBASystemException ex) {
+          Log.INTERCEPTORS.Error("Erro ao tentar validar as credenciais.", ex);
+          return;
+        }        
+        for (int i = 0; i < results.Length; i++) {
+          Credential credential = credentialArray[i];
+          if (results[i] == false) {
+            Log.INTERCEPTORS.Debug(String.Format("A credencial {0}:{1} não é mais válida.",
+              credential.identifier, credential.owner));
+            cache.Remove(credential);
+          }
+          else {
+            Log.INTERCEPTORS.Debug(String.Format("A credencial {0}:{1} ainda é válida.",
+              credential.identifier, credential.owner));
+          }
+        }
+      }
+      catch (System.Exception ex) {
+        Log.INTERCEPTORS.Error("Erro no validador de credenciais.", ex);
       }
     }
 
