@@ -109,7 +109,6 @@ namespace OpenbusAPI
     /// </param>
     /// <returns> <code>true</code> caso a atualização feita com sucesso, ou 
     /// <code>false</code> caso contrário. </returns>
-    /// </returns>
     public bool UpdateOpenbus(Openbus openbus) {
       int indexList = this.lastIndexList;
       int trials = 0;

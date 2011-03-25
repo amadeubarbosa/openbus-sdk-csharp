@@ -58,6 +58,7 @@ namespace OpenbusAPI.Interceptors
 
     #region ORBInitializer Not Implemented
 
+    /// <inheritdoc />
     public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
       //Nada a fazer
     }
