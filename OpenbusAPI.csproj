@@ -48,6 +48,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
     </Reference>
+    <Reference Include="Scs.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -69,6 +70,8 @@
     <Compile Include="src\Interceptors\ClientInterceptor.cs" />
     <Compile Include="src\Interceptors\FTClientInterceptor.cs" />
     <Compile Include="src\Interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\Interceptors\ServerInitializer.cs" />
+    <Compile Include="src\Interceptors\ServerInterceptor.cs" />
     <Compile Include="src\Lease\LeaseExpiredCallback.cs" />
     <Compile Include="src\Lease\LeaseRenewer.cs" />
     <Compile Include="src\Lease\RenewerTask.cs" />
