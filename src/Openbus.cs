@@ -322,7 +322,7 @@ namespace OpenbusAPI
       }
 
       //Registrando um canal
-      this.channel = new IiopClientChannel();
+      this.channel = new IiopChannel(0);
       ChannelServices.RegisterChannel(channel, false);
     }
 
