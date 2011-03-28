@@ -1,22 +1,27 @@
-using OpenbusAPI.Logger;
-using OpenbusAPI;
-using OpenbusAPI.Security;
-using System.Security.Cryptography.X509Certificates;
-using DemoDelegate_Server.Properties;
+using System;
+using System.IO;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Xml;
+using DemoDelegate_Server.Properties;
+using OpenbusAPI;
+using OpenbusAPI.Logger;
+using OpenbusAPI.Security;
+using scs.core;
+using Scs.Core;
 using tecgraf.openbus.core.v1_05.registry_service;
 
 
-namespace DemoDelegate_Server
+namespace Server
 {
   /// <summary>
-  /// Servidor do demo delegate.
+  /// Servidor do demo hello.
   /// </summary>
   class HelloServer
   {
 
     static void Main(string[] args) {
-
+      AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
@@ -33,15 +38,29 @@ namespace DemoDelegate_Server
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFile);
 
-      /* TODO: Cria o componente */
+      ComponentBuilder builder = new ComponentBuilder();
+
+      String componentModel = Resources.ComponentModel;
+      TextReader file = new StringReader(componentModel);
+      XmlTextReader componentInformation = new XmlTextReader(file);
+      ComponentContext component = builder.NewComponent(componentInformation);
 
       IRegistryService registryService =
         openbus.Connect(entityName, privateKey, acsCertificate);
 
-      /* TODO: Registra o componente no RegistryService */
+      _Property[] properties = new _Property[0];
+      IComponent member = component.GetIComponent();
+      ServiceOffer serviceOffer = new ServiceOffer(properties, member);
+      registryService.register(serviceOffer);
 
+      Console.WriteLine("Servidor no ar.");
       openbus.Run();
     }
 
+    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+      Openbus openbus = Openbus.GetInstance();
+      openbus.Disconnect();
+      openbus.Destroy();
+    }
   }
 }

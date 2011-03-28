@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.50727</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{790104DB-FAB0-4E39-A62B-72A596C20A3D}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -53,6 +53,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\OpenbusAPI.dll</HintPath>
     </Reference>
+    <Reference Include="Scs, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\Scs.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(OPENBUS_HOME)\libpath\c#\Scs.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -64,6 +72,11 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="src\HelloImpl.cs" />
     <Compile Include="src\HelloServer.cs" />
   </ItemGroup>
@@ -72,6 +85,16 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>DemoConfig.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="HelloComponent.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

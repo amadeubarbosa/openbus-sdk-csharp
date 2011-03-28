@@ -1,12 +1,15 @@
+using System;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using DemoDelegate_Client.Properties;
+using demoidl.demoDelegate;
 using OpenbusAPI;
 using OpenbusAPI.Logger;
+using OpenbusAPI.Security;
 using scs.core;
-using System;
-using demoidl.demoDelegate;
-using System.Threading;
-using tecgraf.openbus.core.v1_05.registry_service;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v1_05.registry_service;
 
 namespace DemoDelegate_Client
 {
@@ -30,12 +33,21 @@ namespace DemoDelegate_Client
 
       string userLogin = DemoConfig.Default.login;
       string userPassword = DemoConfig.Default.password;
+      string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
       string entityName = DemoConfig.Default.entityName;
+      string acsCertificateFile = DemoConfig.Default.acsCertificateFileName;
+
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(privaKeyFile);
+      X509Certificate2 acsCertificate =
+        Crypto.ReadCertificate(acsCertificateFile);
 
       IRegistryService registryService = openbus.Connect(userLogin, userPassword);
 
       string[] facets = new string[] { "IHello" };
       ServiceOffer[] offers = registryService.find(facets);
+
+      Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
+      Console.ReadLine();
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");

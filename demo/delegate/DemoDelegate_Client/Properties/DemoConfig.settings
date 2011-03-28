@@ -17,5 +17,11 @@
     <Setting Name="entityName" Type="System.String" Scope="User">
       <Value Profile="(Default)">TesteBarramento</Value>
     </Setting>
+    <Setting Name="acsCertificateFileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">AccessControlService.crt</Value>
+    </Setting>
+    <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">TesteBarramento.key</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

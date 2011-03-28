@@ -1,10 +1,10 @@
-using DemoHello_Client.Properties;
 using OpenbusAPI;
 using OpenbusAPI.Logger;
 using scs.core;
 using System;
 using demoidl.hello;
 using tecgraf.openbus.core.v1_05.registry_service;
+using DemoHello_Client.Properties;
 
 namespace DemoHello_Client
 {
@@ -31,6 +31,9 @@ namespace DemoHello_Client
       string userPassword = DemoConfig.Default.userPassword;
 
       IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+
+      Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
+      Console.ReadLine();
 
       string[] facets = new string[] { "IHello" };
       ServiceOffer[] offers = registryService.find(facets);
