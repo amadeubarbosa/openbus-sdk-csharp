@@ -17,6 +17,7 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,20 +38,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=737d7ebb1cf8d684, processorArchitecture=MSIL">
-      <HintPath>$(OPENBUS_HOME)\install\libpath\c#\IIOPChannel.dll</HintPath>
+      <HintPath>..\..\..\..\..\install\libpath\c#\IIOPChannel.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus-demo-hello-idl-iiopNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-demo-hello-idl-iiopNet.dll</HintPath>
-    </Reference>
     <Reference Include="Openbus-idl-iiopNet, Version=1.6.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Openbus.Demo.Hello.Idl-iiopnet, Version=1.6.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>>$(OPENBUS_HOME)\libpath\c#\Openbus.Demo.Hello.Idl-iiopnet.dll</HintPath>
     </Reference>
     <Reference Include="OpenbusAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -58,13 +59,16 @@
     </Reference>
     <Reference Include="Scs, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\scs\csharp\trunk\lib\Scs.dll</HintPath>
+      <HintPath>>$(OPENBUS_HOME)\libpath\c#\Scs.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
