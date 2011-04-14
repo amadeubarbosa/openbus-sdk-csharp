@@ -19,6 +19,7 @@ namespace Server
   /// </summary>
   class HelloServer
   {
+    static string offerIndentifier;
 
     static void Main(string[] args) {
       AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
@@ -51,14 +52,17 @@ namespace Server
       _Property[] properties = new _Property[0];
       IComponent member = component.GetIComponent();
       ServiceOffer serviceOffer = new ServiceOffer(properties, member);
-      registryService.register(serviceOffer);
+      offerIndentifier = registryService.register(serviceOffer);
 
       Console.WriteLine("Servidor no ar.");
+      
       openbus.Run();
     }
 
-    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {      
       Openbus openbus = Openbus.GetInstance();
+      IRegistryService registryService = openbus.GetRegistryService();
+      registryService.unregister(offerIndentifier);
       openbus.Disconnect();
       openbus.Destroy();
     }

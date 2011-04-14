@@ -1,7 +1,7 @@
 using System;
 using OpenbusAPI;
 using Scs.Core;
-using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v1_06.access_control_service;
 
 
 namespace Server

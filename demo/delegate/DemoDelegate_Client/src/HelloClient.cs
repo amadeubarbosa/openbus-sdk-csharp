@@ -8,8 +8,8 @@ using OpenbusAPI;
 using OpenbusAPI.Logger;
 using OpenbusAPI.Security;
 using scs.core;
-using tecgraf.openbus.core.v1_05.access_control_service;
-using tecgraf.openbus.core.v1_05.registry_service;
+using tecgraf.openbus.core.v1_06.access_control_service;
+using tecgraf.openbus.core.v1_06.registry_service;
 
 namespace Client
 {
