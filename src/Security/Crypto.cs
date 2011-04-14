@@ -52,6 +52,8 @@ namespace OpenbusAPI.Security
     /// XML.</param>
     /// <param name="acsCertificate">O certificado formatado em X509.</param>
     /// <returns>A resposta do desafio.</returns>
+    /// <exception cref="CryptographicException">As chaves não estão corretas.
+    /// </exception>
     public static byte[] GenerateAnswer(byte[] challenge,
       RSACryptoServiceProvider privateKey, X509Certificate2 acsCertificate) {
       byte[] plainChallenge = Decrypt(privateKey, challenge);

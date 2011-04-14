@@ -527,10 +527,10 @@ namespace OpenbusAPI
       try {
         answer = Crypto.GenerateAnswer(challenge, privateKey, acsCertificate);
       }
-      catch (CryptographicException) {
+      catch (CryptographicException e) {
         throw new ACSLoginFailureException("Ocorreu um erro ao realizar a " +
           "autenticação no barramento. Verifique se a chave privada " +
-          "utilizada corresponde ao certificado digital cadastrado.");
+          "utilizada corresponde ao certificado digital cadastrado.", e);
       }
 
       int leaseTime = -1;
