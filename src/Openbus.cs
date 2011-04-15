@@ -510,7 +510,7 @@ namespace OpenbusAPI
     public IRegistryService Connect(String name,
       RSACryptoServiceProvider privateKey, X509Certificate2 acsCertificate) {
       if ((String.IsNullOrEmpty(name)) || (acsCertificate == null) ||
-        (privateKey == null))
+          (privateKey == null))
         throw new ArgumentException("Nenhum parâmetro pode ser nulo.");
 
       if (!String.IsNullOrEmpty(this.Credential.identifier))
@@ -529,13 +529,13 @@ namespace OpenbusAPI
       }
       catch (CryptographicException e) {
         throw new ACSLoginFailureException("Ocorreu um erro ao realizar a " +
-          "autenticação no barramento. Verifique se a chave privada " +
-          "utilizada corresponde ao certificado digital cadastrado.", e);
+            "autenticação no barramento. Verifique se a chave privada " +
+            "utilizada corresponde ao certificado digital cadastrado.", e);
       }
 
       int leaseTime = -1;
       bool connect = this.acs.loginByCertificate(name, answer,
-        out this.credential, out leaseTime);
+          out this.credential, out leaseTime);
       if (!connect) {
         Log.SERVICES.Fatal("Não foi possível se conectar com o barramento.");
         return null;
@@ -543,11 +543,11 @@ namespace OpenbusAPI
 
 
       this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
-        new OpenbusExpiredCallback());
+          new OpenbusExpiredCallback());
       this.leaseRenewer.Start();
 
       Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = "
-        + leaseTime + " segundos.");
+          + leaseTime + " segundos.");
       this.registryService = GetRegistryService();
       return this.registryService;
     }
