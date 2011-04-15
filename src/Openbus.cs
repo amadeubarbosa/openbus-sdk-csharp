@@ -537,10 +537,9 @@ namespace OpenbusAPI
       bool connect = this.acs.loginByCertificate(name, answer,
           out this.credential, out leaseTime);
       if (!connect) {
-        Log.SERVICES.Fatal("Não foi possível se conectar com o barramento.");
-        return null;
+        throw new ACSLoginFailureException(
+            "Não foi possível se conectar com o barramento.");
       }
-
 
       this.leaseRenewer = new LeaseRenewer(this.Credential, this.leaseProvider,
           new OpenbusExpiredCallback());
