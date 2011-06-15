@@ -296,7 +296,7 @@ namespace OpenbusAPI
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
     public void Init(String host, int port) {
-      Init(host, port, CredentialValidationPolicy.ALWAYS);
+      Init(host, port, CredentialValidationPolicy.ALWAYS,true);
     }
 
     /// <summary>
@@ -308,19 +308,22 @@ namespace OpenbusAPI
     /// tolerância a falha</param>
     /// <param name="policy">A política de validação de credenciais obtidas pelo
     /// interceptador servidor.</param>
+    /// <param name="hasServant">Indica se o Orb será inicializado permitindo
+    /// prover servants.</param>
     /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
     /// inicializado.</exception>
     /// <exception cref="ArgumentException">Caso os argumentos estejam
     /// incorretos</exception>
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
-    public void Init(String host, int port, String ftConfigPath, CredentialValidationPolicy policy) {
+    public void Init(String host, int port, String ftConfigPath, 
+        CredentialValidationPolicy policy, Boolean hasServant) {
       if (String.IsNullOrEmpty(ftConfigPath))
         throw new ArgumentException(
             "O campo 'ftConfigPath' não pode ser nulo ou vazio.");
 
       this.ftManager = new FaultToleranceManager(ftConfigPath);
-      Init(host, port, policy);
+      Init(host, port, policy, hasServant);
     }
 
     /// <summary>
@@ -330,13 +333,15 @@ namespace OpenbusAPI
     /// <param name="port">A porta do serviço de controle de acesso.</param>
     /// <param name="policy">A política de validação de credenciais obtidas pelo
     /// interceptador servidor.</param>
+    /// <param name="hasServant">Indica se o Orb será inicializado permitindo
+    /// prover servants.</param>
     /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
     /// inicializado.</exception>
     /// <exception cref="ArgumentException">Caso os argumentos estejam
     /// incorretos</exception>
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
-    public void Init(String host, int port, CredentialValidationPolicy policy) {
+    public void Init(String host, int port, CredentialValidationPolicy policy, Boolean hasServant) {
       if (this.host != String.Empty)
         throw new OpenbusAlreadyInitialized();
 
@@ -360,8 +365,10 @@ namespace OpenbusAPI
         this.orb.CompleteInterceptorRegistration();
       }
 
-      //Registrando um canal
-      this.channel = new IiopChannel(0);
+      if (hasServant)
+        this.channel = new IiopChannel(0);
+      else
+        this.channel = new IiopChannel();
       ChannelServices.RegisterChannel(channel, false);
     }
 
