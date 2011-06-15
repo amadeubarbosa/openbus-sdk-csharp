@@ -286,8 +286,7 @@ namespace OpenbusAPI
     #region OpenbusAPI Implemented
 
     /// <summary>
-    /// Retorna o barramento para o seu estado inicial, ou seja, desfaz as
-    /// definições de atributos realizadas. Em seguida, inicializa o Orb.
+    /// Inicializa o Orb.
     /// </summary>
     /// <param name="host">O endereço do serviço de controle de acesso.</param>
     /// <param name="port">A porta do serviço de controle de acesso.</param>
@@ -298,6 +297,45 @@ namespace OpenbusAPI
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
     public void Init(String host, int port) {
+      Init(host, port, true);
+    }
+
+    /// <summary>
+    /// Inicializa o Orb.
+    /// </summary>
+    /// <param name="host">O endereço do serviço de controle de acesso.</param>
+    /// <param name="port">A porta do serviço de controle de acesso.</param>
+    /// <param name="ftConfigPath">O caminho para o arquivo de configuração do
+    ///  tolerância a falha</param>
+    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
+    /// inicializado.</exception>
+    /// <exception cref="ArgumentException">Caso os argumentos estejam
+    /// incorretos</exception>
+    /// <exception cref="System.Security.SecurityException">Caso não possua
+    /// permissão para configurar um canal.</exception>
+    public void Init(String host, int port, String ftConfigPath) {
+      if (String.IsNullOrEmpty(ftConfigPath))
+        throw new ArgumentException(
+            "O campo 'ftConfigPath' não pode ser nulo ou vazio.");
+
+      this.ftManager = new FaultToleranceManager(ftConfigPath);
+      Init(host, port);
+    }
+
+    /// <summary>
+    /// Inicializa o Orb.
+    /// </summary>
+    /// <param name="host">O endereço do serviço de controle de acesso.</param>
+    /// <param name="port">A porta do serviço de controle de acesso.</param>
+    /// <param name="hasServant">Indica se o Orb será inicializado permitindo
+    /// prover servants.</param>
+    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
+    /// inicializado.</exception>
+    /// <exception cref="ArgumentException">Caso os argumentos estejam
+    /// incorretos</exception>
+    /// <exception cref="System.Security.SecurityException">Caso não possua
+    /// permissão para configurar um canal.</exception>
+    public void Init(String host, int port, Boolean hasServant) {
       if (this.host != String.Empty)
         throw new OpenbusAlreadyInitialized();
 
@@ -321,32 +359,11 @@ namespace OpenbusAPI
         this.orb.CompleteInterceptorRegistration();
       }
 
-      //Registrando um canal
-      this.channel = new IiopChannel(0);
+      if (hasServant)
+        this.channel = new IiopChannel(0);
+      else
+        this.channel = new IiopChannel();
       ChannelServices.RegisterChannel(channel, false);
-    }
-
-    /// <summary>
-    /// Retorna o barramento para o seu estado inicial, ou seja, desfaz as
-    /// definições de atributos realizadas. Em seguida, inicializa o Orb.
-    /// </summary>
-    /// <param name="host">O endereço do serviço de controle de acesso.</param>
-    /// <param name="port">A porta do serviço de controle de acesso.</param>
-    /// <param name="ftConfigPath">O caminho para o arquivo de configuração do
-    ///  tolerância a falha</param>
-    /// <exception cref="OpenbusAlreadyInitialized"> Caso o Openbus já esteja
-    /// inicializado.</exception>
-    /// <exception cref="ArgumentException">Caso os argumentos estejam
-    /// incorretos</exception>
-    /// <exception cref="System.Security.SecurityException">Caso não possua
-    /// permissão para configurar um canal.</exception>
-    public void Init(String host, int port, String ftConfigPath) {
-      if (String.IsNullOrEmpty(ftConfigPath))
-        throw new ArgumentException(
-            "O campo 'ftConfigPath' não pode ser nulo ou vazio.");
-
-      this.ftManager = new FaultToleranceManager(ftConfigPath);
-      Init(host, port);
     }
 
     /// <summary>
