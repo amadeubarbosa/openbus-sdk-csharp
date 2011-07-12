@@ -10,7 +10,7 @@ using scs.core;
 using Scs.Core;
 using Scs.Core.Builder;
 using Server.Properties;
-using tecgraf.openbus.core.v1_06.registry_service;
+using tecgraf.openbus.core.v1_05.registry_service;
 
 namespace Server
 {

@@ -2,7 +2,7 @@
 using omg.org.IOP;
 using OpenbusAPI.Logger;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v1_06.access_control_service;
+using tecgraf.openbus.core.v1_05.access_control_service;
 
 
 namespace OpenbusAPI.Interceptors

@@ -7,8 +7,8 @@ using OpenbusAPI.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using OpenbusAPI.Lease;
-using tecgraf.openbus.core.v1_06.registry_service;
-using tecgraf.openbus.core.v1_06.access_control_service;
+using tecgraf.openbus.core.v1_05.registry_service;
+using tecgraf.openbus.core.v1_05.access_control_service;
 
 namespace Test_API
 {

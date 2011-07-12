@@ -3,7 +3,7 @@ using OpenbusAPI.Logger;
 using scs.core;
 using System;
 using demoidl.hello;
-using tecgraf.openbus.core.v1_06.registry_service;
+using tecgraf.openbus.core.v1_05.registry_service;
 using Client.Properties;
 
 namespace DemoHello_Client

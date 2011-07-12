@@ -15,8 +15,8 @@ using OpenbusAPI.Lease;
 using OpenbusAPI.Logger;
 using OpenbusAPI.Security;
 using scs.core;
-using tecgraf.openbus.core.v1_06.access_control_service;
-using tecgraf.openbus.core.v1_06.registry_service;
+using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v1_05.registry_service;
 
 
 namespace OpenbusAPI
@@ -41,7 +41,7 @@ namespace OpenbusAPI
     /// <!-- Atenção: O orb é singleton, com isso só podemos registrar 
     /// interceptadores uma única vez. -->
     /// </summary>
-    OrbServices orb;
+    private OrbServices orb;
     /// <summary>
     /// A faceta IAccessControlService do serviço de controle de acesso.
     /// </summary>
@@ -118,7 +118,7 @@ namespace OpenbusAPI
     /// <summary>
     /// Versão atual do Openbus
     /// </summary>
-    internal const String OPENBUS_VERSION = "1_06";
+    internal const String OPENBUS_VERSION = "1_05";
 
     /// <summary>
     /// Representa a chave para obtenção do barramento.
