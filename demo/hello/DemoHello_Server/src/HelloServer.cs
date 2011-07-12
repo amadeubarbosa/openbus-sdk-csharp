@@ -8,6 +8,7 @@ using OpenbusAPI.Logger;
 using OpenbusAPI.Security;
 using scs.core;
 using Scs.Core;
+using Scs.Core.Builder;
 using Server.Properties;
 using tecgraf.openbus.core.v1_05.registry_service;
 
@@ -39,12 +40,11 @@ namespace Server
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFile);
 
-      ComponentBuilder builder = new ComponentBuilder();
-
       String componentModel = Resources.ComponentModel;
       TextReader file = new StringReader(componentModel);
       XmlTextReader componentInformation = new XmlTextReader(file);
-      ComponentContext component = builder.NewComponent(componentInformation);
+      XMLComponentBuilder builder = new XMLComponentBuilder(componentInformation);
+      ComponentContext component = builder.build();
 
       IRegistryService registryService =
         openbus.Connect(entityName, privateKey, acsCertificate);
@@ -55,11 +55,11 @@ namespace Server
       offerIndentifier = registryService.register(serviceOffer);
 
       Console.WriteLine("Servidor no ar.");
-      
+
       openbus.Run();
     }
 
-    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {      
+    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
       Openbus openbus = Openbus.GetInstance();
       IRegistryService registryService = openbus.GetRegistryService();
       registryService.unregister(offerIndentifier);
