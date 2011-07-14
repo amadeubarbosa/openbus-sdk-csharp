@@ -32,10 +32,10 @@
 
 \lstdefinelanguage{CSharp}
 {
- morecomment = [l]{//}, 
+ morecomment = [l]{//},
  morecomment = [l]{///},
  morecomment = [s]{/*}{*/},
- morestring=[b]", 
+ morestring=[b]",
  sensitive = true,
  morekeywords = {abstract,  event,  new,  struct,
    as,  explicit,  null,  switch,
@@ -54,8 +54,8 @@
    default,  interface,  sealed,  volatile,
    delegate,  internal,  short,  void,
    do,  is,  sizeof,  while,
-   double,  lock,  stackalloc,   
-   else,  long,  static,   
+   double,  lock,  stackalloc,
+   else,  long,  static,
    enum,  namespace,  string}
 }
 
@@ -63,12 +63,12 @@
 % Inicio do documento
 % ===================
 
-\begin{document} 
+\begin{document}
 
-\title{OpenBus-CSharp - Tutorial - API}
+\title{Tutorial do SDK C\# do Openbus}
 \author{C. Augusto, R. Cosme, R. Cerqueira \\
         Tecgraf \\
-        Pontifícia Universidade Católica do Rio de Janeiro 
+        Pontifícia Universidade Católica do Rio de Janeiro
         (PUC-Rio)\\
         openbus-dev@tecgraf.puc-rio.br}
 
@@ -81,15 +81,15 @@
 \section{Introdução}
 
 Este documento é destinado aos usuários desenvolvedores de aplicações .NET que
- desejem utilizar o OpenBus. O processo de \emph{deployment} do barramento não
+ desejam utilizar o OpenBus. O processo de \emph{deployment} do barramento não
  é coberto neste tutorial. Considera-se como pré-requisito para um bom
  entendimento deste documento o conhecimento básico dos seguintes assuntos:
 
 \begin{itemize}
-	\item Linguagem de programação C\#.
-	\item CORBA.
-	\item Modelo de Componentes SCS.
-	\item Conceitos básicos do Openbus.
+  \item Linguagem de programação C\#.
+  \item CORBA.
+  \item Modelo de Componentes SCS.
+  \item Conceitos básicos do Openbus.
 \end{itemize}
 
 \section{Preparação do Ambiente}
@@ -98,7 +98,7 @@ O OpenBus utiliza o mecanismo de interceptação de CORBA no processo de controle
  de acesso aos serviços. Após a chamada de requisição de \emph{login} no
  barramento, todas as chamadas seguintes devem estar com a credencial de acesso
  anexada. Sendo assim, faz-se necessário a habilitação dos interceptadores
- frente ao ORB que será utilizado. No OpenBus-C\# a comunicação será feira
+ frente ao ORB que será utilizado. No SDK C\# a comunicação será feira
  utilizando o IIOP.NET, e a API se encarregará de registrar os interceptadores
  em sua inicialização. Não sendo necessária nenhuma ação por parte do usuário
  nesse aspecto.
@@ -118,11 +118,11 @@ A API C\# possui apenas o lado cliente. Por conta disso, para executar o demo,
 
 \begin{itemize}
   \item Entrar no diretório
-\$OPENBUS\_HOME/demo/hello/c\#/DemoHello\_Client/Properties/ 
+\$OPENBUS\_HOME/demo/hello/c\#/DemoHello\_Client/Properties/
     e configurar a localização do barramento no arquivo DemoConfig.settings.
   \item Executar o processo cliente da classe
 % NOTA: incluindo a quebra de linha no path para melhorar formatacao do pdf
-\$OPENBUS\_HOME/demo/hello/c\#\linebreak/DemoHello\_Client/src/HelloClient.cs. 
+\$OPENBUS\_HOME/demo/hello/c\#\linebreak/DemoHello\_Client/src/HelloClient.cs.
 \end{itemize}
 
 Após a execução do cliente, no terminal do processo servidor a seguinte
@@ -153,16 +153,17 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
 
 \begin{itemize}
   \item \code{Openbus GetInstance()}: Fornece a instancia do barramento.
-  \item \code{void Init(...)}: Inicializa a biblioteca.
   \item \code{IRegistryService Connect(String user, String password)}: Realiza uma tentativa de conexão com o barramento. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, duas exceções além das de CORBA podem ser lançadas:
     \subitem \code{ACSLoginFailureException}: O par nome de usuário e senha não foram validados.
+    \subitem \code{ACSUnavailableException}: Erro ao obter o serviço de controle de acesso.
     \subitem \code{ArgumentException}: Caso o método receba argumentos inválidos.
   \item \code{IRegistryService Connect(String name, RSACryptoServiceProvider privateKey, X509Certificate2 acsCertificate)}: Realiza uma tentativa de conexão com o barramento, utilizando o mecanismo de certificação para o processo de autenticação. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, três exceções além das de CORBA podem ser lançadas:
-    \subitem \code{ACSLoginFailureException}: O certificado não foi validado.
-    \subitem \code{InvalidCredentialException}: Caso a credencial seja rejeitada ao tentar obter o Serviço de Registro.
+    \subitem \code{ACSLoginFailureException}: Falha ao tentar estabelecer conexão com o barramento.
+    \subitem \code{ACSUnavailableException}: Erro ao obter o serviço de controle de acesso.
     \subitem \code{ArgumentException}: Caso o método receba argumentos inválidos.
   \item \code{IRegistryService Connect(Credential credential)}: Realiza uma tentativa de conexão ao barramento, a partir de uma credencial já existente. Se a tentativa for bem sucedida, um \emph{stub} do Serviço de Registro é retornado. Caso contrário, duas exceções além das de CORBA podem ser lançadas:
     \subitem \code{InvalidCredentialException}: Caso a credencial seja rejeitada ao tentar obter o Serviço de Registro.
+    \subitem \code{ACSUnavailableException}: Erro ao obter o serviço de controle de acesso.
     \subitem \code{ArgumentException}: Caso o método receba argumentos inválidos.
   \item \code{boolean Disconnect()}: Desfaz a conexão atual.
   \item \code{void Destroy()}: Finaliza a utilização do barramento.
@@ -179,24 +180,49 @@ Os outros métodos da API Openbus serão explicados em mais detalhes a seguir:
 
 A explicação dos métodos dos serviços básicos podem ser encontrados na documentação referente às idls.
 
-A API utiliza o log provido pela Apache (log4Net), que possui os níveis de log 
- descritos na classe \emph{OpenbusAPI.Logger.Level}. Para alterar o nível de log
+\subsection{Configurações avançadas}
+
+\subsubsection{Definindo os níveis de log da API}
+A API utiliza o log provido pela Apache (log4Net), que possui os níveis de log
+ descritos no enum \emph{OpenbusAPI.Logger.Level}. Para alterar o nível de log
  da API deve-se chamar o método \emph{SetLogsLevel()} enviando o nível desejado
  como parâmetro. Este método se encontra na classe \emph{OpenbusAPI.Logger.Log}.
- 
-A configuração do log4Net pode ser feita num arquivo xml que deve ter o nome 
-Openbus.config e estar na mesma pasta da biblioteca. Caso nenhuma configuração 
+
+A configuração do log4Net pode ser feita num arquivo xml que deve ter o nome
+ Openbus.config e estar na mesma pasta da biblioteca. Caso nenhuma configuração
  seja fornecida, a biblioteca utilizará a configuração padrão.
+
+\subsubsection{Habilitando a política de cache das credenciais}
+A API fornece uma forma de inicializar o barramento com a configuração desejada
+ da política de validação de credenciais obtidas pelo interceptador servidor.
+ Esta política permite que a API use um mecanismo de cache otimizando o
+ desempenho do barramento.
+
+Para usar uma política, basta especificá-la na inicialização através do método
+ \emph{init}. Para maiores informações sobre os tipos de política que podem ser
+ definidos, vide a classe \emph{interceptors.CredentialValidationPolicy}. Por
+ padrão, o barramento é inicializado com a política de sempre validar uma
+ credencial interceptada no servidor.
 
 \subsection{Primeiros Passos}
 
-Basicamente há dois tipos de aplicações Openbus. Uma que oferta serviços e outra que consome serviços, sendo possível e natural uma aplicação híbrida que tanto oferte quanto consuma. Para ambos os tipos, existe uma certa dinâmica de programação já definida, e é justamente a explicitação dessa dinâmica que será o objetivo deste tópico.
+Basicamente há dois tipos de aplicações Openbus. Uma que oferta serviços e outra
+ que consome serviços, sendo possível e natural uma aplicação híbrida que tanto
+ oferte quanto consuma. Para ambos os tipos, existe uma certa dinâmica de
+ programação já definida, e é justamente a explicitação dessa dinâmica que
+ será o objetivo deste tópico.
 
-Como facilitador, os processos serão demonstrados com base na demo Hello. De propósito, este é uma demo muito simplória, que é composto de um módulo cliente e de outro servidor. O servidor oferta um serviço do tipo Hello num determinado barramento, enquanto que o cliente procura por este serviço no barramento e o utiliza.
+Os processos serão demonstrados com base na demo Hello. De propósito, esta é
+ uma demo muito simplória, que é composto de um módulo cliente e de outro
+ servidor. O servidor oferta um serviço do tipo "Hello" num determinado
+ barramento, enquanto que o cliente procura por este serviço no barramento e o
+ utiliza.
 
 \subsubsection{Conexão com o Barramento}
 
-O primeiro passo é firmar uma conexão autenticada com o barramento, o que é necessário tanto para o cliente como para o servidor. Para se concluir a conexão é preciso:
+O primeiro passo é firmar uma conexão autenticada com o barramento, o que é
+ necessário tanto para o cliente como para o servidor. Para se concluir a conexão
+ é preciso:
 
 \begin{itemize}
   \item Adquirir a instância que representa o barramento.
@@ -212,34 +238,37 @@ Existem três modos de autenticação frente ao barramento:
   \item Utilização de uma credencial já existente e válida.
 \end{itemize}
 
-O primeiro é destinado normalmente aos clientes que estão acessando o barramento à procura de um serviço. O segundo é mais adequado ao processo servidor que registrará um determinado serviço no barramento. Já o terceiro é útil para aplicações que dependam de terceiros para realizar uma autenticação, ou seja, não tenham acesso a um par usuário/senha nem a um certificado, mas sim a um terceiro elemento que proveja uma credencial válida.
+O primeiro é destinado normalmente aos clientes que estão acessando o barramento
+ à procura de um serviço. O segundo é mais adequado ao processo servidor que
+ registrará um determinado serviço no barramento. Já o terceiro é útil para
+ aplicações que dependam de terceiros para realizar uma autenticação, ou seja,
+ não tenham acesso a um par usuário/senha nem a um certificado, mas sim a um
+ terceiro elemento que proveja uma credencial válida.
 
-No caso da autenticação via certificado, o responsável pelo serviço deve encaminhar ao administrador do barramento o certificado do serviço, ou seja, um arquivo especial que contenha a chave pública do serviço, dentre outras informações pertinentes. O administrador deve fornecer o certificado do serviço de controle de acesso.
+No caso da autenticação via certificado, o responsável pelo serviço deve
+ encaminhar ao administrador do barramento o certificado do serviço, ou seja,
+ um arquivo especial que contenha a chave pública do serviço. O administrador
+ deve fornecer o certificado do serviço de controle de acesso.
 
-Um exemplo do código necessário para a conexão com o barramento pode ser visto no Código~\ref{lst:conexao}.
+Um exemplo do código necessário para a conexão com o barramento pode ser visto
+ no Código~\ref{lst:conexao}.
 
 \begin{labeledcode}[CSharp]{conexao}{Conexão com o Barramento}
-using OpenbusAPI;
-using OpenbusAPI.Security;
-
 Openbus openbus = Openbus.GetInstance();
-
-// host e porta apenas para fins de exemplo.
 openbus.Init(hostName, hostPort);
 
-RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey("HelloService.key");
-X509Certificate2 acsCertificate = 
-    Crypto.ReadCertificate("AccessControlService.crt");
-
-RegistryService registryService = 
-    openbus.Connect("HelloService", privateKey, acsCertificate);
-
+RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(privaKeyFile);
+X509Certificate2 acsCertificate = Crypto.ReadCertificate(acsCertificateFile);
+IRegistryService registryService = openbus.Connect(entityName, privateKey, acsCertificate);
 \end{labeledcode}
 
 \subsubsection{Serviço de Registro}
 
-Um serviço pode ser colocado no barramento através de uma oferta de serviço (\emph{ServiceOffer}), que é uma estrutura que representa o serviço através de uma lista de propriedades (\emph{properties}) e de uma referência a um componente (\emph{member}) SCS. As definições em IDL dessas estruturas podem ser vistas no Código~\ref{lst:offer}.
-
+Um serviço pode ser colocado no barramento através de uma oferta de serviço
+ (\emph{ServiceOffer}), que é uma estrutura que representa o serviço através de
+ uma lista de propriedades (\emph{properties}) e de uma referência a um
+ componente (\emph{member}) SCS. As definições em IDL dessas estruturas podem
+ ser vistas no Código~\ref{lst:offer}.
 
 \begin{labeledcode}[idl]{offer}{Definições de Ofertas de Serviço}
 typedef sequence<string> PropertyValue;
@@ -256,27 +285,72 @@ struct ServiceOffer {
 };
 \end{labeledcode}
 
-A lista de propriedades pode ser utilizada para adicionar características para o serviço, a fim de facilitar a identificação por parte dos clientes.
+A lista de propriedades pode ser utilizada para adicionar características para
+ o serviço, a fim de facilitar a identificação por parte dos clientes.
 
-A arquitetura do Openbus é baseada no modelo de componentes SCS. Os serviços são de fato representados por componentes, que podem apresentar distintas facetas (interfaces). Sendo assim, o primeiro passo para o registro de um serviço é criar um componente que represente esse serviço. Maiores informações sobre a criação de componentes SCS podem ser obtidas nos tutoriais desse projeto.
+A arquitetura do Openbus é baseada no modelo de componentes SCS. Os serviços
+ são de fato representados por componentes, que podem apresentar distintas
+ facetas (interfaces). Sendo assim, o primeiro passo para o registro de um
+ serviço é criar um componente que represente esse serviço. Maiores informações
+ sobre a criação de componentes SCS podem ser obtidas nos tutoriais desse
+ projeto.
 
-Um serviço registrado no barramento deve ser descrito através de uma oferta de serviço, que é representada pela estrutura \emph{ServiceOffer}. Pendura-se nessa estrutura o serviço em si, que é representado através de um componente SCS e, opcionalmente, uma lista de propriedades referentes ao serviço. As propriedades devem ser descritas numa estrutura que representa uma lista.
+Um serviço registrado no barramento deve ser descrito através de uma oferta de
+ serviço, que é representada pela estrutura \emph{ServiceOffer}. Pendura-se
+ nessa estrutura o serviço em si, que é representado através de um componente
+ SCS e, opcionalmente, uma lista de propriedades referentes ao serviço. As
+ propriedades devem ser descritas numa estrutura que representa uma lista. Um
+ exemplo pode ser conferido no Código~\ref{lst:registering}.
+
+\begin{labeledcode}[CSharp]{registering}{Registro de uma Oferta de Serviço}
+_Property[] properties = new _Property[0];
+IComponent member = component.GetIComponent();
+ServiceOffer serviceOffer = new ServiceOffer(properties, member);
+offerIndentifier = registryService.register(serviceOffer);
+\end{labeledcode}
+
+É interessante (mas não obrigatório) que um \emph{ProcessExit} seja instalado
+ para garantir o término correto das conexões do ORB. Um exemplo pode ser
+ conferido nas Listagens ~\ref{lst:processExit} e ~\ref{lst:hookinstall}.
+
+\begin{labeledcode}[CSharp]{processExit}{Exemplo de um \emph{ProcessExit}}
+static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+  Openbus openbus = Openbus.GetInstance();
+  IRegistryService registryService = openbus.GetRegistryService();
+  registryService.unregister(offerIndentifier);
+  openbus.Disconnect();
+  openbus.Destroy();
+}
+\end{labeledcode}
+
+\begin{labeledcode}[java]{hookinstall}{Instalação de um \emph{EventHandler}}
+AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
+\end{labeledcode}
+
+Até este ponto, o servidor basicamente se autenticou ao barramento e registrou o
+ serviço. O último passo necessário para finalizar o código do servidor é
+ habilitar o processo servidor a escutar as requisições CORBA que serão
+ direcionadas para o serviço ofertado, o que pode ser feito com o uso do
+ método da API \emph{run()} descrito anteriormente na Seção \ref{api}.
 
 \subsubsection{Processo Cliente}
 
-Como o servidor, o cliente necessita se autenticar ao barramento. Portanto, os mesmos passos aplicados ao servidor para a autenticação devem ser repetidos, com exceção que o cliente geralmente se autentica através do mecanismo de usuário e senha, como no Código~\ref{lst:clientauth}.
+Como o servidor, o cliente necessita se autenticar ao barramento. Portanto, os
+ mesmos passos aplicados ao servidor para a autenticação devem ser repetidos,
+ com exceção que o cliente geralmente se autentica através do mecanismo de
+ usuário e senha, como no Código~\ref{lst:clientauth}.
 
 \begin{labeledcode}[CSharp]{clientauth}{Autenticação da Aplicação Cliente}
-// userLogin e userPassword são variáveis String contendo o 
-// nome de usuário e senha.
 IRegistryService registryService = openbus.Connect(userLogin, userPassword);
 \end{labeledcode}
 
-Após a conexão bem sucedida com o barramento, o próximo passo é obter o serviço desejado. Isso pode ser feito através de uma chamada ao método \emph{find()} do Serviço de Registro, que retorna uma lista de ofertas de serviço que implementam a faceta que o usuário deseja. Um exemplo pode ser conferido no Código~\ref{lst:clientsearch}.
+Após a conexão bem sucedida com o barramento, o próximo passo é obter o serviço
+ desejado. Isso pode ser feito através de uma chamada ao método \emph{find()} do
+ Serviço de Registro, que retorna uma lista de ofertas de serviço que
+ implementam a faceta que o usuário deseja. Um exemplo pode ser conferido no
+ Código~\ref{lst:clientsearch}.
 
 \begin{labeledcode}[CSharp]{clientsearch}{Busca por Ofertas de Serviço}
-// busca no barramento serviços que implementem uma faceta de nome IHello.
-// uma lista de *ofertas de serviço* é retornada para o usuário.
 string[] facets = new string[] { "IHello" };
 ServiceOffer[] offers = registryService.find(facets);
 
@@ -284,23 +358,36 @@ if (offers.Length < 1) {
   Console.WriteLine("O serviço Hello não se encontra no barramento.");
   Environment.Exit(1);
 }
-
-// pegar a primeira oferta recebida
-ServiceOffer serviceOffer = servicesOffers[0];
+IComponent component = offers[0].member
 \end{labeledcode}
 
-Como visto anteriormente, a oferta de serviço contém uma referência para um componente SCS ou, mais especificamente, para sua faceta IComponent. Como esse componente pode apresentar diversas facetas, o usuário deve obter a faceta que deseja utilizar. No exemplo há somente uma faceta além das facetas básicas do modelo SCS, chamada IHello. A faceta recebida na oferta, IComponent, oferece métodos (\emph{getFacet} e \emph{getFacetByName}) para que o usuário possa obter um objeto CORBA que represente a faceta desejada. De posse do objeto CORBA, o usuário deve efetuar um \emph{typecast} para mapeá-lo para a interface desejada e daí em diante o programador estará apto a utilizar essa faceta / serviço. Um exemplo pode ser visto no Código~\ref{lst:clientfacet}.
+Como visto anteriormente, a oferta de serviço contém uma referência para um
+ componente SCS ou, mais especificamente, para sua faceta IComponent. Como esse
+ componente pode apresentar diversas facetas, o usuário deve obter a faceta que
+ deseja utilizar. No exemplo há somente uma faceta além das facetas básicas do
+ modelo SCS, chamada IHello. A faceta recebida na oferta, IComponent, oferece
+ métodos (\emph{getFacet} e \emph{getFacetByName}) para que o usuário possa
+ obter um objeto CORBA que represente a faceta desejada. De posse do objeto
+ CORBA, o usuário deve efetuar um \emph{typecast} para mapeá-lo para a interface
+ desejada e daí em diante o programador estará apto a utilizar essa
+ faceta/serviço. Um exemplo pode ser visto no Código~\ref{lst:clientfacet}.
 
 \begin{labeledcode}[CSharp]{clientfacet}{Acesso à Faceta Desejada}
-// obtenção da faceta IHello
-IComponent component = serviceOffer.member;
 MarshalByRefObject helloObj = component.getFacetByName("IHello");
-IHello hello = helloObj as IHello;
 
-// utilização da faceta / serviço IHello
+if (helloObj == null) {
+  Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
+  Environment.Exit(1);
+}
+
+IHello hello = helloObj as IHello;
+if (hello == null) {
+  Console.WriteLine("Faceta encontrada não implementa IHello.");
+  Environment.Exit(1);
+}
+
 hello.sayHello();
 \end{labeledcode}
 
 Os códigos completos podem ser conferidos nas demos do projeto.
-
 \end{document}
