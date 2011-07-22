@@ -68,7 +68,16 @@ namespace OpenbusAPI.Interceptors
 
     public void receive_request(ServerRequestInfo ri) {
       Openbus openbus = Openbus.GetInstance();
+
       //isInterptable
+      String interceptedOperation = ri.operation;
+      foreach (string methodName in Openbus.CORBA_OBJECT_METHODS) {
+        if (interceptedOperation.Equals(methodName)) {
+          Log.INTERCEPTORS.Debug(String.Format(
+              "A operação {0} não deve ser interceptada pelo servidor.", interceptedOperation));
+          return;
+        }
+      }
 
       Credential interceptedCredential = openbus.GetInterceptedCredential();
       if (String.IsNullOrEmpty(interceptedCredential.identifier)) {
@@ -156,7 +165,7 @@ namespace OpenbusAPI.Interceptors
         catch (AbstractCORBASystemException ex) {
           Log.INTERCEPTORS.Error("Erro ao tentar validar as credenciais.", ex);
           return;
-        }        
+        }
         for (int i = 0; i < results.Length; i++) {
           Credential credential = credentialArray[i];
           if (results[i] == false) {

@@ -24,15 +24,23 @@ namespace OpenbusAPI.Interceptors
     public void receive_request(ServerRequestInfo ri) {
       Openbus openbus = Openbus.GetInstance();
       //isInterptable
+      String interceptedOperation = ri.operation;
+      foreach (string methodName in Openbus.CORBA_OBJECT_METHODS) {
+        if (interceptedOperation.Equals(methodName)) {
+          Log.INTERCEPTORS.Debug(String.Format(
+              "A operação {0} não deve ser interceptada pelo servidor.", interceptedOperation));
+          return;
+        }
+      }
 
       Credential interceptedCredential = openbus.GetInterceptedCredential();
-      if(String.IsNullOrEmpty(interceptedCredential.identifier)){
+      if (String.IsNullOrEmpty(interceptedCredential.identifier)) {
         throw new NO_PERMISSION(100, CompletionStatus.Completed_No);
       }
 
       IAccessControlService acs = openbus.GetAccessControlService();
       bool isValid = false;
-    
+
       try {
         isValid = acs.isValid(interceptedCredential);
       }

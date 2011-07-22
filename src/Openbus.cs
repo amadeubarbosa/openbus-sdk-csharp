@@ -102,7 +102,8 @@ namespace OpenbusAPI
     private IRegistryService registryService;
 
     /// <summary>
-    /// Mantém a lista de métodos a serem liberados no interceptador servidor.
+    /// Mantém a lista de métodos a serem liberados por interface
+    /// no interceptador servidor. 
     /// </summary>
     private Dictionary<String, List<String>> interceptableMethods;
 
@@ -138,10 +139,22 @@ namespace OpenbusAPI
     internal const String FAULT_TOLERANT_ACS_KEY = "FTACS_v" + OPENBUS_VERSION;
 
     /// <summary>
-    /// Conjunto de Object Keys do Serviço de Registro.
+    /// Object Keys do Serviço de Registro.
     /// </summary>
     internal const String REGISTRY_SERVICE_KEY = "RS_v" + OPENBUS_VERSION;
 
+    /// <summary>
+    /// Métodos remotos que podem ser lançados por um objeto CORBA.
+    /// </summary>
+    internal static readonly String[] CORBA_OBJECT_METHODS = new String[7] {
+        "_interface",
+        "_is_a",
+        "_non_existent", 
+        "_domain_managers",
+        "_component",
+        "_repository_id",
+        "_get_policy"
+    };
     #endregion
 
     #region Constructors
@@ -296,7 +309,7 @@ namespace OpenbusAPI
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
     public void Init(String host, int port) {
-      Init(host, port, CredentialValidationPolicy.ALWAYS,true);
+      Init(host, port, CredentialValidationPolicy.ALWAYS, true);
     }
 
     /// <summary>
@@ -316,7 +329,7 @@ namespace OpenbusAPI
     /// incorretos</exception>
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
-    public void Init(String host, int port, String ftConfigPath, 
+    public void Init(String host, int port, String ftConfigPath,
         CredentialValidationPolicy policy, Boolean hasServant) {
       if (String.IsNullOrEmpty(ftConfigPath))
         throw new ArgumentException(
@@ -616,6 +629,7 @@ namespace OpenbusAPI
 
     /// <summary>
     /// Controla se o método deve ou não ser interceptado pelo servidor.
+    /// Por padrão todos os métodos são interceptados.
     /// </summary>
     /// <param name="iface">RepID da interface</param>
     /// <param name="method">Nome do método.</param>
@@ -627,26 +641,26 @@ namespace OpenbusAPI
         Log.COMMON.Error("Os parâmetros não podem ser vazios ou nulos.");
         return;
       }
+      List<String> methods = null;
+      if (interceptableMethods.ContainsKey(iface)) {
+        methods = interceptableMethods[iface];
+      }
 
-      if (!interceptable) {
-        if (interceptableMethods.ContainsKey(iface)) {
-          List<String> methods = interceptableMethods[iface];
-          if (methods == null)
-            methods = new List<String>();
-          if (method.Contains(method))
-            return;
-          methods.Add(method);
-        }
-        else {
-          List<String> methods = new List<String>();
-          methods.Add(method);
-          interceptableMethods.Add(iface, methods);
+      if (interceptable) {
+        if (methods != null) {
+          methods.Remove(method);
+          if (methods.Count == 0) {
+            interceptableMethods.Remove(iface);
+          }
         }
       }
       else {
-        List<String> methods = interceptableMethods[iface];
-        if (methods != null)
-          methods.Remove(method);
+        if (methods == null) {
+          methods = new List<string>();
+          interceptableMethods.Add(iface, methods);
+        }
+        if (!methods.Contains(method))
+          methods.Add(method);
       }
     }
 
@@ -658,8 +672,11 @@ namespace OpenbusAPI
     /// <returns><code>True</code> se o método de ver interceptado, caso 
     /// contrário <code>false</code>.</returns>
     private bool IsInterceptable(String iface, String method) {
+      if (!interceptableMethods.ContainsKey(iface))
+        return true;
+
       List<String> methods = interceptableMethods[iface];
-      return (methods == null) || !methods.Contains(method);
+      return !methods.Contains(method);
     }
 
     /// <summary>

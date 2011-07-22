@@ -51,7 +51,7 @@ namespace OpenbusAPI.Interceptors
         serviceContext = ri.get_request_service_context(CONTEXT_ID);
       }
       catch (BAD_PARAM) {
-        Log.INTERCEPTORS.Fatal(String.Format(
+        Log.INTERCEPTORS.Warn(String.Format(
           "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
         return;
       }
