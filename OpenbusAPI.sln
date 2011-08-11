@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenbusAPI", "OpenbusAPI.csproj", "{F7F4E7D6-0952-43B7-9468-A211E5153A15}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Openbus", "Openbus.csproj", "{F7F4E7D6-0952-43B7-9468-A211E5153A15}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test_API", "test\Test_API\Test_API.csproj", "{D850AAEC-D3C8-4B5C-8482-A0E3DF5963B6}"
 	ProjectSection(ProjectDependencies) = postProject

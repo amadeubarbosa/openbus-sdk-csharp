@@ -7,8 +7,8 @@
     <ProjectGuid>{F7F4E7D6-0952-43B7-9468-A211E5153A15}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OpenbusAPI</RootNamespace>
-    <AssemblyName>OpenbusAPI</AssemblyName>
+    <RootNamespace>Tecgraf.Openbus</RootNamespace>
+    <AssemblyName>Openbus</AssemblyName>
     <StartupObject>
     </StartupObject>
     <FileUpgradeFlags>
@@ -36,7 +36,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OPENBUS_HOME)\libpath\c#\OpenbusAPI-doc.XML</DocumentationFile>
+    <DocumentationFile>Y:\Openbus\install\libpath\c#\Openbus.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=86d952ca8b69eded, processorArchitecture=MSIL">
@@ -47,10 +47,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus-idl-iiopNet, Version=1.6.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
-    </Reference>
+    <Reference Include="Openbus.Idl, Version=1.5.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL" />
     <Reference Include="Scs, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\Scs.dll</HintPath>
@@ -81,15 +78,15 @@
     <Compile Include="src\Exception\InvalidCredentialException.cs" />
     <Compile Include="src\Exception\OpenbusException.cs" />
     <Compile Include="src\FaultToleranceManager.cs" />
-    <Compile Include="src\Interceptors\CachedCredentialValidatorServerInterceptor.cs" />
-    <Compile Include="src\Interceptors\ClientInitializer.cs" />
-    <Compile Include="src\Interceptors\ClientInterceptor.cs" />
-    <Compile Include="src\Interceptors\CredentialValidationPolicy.cs" />
-    <Compile Include="src\Interceptors\CredentialValidatorServerInterceptor.cs" />
-    <Compile Include="src\Interceptors\FTClientInterceptor.cs" />
-    <Compile Include="src\Interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\Interceptors\ServerInitializer.cs" />
-    <Compile Include="src\Interceptors\ServerInterceptor.cs" />
+    <Compile Include="src\Lease\Interceptors\CachedCredentialValidatorServerInterceptor.cs" />
+    <Compile Include="src\Lease\Interceptors\ClientInitializer.cs" />
+    <Compile Include="src\Lease\Interceptors\ClientInterceptor.cs" />
+    <Compile Include="src\Lease\Interceptors\CredentialValidationPolicy.cs" />
+    <Compile Include="src\Lease\Interceptors\CredentialValidatorServerInterceptor.cs" />
+    <Compile Include="src\Lease\Interceptors\FTClientInterceptor.cs" />
+    <Compile Include="src\Lease\Interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\Lease\Interceptors\ServerInitializer.cs" />
+    <Compile Include="src\Lease\Interceptors\ServerInterceptor.cs" />
     <Compile Include="src\Lease\LeaseExpiredCallback.cs" />
     <Compile Include="src\Lease\LeaseRenewer.cs" />
     <Compile Include="src\Lease\RenewerTask.cs" />

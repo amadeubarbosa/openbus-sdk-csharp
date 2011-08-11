@@ -57,11 +57,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\nunit.util.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus-idl-iiopNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <Reference Include="Openbus.Idl, Version=1.5.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -99,9 +95,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\OpenbusAPI.csproj">
+    <ProjectReference Include="..\..\Openbus.csproj">
       <Project>{F7F4E7D6-0952-43B7-9468-A211E5153A15}</Project>
-      <Name>OpenbusAPI</Name>
+      <Name>Openbus</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
