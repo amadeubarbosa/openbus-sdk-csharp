@@ -9,17 +9,17 @@ using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using OpenbusAPI.Exception;
-using OpenbusAPI.Interceptors;
-using OpenbusAPI.Lease;
-using OpenbusAPI.Logger;
-using OpenbusAPI.Security;
 using scs.core;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v1_05.registry_service;
+using Tecgraf.Openbus.Exception;
+using Tecgraf.Openbus.Interceptors;
+using Tecgraf.Openbus.Lease;
+using Tecgraf.Openbus.Logger;
+using Tecgraf.Openbus.Security;
 
 
-namespace OpenbusAPI
+namespace Tecgraf.Openbus
 {
   /// <summary>
   /// API de acesso a um barramento OpenBus.
@@ -295,7 +295,7 @@ namespace OpenbusAPI
 
     #endregion
 
-    #region OpenbusAPI Implemented
+    #region Tecgraf.Openbus Implemented
 
     /// <summary>
     /// Inicializa o Orb.

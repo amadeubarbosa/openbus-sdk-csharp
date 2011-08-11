@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using OpenbusAPI.Exception;
-using OpenbusAPI.Logger;
+using Tecgraf.Openbus.Exception;
+using Tecgraf.Openbus.Logger;
 
-namespace OpenbusAPI
+namespace Tecgraf.Openbus
 {
   /// <summary>
   /// Representa o controlador das réplicas para tolerância a falhas.

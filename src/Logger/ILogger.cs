@@ -1,7 +1,7 @@
 using System;
 
 
-namespace OpenbusAPI.Logger
+namespace Tecgraf.Openbus.Logger
 {
   /// <summary>
   /// Interface de Log do Openbus.

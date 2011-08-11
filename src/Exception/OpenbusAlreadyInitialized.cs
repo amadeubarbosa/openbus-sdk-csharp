@@ -1,7 +1,7 @@
 using System;
 
 
-namespace OpenbusAPI.Exception
+namespace Tecgraf.Openbus.Exception
 {
   /// <summary>
   /// Indica uma exceção de Openbus já está inicializado.

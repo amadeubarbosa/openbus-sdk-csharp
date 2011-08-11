@@ -3,14 +3,14 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
-using OpenbusAPI;
-using OpenbusAPI.Logger;
-using OpenbusAPI.Security;
 using scs.core;
 using Scs.Core;
 using Scs.Core.Builder;
 using Server.Properties;
 using tecgraf.openbus.core.v1_05.registry_service;
+using Tecgraf.Openbus.Logger;
+using Tecgraf.Openbus;
+using Tecgraf.Openbus.Security;
 
 
 namespace Server

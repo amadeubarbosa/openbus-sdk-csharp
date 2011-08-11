@@ -1,7 +1,7 @@
 using System;
 
 
-namespace OpenbusAPI.Exception
+namespace Tecgraf.Openbus.Exception
 {
   /// <summary>
   /// Indica uma execeção de falha no serviço de controle de acesso. 

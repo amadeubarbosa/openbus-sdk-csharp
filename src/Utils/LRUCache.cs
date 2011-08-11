@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OpenbusAPI.Utils
+namespace Tecgraf.Openbus.Utils
 {
   /// <summary>
   /// Representa uma Cache utilizando o algoritmo Least-Recently-Used (LRU).  

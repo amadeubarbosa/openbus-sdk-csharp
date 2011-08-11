@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
-using OpenbusAPI;
-using OpenbusAPI.Logger;
-using OpenbusAPI.Exception;
+using Tecgraf.Openbus;
+using Tecgraf.Openbus.Logger;
+using Tecgraf.Openbus.Exception;
 
 
 namespace Test_API

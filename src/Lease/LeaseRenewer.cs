@@ -3,7 +3,7 @@ using System.Threading;
 using tecgraf.openbus.core.v1_05.access_control_service;
 
 
-namespace OpenbusAPI.Lease
+namespace Tecgraf.Openbus.Lease
 {
   /// <summary>
   /// Classe responsável por renovar o <i>lease</i>.

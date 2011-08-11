@@ -1,6 +1,6 @@
 
 
-namespace OpenbusAPI.Lease
+namespace Tecgraf.Openbus.Lease
 {
   /// <summary>
   /// Define como informar que a renovação do <i>lease</i> expirou.

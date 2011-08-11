@@ -2,9 +2,9 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
-using OpenbusAPI.Logger;
+using Tecgraf.Openbus.Logger;
 
-namespace OpenbusAPI.Security
+namespace Tecgraf.Openbus.Security
 {
   /// <summary>
   /// Código retirado de um exemplo do <i>Java Science Consulting</i>

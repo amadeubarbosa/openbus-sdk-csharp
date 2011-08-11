@@ -3,11 +3,11 @@ using System.IO;
 using System.Xml;
 
 
-namespace OpenbusAPI.Logger
+namespace Tecgraf.Openbus.Logger
 {
   /// <summary>
   /// Um wrapper para a Log da Apache.
-  /// Implementa o OpenbusAPI.Logger.ILogger.
+  /// Implementa o Tecgraf.Openbus.Logger.ILogger.
   /// </summary>
   class ApacheLog : ILogger
   {

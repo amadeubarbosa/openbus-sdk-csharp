@@ -3,9 +3,9 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Xml;
-using OpenbusAPI.Logger;
+using Tecgraf.Openbus.Logger;
 
-namespace OpenbusAPI.Security
+namespace Tecgraf.Openbus.Security
 {
   /// <summary>
   /// Classe responsável pela segurança do Openbus.

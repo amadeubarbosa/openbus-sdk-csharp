@@ -1,14 +1,14 @@
 using System;
-using NUnit.Framework;
-using OpenbusAPI.Logger;
-using OpenbusAPI;
-using OpenbusAPI.Exception;
-using OpenbusAPI.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
-using OpenbusAPI.Lease;
-using tecgraf.openbus.core.v1_05.registry_service;
+using System.Security.Cryptography.X509Certificates;
+using NUnit.Framework;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v1_05.registry_service;
+using Tecgraf.Openbus;
+using Tecgraf.Openbus.Exception;
+using Tecgraf.Openbus.Lease;
+using Tecgraf.Openbus.Logger;
+using Tecgraf.Openbus.Security;
 
 namespace Test_API
 {

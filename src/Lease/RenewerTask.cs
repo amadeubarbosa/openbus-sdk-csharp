@@ -1,12 +1,12 @@
 using System;
 using System.Text;
 using System.Threading;
-using OpenbusAPI.Logger;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using Tecgraf.Openbus.Logger;
 
 
-namespace OpenbusAPI.Lease
+namespace Tecgraf.Openbus.Lease
 {
   /// <summary>
   /// Tarefa responsável por renovar o <i>lease</i> perante o serviço de 

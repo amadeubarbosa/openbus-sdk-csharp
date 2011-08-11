@@ -1,8 +1,8 @@
 using System;
 using demoidl.hello;
-using OpenbusAPI;
 using Scs.Core;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using Tecgraf.Openbus;
 
 
 namespace Server

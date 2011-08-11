@@ -1,6 +1,6 @@
 
 
-namespace OpenbusAPI.Logger
+namespace Tecgraf.Openbus.Logger
 {
   /// <summary>
   /// Classe responsável pelo Log do Openbus
