@@ -36,7 +36,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>Y:\Openbus\install\libpath\c#\Openbus.xml</DocumentationFile>
+    <DocumentationFile>..\..\..\install\libpath\c#\Openbus.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=86d952ca8b69eded, processorArchitecture=MSIL">
@@ -78,15 +78,15 @@
     <Compile Include="src\Exception\InvalidCredentialException.cs" />
     <Compile Include="src\Exception\OpenbusException.cs" />
     <Compile Include="src\FaultToleranceManager.cs" />
-    <Compile Include="src\Lease\Interceptors\CachedCredentialValidatorServerInterceptor.cs" />
-    <Compile Include="src\Lease\Interceptors\ClientInitializer.cs" />
-    <Compile Include="src\Lease\Interceptors\ClientInterceptor.cs" />
-    <Compile Include="src\Lease\Interceptors\CredentialValidationPolicy.cs" />
-    <Compile Include="src\Lease\Interceptors\CredentialValidatorServerInterceptor.cs" />
-    <Compile Include="src\Lease\Interceptors\FTClientInterceptor.cs" />
-    <Compile Include="src\Lease\Interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\Lease\Interceptors\ServerInitializer.cs" />
-    <Compile Include="src\Lease\Interceptors\ServerInterceptor.cs" />
+    <Compile Include="src\Interceptors\CachedCredentialValidatorServerInterceptor.cs" />
+    <Compile Include="src\Interceptors\ClientInitializer.cs" />
+    <Compile Include="src\Interceptors\ClientInterceptor.cs" />
+    <Compile Include="src\Interceptors\CredentialValidationPolicy.cs" />
+    <Compile Include="src\Interceptors\CredentialValidatorServerInterceptor.cs" />
+    <Compile Include="src\Interceptors\FTClientInterceptor.cs" />
+    <Compile Include="src\Interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\Interceptors\ServerInitializer.cs" />
+    <Compile Include="src\Interceptors\ServerInterceptor.cs" />
     <Compile Include="src\Lease\LeaseExpiredCallback.cs" />
     <Compile Include="src\Lease\LeaseRenewer.cs" />
     <Compile Include="src\Lease\RenewerTask.cs" />

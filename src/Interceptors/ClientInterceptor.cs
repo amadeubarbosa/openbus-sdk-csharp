@@ -1,11 +1,11 @@
 
 using omg.org.IOP;
-using OpenbusAPI.Logger;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using Tecgraf.Openbus.Logger;
 
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   /// <summary>
   /// Representa o interceptador cliente.

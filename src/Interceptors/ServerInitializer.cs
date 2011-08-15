@@ -1,7 +1,7 @@
 ﻿using omg.org.IOP;
-using OpenbusAPI.Logger;
+using Tecgraf.Openbus.Logger;
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   internal class ServerInitializer : omg.org.PortableInterceptor.ORBInitializer
   {

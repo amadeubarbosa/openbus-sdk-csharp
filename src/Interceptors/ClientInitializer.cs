@@ -1,8 +1,8 @@
 using omg.org.IOP;
-using OpenbusAPI.Logger;
+using Tecgraf.Openbus.Logger;
 
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   /// <summary>
   /// Classe responsável por inicializar o interceptador cliente.

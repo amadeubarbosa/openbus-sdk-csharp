@@ -3,9 +3,9 @@ using Ch.Elca.Iiop.CorbaObjRef;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
-using OpenbusAPI.Logger;
+using Tecgraf.Openbus.Logger;
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   internal class FTClientInterceptor : ClientInterceptor
   {

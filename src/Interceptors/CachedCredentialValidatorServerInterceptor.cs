@@ -2,11 +2,11 @@
 using System.Timers;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using OpenbusAPI.Logger;
-using OpenbusAPI.Utils;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using Tecgraf.Openbus.Logger;
+using Tecgraf.Openbus.Utils;
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   /// <summary>
   /// Implementa a política de validação de credenciais interceptadas em um servidor,

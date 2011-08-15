@@ -2,7 +2,7 @@ using System;
 using omg.org.IOP;
 
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   /// <summary>
   /// Implementa um interceptador.

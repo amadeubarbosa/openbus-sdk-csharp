@@ -1,10 +1,10 @@
 ﻿using System;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using OpenbusAPI.Logger;
 using tecgraf.openbus.core.v1_05.access_control_service;
+using Tecgraf.Openbus.Logger;
 
-namespace OpenbusAPI.Interceptors
+namespace Tecgraf.Openbus.Interceptors
 {
   internal class CredentialValidatorServerInterceptor : ServerRequestInterceptor
   {

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OpenbusAPI.Interceptors
+﻿
+namespace Tecgraf.Openbus.Interceptors
 {
   /// <summary>
   /// Define as políticas para a validação de credenciais interceptadas em um
