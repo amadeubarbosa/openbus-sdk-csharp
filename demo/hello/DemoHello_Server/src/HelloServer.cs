@@ -43,7 +43,7 @@ namespace Server
       String componentModel = Resources.ComponentModel;
       TextReader file = new StringReader(componentModel);
       XmlTextReader componentInformation = new XmlTextReader(file);
-      XMLComponentBuilder builder = new XMLComponentBuilder(componentInformation);
+      XmlComponentBuilder builder = new XmlComponentBuilder(componentInformation);
       ComponentContext component = builder.build();
 
       IRegistryService registryService =
