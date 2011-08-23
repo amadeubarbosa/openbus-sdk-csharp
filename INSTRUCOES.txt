@@ -1,0 +1,25 @@
+Para compilar o projeto é necessário:
+
+Definir a variável de ambiente IIOP_TOOLS apontando para o checkout de
+ "https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/trunk/iiopNet-1.9.0/idlCompiler".
+
+Também é necessário adicionar os seguintes artefatos em:
+
+|	Artefato		|		Destino		|	Encontrado													|
+|  IIOP.NET.dll		|  lib				|https://subversion.tecgraf.puc-rio.br/engdist/openbus/libs/trunk/iiopNet-1.9.0/lib/	|
+|  IDLs do Openbus	|  idl				|https://subversion.tecgraf.puc-rio.br/engdist/openbus/idl/trunk/src/				|
+|  Scs.Core.dll		|  lib				|Compilado pelo projeto SCS											|
+|  Scs.dll			|  lib				|Compilado pelo projeto SCS											|
+
+Comandos do Nmake:
+ * build 	--> Compila a IDL, os exemplos e o Projeto
+ * test		--> Executa os testes unitários do Projeto
+ * clean	--> Remove os arquivos gerados
+ * rebuild	--> Executa o comando 'clean' e 'build'
+ * all		--> Executa o comando 'build' e 'test'
+ * idl		--> Compila as IDLs dos exemplos e do Projeto
+ * dist		--> Gera um pacote o SDK
+ 
+ 
+ ** IMPORTANTE **
+  -- Antes de gerar o pacote é necessário verificar se os assemblies estão com a versão correta.
