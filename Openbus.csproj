@@ -36,7 +36,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>docs\Openbus.xml</DocumentationFile>
+    <DocumentationFile>doc\Openbus.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=737d7ebb1cf8d684, processorArchitecture=MSIL">

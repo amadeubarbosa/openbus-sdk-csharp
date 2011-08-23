@@ -1,13 +1,36 @@
 MSBUILD=msbuild /nologo
 BUILD=$(MSBUILD) /p:Configuration=Release /verbosity:minimal
 CLEAN=$(MSBUILD) /p:Configuration=Release /verbosity:minimal /target:Clean
-CLEAND=$(MSBUILD) /p:Configuration=Debug /verbosity:minimal /target:Clean
+_IDLCOMPILER="%IIOP_TOOLS%\IDLToCLSCompiler.exe"
+IDLCOMPILER="$(_IDLCOMPILER)"
 
-build: build-base build-examples
+VERSION=1.5.3
+
+build: idl build-base build-examples
 test: build run-tests
-clean: clean-base clean-example
+clean: clean-idl clean-idl-example clean-base clean-example
 rebuild: clean build
-dist: clean build-base run-dist
+all: build test
+idl: compile-idl compile-idl-example
+
+
+compile-idl:
+    cd lib\generated
+    $(IDLCOMPILER) -snk ..\..\Openbus.snk -asmVersion $(VERSION) -r:..\Scs.Core.dll \
+ Openbus.Idl ..\..\idl\access_control_service.idl ..\..\idl\registry_service.idl \
+ ..\..\idl\session_service.idl ..\..\idl\core.idl
+    cd ..\..
+
+compile-idl-example:
+    cd demo\delegate\lib\generated
+    $(IDLCOMPILER) -asmVersion $(VERSION) Openbus.Demo.Delegate.Idl-iiopnet \
+ ..\..\idl\delegate.idl
+    cd ..\..\..\..
+    cd demo\hello\lib\generated
+    $(IDLCOMPILER) -asmVersion $(VERSION) Openbus.Demo.Hello.Idl-iiopnet \
+ ..\..\idl\hello.idl
+    cd ..\..\..\..
+
 
 build-base:
     $(BUILD) OpenbusAPI.sln
@@ -20,35 +43,42 @@ build-examples:
     $(BUILD) DemoDelegate.sln
     cd ..\..
 
+
 run-tests:
-    test\Test_API\bin\Release\Test_API.exe
+    %OPENBUS_HOME%\libpath\c#\Test_API.exe
+
+
+clean-idl:
+    cd lib\generated
+    rm Openbus.Idl.dll
+    cd ..\..
+
+clean-idl-example:
+    cd demo\delegate
+    rm lib\generated\*.dll
+    cd ..
+    cd hello
+    rm lib\generated\*.dll
+    cd ..\..
 
 clean-base:
     $(CLEAN) OpenbusAPI.sln
 
 clean-example:
-    cd demo\hello
-    $(CLEAN) DemoHello.sln
-    $(CLEAND) DemoHello.sln
-    cd ..
-    cd delegate
+    cd demo\delegate
     $(CLEAN) DemoDelegate.sln
-    $(CLEAND) DemoDelegate.sln
+    cd ..
+    cd hello
+    $(CLEAN) DemoHello.sln
     cd ..\..
 
-run-dist:
-    if exist package rd /S /Q package
+
+dist:
+    if exist package rm -r package
     mkdir package
     mkdir package\doc
-    mkdir package\schema
-    copy doc\Scs.XML package\doc
-    copy doc\Openbus.XML package\doc
+    cp doc\Scs.XML package\doc
     xcopy demo\* package\demo /e /i /q
-    copy lib\SCS*.dll  package
-    copy lib\Openbus*.dll  package
-    copy lib\generated\*.dll package
-    copy lib\log4net.dll package
-    copy lib\IIOPChannel.dll package
-    copy lib\Resources\*.xsd package\schema
-    zip -r scs.zip package -q
-    rd /S /Q package
+    cp lib\*.dll lib\Resources\*.xsd lib\generated\*.dll package
+    zip -r scs.zip package\*
+
