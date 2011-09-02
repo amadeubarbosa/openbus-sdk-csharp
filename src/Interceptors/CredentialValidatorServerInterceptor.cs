@@ -48,7 +48,7 @@ namespace Tecgraf.Openbus.Interceptors
         Log.INTERCEPTORS.Fatal(String.Format(
           "Erro ao tentar validar a credencial {0}:{1}",
           interceptedCredential.owner, interceptedCredential.identifier), e);
-        throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
+        throw new NO_PERMISSION(10, CompletionStatus.Completed_No);
       }
 
       if (isValid) {
