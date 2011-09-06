@@ -1,16 +1,19 @@
 ﻿using System;
 using Ch.Elca.Iiop.Idl;
+using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v1_05.access_control_service;
-using Tecgraf.Openbus.Logger;
+
 
 namespace Tecgraf.Openbus.Interceptors
 {
   internal class ServerInterceptor : InterceptorImpl, ServerRequestInterceptor
   {
     #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(ServerInterceptor));
 
     /// <summary>
     ///O slot para transporte da credencial.
@@ -42,7 +45,7 @@ namespace Tecgraf.Openbus.Interceptors
     public void receive_request_service_contexts(ServerRequestInfo ri) {
 
       String interceptedOperation = ri.operation;
-      Log.INTERCEPTORS.Info(String.Format(
+      logger.Info(String.Format(
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
       Openbus openbus = Openbus.GetInstance();
@@ -51,13 +54,13 @@ namespace Tecgraf.Openbus.Interceptors
         serviceContext = ri.get_request_service_context(CONTEXT_ID);
       }
       catch (BAD_PARAM) {
-        Log.INTERCEPTORS.Warn(String.Format(
+        logger.Warn(String.Format(
           "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
         return;
       }
 
       if (serviceContext.context_data == null) {
-        Log.INTERCEPTORS.Fatal(String.Format(
+        logger.Fatal(String.Format(
           "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
         return;
       }
@@ -78,7 +81,7 @@ namespace Tecgraf.Openbus.Interceptors
         ri.set_slot(openbusRequestCredentialSlot, requestCredential);
       }
       catch (System.Exception e) {
-        Log.INTERCEPTORS.Fatal("Erro na validação da credencial", e);
+        logger.Fatal("Erro na validação da credencial", e);
       }
     }
 

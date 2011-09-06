@@ -1,11 +1,14 @@
-﻿using omg.org.IOP;
-using Tecgraf.Openbus.Logger;
+﻿using log4net;
+using omg.org.IOP;
+
 
 namespace Tecgraf.Openbus.Interceptors
 {
   internal class ServerInitializer : omg.org.PortableInterceptor.ORBInitializer
   {
     #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(ServerInitializer));
 
     private CredentialValidationPolicy policy;
 
@@ -44,11 +47,11 @@ namespace Tecgraf.Openbus.Interceptors
         case CredentialValidationPolicy.NONE:
           break;
         default:
-          Log.INTERCEPTORS.Error(
+          logger.Error(
               "Não foi escolhida nenhuma política para a validação de credenciais obtidas pelo interceptador servidor.");
           break;
       }
-      Log.INTERCEPTORS.Info("O interceptador servidor foi registrado.");
+      logger.Info("O interceptador servidor foi registrado.");
     }
 
     #endregion

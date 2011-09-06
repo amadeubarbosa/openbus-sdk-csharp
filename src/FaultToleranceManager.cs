@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
+using log4net;
 using Tecgraf.Openbus.Exception;
-using Tecgraf.Openbus.Logger;
+
 
 namespace Tecgraf.Openbus
 {
@@ -12,6 +13,8 @@ namespace Tecgraf.Openbus
   class FaultToleranceManager
   {
     #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(FaultToleranceManager));
 
     /// <summary>
     /// A Lista de endereços dos Serviços de Controle de Acesso.
@@ -79,7 +82,7 @@ namespace Tecgraf.Openbus
         xmlDocument.Load(ftConfigPath);
       }
       catch (FileNotFoundException) {
-        Log.FAULT_TOLERANCE.Fatal("O arquivo '" + ftConfigPath + "' que" +
+        logger.Fatal("O arquivo '" + ftConfigPath + "' que" +
           "configura o tolerância a falha não foi encontrado ou não existe");
         throw new FileNotFoundException();
       }
@@ -128,7 +131,7 @@ namespace Tecgraf.Openbus
           port = Convert.ToInt32(portValue);
         }
         catch (FormatException) {
-          Log.FAULT_TOLERANCE.Error("Porta inválida para o host '" + host + "'");
+          logger.Error("Porta inválida para o host '" + host + "'");
           continue;
         }
 
@@ -137,7 +140,7 @@ namespace Tecgraf.Openbus
           openbus.FetchACS();
         }
         catch (ACSUnavailableException) {
-          Log.FAULT_TOLERANCE.Error("Réplica '" + host + ":" + port +
+          logger.Error("Réplica '" + host + ":" + port +
               " não se encontra disponível");
           continue;
         }

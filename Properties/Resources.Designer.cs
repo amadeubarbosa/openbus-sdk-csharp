@@ -70,18 +70,18 @@ namespace Tecgraf.Openbus.Properties {
         ///  &lt;/configSections&gt;
         ///
         ///  &lt;log4net&gt;
-        ///    &lt;appender name=&quot;services&quot; type=&quot;log4net.Appender.ColoredConsoleAppender&quot;&gt;
+        ///    &lt;appender name=&quot;fileAppender&quot; type=&quot;log4net.Appender.ColoredConsoleAppender&quot;&gt;
         ///      &lt;mapping&gt;
         ///        &lt;level value=&quot;ERROR&quot; /&gt;
         ///        &lt;foreColor value=&quot;White&quot; /&gt;
         ///        &lt;backColor value=&quot;Red, HighIntensity&quot; /&gt;
         ///      &lt;/mapping&gt;
         ///      &lt;layout type=&quot;log4net.Layout.PatternLayout&quot;&gt;
-        ///        &lt;c [rest of string was truncated]&quot;;.
+        ///       [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string LogConfigFile {
+        internal static string Openbus {
             get {
-                return ResourceManager.GetString("LogConfigFile", resourceCulture);
+                return ResourceManager.GetString("Openbus", resourceCulture);
             }
         }
     }

@@ -1,8 +1,7 @@
-
+using log4net;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v1_05.access_control_service;
-using Tecgraf.Openbus.Logger;
 
 
 namespace Tecgraf.Openbus.Interceptors
@@ -13,6 +12,12 @@ namespace Tecgraf.Openbus.Interceptors
   /// </summary>
   internal class ClientInterceptor : InterceptorImpl, ClientRequestInterceptor
   {
+    #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(ClientInterceptor));
+
+    #endregion
+
     #region Contructor
 
     /// <summary>
@@ -32,24 +37,24 @@ namespace Tecgraf.Openbus.Interceptors
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
-      Log.INTERCEPTORS.Debug("executando método: " + ri.operation);
+      logger.Debug("executando método: " + ri.operation);
 
       /* Verifica se existe uma credencial para envio */
       Openbus openbus = Openbus.GetInstance();
       Credential credential = openbus.Credential;
       if (string.IsNullOrEmpty(credential.identifier)) {
-        Log.INTERCEPTORS.Info("Sem Credencial!");
+        logger.Info("Sem Credencial!");
         return;
       }
 
-      Log.INTERCEPTORS.Debug("Tem Credencial");
+      logger.Debug("Tem Credencial");
 
       byte[] value = null;
       try {
         value = this.Codec.encode_value(credential);
       }
       catch {
-        Log.INTERCEPTORS.Fatal("Erro na codificação da credencial.");
+        logger.Fatal("Erro na codificação da credencial.");
       }
       ServiceContext serviceContext = new ServiceContext(CONTEXT_ID, value);
       ri.add_request_service_context(serviceContext, false);

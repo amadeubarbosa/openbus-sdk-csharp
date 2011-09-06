@@ -1,5 +1,5 @@
+using log4net;
 using omg.org.IOP;
-using Tecgraf.Openbus.Logger;
 
 
 namespace Tecgraf.Openbus.Interceptors
@@ -11,6 +11,8 @@ namespace Tecgraf.Openbus.Interceptors
   internal class ClientInitializer : omg.org.PortableInterceptor.ORBInitializer
   {
     #region Field
+
+    private static ILog logger = LogManager.GetLogger(typeof(ClientInitializer));
 
     /// <summary>
     /// Sinaliza se o interceptador é tolerante a falha.
@@ -47,10 +49,10 @@ namespace Tecgraf.Openbus.Interceptors
           info.add_client_request_interceptor(new ClientInterceptor(codec));
         }
 
-        Log.INTERCEPTORS.Info("Registrei interceptador cliente.");
+        logger.Info("Registrei interceptador cliente.");
       }
       catch (System.Exception e) {
-        Log.INTERCEPTORS.Error("Erro no registro do interceptador cliente", e);
+        logger.Error("Erro no registro do interceptador cliente", e);
       }
     }
 

@@ -1,9 +1,9 @@
 using System;
 using System.Text;
 using System.Threading;
+using log4net;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v1_05.access_control_service;
-using Tecgraf.Openbus.Logger;
 
 
 namespace Tecgraf.Openbus.Lease
@@ -15,6 +15,8 @@ namespace Tecgraf.Openbus.Lease
   class RenewerTask
   {
     #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(RenewerTask));
 
     /// <summary>
     /// A credencial.
@@ -86,7 +88,7 @@ namespace Tecgraf.Openbus.Lease
 
             if (!ok) {
               this.mustContinue = false;
-              Log.LEASE.Warn("Falha na renovação da credencial.");
+              logger.Warn("Falha na renovação da credencial.");
               if (this.expiredCallback != null)
                 this.expiredCallback.Expired();
             }
@@ -95,11 +97,11 @@ namespace Tecgraf.Openbus.Lease
               msg.Append(DateTime.Now);
               msg.Append(" - Lease renovado. Próxima renovação em ");
               msg.Append(newLease + " segundos.");
-              Log.LEASE.Debug(msg.ToString());
+              logger.Debug(msg.ToString());
             }
           }
           catch (AbstractCORBASystemException e) {
-            Log.LEASE.Error("Erro ao tentar renovar o lease", e);
+            logger.Error("Erro ao tentar renovar o lease", e);
           }
 
           if (this.mustContinue) {
@@ -108,7 +110,7 @@ namespace Tecgraf.Openbus.Lease
         }
       }
       catch (ThreadInterruptedException) {
-        Log.LEASE.Debug("Lease Interrompido");
+        logger.Debug("Lease Interrompido");
       }
     }
 

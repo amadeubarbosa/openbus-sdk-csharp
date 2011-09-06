@@ -1,14 +1,20 @@
 ﻿using System;
 using Ch.Elca.Iiop.CorbaObjRef;
+using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
-using Tecgraf.Openbus.Logger;
+
 
 namespace Tecgraf.Openbus.Interceptors
 {
   internal class FTClientInterceptor : ClientInterceptor
   {
+    #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(FTClientInterceptor));
+
+    #endregion
 
     #region Contructor
 
@@ -33,7 +39,7 @@ namespace Tecgraf.Openbus.Interceptors
         ri.received_exception_id.Equals("IDL:omg.org/CORBA/COMM_FAILURE:1.0");
 
       if (!fetch) {
-        Log.INTERCEPTORS.Fatal(ri.received_exception_id);
+        logger.Fatal(ri.received_exception_id);
         return;
       }
 
@@ -41,7 +47,7 @@ namespace Tecgraf.Openbus.Interceptors
       FaultToleranceManager ftManager = openbus.GetFaultToleranceManager();
       String key = GetObjectKey(ri);
 
-      Log.INTERCEPTORS.Fatal(key);
+      logger.Fatal(key);
 
       bool acsError =
       key.Equals(Openbus.OPENBUS_KEY) ||
@@ -52,7 +58,7 @@ namespace Tecgraf.Openbus.Interceptors
       if (acsError) {
         bool ok = ftManager.UpdateOpenbus(openbus);
         if (!ok) {
-          Log.INTERCEPTORS.Fatal("Não foi possível se reconectar ao barramento");
+          logger.Fatal("Não foi possível se reconectar ao barramento");
           return;
         }
 

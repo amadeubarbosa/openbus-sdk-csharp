@@ -94,9 +94,6 @@
     <Compile Include="src\Lease\LeaseExpiredCallback.cs" />
     <Compile Include="src\Lease\LeaseRenewer.cs" />
     <Compile Include="src\Lease\RenewerTask.cs" />
-    <Compile Include="src\Logger\ApacheLog.cs" />
-    <Compile Include="src\Logger\ILogger.cs" />
-    <Compile Include="src\Logger\Log.cs" />
     <Compile Include="src\Openbus.cs" />
     <Compile Include="src\Security\Crypto.cs" />
     <Compile Include="src\Security\RSAPKCS8KeyFormatter.cs" />
@@ -114,7 +111,9 @@
     <None Include="Resources\ftConfigSchema.xsd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Log.config" />
+    <None Include="Resources\Openbus.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

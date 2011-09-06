@@ -1,9 +1,9 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using System.Xml;
-using Tecgraf.Openbus.Logger;
+using log4net;
+
 
 namespace Tecgraf.Openbus.Security
 {
@@ -12,6 +12,12 @@ namespace Tecgraf.Openbus.Security
   /// </summary>
   public static class Crypto
   {
+    #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(Crypto));
+
+    #endregion
+
     #region Members
 
     /// <summary>
@@ -26,7 +32,7 @@ namespace Tecgraf.Openbus.Security
 
       RSACryptoServiceProvider rsa = RSAPKCS8KeyFormatter.DecodePEMKey(pemstr);
       if (rsa == null)
-        Log.CRYPTO.Fatal("Não foi possível gerar um RSACryptoServiceProvider");
+        logger.Fatal("Não foi possível gerar um RSACryptoServiceProvider");
 
       return rsa;
     }

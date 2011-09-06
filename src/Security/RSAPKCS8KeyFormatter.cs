@@ -1,8 +1,9 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.IO;
-using Tecgraf.Openbus.Logger;
+using log4net;
+
 
 namespace Tecgraf.Openbus.Security
 {
@@ -12,6 +13,11 @@ namespace Tecgraf.Openbus.Security
   /// </summary>
   static class RSAPKCS8KeyFormatter
   {
+    #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(RSAPKCS8KeyFormatter));
+
+    #endregion
 
     #region Consts
 
@@ -37,7 +43,7 @@ namespace Tecgraf.Openbus.Security
     #endregion
 
     #region Members
-    
+
     /// <summary>
     /// Decodifica a chave RSA PKCS#8.
     /// </summary>
@@ -45,21 +51,21 @@ namespace Tecgraf.Openbus.Security
     /// <returns>Uma instância de RSACryptoServiceProvider.</returns>
     public static RSACryptoServiceProvider DecodePEMKey(String pemText) {
       if (!pemText.StartsWith(pemHeader) || !pemText.EndsWith(pemFooter)) {
-        Log.CRYPTO.Fatal("Arquivo em formato errado.");
+        logger.Fatal("Arquivo em formato errado.");
         return null;
       }
 
-      Log.CRYPTO.Debug("Decodificando e analisando como PEM PKCS #8 PrivateKeyInfo");
+      logger.Debug("Decodificando e analisando como PEM PKCS #8 PrivateKeyInfo");
       byte[] pkcs8privatekey = DecodePkcs8PrivateKey(pemText);
       if (pkcs8privatekey == null) {
-        Log.CRYPTO.Fatal("Erro ao gerar o binário da chave privada");
+        logger.Fatal("Erro ao gerar o binário da chave privada");
         return null;
       }
 
-      Log.CRYPTO.Debug("Criando a instancia de RSACryptoServiceProvider");
+      logger.Debug("Criando a instancia de RSACryptoServiceProvider");
       RSACryptoServiceProvider rsa = DecodePrivateKeyInfo(pkcs8privatekey);
       if (rsa == null) {
-        Log.CRYPTO.Fatal("Erro ao decodificar a chave privada");
+        logger.Fatal("Erro ao decodificar a chave privada");
         return null;
       }
 
@@ -76,7 +82,7 @@ namespace Tecgraf.Openbus.Security
       if (rsa.KeySize != KEY_LENGTH) {
         String errorMessage =
           String.Format("Chave não possui tamanho de {0} bits", KEY_LENGTH);
-        Log.CRYPTO.Fatal(errorMessage);
+        logger.Fatal(errorMessage);
         return null;
       }
 
@@ -142,11 +148,11 @@ namespace Tecgraf.Openbus.Security
         if (twobytes != 0x0001)
           return null;
 
-        Log.CRYPTO.Debug("Lendo a sequência OID.");
+        logger.Debug("Lendo a sequência OID.");
         byte[] seq = binFile.ReadBytes(15);
 
         if (!CompareByteArrays(seq, SeqOID)) {
-          Log.CRYPTO.Fatal("A sequenceia OID não está correta.");
+          logger.Fatal("A sequenceia OID não está correta.");
           return null;
         }
 
@@ -160,13 +166,13 @@ namespace Tecgraf.Openbus.Security
         else if (bt == 0x82)
           binFile.ReadUInt16();
 
-        Log.CRYPTO.Debug("Lendo a chave propriamente dita.");
+        logger.Debug("Lendo a chave propriamente dita.");
         byte[] rsaPrivateKey = binFile.ReadBytes((int)(stream.Length - stream.Position));
         RSACryptoServiceProvider rsacsp = DecodeRSAPrivateKey(rsaPrivateKey);
         return rsacsp;
       }
       catch (System.Exception e) {
-        Log.CRYPTO.Fatal("Erro ao decodificar a chave.", e);
+        logger.Fatal("Erro ao decodificar a chave.", e);
         return null;
       }
       finally {
@@ -225,7 +231,7 @@ namespace Tecgraf.Openbus.Security
         if (bt != 0x00)
           return null;
 
-        Log.CRYPTO.Debug("Criando a instancia de RSACryptoServiceProvider e inicializando-a");
+        logger.Debug("Criando a instancia de RSACryptoServiceProvider e inicializando-a");
         RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
         RSAParameters RSAparams = new RSAParameters();
 

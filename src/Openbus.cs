@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
+using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
 using scs.core;
@@ -15,7 +16,6 @@ using tecgraf.openbus.core.v1_05.registry_service;
 using Tecgraf.Openbus.Exception;
 using Tecgraf.Openbus.Interceptors;
 using Tecgraf.Openbus.Lease;
-using Tecgraf.Openbus.Logger;
 using Tecgraf.Openbus.Security;
 
 
@@ -27,6 +27,8 @@ namespace Tecgraf.Openbus
   public class Openbus
   {
     #region Fields
+
+    private static ILog logger = LogManager.GetLogger(typeof(Openbus));
 
     /// <summary>
     /// O endereço do serviço de controle de acesso.
@@ -224,7 +226,7 @@ namespace Tecgraf.Openbus
           IComponent;
 
       if (this.acsComponent == null) {
-        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
+        logger.Error("O serviço de controle de acesso não foi encontrado");
         throw new ACSUnavailableException();
       }
 
@@ -235,12 +237,12 @@ namespace Tecgraf.Openbus
         acsObjRef = this.acsComponent.getFacet(acsID);
       }
       catch (AbstractCORBASystemException e) {
-        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado", e);
+        logger.Error("O serviço de controle de acesso não foi encontrado", e);
         throw new ACSUnavailableException();
       }
 
       if (acsObjRef == null) {
-        Log.COMMON.Error("O serviço de controle de acesso não foi encontrado");
+        logger.Error("O serviço de controle de acesso não foi encontrado");
         return;
       }
       this.acs = acsObjRef as IAccessControlService;
@@ -248,7 +250,7 @@ namespace Tecgraf.Openbus
       String leaseProviderID = Repository.GetRepositoryID(typeof(ILeaseProvider));
       MarshalByRefObject lpObjRef = this.acsComponent.getFacet(leaseProviderID);
       if (lpObjRef == null) {
-        Log.COMMON.Error(
+        logger.Error(
           "O serviço de controle de acesso não possui a faceta ILeaseProvider");
         return;
       }
@@ -295,7 +297,7 @@ namespace Tecgraf.Openbus
 
     #endregion
 
-    #region Tecgraf.Openbus Implemented
+    #region Public Members
 
     /// <summary>
     /// Inicializa o Orb.
@@ -329,7 +331,7 @@ namespace Tecgraf.Openbus
     /// incorretos</exception>
     /// <exception cref="System.Security.SecurityException">Caso não possua
     /// permissão para configurar um canal.</exception>
-    public void Init(String host, int port, String ftConfigPath,
+    internal void Init(String host, int port, String ftConfigPath,
         CredentialValidationPolicy policy, Boolean hasServant) {
       if (String.IsNullOrEmpty(ftConfigPath))
         throw new ArgumentException(
@@ -410,7 +412,7 @@ namespace Tecgraf.Openbus
         return this.registryService;
 
       if (this.acsComponent == null) {
-        Log.COMMON.Fatal(
+        logger.Fatal(
           "O IComponent do AccessControlService não está disponível.");
         return null;
       }
@@ -418,7 +420,7 @@ namespace Tecgraf.Openbus
       String receptaclesID = Repository.GetRepositoryID(typeof(IReceptacles));
       MarshalByRefObject rgsObjRef = this.acsComponent.getFacet(receptaclesID);
       if (rgsObjRef == null) {
-        Log.COMMON.Fatal("O Receptáculo " + receptaclesID + " está nulo.");
+        logger.Fatal("O Receptáculo " + receptaclesID + " está nulo.");
         return null;
       }
 
@@ -428,19 +430,19 @@ namespace Tecgraf.Openbus
         connections = receptacles.getConnections(REGISTRY_SERVICE_RECEPTACLE_NAME);
       }
       catch (InvalidName e) {
-        Log.COMMON.Error("Erro ao obter o RegistryServiceReceptacle.", e);
+        logger.Error("Erro ao obter o RegistryServiceReceptacle.", e);
       }
       if (connections == null || connections.Length == 0) {
-        Log.COMMON.Fatal("O Serviço de Registro não está no ar.");
+        logger.Fatal("O Serviço de Registro não está no ar.");
         return null;
       }
       if (connections.Length != 1)
-        Log.COMMON.Debug("Existe mais de um Serviço de Registro no ar.");
+        logger.Debug("Existe mais de um Serviço de Registro no ar.");
 
       MarshalByRefObject objRef = connections[0].objref;
       IComponent registryComponent = objRef as IComponent;
       if (registryComponent == null) {
-        Log.COMMON.Warn("Erro ao acessar a faceta 'IComponent' do Serviço de Registro");
+        logger.Warn("Erro ao acessar a faceta 'IComponent' do Serviço de Registro");
         return null;
       }
 
@@ -463,7 +465,7 @@ namespace Tecgraf.Openbus
         requestCredentialValue = pic.get_slot(this.requestCredentialSlot);
       }
       catch (InvalidSlot e) {
-        Log.COMMON.Fatal("Erro ao obter a credencial interceptada.", e);
+        logger.Fatal("Erro ao obter a credencial interceptada.", e);
         return new Credential();
       }
       if (requestCredentialValue == null)
@@ -505,7 +507,7 @@ namespace Tecgraf.Openbus
         new OpenbusExpiredCallback());
       this.leaseRenewer.Start();
 
-      Log.COMMON.Debug("Thread de renovação de lease está ativa. Lease = "
+      logger.Debug("Thread de renovação de lease está ativa. Lease = "
         + leaseTime + " segundos.");
 
       this.registryService = this.GetRegistryService();
@@ -565,7 +567,7 @@ namespace Tecgraf.Openbus
           new OpenbusExpiredCallback());
       this.leaseRenewer.Start();
 
-      Log.COMMON.Info("Thread de renovação de lease está ativa. Lease = "
+      logger.Info("Thread de renovação de lease está ativa. Lease = "
           + leaseTime + " segundos.");
       this.registryService = GetRegistryService();
       return this.registryService;
@@ -638,7 +640,7 @@ namespace Tecgraf.Openbus
     private void SetInterceptable(String iface, String method,
       bool interceptable) {
       if ((String.IsNullOrEmpty(iface)) || (String.IsNullOrEmpty(method))) {
-        Log.COMMON.Error("Os parâmetros não podem ser vazios ou nulos.");
+        logger.Error("Os parâmetros não podem ser vazios ou nulos.");
         return;
       }
       List<String> methods = null;
@@ -717,7 +719,7 @@ namespace Tecgraf.Openbus
     /// Informa aos observadores que o <i>lease</i> expirou.
     /// </summary>
     internal void LeaseExpired() {
-      Log.LEASE.Debug("Atualizando estado do Openbus");
+      logger.Debug("Atualizando estado do Openbus");
       Reset();
       if (this.leaseExpiredCb != null) {
         this.leaseExpiredCb.Expired();
