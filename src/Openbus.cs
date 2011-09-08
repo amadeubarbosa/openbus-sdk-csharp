@@ -511,6 +511,8 @@ namespace Tecgraf.Openbus
         + leaseTime + " segundos.");
 
       this.registryService = this.GetRegistryService();
+      logger.Info(String.Format(
+          "SDK conectado com o barramento: {0}:{1} e login '{2}'", host, port, user));
       return this.registryService;
     }
 
@@ -570,6 +572,10 @@ namespace Tecgraf.Openbus
       logger.Info("Thread de renovação de lease está ativa. Lease = "
           + leaseTime + " segundos.");
       this.registryService = GetRegistryService();
+
+      logger.Info(String.Format(
+          "SDK conectado com o barramento '{0}:{1}' e entidade '{2}' ", host,
+          port, name));
       return this.registryService;
     }
 
@@ -597,6 +603,9 @@ namespace Tecgraf.Openbus
 
       this.credential = credential;
       this.registryService = this.GetRegistryService();
+
+      logger.Info(String.Format(
+          "SDK conectado com o barramento '{0}:{1}'", host, port));
       return this.registryService;
     }
 

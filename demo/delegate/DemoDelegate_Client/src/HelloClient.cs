@@ -4,12 +4,15 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Client.Properties;
 using demoidl.demoDelegate;
-using Tecgraf.Openbus;
-using Tecgraf.Openbus.Logger;
-using Tecgraf.Openbus.Security;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Layout;
 using scs.core;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v1_05.registry_service;
+using Tecgraf.Openbus;
+using Tecgraf.Openbus.Security;
 
 namespace Client
 {
@@ -26,7 +29,12 @@ namespace Client
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      Log.setLogsLevel(Level.WARN);
+      ConsoleAppender appender = new ConsoleAppender()
+      {
+        Threshold = Level.Info,
+        Layout = new SimpleLayout(),
+      };
+      BasicConfigurator.Configure(appender);
 
       openbus = Openbus.GetInstance();
       openbus.Init(hostName, hostPort);

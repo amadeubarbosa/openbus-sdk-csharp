@@ -3,12 +3,12 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
+using log4net.Config;
 using scs.core;
 using Scs.Core;
 using Scs.Core.Builder;
 using Server.Properties;
 using tecgraf.openbus.core.v1_05.registry_service;
-using Tecgraf.Openbus.Logger;
 using Tecgraf.Openbus;
 using Tecgraf.Openbus.Security;
 
@@ -27,7 +27,8 @@ namespace Server
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      Log.setLogsLevel(Level.INFO);
+      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
+      XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       Openbus openbus = Openbus.GetInstance();
       openbus.Init(hostName, hostPort);
