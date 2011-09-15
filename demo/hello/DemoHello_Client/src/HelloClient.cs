@@ -1,10 +1,13 @@
 using System;
 using Client.Properties;
 using demoidl.hello;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Layout;
 using scs.core;
 using tecgraf.openbus.core.v1_05.registry_service;
 using Tecgraf.Openbus;
-using Tecgraf.Openbus.Logger;
 
 namespace DemoHello_Client
 {
@@ -13,7 +16,6 @@ namespace DemoHello_Client
   /// </summary>
   class HelloClient
   {
-
     private static Openbus openbus;
 
     static void Main(string[] args) {
@@ -22,7 +24,12 @@ namespace DemoHello_Client
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      Log.setLogsLevel(Level.WARN);
+      ConsoleAppender appender = new ConsoleAppender()
+      {
+        Threshold = Level.Info,
+        Layout = new SimpleLayout(),
+      };
+      BasicConfigurator.Configure(appender);
 
       openbus = Openbus.GetInstance();
       openbus.Init(hostName, hostPort);
