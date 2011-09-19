@@ -88,6 +88,8 @@ namespace Test
     [TestCleanup]
     public void AfterEachTest() {
       Openbus openbus = Openbus.GetInstance();
+      try { openbus.Disconnect(); }
+      catch (Exception) { }
       openbus.Destroy();
     }
 
@@ -171,10 +173,7 @@ namespace Test
       IRegistryService registryService =
         openbus.Connect(entityName, privateKey, acsCertificate);
 
-
       Assert.IsNotNull(registryService);
-
-
       Assert.IsTrue(openbus.Disconnect());
     }
 
@@ -352,7 +351,7 @@ namespace Test
       Assert.IsTrue(openbus.Disconnect());
       Assert.IsNull(openbus.GetRegistryService());
     }
-    
+
     #endregion
 
     #region Private Classes

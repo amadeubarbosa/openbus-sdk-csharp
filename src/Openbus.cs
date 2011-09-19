@@ -615,7 +615,6 @@ namespace Tecgraf.Openbus
     /// <returns><code>true</code> caso a conexão seja desfeita, ou 
     /// <code>false</code> se nenhuma conexão estiver ativa. </returns>
     public bool Disconnect() {
-      bool status = false;
       if (String.IsNullOrEmpty(this.credential.identifier))
         return false;
 
@@ -623,7 +622,7 @@ namespace Tecgraf.Openbus
         this.leaseRenewer.Finish();
         this.leaseRenewer = null;
       }
-      status = this.acs.logout(this.credential);
+      bool status = this.acs.logout(this.credential);
       if (status)
         Reset();
 

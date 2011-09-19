@@ -3,6 +3,8 @@ BUILD=$(MSBUILD) /p:Configuration=Release /verbosity:minimal
 CLEAN=$(MSBUILD) /p:Configuration=Release /verbosity:minimal /target:Clean
 _IDLCOMPILER="%IIOP_TOOLS%\IDLToCLSCompiler.exe"
 IDLCOMPILER="$(_IDLCOMPILER)"
+_TEST="%VS90COMNTOOLS%..\IDE\MSTest.exe"
+TEST="$(_TEST)" /nologo /noresults
 
 VERSION=1.5.3
 
@@ -33,7 +35,7 @@ compile-idl-example:
 
 
 build-base:
-    $(BUILD) OpenbusAPI.sln
+    $(BUILD) Openbus.sln
 
 build-examples:
     cd demo\hello
@@ -45,7 +47,10 @@ build-examples:
 
 
 run-tests:
-    %OPENBUS_HOME%\libpath\c#\Test_API.exe
+    cd Test\bin\Release
+    $(TEST) /testmetadata:..\..\..\Openbus.vsmdi /testlist:FastTests 
+    $(TEST) /testmetadata:..\..\..\Openbus.vsmdi /testlist:SlowTests 
+    cd ..\..\..
 
 
 clean-idl:
