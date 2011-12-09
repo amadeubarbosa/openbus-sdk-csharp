@@ -1,14 +1,14 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Openbus", "Openbus.csproj", "{F7F4E7D6-0952-43B7-9468-A211E5153A15}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{6CF935B3-7855-41C2-BA16-5DF82AB43551}"
-EndProject
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A46417A3-E1C1-42F7-BCCB-F52BB5B163FB}"
 	ProjectSection(SolutionItems) = preProject
 		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
 		Openbus.vsmdi = Openbus.vsmdi
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Openbus", "Openbus.csproj", "{F7F4E7D6-0952-43B7-9468-A211E5153A15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{6CF935B3-7855-41C2-BA16-5DF82AB43551}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
