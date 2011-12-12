@@ -15,7 +15,7 @@
       <Value Profile="(Default)">2089</Value>
     </Setting>
     <Setting Name="logFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">..\..\..\..\..\lib\Resources\Openbus.config</Value>
+      <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">Teste.key</Value>

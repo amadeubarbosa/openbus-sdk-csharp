@@ -98,7 +98,9 @@
     <Compile Include="src\HelloClient.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\DemoConfig.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>DemoConfig.Designer.cs</LastGenOutput>
@@ -121,6 +123,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
