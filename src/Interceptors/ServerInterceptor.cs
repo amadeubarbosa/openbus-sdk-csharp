@@ -20,6 +20,9 @@ namespace Tecgraf.Openbus.Interceptors
     /// </summary>
     private int credentialSlot;
 
+    private String[] corbaObjMethods = new String[] {"_interface", "_is_a", 
+      "_non_existent", "_repository_id", "_component", "_domain_managers"};
+
     #endregion
 
     #region Constructors
@@ -59,10 +62,22 @@ namespace Tecgraf.Openbus.Interceptors
         return;
       }
 
-      if (serviceContext.context_data == null) {
-        logger.Fatal(String.Format(
-          "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
-        return;
+      bool isCorbaObjMethod = false;
+      foreach (String s in corbaObjMethods) {
+        if (s.Equals(interceptedOperation)) {
+          isCorbaObjMethod = true;
+          logger.Info(String.Format("A operação '{0}' é da interface CORBA::OBject e portanto não precisa de credencial.", interceptedOperation));
+          break;
+        }
+      }
+
+      if (!isCorbaObjMethod) {
+        if (serviceContext.context_data == null) {
+          logger.Fatal(String.Format(
+            "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
+          return;
+        }
+        logger.Info(String.Format("A operação '{0}' possui credencial.", interceptedOperation));
       }
 
       try {
