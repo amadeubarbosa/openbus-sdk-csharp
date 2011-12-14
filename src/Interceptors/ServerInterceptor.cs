@@ -17,6 +17,11 @@ namespace OpenbusAPI.Interceptors
     /// </summary>
     private int credentialSlot;
 
+    /// <summary>
+    ///Métodos da interface CORBA::Object que não precisam de credencial.
+    /// </summary>
+    private String[] corbaObjMethods = new String[] {"_interface", "_is_a",
+      "_non_existent", "_repository_id", "_component", "_domain_managers"};
     #endregion
 
     #region Constructors
@@ -46,6 +51,14 @@ namespace OpenbusAPI.Interceptors
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
       Openbus openbus = Openbus.GetInstance();
+
+      foreach (String s in corbaObjMethods) {
+        if (s.Equals(interceptedOperation)) {
+          Log.INTERCEPTORS.Info(String.Format("A operação '{0}' é da interface CORBA::OBject e portanto não precisa de credencial.", interceptedOperation));
+          return;
+        }
+      }
+
       ServiceContext serviceContext;
       try {
         serviceContext = ri.get_request_service_context(CONTEXT_ID);
@@ -61,6 +74,7 @@ namespace OpenbusAPI.Interceptors
           "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
         return;
       }
+      Log.INTERCEPTORS.Info(String.Format("A operação '{0}' possui credencial.", interceptedOperation));
 
       try {
         OrbServices orb = OrbServices.GetSingleton();
