@@ -43,13 +43,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(OPENBUS_HOME)\libpath\c#\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus-idl-iiopNet, Version=1.6.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(OPENBUS_HOME)\libpath\c#\Openbus-idl-iiopNet.dll</HintPath>
-    </Reference>
     <Reference Include="Openbus.Demo.Hello.Idl-iiopnet, Version=1.6.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>&gt;$(OPENBUS_HOME)\libpath\c#\Openbus.Demo.Hello.Idl-iiopnet.dll</HintPath>
+    </Reference>
+    <Reference Include="Openbus.Idl, Version=1.5.3.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\Openbus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenbusAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -86,6 +86,7 @@
     <Compile Include="src\HelloServer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="Properties\DemoConfig.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>DemoConfig.Designer.cs</LastGenOutput>
