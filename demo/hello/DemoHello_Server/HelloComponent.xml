@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<scs:component xmlns:scs="tecgraf.scs.core"
+           xmlns:xi="http://www.w3.org/2001/XMLSchema-instance">
+  <id>
+    <name>Hello</name>
+    <version>1.0.0</version>
+    <platformSpec>.Net FrameWork 3.5</platformSpec>
+  </id>
+  <facets>
+    <facet>
+      <name>IHello</name>
+      <interfaceName>IDL:demoidl/hello/IHello:1.0</interfaceName>
+      <facetImpl assembly="DemoHello.Server">Server.HelloImpl</facetImpl>
+    </facet>
+  </facets>
+</scs:component>
