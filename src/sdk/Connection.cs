@@ -37,23 +37,15 @@ namespace tecgraf.openbus.sdk {
     /// do barramento que impediu o estabelecimento da conexão.</exception>
     void LoginByCertificate(String entity, Byte[] privateKey);
      
-    /// <summary>
-    /// Efetua login no barramento como uma entidade usando informações de
-    /// login compartilhada de outra conexão.
-    /// </summary>
-    /// <param name="encodedlogin"> Dados de login codificados compatilhado com outra
-    /// conexão estabelecida previamente.</param>
-    /// <exception cref=" CorruptedLogin"> Os dados codificados estão corrompidos.</exception>
-    /// <exception cref=" InvalidLogin"> O login codificado não é válido no barramento.</exception>
-    /// <exception cref=" AlreadyLoggedIn"> A conexão já está logada.</exception>
-    /// <exception cref=" ServiceFailure"> Ocorreu uma falha interna nos serviços do
-    /// barramento que impediu o estabelecimento da conexão.</exception>
-    void ShareLogin(Byte[] encodedlogin);
-     
     /*************************************************************************
      * GERÊNCIA DO LOGIN *****************************************************
      *************************************************************************/
-     
+
+    /// <summary>
+    /// Informa se a conexão está logada em um dado momento.
+    /// </summary>
+    bool IsLoggedIn();
+
     /// <summary>
     /// Efetua logout no barramento. Retorna verdadeiro se o processo de logout
     /// for concluído com êxito e falso se a conexão já estiver deslogada 

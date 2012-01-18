@@ -1,31 +1,21 @@
-﻿using Tecgraf.Openbus;
+﻿using System;
+using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using Tecgraf.Openbus.sdk;
-using tecgraf.openbus.sdk.Exceptions;
+using tecgraf.openbus.sdk;
 
-namespace Test
-{
+namespace Test {
   /// <summary>
   /// Classe responsável por testar o método de inicializar e finalizar o Openbus.
   /// </summary>
   [TestClass]
-  public class OpenbusInitTest
-  {
+  public class OpenbusInitTest {
     #region Fields
 
-    private TestContext testContextInstance;
-    public TestContext TestContext {
-      get {
-        return testContextInstance;
-      }
-      set {
-        testContextInstance = value;
-      }
-    }
-
-    private static String hostName;
-    private static int hostPort;
+    private static String _hostName;
+    private static int _hostPort;
+    private static String _entity;
+    private static byte[] _password;
+    public TestContext TestContext { get; set; }
 
     #endregion
 
@@ -33,18 +23,28 @@ namespace Test
 
     [ClassInitialize]
     public static void BeforeClass(TestContext testContext) {
-      hostName = System.Configuration.ConfigurationSettings.AppSettings["hostName"];
-      if (String.IsNullOrEmpty(hostName))
+      _hostName = ConfigurationManager.AppSettings["hostName"];
+      if (String.IsNullOrEmpty(_hostName)) {
         throw new ArgumentNullException("hostName");
+      }
 
-      string port = System.Configuration.ConfigurationSettings.AppSettings["hostPort"];
-      hostPort = Int32.Parse(port);
+      string port = ConfigurationManager.AppSettings["hostPort"];
+      _hostPort = Int32.Parse(port);
+
+      _entity = ConfigurationManager.AppSettings["entityName"];
+      if (String.IsNullOrEmpty(_entity)) {
+        throw new ArgumentNullException("entityName");
+      }
+
+      string password = ConfigurationManager.AppSettings["userPassword"];
+      char[] chars = password.ToCharArray();
+      for (int i = 0; i < chars.Length; i++) {
+        _password[i] = (byte) chars[i];
+      }
     }
 
     [TestCleanup]
     public void AfterTest() {
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Destroy();
     }
 
     #endregion
@@ -52,53 +52,41 @@ namespace Test
     #region Tests
 
     /// <summary>
-    /// Testa o método init.
+    /// Testa a inicialização da classe.
     /// </summary>
     [TestMethod]
-    public void Init() {
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Init(hostName, hostPort);
+    public void Instantiate() {
+      Openbus bus = new Openbus(_hostName, _hostPort, false);
+      IConnection conn = bus.Connect();
+      conn.LoginByPassword(_entity, _password);
+      conn.Logout();
     }
 
     /// <summary>
-    /// Testa o método init passando o endereço nulo do barramento.
+    /// Testa a inicialização passando o endereço do barramento nulo.
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void Init_NullHostName() {
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Init(null, hostPort);
+    [ExpectedException(typeof (ArgumentException))]
+    public void InstantiateNullHostName() {
+      new Openbus(null, _hostPort, false);
     }
 
     /// <summary>
-    /// Testa executar o método init duas vezes seguidas.
+    /// Testa a inicialização de dois barramentos.
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(OpenbusAlreadyInitialized))]
-    public void Init_Twice() {
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Init(hostName, hostPort);
-
-      openbus.Init(hostName, hostPort);
+    public void InstantiateTwice() {
+      new Openbus(_hostName, _hostPort, false);
+      new Openbus(_hostName, _hostPort, false);
     }
 
     /// <summary>
-    /// Testa o método init passando a porta inválida do barramento.
+    /// Testa a inicialização passando uma porta inválida.
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void Init_InvalidHostPort() {
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Init(hostName, -1);
-    }
-
-    /// <summary>
-    /// Testa o método destroy sem inicializar o Openbus
-    /// </summary>    
-    [TestMethod]
-    public void Destroy_WithOutInit() {
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Destroy();
+    [ExpectedException(typeof (ArgumentException))]
+    public void InstantiateInvalidHostPort() {
+      new Openbus(_hostName, -1, false);
     }
 
     #endregion

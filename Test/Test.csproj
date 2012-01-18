@@ -73,8 +73,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="OpenbusInitTest.cs" />
-    <Compile Include="OpenbusLeaseTest.cs" />
-    <Compile Include="OpenbusTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

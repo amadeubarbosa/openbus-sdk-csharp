@@ -1,5 +1,5 @@
 ﻿namespace tecgraf.openbus.sdk {
-  interface IExpiredLoginCallback {
+  public interface IExpiredLoginCallback {
     void OnInvalidLogin(IConnection conn);
   }
 }

@@ -71,6 +71,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="src\sdk\Exceptions\ACSLoginFailureException.cs" />
+    <Compile Include="src\sdk\Exceptions\ACSUnavailableException.cs" />
     <Compile Include="src\sdk\Exceptions\ConnectionAlreadyLoggedIn.cs" />
     <Compile Include="src\sdk\Exceptions\OpenbusException.cs" />
     <Compile Include="src\sdk\ExpiredLoginCallback.cs" />
@@ -82,6 +84,8 @@
     <Compile Include="src\sdk\Interceptors\ServerInterceptor.cs" />
     <Compile Include="src\sdk\Connection.cs" />
     <Compile Include="src\sdk\Openbus.cs" />
+    <Compile Include="src\sdk\Security\Crypto.cs" />
+    <Compile Include="src\sdk\Security\RSAPKCS8KeyFormatter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
