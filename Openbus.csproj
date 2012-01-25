@@ -76,10 +76,14 @@
     <Compile Include="src\sdk\Exceptions\ConnectionAlreadyLoggedIn.cs" />
     <Compile Include="src\sdk\Exceptions\OpenbusException.cs" />
     <Compile Include="src\sdk\ExpiredLoginCallback.cs" />
-    <Compile Include="src\sdk\Implementations\ConnectionImpl.cs" />
+    <Compile Include="src\sdk\Implementations\MultiplexedConnection.cs" />
+    <Compile Include="src\sdk\Implementations\MultiplexedOpenbus.cs" />
+    <Compile Include="src\sdk\Implementations\StandardConnection.cs" />
+    <Compile Include="src\sdk\Implementations\StandardOpenbus.cs" />
     <Compile Include="src\sdk\Interceptors\ClientInitializer.cs" />
     <Compile Include="src\sdk\Interceptors\ClientInterceptor.cs" />
     <Compile Include="src\sdk\Interceptors\CredentialValidationPolicy.cs" />
+    <Compile Include="src\sdk\Interceptors\InterceptorImpl.cs" />
     <Compile Include="src\sdk\Interceptors\ServerInitializer.cs" />
     <Compile Include="src\sdk\Interceptors\ServerInterceptor.cs" />
     <Compile Include="src\sdk\Connection.cs" />
@@ -96,9 +100,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Openbus.snk" />
-    <None Include="Resources\ftConfigSchema.xsd">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Resources\Openbus.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>

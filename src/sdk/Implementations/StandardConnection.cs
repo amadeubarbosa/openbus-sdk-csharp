@@ -9,23 +9,24 @@ using tecgraf.openbus.sdk.Exceptions;
 using tecgraf.openbus.sdk.Security;
 
 namespace tecgraf.openbus.sdk.Implementations {
-  internal class ConnectionImpl : IConnection {
+  internal class StandardConnection : Connection {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (ConnectionImpl));
+      LogManager.GetLogger(typeof (StandardConnection));
 
     private readonly Openbus _bus;
     private readonly X509Certificate2 _certificate;
     private readonly RSACryptoServiceProvider _prvKey;
     private readonly RSACryptoServiceProvider _pubKey;
+    private IExpiredLoginCallback _expLoginCallback;
     private LoginInfo? _login;
 
     #endregion
 
     #region Constructors
 
-    public ConnectionImpl(Openbus bus) {
+    public StandardConnection(Openbus bus) {
       _bus = bus;
       _certificate = Crypto.NewCertificate();
       _prvKey = Crypto.GetPrivateKey(_certificate);
@@ -37,9 +38,9 @@ namespace tecgraf.openbus.sdk.Implementations {
 
 //TODO: TRADUZIR MENSAGENS PARA INGLES
 
-    #region IConnection Members
+    #region Connection Members
 
-    void IConnection.LoginByPassword(string entity, byte[] password) {
+    void Connection.LoginByPassword(string entity, byte[] password) {
       if (IsLoggedIn()) {
         throw new ConnectionAlreadyLoggedIn();
       }
@@ -72,7 +73,7 @@ namespace tecgraf.openbus.sdk.Implementations {
       _login = new LoginInfo(id, entity);
     }
 
-    void IConnection.LoginByCertificate(string entity, byte[] privKey) {
+    void Connection.LoginByCertificate(string entity, byte[] privKey) {
       if (IsLoggedIn()) {
         throw new ConnectionAlreadyLoggedIn();
       }
@@ -120,38 +121,44 @@ namespace tecgraf.openbus.sdk.Implementations {
         try {
           _bus.Acs.logout();
         }
-        catch(Exception e) {
-          //TODO: implementar o resto
+        catch(NO_PERMISSION e) {
+          if ((e.Minor != InvalidLoginCode.ConstVal) || (e.Status.Equals("COMPLETED_NO"))) {
+            throw;
+          }
+          LocalLogout();
+          return false;
         }
+        LocalLogout();
+        return true;
       }
+      return false;
+    }
+
+    void Connection.SetExpiredLoginCallback(IExpiredLoginCallback callback) {
+      _expLoginCallback = callback;
+    }
+
+    IExpiredLoginCallback Connection.GetExpiredLoginCallback() {
+      return _expLoginCallback;
+    }
+
+    CallChain Connection.GetCallerChain() {
       throw new NotImplementedException();
     }
 
-    void IConnection.SetExpiredLoginCallback(IExpiredLoginCallback callback) {
+    void Connection.JoinChain(CallChain chain) {
       throw new NotImplementedException();
     }
 
-    IExpiredLoginCallback IConnection.GetExpiredLoginCallback() {
+    void Connection.ExitChain() {
       throw new NotImplementedException();
     }
 
-    CallChain IConnection.GetCallerChain() {
+    CallChain Connection.GetJoinedChain() {
       throw new NotImplementedException();
     }
 
-    void IConnection.JoinChain(CallChain chain) {
-      throw new NotImplementedException();
-    }
-
-    void IConnection.ExitChain() {
-      throw new NotImplementedException();
-    }
-
-    CallChain IConnection.GetJoinedChain() {
-      throw new NotImplementedException();
-    }
-
-    void IConnection.Close() {
+    void Connection.Close() {
       Logout();
       //TODO: remover conexao de cache se for o caso
     }
@@ -168,6 +175,12 @@ namespace tecgraf.openbus.sdk.Implementations {
       Encoding encode = new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2);
       Codec codec = factory.create_codec(encode);
       return codec;
+    }
+
+    private void LocalLogout() {
+      _login = null;
+      //TODO: resetar caches qdo forem implementados
+      //TODO: desagendar o renovador de credenciais
     }
   }
 }

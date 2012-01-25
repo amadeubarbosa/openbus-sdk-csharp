@@ -3,7 +3,7 @@ using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 
 namespace tecgraf.openbus.sdk {
-  public interface IConnection {
+  public interface Connection {
     /*************************************************************************
      * LOGIN AO BARRAMENTO ***************************************************
      *************************************************************************/

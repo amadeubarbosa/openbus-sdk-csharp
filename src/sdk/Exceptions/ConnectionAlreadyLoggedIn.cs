@@ -3,7 +3,7 @@ using System;
 namespace tecgraf.openbus.sdk.Exceptions
 {
   /// <summary>
-  /// Indica uma exceção de Openbus já está inicializado.
+  /// Indica uma exceção de conexão com login já realizado.
   /// </summary>
   [Serializable]
   public class ConnectionAlreadyLoggedIn : OpenbusException

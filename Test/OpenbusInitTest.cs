@@ -2,6 +2,7 @@
 using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using tecgraf.openbus.sdk;
+using tecgraf.openbus.sdk.Implementations;
 
 namespace Test {
   /// <summary>
@@ -56,8 +57,8 @@ namespace Test {
     /// </summary>
     [TestMethod]
     public void Instantiate() {
-      Openbus bus = new Openbus(_hostName, _hostPort, false);
-      IConnection conn = bus.Connect();
+      Openbus bus = new StandardOpenbus(_hostName, _hostPort, false);
+      Connection conn = bus.Connect();
       conn.LoginByPassword(_entity, _password);
       conn.Logout();
     }
@@ -68,7 +69,7 @@ namespace Test {
     [TestMethod]
     [ExpectedException(typeof (ArgumentException))]
     public void InstantiateNullHostName() {
-      new Openbus(null, _hostPort, false);
+      new StandardOpenbus(null, _hostPort, false);
     }
 
     /// <summary>
@@ -76,8 +77,8 @@ namespace Test {
     /// </summary>
     [TestMethod]
     public void InstantiateTwice() {
-      new Openbus(_hostName, _hostPort, false);
-      new Openbus(_hostName, _hostPort, false);
+      new StandardOpenbus(_hostName, _hostPort, false);
+      new StandardOpenbus(_hostName, _hostPort, false);
     }
 
     /// <summary>
@@ -86,7 +87,7 @@ namespace Test {
     [TestMethod]
     [ExpectedException(typeof (ArgumentException))]
     public void InstantiateInvalidHostPort() {
-      new Openbus(_hostName, -1, false);
+      new StandardOpenbus(_hostName, -1, false);
     }
 
     #endregion

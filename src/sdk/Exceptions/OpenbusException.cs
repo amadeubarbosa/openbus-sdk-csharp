@@ -9,7 +9,7 @@ namespace tecgraf.openbus.sdk.Exceptions
   public class OpenbusException : ApplicationException
   {
     /// <summary>
-    /// Cria uma execeção do Openbus
+    /// Cria uma execeção do OpenBus
     /// </summary>
     public OpenbusException() { }
     

@@ -6,7 +6,7 @@ using log4net;
 
 namespace tecgraf.openbus.sdk.Security {
   /// <summary>
-  /// Classe responsável pela segurança do Openbus.
+  /// Classe responsável pela segurança do OpenBus.
   /// </summary>
   public static class Crypto {
     #region Fields
