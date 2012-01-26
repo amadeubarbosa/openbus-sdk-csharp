@@ -7,11 +7,11 @@ using omg.org.PortableInterceptor;
 
 namespace tecgraf.openbus.sdk.Interceptors
 {
-  internal class ServerInterceptor : InterceptorImpl, ServerRequestInterceptor
+  internal class StandardServerInterceptor : InterceptorImpl, ServerRequestInterceptor
   {
     #region Fields
 
-    private static ILog logger = LogManager.GetLogger(typeof(ServerInterceptor));
+    private static readonly ILog Logger = LogManager.GetLogger(typeof(StandardServerInterceptor));
 
     /// <summary>
     ///O slot para transporte da credencial.
@@ -27,12 +27,12 @@ namespace tecgraf.openbus.sdk.Interceptors
 
 
     /// <summary>
-    /// Inicializa uma nova instância de OpenbusAPI.Interceptors.ServerInterceptor.   
+    /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardServerInterceptor.   
     /// </summary>
     /// <param name="codec">Codificador.</param>
     /// <param name="credentialSlot">O slot para transporte da credencial.</param>
-    public ServerInterceptor(Codec codec, int credentialSlot)
-      : base("ServerInterceptor", codec) {
+    public StandardServerInterceptor(Codec codec, int credentialSlot)
+      : base("StandardServerInterceptor", codec) {
       sdk.Openbus openbus = sdk.Openbus.GetInstance();
       this.credentialSlot = credentialSlot;
       openbus.RequestCredentialSlot = credentialSlot;
@@ -46,16 +46,16 @@ namespace tecgraf.openbus.sdk.Interceptors
     public void receive_request_service_contexts(ServerRequestInfo ri) {
 
       String interceptedOperation = ri.operation;
-      logger.Info(String.Format(
+      Logger.Info(String.Format(
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
       sdk.Openbus openbus = sdk.Openbus.GetInstance();
       ServiceContext serviceContext;
       try {
-        serviceContext = ri.get_request_service_context(CONTEXT_ID);
+        serviceContext = ri.get_request_service_context(ContextId);
       }
       catch (BAD_PARAM) {
-        logger.Warn(String.Format(
+        Logger.Warn(String.Format(
           "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
         return;
       }
@@ -64,18 +64,18 @@ namespace tecgraf.openbus.sdk.Interceptors
       foreach (String s in corbaObjMethods) {
         if (s.Equals(interceptedOperation)) {
           isCorbaObjMethod = true;
-          logger.Info(String.Format("A operação '{0}' é da interface CORBA::OBject e portanto não precisa de credencial.", interceptedOperation));
+          Logger.Info(String.Format("A operação '{0}' é da interface CORBA::OBject e portanto não precisa de credencial.", interceptedOperation));
           break;
         }
       }
 
       if (!isCorbaObjMethod) {
         if (serviceContext.context_data == null) {
-          logger.Fatal(String.Format(
+          Logger.Fatal(String.Format(
             "A chamada à operação '{0}' não possui credencial.", interceptedOperation));
           return;
         }
-        logger.Info(String.Format("A operação '{0}' possui credencial.", interceptedOperation));
+        Logger.Info(String.Format("A operação '{0}' possui credencial.", interceptedOperation));
       }
 
       try {
@@ -94,7 +94,7 @@ namespace tecgraf.openbus.sdk.Interceptors
         ri.set_slot(openbusRequestCredentialSlot, requestCredential);
       }
       catch (System.Exception e) {
-        logger.Fatal("Erro na validação da credencial", e);
+        Logger.Fatal("Erro na validação da credencial", e);
       }
     }
 

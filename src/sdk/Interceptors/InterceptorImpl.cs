@@ -16,24 +16,24 @@ namespace tecgraf.openbus.sdk.Interceptors
     /// Representa a identificação do "service context" (contexto) utilizado
     /// para transporte de credenciais em requisições de serviço.
     /// </summary>
-    internal protected readonly int CONTEXT_ID = 1234;
-
+    protected const int ContextId = core.v2_00.credential.CredentialContextId.ConstVal;
+    
     /// <summary>
     /// Fornece o nome do interceptador.
     /// </summary>
     public string Name {
-      get { return name; }
+      get { return _name; }
     }
-    private String name = String.Empty;
+    private readonly String _name = String.Empty;
 
     /// <summary>
     /// Fornece o objeto responsável pelo marshall/unmarshall de credenciais 
     /// para transporte/obtenção de contextos de requisições de servico.
     /// </summary>
-    public Codec Codec {
-      get { return codec; }
+    protected Codec Codec {
+      get { return _codec; }
     }
-    private Codec codec;
+    private readonly Codec _codec;
 
     #endregion
 
@@ -44,9 +44,9 @@ namespace tecgraf.openbus.sdk.Interceptors
     /// </summary>
     /// <param name="name">O nome do interceptador</param>
     /// <param name="codec">Elemento codificador/decodificador</param>
-    public InterceptorImpl(String name, Codec codec) {
-      this.name = name;
-      this.codec = codec;
+    protected InterceptorImpl(String name, Codec codec) {
+      _name = name;
+      _codec = codec;
     }
 
     #endregion

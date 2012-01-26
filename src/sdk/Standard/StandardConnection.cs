@@ -8,7 +8,7 @@ using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk.Exceptions;
 using tecgraf.openbus.sdk.Security;
 
-namespace tecgraf.openbus.sdk.Implementations {
+namespace tecgraf.openbus.sdk.Standard {
   internal class StandardConnection : Connection {
     #region Fields
 
@@ -35,8 +35,6 @@ namespace tecgraf.openbus.sdk.Implementations {
     }
 
     #endregion
-
-//TODO: TRADUZIR MENSAGENS PARA INGLES
 
     #region Connection Members
 
@@ -177,7 +175,7 @@ namespace tecgraf.openbus.sdk.Implementations {
       return codec;
     }
 
-    private void LocalLogout() {
+    protected void LocalLogout() {
       _login = null;
       //TODO: resetar caches qdo forem implementados
       //TODO: desagendar o renovador de credenciais

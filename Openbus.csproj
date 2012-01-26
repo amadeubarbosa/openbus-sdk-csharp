@@ -76,16 +76,15 @@
     <Compile Include="src\sdk\Exceptions\ConnectionAlreadyLoggedIn.cs" />
     <Compile Include="src\sdk\Exceptions\OpenbusException.cs" />
     <Compile Include="src\sdk\ExpiredLoginCallback.cs" />
-    <Compile Include="src\sdk\Implementations\MultiplexedConnection.cs" />
-    <Compile Include="src\sdk\Implementations\MultiplexedOpenbus.cs" />
-    <Compile Include="src\sdk\Implementations\StandardConnection.cs" />
-    <Compile Include="src\sdk\Implementations\StandardOpenbus.cs" />
-    <Compile Include="src\sdk\Interceptors\ClientInitializer.cs" />
-    <Compile Include="src\sdk\Interceptors\ClientInterceptor.cs" />
-    <Compile Include="src\sdk\Interceptors\CredentialValidationPolicy.cs" />
+    <Compile Include="src\sdk\Multiplexed\MultiplexedConnection.cs" />
+    <Compile Include="src\sdk\Multiplexed\MultiplexedOpenbus.cs" />
+    <Compile Include="src\sdk\Standard\StandardConnection.cs" />
+    <Compile Include="src\sdk\Standard\StandardOpenbus.cs" />
+    <Compile Include="src\sdk\Standard\Interceptors\StandardClientInitializer.cs" />
+    <Compile Include="src\sdk\Standard\Interceptors\StandardClientInterceptor.cs" />
     <Compile Include="src\sdk\Interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\sdk\Interceptors\ServerInitializer.cs" />
-    <Compile Include="src\sdk\Interceptors\ServerInterceptor.cs" />
+    <Compile Include="src\sdk\Standard\Interceptors\StandardServerInitializer.cs" />
+    <Compile Include="src\sdk\Standard\Interceptors\StandardServerInterceptor.cs" />
     <Compile Include="src\sdk\Connection.cs" />
     <Compile Include="src\sdk\Openbus.cs" />
     <Compile Include="src\sdk\Security\Crypto.cs" />
@@ -105,7 +104,9 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="src\sdk\Multiplexed\Interceptors\" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

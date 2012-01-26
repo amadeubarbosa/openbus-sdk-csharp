@@ -1,16 +1,18 @@
-﻿using tecgraf.openbus.sdk.Interceptors;
-using log4net;
+﻿using log4net;
 using omg.org.IOP;
+using tecgraf.openbus.sdk.Interceptors;
 
-namespace tecgraf.openbus.sdk.Interceptors
+namespace tecgraf.openbus.sdk.Standard.Interceptors
 {
-  internal class ServerInitializer : omg.org.PortableInterceptor.ORBInitializer
+  internal class StandardServerInitializer : omg.org.PortableInterceptor.ORBInitializer
   {
     #region Fields
 
-    private static ILog logger = LogManager.GetLogger(typeof(ServerInitializer));
+    private static readonly ILog Logger = LogManager.GetLogger(typeof(StandardServerInitializer));
 
-    private CredentialValidationPolicy policy;
+    private readonly CredentialValidationPolicy _policy;
+
+    private StandardOpenbus _bus;
 
     #endregion
 
@@ -18,9 +20,11 @@ namespace tecgraf.openbus.sdk.Interceptors
 
     /// <summary>
     /// Construtor.
+    /// <param name="bus">Barramento de conexão única sendo utilizado.</param>
     /// </summary>
-    public ServerInitializer(CredentialValidationPolicy policy) {
-      this.policy = policy;
+    public StandardServerInitializer(StandardOpenbus bus, CredentialValidationPolicy policy) {
+      _policy = policy;
+      _bus = bus;
     }
 
     #endregion
@@ -30,12 +34,12 @@ namespace tecgraf.openbus.sdk.Interceptors
     /// <inheritdoc />
     public void post_init(omg.org.PortableInterceptor.ORBInitInfo info) {
       CodecFactory codecFactory = info.codec_factory;
-      Encoding encode = new omg.org.IOP.Encoding();
+      Encoding encode = new Encoding();
       Codec codec = codecFactory.create_codec(encode);
       int slotId = info.allocate_slot_id();
-      info.add_server_request_interceptor(new ServerInterceptor(codec, slotId));
+      info.add_server_request_interceptor(new StandardServerInterceptor(codec, slotId));
 
-      switch (policy) {
+      switch (_policy) {
         case CredentialValidationPolicy.ALWAYS:
           info.add_server_request_interceptor(new CredentialValidatorServerInterceptor());
           break;
@@ -47,11 +51,11 @@ namespace tecgraf.openbus.sdk.Interceptors
         case CredentialValidationPolicy.NONE:
           break;
         default:
-          logger.Error(
+          Logger.Error(
               "Não foi escolhida nenhuma política para a validação de credenciais obtidas pelo interceptador servidor.");
           break;
       }
-      logger.Info("O interceptador servidor foi registrado.");
+      Logger.Info("O interceptador servidor foi registrado.");
     }
 
     #endregion
