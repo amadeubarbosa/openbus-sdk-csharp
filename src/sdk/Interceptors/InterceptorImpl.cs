@@ -17,7 +17,11 @@ namespace tecgraf.openbus.sdk.Interceptors
     /// para transporte de credenciais em requisições de serviço.
     /// </summary>
     protected const int ContextId = core.v2_00.credential.CredentialContextId.ConstVal;
-    
+
+    protected readonly byte MajorVersion = Byte.Parse(core.v2_00.Version.ConstVal.Substring(0, 1));
+    protected readonly byte MinorVersion = Byte.Parse(core.v2_00.Version.ConstVal.Substring(2, 1));
+    protected readonly const int SecretSize = 16;
+
     /// <summary>
     /// Fornece o nome do interceptador.
     /// </summary>
@@ -47,6 +51,24 @@ namespace tecgraf.openbus.sdk.Interceptors
     protected InterceptorImpl(String name, Codec codec) {
       _name = name;
       _codec = codec;
+    }
+
+    protected class Session {
+
+      public Session(int id, byte[] secret, string remoteLogin) {
+        Id = id;
+        Secret = secret;
+        RemoteLogin = remoteLogin;
+        Ticket = -1;
+      }
+
+      public string RemoteLogin { get; private set; }
+
+      public byte[] Secret { get; private set; }
+
+      public int Id { get; private set; }
+
+      public int Ticket { get; private set; }
     }
 
     #endregion

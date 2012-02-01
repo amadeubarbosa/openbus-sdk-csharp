@@ -73,6 +73,7 @@
     </Compile>
     <Compile Include="src\sdk\Exceptions\ACSLoginFailureException.cs" />
     <Compile Include="src\sdk\Exceptions\ACSUnavailableException.cs" />
+    <Compile Include="src\sdk\Exceptions\IncompatibleVersionException.cs" />
     <Compile Include="src\sdk\Exceptions\ConnectionAlreadyLoggedIn.cs" />
     <Compile Include="src\sdk\Exceptions\OpenbusException.cs" />
     <Compile Include="src\sdk\ExpiredLoginCallback.cs" />

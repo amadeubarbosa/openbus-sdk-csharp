@@ -36,6 +36,18 @@ namespace tecgraf.openbus.sdk.Standard {
 
     #endregion
 
+    public LoginInfo? Login {
+      get { return _login; }
+    }
+
+    public RSACryptoServiceProvider PublicKey {
+      get { return _pubKey; }
+    }
+
+    public RSACryptoServiceProvider PrivateKey {
+      get { return _prvKey; }
+    }
+
     #region Connection Members
 
     void Connection.LoginByPassword(string entity, byte[] password) {
@@ -68,6 +80,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
       int lease;
       String id = _bus.Acs.loginByPassword(entity, pubBlob, encrypted, out lease);
+      //TODO: utilizar o lease
       _login = new LoginInfo(id, entity);
     }
 
@@ -107,6 +120,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
       int lease;
       String id = loginByCert.login(pubBlob, encrypted, out lease);
+      //TODO: utilizar o lease
       _login = new LoginInfo(id, entity);
     }
 
