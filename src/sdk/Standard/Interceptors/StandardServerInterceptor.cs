@@ -4,8 +4,9 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
+using tecgraf.openbus.sdk.Interceptors;
 
-namespace tecgraf.openbus.sdk.Interceptors
+namespace tecgraf.openbus.sdk.Standard.Interceptors
 {
   internal class StandardServerInterceptor : InterceptorImpl, ServerRequestInterceptor
   {
@@ -13,29 +14,22 @@ namespace tecgraf.openbus.sdk.Interceptors
 
     private static readonly ILog Logger = LogManager.GetLogger(typeof(StandardServerInterceptor));
 
-    /// <summary>
-    ///O slot para transporte da credencial.
-    /// </summary>
-    private int credentialSlot;
-
-    private String[] corbaObjMethods = new String[] {"_interface", "_is_a", 
-      "_non_existent", "_repository_id", "_component", "_domain_managers"};
+    private readonly StandardOpenbus _bus;
+    private readonly StandardConnection _connection;
 
     #endregion
 
     #region Constructors
 
-
     /// <summary>
     /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardServerInterceptor.   
     /// </summary>
+    /// <param name="bus">Barramento de uma única conexão.</param>
     /// <param name="codec">Codificador.</param>
-    /// <param name="credentialSlot">O slot para transporte da credencial.</param>
-    public StandardServerInterceptor(Codec codec, int credentialSlot)
+    public StandardServerInterceptor(StandardOpenbus bus, Codec codec)
       : base("StandardServerInterceptor", codec) {
-      sdk.Openbus openbus = sdk.Openbus.GetInstance();
-      this.credentialSlot = credentialSlot;
-      openbus.RequestCredentialSlot = credentialSlot;
+      _bus = bus;
+      _connection = _bus.Connect() as StandardConnection;
     }
 
     #endregion
@@ -61,7 +55,7 @@ namespace tecgraf.openbus.sdk.Interceptors
       }
 
       bool isCorbaObjMethod = false;
-      foreach (String s in corbaObjMethods) {
+      foreach (String s in _corbaObjMethods) {
         if (s.Equals(interceptedOperation)) {
           isCorbaObjMethod = true;
           Logger.Info(String.Format("A operação '{0}' é da interface CORBA::OBject e portanto não precisa de credencial.", interceptedOperation));
@@ -104,7 +98,7 @@ namespace tecgraf.openbus.sdk.Interceptors
 
     /// <inheritdoc />
     public virtual void receive_request(ServerRequestInfo ri) {
-      //Nada a ser feito
+
     }
 
     /// <inheritdoc />

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
@@ -8,10 +9,9 @@ using omg.org.IOP;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.credential;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.Exceptions;
 using tecgraf.openbus.sdk.Interceptors;
 using tecgraf.openbus.sdk.Security;
-using System.Collections.Generic;
+using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus.sdk.Standard.Interceptors {
   /// <summary>
@@ -29,9 +29,9 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     private readonly StandardConnection _connection;
 
     //TODO: avaliar a melhor forma de armazenar a chave. String é uma boa opção? Se fosse usar o array de bytes direto eu teria q criar uma classe com metodos de comparacao que criasse um hash, para nao ficar muito cara a comparacao...
-    private readonly Dictionary<String, string> _profile2Login;
 
     private readonly Dictionary<string, Session> _outgoingLogin2Session;
+    private readonly Dictionary<String, string> _profile2Login;
 
     #endregion
 
@@ -132,10 +132,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       ri.add_request_service_context(serviceContext, false);
     }
 
-    #endregion
-
-    #region ClientRequestInterceptor Not Implemented
-
     /// <inheritdoc />
     public virtual void receive_exception(ClientRequestInfo ri) {
       String operation = ri.operation;
@@ -185,6 +181,10 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       throw new ForwardRequest(ri.target);
     }
 
+    #endregion
+
+    #region ClientRequestInterceptor Not Implemented
+
     /// <inheritdoc />
     public virtual void receive_other(ClientRequestInfo ri) {
       //Nada a ser feito;
@@ -201,6 +201,8 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     }
 
     #endregion
+
+    #region Private Methods
 
     private byte[] CreateCredentialHash(string operation, int ticket,
                                         byte[] secret, int requestId) {
@@ -241,19 +243,15 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     private byte[] CreateAndEncodeCredential(string loginId, int sessionId,
                                              int ticket, byte[] hash,
                                              SignedCallChain chain) {
-
       CredentialData data = new CredentialData(_bus.BusId, loginId, sessionId,
                                                ticket,
                                                hash, chain);
       byte[] value = Codec.encode_value(data);
-      byte[] valueComVersao = new byte[value.Length + 2];
-      valueComVersao[0] = MajorVersion;
-      valueComVersao[1] = MinorVersion;
-      value.CopyTo(valueComVersao, 2);
-      return valueComVersao;
+      return value;
     }
 
-    private CredentialReset ReadCredentialReset(ClientRequestInfo ri, NO_PERMISSION exception) {
+    private CredentialReset ReadCredentialReset(ClientRequestInfo ri,
+                                                NO_PERMISSION exception) {
       CredentialReset requestReset;
 
       try {
@@ -261,26 +259,14 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
           ri.get_request_service_context(ContextId);
 
         OrbServices orb = OrbServices.GetSingleton();
-        Type resetType = typeof(CredentialReset);
-        omg.org.CORBA.TypeCode resetTypeCode =
+        Type resetType = typeof (CredentialReset);
+        TypeCode resetTypeCode =
           orb.create_interface_tc(
             Repository.GetRepositoryID(resetType), resetType.Name);
 
         byte[] data = serviceContext.context_data;
-        if ((data[0] != MajorVersion) || (data[1] != MinorVersion)) {
-          Logger.Fatal(String.Format(
-            "Credencial recebida para início de sessão não é da versão {0}.{1}. Sessão não será iniciada.",
-            MajorVersion, MinorVersion),
-                       exception);
-          throw new IncompatibleVersionException(String.Format("A versão do objeto remoto é {0}.{1}.", data[0], data[1]));
-        }
-        byte[] resetData = new byte[data.Length - 2];
-        for (int i = 2; i < data.Length; i++) {
-          resetData[i - 2] = data[i];
-        }
-
         requestReset =
-          (CredentialReset)Codec.decode_value(resetData, resetTypeCode);
+          (CredentialReset) Codec.decode_value(data, resetTypeCode);
       }
       catch (Exception e) {
         Logger.Fatal(
@@ -289,5 +275,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       }
       return requestReset;
     }
+
+  #endregion
   }
 }

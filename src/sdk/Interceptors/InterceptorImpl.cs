@@ -13,10 +13,11 @@ namespace tecgraf.openbus.sdk.Interceptors
     #region Fields
 
     /// <summary>
-    /// Representa a identificação do "service context" (contexto) utilizado
+    /// Representam a identificação dos "service contexts" (contextos) utilizados
     /// para transporte de credenciais em requisições de serviço.
     /// </summary>
     protected const int ContextId = core.v2_00.credential.CredentialContextId.ConstVal;
+    protected const int PrevContextId = 1234;
 
     protected readonly byte MajorVersion = Byte.Parse(core.v2_00.Version.ConstVal.Substring(0, 1));
     protected readonly byte MinorVersion = Byte.Parse(core.v2_00.Version.ConstVal.Substring(2, 1));
