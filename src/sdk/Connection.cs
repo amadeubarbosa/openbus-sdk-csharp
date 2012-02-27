@@ -4,6 +4,7 @@ using tecgraf.openbus.core.v2_00.services.access_control;
 
 namespace tecgraf.openbus.sdk {
   public interface Connection {
+    //TODO: atualizar
     /*************************************************************************
      * LOGIN AO BARRAMENTO ***************************************************
      *************************************************************************/
@@ -36,6 +37,34 @@ namespace tecgraf.openbus.sdk {
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
     void LoginByCertificate(String entity, Byte[] privateKey);
+
+	  ///
+    /// <summary>
+	  /// Inicia o processo de login por single sign-on e cria um objeto para
+	  /// conclusão desse processo.
+    /// 
+	  /// O objeto criado para conclusão do processo de login só pode ser utilizado
+	  /// para concluir um único login. Após a conclusão do login (com sucesso ou
+	  /// falha), o objeto fica inválido. O objeto criado também pode ficar
+	  /// inválido após um tempo. Em ambos os casos, é necessário reiniciar o
+	  /// processo de login por certificado chamando essa operação novamente.
+    /// 
+	  /// Retorna um objeto a ser usado para efetuar o login e um desafio.
+    /// </summary>
+    /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
+    /// do barramento que impediu a obtenção do objeto de login e desafio.</exception>
+    LoginProcess StartSingleSignOn(out Byte[] secret);
+
+    /// <summary>
+    /// Efetua login no barramento como uma entidade usando autenticação por
+    /// um outro login.
+    /// </summary>
+    /// <param name="login"> Objeto de login a ser utilizado.</param>
+    /// <param name="secret"> Segredo decodificado a partir de outro login.</param>
+    /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
+    /// do barramento que impediu o estabelecimento da conexão.</exception>
+    void LoginBySingleSignOn(LoginProcess login, Byte[] secret);
+
      
     /*************************************************************************
      * GERÊNCIA DO LOGIN *****************************************************

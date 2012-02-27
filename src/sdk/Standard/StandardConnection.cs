@@ -15,7 +15,7 @@ namespace tecgraf.openbus.sdk.Standard {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (StandardConnection));
 
-    private readonly Openbus _bus;
+    private readonly StandardOpenbus _bus;
     private readonly X509Certificate2 _certificate;
     private readonly RSACryptoServiceProvider _prvKey;
     private readonly RSACryptoServiceProvider _pubKey;
@@ -26,7 +26,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
     #region Constructors
 
-    public StandardConnection(Openbus bus) {
+    public StandardConnection(StandardOpenbus bus) {
       _bus = bus;
       _certificate = Crypto.NewCertificate();
       _prvKey = Crypto.GetPrivateKey(_certificate);
@@ -79,49 +79,31 @@ namespace tecgraf.openbus.sdk.Standard {
       }
 
       int lease;
-      String id = _bus.Acs.loginByPassword(entity, pubBlob, encrypted, out lease);
+      _login = _bus.Acs.loginByPassword(entity, pubBlob, encrypted, out lease);
       //TODO: utilizar o lease
-      _login = new LoginInfo(id, entity);
     }
 
     void Connection.LoginByCertificate(string entity, byte[] privKey) {
       if (IsLoggedIn()) {
         throw new ConnectionAlreadyLoggedIn();
       }
-
-      Codec codec = GetCodec();
-
       byte[] challenge;
-      LoginByCertificate loginByCert = _bus.Acs.startLoginByCertificate(entity,
-                                                                        out
-                                                                          challenge);
+      LoginProcess login = _bus.Acs.startLoginByCertificate(entity,
+                                                            out
+                                                              challenge);
       byte[] answer = Crypto.Decrypt(_bus.BusKey, challenge);
+      LoginByObject(login, answer);
+    }
 
-      byte[] encrypted;
-      byte[] pubBlob = _pubKey.ExportCspBlob(false);
-      try {
-        //encode answer and hash of public key
-        LoginAuthenticationInfo info = new LoginAuthenticationInfo {
-                                                                     data =
-                                                                       answer,
-                                                                     hash =
-                                                                       SHA256.
-                                                                       Create().
-                                                                       ComputeHash
-                                                                       (pubBlob)
-                                                                   };
-        encrypted = Crypto.Encrypt(_bus.BusKey, codec.encode_value(info));
-      }
-      catch {
-        const string msg = "Erro na codificação das informações de login.";
-        Logger.Fatal(msg);
-        throw new ACSLoginFailureException(msg);
-      }
+    public LoginProcess StartSingleSignOn(out byte[] secret) {
+      byte[] challenge;
+      LoginProcess login = _bus.Acs.startLoginBySingleSignOn(out challenge);
+      secret = Crypto.Decrypt(_prvKey, challenge);
+      return login;
+    }
 
-      int lease;
-      String id = loginByCert.login(pubBlob, encrypted, out lease);
-      //TODO: utilizar o lease
-      _login = new LoginInfo(id, entity);
+    public void LoginBySingleSignOn(LoginProcess login, byte[] secret) {
+      LoginByObject(login, secret);
     }
 
     public bool IsLoggedIn() {
@@ -129,21 +111,24 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     public bool Logout() {
-      if (IsLoggedIn()) {
-        try {
-          _bus.Acs.logout();
-        }
-        catch(NO_PERMISSION e) {
-          if ((e.Minor != InvalidLoginCode.ConstVal) || (e.Status.Equals("COMPLETED_NO"))) {
-            throw;
-          }
-          LocalLogout();
-          return false;
-        }
-        LocalLogout();
-        return true;
+      if (!IsLoggedIn()) {
+        return false;
       }
-      return false;
+
+      try {
+        _bus.Acs.logout();
+      }
+      catch (NO_PERMISSION e) {
+        if ((e.Minor != InvalidLoginCode.ConstVal) ||
+            (e.Status.Equals("COMPLETED_NO"))) {
+          throw;
+        }
+        // já fui deslogado do barramento
+        LocalLogout();
+        return false;
+      }
+      LocalLogout();
+      return true;
     }
 
     void Connection.SetExpiredLoginCallback(IExpiredLoginCallback callback) {
@@ -176,6 +161,41 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     #endregion
+
+    private void LoginByObject(LoginProcess login, byte[] secret) {
+      if (IsLoggedIn()) {
+        login.cancel();
+        throw new ConnectionAlreadyLoggedIn();
+      }
+
+      Codec codec = GetCodec();
+
+      byte[] encrypted;
+      byte[] pubBlob = _pubKey.ExportCspBlob(false);
+      try {
+        //encode answer and hash of public key
+        LoginAuthenticationInfo info = new LoginAuthenticationInfo {
+                                                                     data =
+                                                                       secret,
+                                                                     hash =
+                                                                       SHA256.
+                                                                       Create().
+                                                                       ComputeHash
+                                                                       (pubBlob)
+                                                                   };
+        encrypted = Crypto.Encrypt(_bus.BusKey, codec.encode_value(info));
+      }
+      catch {
+        login.cancel();
+        const string msg = "Erro na codificação das informações de login.";
+        Logger.Fatal(msg);
+        throw new ACSLoginFailureException(msg);
+      }
+
+      int lease;
+      _login = login.login(pubBlob, encrypted, out lease);
+      //TODO: utilizar o lease
+    }
 
     private static Codec GetCodec() {
       OrbServices orb = OrbServices.GetSingleton();
