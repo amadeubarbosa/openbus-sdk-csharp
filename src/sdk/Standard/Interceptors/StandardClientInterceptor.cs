@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
 using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
@@ -30,6 +28,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
     //TODO: avaliar a melhor forma de armazenar a chave. String é uma boa opção? Se fosse usar o array de bytes direto eu teria q criar uma classe com metodos de comparacao que criasse um hash, para nao ficar muito cara a comparacao...
 
+    //TODO: caches ainda nao tem nenhuma politica de remocao ou de tamanho maximo
     private readonly Dictionary<string, Session> _outgoingLogin2Session;
     private readonly Dictionary<String, string> _profile2Login;
 
@@ -77,15 +76,12 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       string loginId = login.Value.id;
       int sessionId = 0;
       int ticket = 0;
-      byte[] secret = new byte[SecretSize];
-      byte[] hash;
-      SignedCallChain chain;
+      byte[] secret = new byte[0];
 
       string profile = ri.effective_profile.tag +
                        ri.effective_profile.profile_data.ToString();
       string remoteLogin = "";
       // Uso o bool abaixo para nao precisar aninhar os locks.
-      bool hasSession = false;
       lock (_profile2Login) {
         if (_profile2Login.ContainsKey(profile)) {
           remoteLogin = _profile2Login[profile];
@@ -96,40 +92,55 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
           Session session = _outgoingLogin2Session[remoteLogin];
           sessionId = session.Id;
           ticket = session.Ticket;
+          secret = new byte[session.Secret.Length];
           session.Secret.CopyTo(secret, 0);
-          hasSession = true;
         }
       }
 
-      if (hasSession) {
-        hash = CreateCredentialHash(operation, ticket, secret, ri.request_id);
-        //TODO: codigo abaixo assume que nao existe cache de cadeias ainda
-        chain = CreateCredentialSignedCallChain(remoteLogin);
-        Logger.Info(
-          String.Format("Chamada à operação {0} no servidor de login {1}.",
-                        operation, remoteLogin));
-      }
-      else {
-        // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
-        hash = CreateInvalidCredentialHash();
-        chain = CreateInvalidCredentialSignedCallChain();
-        Logger.Info(
-          String.Format(
-            "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
-            operation, remoteLogin));
-      }
-
-      byte[] value;
       try {
-        value = CreateAndEncodeCredential(loginId, sessionId, ticket, hash,
-                                          chain);
+        byte[] hash;
+        SignedCallChain chain;
+        if (sessionId != 0) {
+          hash = CreateCredentialHash(operation, ticket, secret, ri.request_id);
+          //TODO: codigo abaixo assume que nao existe cache de cadeias ainda
+          chain = CreateCredentialSignedCallChain(remoteLogin);
+          Logger.Info(
+            String.Format("Chamada à operação {0} no servidor de login {1}.",
+                          operation, remoteLogin));
+        }
+        else {
+          // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
+          hash = CreateInvalidCredentialHash();
+          chain = CreateInvalidCredentialSignedCallChain();
+          Logger.Info(
+            String.Format(
+              "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
+              operation, remoteLogin));
+        }
+
+        byte[] value = CreateAndEncodeCredential(loginId, sessionId, ticket, hash,
+                                                 chain);
+        ServiceContext serviceContext = new ServiceContext(ContextId, value);
+        ri.add_request_service_context(serviceContext, false);
+      }
+      catch (NO_PERMISSION e) {
+        if (e.Minor == InvalidLoginCode.ConstVal) {
+          Logger.Fatal(
+            "Este cliente foi deslogado do barramento durante a interceptação desta requisição",
+            e);
+          //TODO chamar callback de login perdido
+          //TODO se callback retornar true, relançar o request
+          // se callback retornar false, tentativas de refazer login falharam, lança exceção
+          throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
+                                  CompletionStatus.Completed_No);
+        }
+        //TODO: Verificar se não é melhor lançar um badremote. Lembrar que CheckValidity lança exceção, talvez seja melhor tentar refatorar
+        throw;
       }
       catch (Exception) {
         Logger.Fatal("Erro ao tentar codificar a credencial.");
         throw;
       }
-      ServiceContext serviceContext = new ServiceContext(ContextId, value);
-      ri.add_request_service_context(serviceContext, false);
     }
 
     /// <inheritdoc />
@@ -140,10 +151,13 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
         "A exceção '{0}' foi interceptada ao tentar realizar a chamada {1}.",
         exceptionId, operation));
 
-      if (!(ri.received_exception is NO_PERMISSION)) {
+      if (!(ri.received_exception_id.Equals(Repository.GetRepositoryID(typeof(NO_PERMISSION))))) {
         return;
       }
       NO_PERMISSION exception = ri.received_exception as NO_PERMISSION;
+      if (exception == null) {
+        return;
+      }
 
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
         return;
@@ -203,27 +217,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     #endregion
 
     #region Private Methods
-
-    private byte[] CreateCredentialHash(string operation, int ticket,
-                                        byte[] secret, int requestId) {
-      UTF8Encoding utf8 = new UTF8Encoding();
-      // 2 bytes para versao, 16 para o segredo, 4 para o ticket em little endian, 4 para o request id em little endian e operacao.
-      byte[] hash = new byte[26 + utf8.GetByteCount(operation)];
-      hash[0] = MajorVersion;
-      hash[1] = MinorVersion;
-      secret.CopyTo(hash, 2);
-      byte[] bTicket = BitConverter.GetBytes(ticket);
-      byte[] bRequestId = BitConverter.GetBytes(requestId);
-      if (!BitConverter.IsLittleEndian) {
-        Array.Reverse(bTicket);
-        Array.Reverse(bRequestId);
-      }
-      bTicket.CopyTo(hash, 18);
-      bRequestId.CopyTo(hash, 22);
-      byte[] bOperation = utf8.GetBytes(operation);
-      bOperation.CopyTo(hash, 26);
-      return SHA256.Create().ComputeHash(hash);
-    }
 
     private byte[] CreateInvalidCredentialHash() {
       return new byte[] {0};
