@@ -102,12 +102,12 @@ namespace tecgraf.openbus.sdk.Security {
     /// <summary>
     /// Encripta uma informação utilizando um certificado digital.
     /// </summary>
-    /// <param name="acsCertificate">O certificado Digital.</param>
+    /// <param name="certificate">O certificado Digital.</param>
     /// <param name="plainData">A informação descriptografada.</param>
     /// <returns>A informação encriptografada.</returns>
-    public static byte[] Encrypt(X509Certificate2 acsCertificate,
+    public static byte[] Encrypt(X509Certificate2 certificate,
                                   byte[] plainData) {
-      RSACryptoServiceProvider rsaProvider = acsCertificate.PublicKey.Key as
+      RSACryptoServiceProvider rsaProvider = certificate.PublicKey.Key as
                         RSACryptoServiceProvider;
       return rsaProvider.Encrypt(plainData, false);
     }
@@ -115,12 +115,12 @@ namespace tecgraf.openbus.sdk.Security {
     /// <summary>
     /// Encripta uma informação utilizando um certificado digital.
     /// </summary>
-    /// <param name="acsKey">A chave a ser usada para criptografar os dados.</param>
+    /// <param name="key">A chave a ser usada para criptografar os dados.</param>
     /// <param name="plainData">A informação descriptografada.</param>
     /// <returns>A informação encriptografada.</returns>
-    public static byte[] Encrypt(RSACryptoServiceProvider acsKey,
+    public static byte[] Encrypt(RSACryptoServiceProvider key,
                                   byte[] plainData) {
-      return acsKey.Encrypt(plainData, false);
+      return key.Encrypt(plainData, false);
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ namespace tecgraf.openbus.sdk.Interceptors
     //TODO: Maia vai criar constantes na IDL para os 3 casos abaixo
     private const byte MajorVersion = core.v2_00.MajorVersion.ConstVal;
     private const byte MinorVersion = core.v2_00.MinorVersion.ConstVal;
-//    protected readonly const int SecretSize = 16;
+    protected readonly const int SecretSize = 16;
 
     /// <summary>
     /// Fornece o nome do interceptador.
@@ -69,13 +69,13 @@ namespace tecgraf.openbus.sdk.Interceptors
       hash[1] = MinorVersion;
       int index = 2;
       secret.CopyTo(hash, index);
+      index += secret.Length;
       byte[] bTicket = BitConverter.GetBytes(ticket);
       byte[] bRequestId = BitConverter.GetBytes(requestId);
       if (!BitConverter.IsLittleEndian) {
         Array.Reverse(bTicket);
         Array.Reverse(bRequestId);
       }
-      index += secret.Length;
       bTicket.CopyTo(hash, index);
       index += 4;
       bRequestId.CopyTo(hash, index);

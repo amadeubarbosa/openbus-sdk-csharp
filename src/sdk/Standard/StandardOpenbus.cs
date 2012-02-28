@@ -5,8 +5,8 @@ using System.Security.Cryptography;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk.Exceptions;
-using tecgraf.openbus.sdk.Interceptors;
 using log4net;
 using omg.org.CORBA;
 using scs.core;
@@ -27,6 +27,8 @@ namespace tecgraf.openbus.sdk.Standard
     private readonly String _host;
     private readonly long _port;
     private readonly AccessControl _acs;
+    private readonly LoginRegistry _lr;
+    private readonly OfferRegistry _or;
     private readonly IComponent _acsComponent;
     private readonly RSACryptoServiceProvider _busKey;
     private readonly Connection _connection;
@@ -42,6 +44,7 @@ namespace tecgraf.openbus.sdk.Standard
     /// O canal IIOP responsável pela troca de mensagens com o barramento.
     /// </summary>
     private readonly IiopChannel _channel;
+
 
     #endregion
 
@@ -68,10 +71,16 @@ namespace tecgraf.openbus.sdk.Standard
       }
 
       String acsId = Repository.GetRepositoryID(typeof(AccessControl));
+      String lrId = Repository.GetRepositoryID(typeof(LoginRegistry));
+      String orId = Repository.GetRepositoryID(typeof(OfferRegistry));
 
       MarshalByRefObject acsObjRef;
+      MarshalByRefObject lrObjRef;
+      MarshalByRefObject orObjRef;
       try {
         acsObjRef = _acsComponent.getFacet(acsId);
+        lrObjRef = _acsComponent.getFacet(lrId);
+        orObjRef = _acsComponent.getFacet(orId);
       }
       catch (AbstractCORBASystemException e) {
         Logger.Error("O serviço de controle de acesso não foi encontrado", e);
@@ -79,7 +88,9 @@ namespace tecgraf.openbus.sdk.Standard
       }
 
       _acs = acsObjRef as AccessControl;
-      if (_acs == null) {
+      _lr = lrObjRef as LoginRegistry;
+      _or = orObjRef as OfferRegistry;
+      if ((_acs == null) || (_lr == null) || (_or == null)) {
         Logger.Error("O serviço de controle de acesso não foi encontrado");
         return;
       }
@@ -117,6 +128,15 @@ namespace tecgraf.openbus.sdk.Standard
 
     public IComponent AcsComponent {
       get { return _acsComponent; }
+    }
+
+    public LoginRegistry LoginRegistry {
+      get { return _lr; }
+    }
+
+    //TODO: apenas a OfferRegistry deveria ser publica
+    public OfferRegistry OfferRegistry {
+      get { return _or; }
     }
 
     public string BusId { get; private set; }
