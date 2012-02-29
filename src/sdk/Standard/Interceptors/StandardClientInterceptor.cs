@@ -91,7 +91,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
         if (_outgoingLogin2Session.ContainsKey(remoteLogin)) {
           Session session = _outgoingLogin2Session[remoteLogin];
           sessionId = session.Id;
-          ticket = session.Ticket;
+          ticket = session.Ticket + 1;
           secret = new byte[session.Secret.Length];
           session.Secret.CopyTo(secret, 0);
         }
@@ -126,7 +126,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       catch (NO_PERMISSION e) {
         if (e.Minor == InvalidLoginCode.ConstVal) {
           Logger.Fatal(
-            "Este cliente foi deslogado do barramento durante a interceptação desta requisição",
+            "Este cliente foi deslogado do barramento durante a interceptação desta requisição.",
             e);
           //TODO chamar callback de login perdido
           //TODO se callback retornar true, relançar o request
@@ -134,11 +134,10 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
           throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        //TODO: Verificar se não é melhor lançar um badremote. Lembrar que CheckValidity lança exceção, talvez seja melhor tentar refatorar
         throw;
       }
       catch (Exception) {
-        Logger.Fatal("Erro ao tentar codificar a credencial.");
+        Logger.Fatal(String.Format("Erro ao tentar enviar a requisição {0}.", operation));
         throw;
       }
     }
