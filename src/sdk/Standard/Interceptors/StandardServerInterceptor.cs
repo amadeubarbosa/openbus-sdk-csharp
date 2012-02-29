@@ -120,6 +120,43 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
                               CompletionStatus.Completed_No);
     }
 
+    #endregion
+
+    #region ServerRequestInterceptor Not Implemented
+
+    /// <inheritdoc />
+    public virtual void receive_request_service_contexts(ServerRequestInfo ri) {
+      //Nada a ser feito
+    }
+
+    /// <inheritdoc />
+    public virtual void send_exception(ServerRequestInfo ri) {
+      //Nada a ser feito
+    }
+
+    /// <inheritdoc />
+    public virtual void send_other(ServerRequestInfo ri) {
+      //Nada a ser feito
+    }
+
+    /// <inheritdoc />
+    public virtual void send_reply(ServerRequestInfo ri) {
+      //Nada a ser feito
+    }
+
+    #endregion
+
+    private CredentialData UnmarshalCredential(ServiceContext serviceContext) {
+      OrbServices orb = OrbServices.GetSingleton();
+      Type credentialType = typeof (CredentialData);
+      omg.org.CORBA.TypeCode credentialTypeCode =
+        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
+                                credentialType.Name);
+
+      byte[] data = serviceContext.context_data;
+      return (CredentialData) Codec.decode_value(data, credentialTypeCode);
+    }
+
     private byte[] CreateCredentialReset(string remoteLogin) {
       if (_connection.Login != null) {
         CredentialReset reset = new CredentialReset();
@@ -194,41 +231,13 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
                                 credential.bus, credential.login));
     }
 
-    #endregion
-
-    #region ServerRequestInterceptor Not Implemented
-
-    /// <inheritdoc />
-    public virtual void receive_request_service_contexts(ServerRequestInfo ri) {
-      //Nada a ser feito
-    }
-
-    /// <inheritdoc />
-    public virtual void send_exception(ServerRequestInfo ri) {
-      //Nada a ser feito
-    }
-
-    /// <inheritdoc />
-    public virtual void send_other(ServerRequestInfo ri) {
-      //Nada a ser feito
-    }
-
-    /// <inheritdoc />
-    public virtual void send_reply(ServerRequestInfo ri) {
-      //Nada a ser feito
-    }
-
-    #endregion
-
-    private CredentialData UnmarshalCredential(ServiceContext serviceContext) {
+    private CallChain UnmarshalCallChain(SignedCallChain signed) {
       OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof (CredentialData);
-      omg.org.CORBA.TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
-
-      byte[] data = serviceContext.context_data;
-      return (CredentialData) Codec.decode_value(data, credentialTypeCode);
+      Type chainType = typeof (CallChain);
+      omg.org.CORBA.TypeCode chainTypeCode =
+        orb.create_interface_tc(Repository.GetRepositoryID(chainType),
+                                chainType.Name);
+      return (CallChain) Codec.decode_value(signed.encoded, chainTypeCode);
     }
 
     private void CheckChain(SignedCallChain signed, string callerId) {
@@ -236,7 +245,8 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       try {
         if (!chain.target.Equals(_connection.Login.Value) ||
             (!chain.callers[chain.callers.Length - 1].id.Equals(callerId)) ||
-            (!_bus.BusKey.VerifyData(signed.encoded, SHA256.Create(), signed.signature))) {
+            (!_bus.BusKey.VerifyData(signed.encoded, SHA256.Create(),
+                                     signed.signature))) {
           Logger.Fatal("Credencial inválida, enviando CredentialReset.");
           throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -249,14 +259,5 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
                                 CompletionStatus.Completed_No);
       }
     }
-
-    private CallChain UnmarshalCallChain(SignedCallChain signed) {
-      OrbServices orb = OrbServices.GetSingleton();
-      Type chainType = typeof (CallChain);
-      omg.org.CORBA.TypeCode chainTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
-      return (CallChain) Codec.decode_value(signed.encoded, chainTypeCode);
-    }
-                                             }
+  }
 }
