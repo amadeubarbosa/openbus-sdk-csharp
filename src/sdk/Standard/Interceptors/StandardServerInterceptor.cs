@@ -101,9 +101,11 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
       if (secret.Length > 0) {
         byte[] hash = CreateCredentialHash(ri.operation, ticket, secret,
-                                            ri.request_id);
+                                           ri.request_id);
         if (hash.Equals(credential.hash)) {
           // credencial valida
+          // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
+          CheckChain(credential.chain, credential.login);
           return;
         }
       }
@@ -170,7 +172,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     private void CheckValidity(CredentialData credential) {
       int validity;
       try {
-        validity = _bus.LoginRegistry.getValidity(new[] { credential.login })[0];
+        validity = _bus.LoginRegistry.getValidity(new[] {credential.login})[0];
       }
       catch (NO_PERMISSION e) {
         if (e.Minor == InvalidLoginCode.ConstVal) {
@@ -227,6 +229,34 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
       byte[] data = serviceContext.context_data;
       return (CredentialData) Codec.decode_value(data, credentialTypeCode);
+    }
+
+    private void CheckChain(SignedCallChain signed, string callerId) {
+      CallChain chain = UnmarshalCallChain(signed);
+      try {
+        if (!chain.target.Equals(_connection.Login.Value) ||
+            (!chain.callers[chain.callers.Length - 1].id.Equals(callerId)) ||
+            (!_bus.BusKey.VerifyData(signed.encoded, SHA256.Create(), signed.signature))) {
+          Logger.Fatal("Credencial inválida, enviando CredentialReset.");
+          throw new NO_PERMISSION(InvalidChainCode.ConstVal,
+                                  CompletionStatus.Completed_No);
+        }
+      }
+      catch (InvalidOperationException) {
+        Logger.Fatal(
+          "Este servidor foi deslogado do barramento durante a interceptação desta requisição");
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+    }
+
+    private CallChain UnmarshalCallChain(SignedCallChain signed) {
+      OrbServices orb = OrbServices.GetSingleton();
+      Type chainType = typeof (CallChain);
+      omg.org.CORBA.TypeCode chainTypeCode =
+        orb.create_interface_tc(Repository.GetRepositoryID(chainType),
+                                chainType.Name);
+      return (CallChain) Codec.decode_value(signed.encoded, chainTypeCode);
     }
                                              }
 }
