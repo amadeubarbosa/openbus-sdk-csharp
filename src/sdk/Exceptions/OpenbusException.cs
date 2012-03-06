@@ -1,6 +1,6 @@
 using System;
 
-namespace tecgraf.openbus.sdk.Exceptions
+namespace tecgraf.openbus.sdk.exceptions
 {
   /// <summary>
   /// Indica uma exceção do OpenBus.

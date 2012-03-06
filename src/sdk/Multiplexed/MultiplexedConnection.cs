@@ -15,7 +15,7 @@ namespace tecgraf.openbus.sdk.Multiplexed {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (MultiplexedConnection));
 
-    private readonly Openbus _bus;
+    private readonly OpenBus _bus;
     private readonly X509Certificate2 _certificate;
     private readonly RSACryptoServiceProvider _prvKey;
     private readonly RSACryptoServiceProvider _pubKey;
@@ -26,7 +26,7 @@ namespace tecgraf.openbus.sdk.Multiplexed {
 
     #region Constructors
 
-    public MultiplexedConnection(Openbus bus) {
+    public MultiplexedConnection(OpenBus bus) {
       _bus = bus;
       _certificate = Crypto.NewCertificate();
       _prvKey = Crypto.GetPrivateKey(_certificate);

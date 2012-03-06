@@ -17,7 +17,7 @@ namespace tecgraf.openbus.sdk.Multiplexed
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>
-  public class MultiplexedOpenbus : Openbus
+  public class MultiplexedOpenbus : OpenBus
   {
     #region Fields
 

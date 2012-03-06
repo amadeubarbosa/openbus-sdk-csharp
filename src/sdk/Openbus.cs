@@ -1,28 +1,13 @@
-using System.Security.Cryptography;
-using tecgraf.openbus.core.v2_00.services.access_control;
-using scs.core;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
-
 namespace tecgraf.openbus.sdk
 {
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>
-  public interface Openbus
+  public interface OpenBus
   {
     /// <summary>
-    /// Cria uma nova conexão com este barramento.
+    /// Cria uma nova conexão com um barramento.
     /// </summary>
-    Connection Connect();
-
-    OfferRegistry OfferRegistry { get; }
-
-    string BusId { get; }
-
-    RSACryptoServiceProvider BusKey { get; }
-
-    long Port { get; }
-
-    string Host { get; }
+    Connection Connect(string host, short port);
   }
 }

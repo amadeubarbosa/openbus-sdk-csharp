@@ -1,10 +1,31 @@
 ﻿using System;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_00.services.offer_registry;
 
 namespace tecgraf.openbus.sdk {
   public interface Connection {
-    //TODO: atualizar
+
+    /*************************************************************************
+     * OBTENÇÃO DOS SERVICOS DO BARRAMENTO ***********************************
+     *************************************************************************/
+
+    OfferRegistry OfferRegistry { get; }
+
+    /*************************************************************************
+     * INFORMAÇÕES DO LOGIN **************************************************
+     *************************************************************************/
+
+    /// <summary>
+    /// Barramento ao qual essa conexão se refere.
+    /// </summary>
+    string BusId { get; }
+
+    /// <summary>
+    /// Informações sobre o login da entidade que autenticou essa conexão.
+    /// </summary>
+    LoginInfo? Login { get; }
+
     /*************************************************************************
      * LOGIN AO BARRAMENTO ***************************************************
      *************************************************************************/
@@ -26,7 +47,7 @@ namespace tecgraf.openbus.sdk {
     /// certificado.
     /// </summary>
     /// <param name="entity"> Identificador da entidade a ser conectada.</param>
-    /// <param name="privateKey"> Chave privada da entidade utilizada na autenticação.</param>
+    /// <param name="privKey"> Chave privada da entidade utilizada na autenticação.</param>
     /// <exception cref="MissingCertificate"> Não há certificado para essa entidade
     /// registrado no barramento indicado.</exception>
     /// <exception cref="CorruptedPrivateKey"> A chave privada fornecida está 
@@ -36,9 +57,8 @@ namespace tecgraf.openbus.sdk {
     /// <exception cref="AlreadyLoggedIn"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
-    void LoginByCertificate(String entity, Byte[] privateKey);
+    void LoginByCertificate(String entity, Byte[] privKey);
 
-	  ///
     /// <summary>
 	  /// Inicia o processo de login por single sign-on e cria um objeto para
 	  /// conclusão desse processo.
@@ -61,6 +81,8 @@ namespace tecgraf.openbus.sdk {
     /// </summary>
     /// <param name="login"> Objeto de login a ser utilizado.</param>
     /// <param name="secret"> Segredo decodificado a partir de outro login.</param>
+    /// <exception cref="WrongSecret"> O segredo não corresponde ao esperado.</exception>
+    /// <exception cref="AlreadyLoggedIn"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
     void LoginBySingleSignOn(LoginProcess login, Byte[] secret);
@@ -71,28 +93,18 @@ namespace tecgraf.openbus.sdk {
      *************************************************************************/
 
     /// <summary>
-    /// Informa se a conexão está logada em um dado momento.
-    /// </summary>
-    bool IsLoggedIn();
-
-    /// <summary>
     /// Efetua logout no barramento. Retorna verdadeiro se o processo de logout
     /// for concluído com êxito e falso se a conexão já estiver deslogada 
     /// (login inválido).
     /// </summary>
     bool Logout();
-     
-    /// <param name="callback"> Objeto que implementa a interface de callback a ser
-    /// chamada ou 'null' caso nenhum objeto deva ser chamado na
-    /// ocorrência desse evento.</param>
-    void SetExpiredLoginCallback(IExpiredLoginCallback callback);
-     
+
     /// <summary>
-    /// Devolve a callback a ser chamada sempre que o login expira. Retorna um 
-    /// objeto que implementa a interface de callback associado a esse
-    /// evento ou 'null' caso nenhum objeto de callback tenha sido associado.
+    /// Objeto que implementa a interface de callback a ser
+    /// chamada ou 'null' caso nenhum objeto deva ser chamado na
+    /// ocorrência desse evento.
     /// </summary>
-    IExpiredLoginCallback GetExpiredLoginCallback();
+    InvalidLoginCallback OnInvalidLoginCallback { get; set; }
      
     /*************************************************************************
      * INSPEÇÃO DO CLIENTE DAS CHAMADAS **************************************
@@ -104,7 +116,7 @@ namespace tecgraf.openbus.sdk {
     /// representa a cadeia de chamadas do barramento que esta chamada faz parte.
     /// Caso contrário devolve 'null'.
     /// </summary>
-    CallChain GetCallerChain();
+    CallerChain GetCallerChain();
      
     /*************************************************************************
      * DELEGAÇÃO DE DIREITOS EM CHAMADAS *************************************
@@ -115,7 +127,7 @@ namespace tecgraf.openbus.sdk {
     /// que todas as chamadas remotas seguintes dessa thread através dessa
     /// conexão sejam feitas como parte dessa cadeia de chamadas.
     /// </summary>
-    void JoinChain(CallChain chain);
+    void JoinChain(CallerChain chain);
      
     /// <summary>
     /// Remove a associação da cadeia de chamadas com a thread corrente, fazendo
@@ -132,7 +144,7 @@ namespace tecgraf.openbus.sdk {
     /// previamente pela operação 'joinChain'. Caso a thread corrente não tenha
     /// nenhuma cadeia associada, essa operação devolve 'null'.
     /// </summary>
-    CallChain GetJoinedChain();
+    CallerChain GetJoinedChain();
      
     /*************************************************************************
      * GERÊNCIA DO CICLO DE VIDA DA CONEXÃO **********************************

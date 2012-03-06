@@ -13,20 +13,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors
 
     private static readonly ILog Logger = LogManager.GetLogger(typeof(StandardClientInitializer));
 
-    private readonly StandardOpenbus _bus;
-
-    #endregion
-
-    #region Constructor
-
-    /// <summary>
-    /// Construtor.
-    /// <param name="bus">O barramento sendo utilizado. Esse é um barramento de apenas uma conexão.</param>
-    /// </summary>
-    public StandardClientInitializer(StandardOpenbus bus) {
-      _bus = bus;
-    }
-
     #endregion
 
     #region ORBInitializer Members
@@ -36,7 +22,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors
       try {
         Encoding encode = new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2);
         Codec codec = info.codec_factory.create_codec(encode);
-        info.add_client_request_interceptor(new StandardClientInterceptor(_bus, codec));
+        info.add_client_request_interceptor(new StandardClientInterceptor(codec));
 
         Logger.Info("Interceptador cliente registrado.");
       }

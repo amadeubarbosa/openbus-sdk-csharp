@@ -1,0 +1,21 @@
+using System;
+
+namespace tecgraf.openbus.sdk.exceptions
+{
+  /// <summary>
+  /// Indica uma execeção de falha no serviço de controle de acesso. 
+  /// </summary>
+  [Serializable]
+  public class AccessDeniedException : OpenbusException
+  {
+    /// <inheritdoc />
+    public AccessDeniedException() { }
+    
+    /// <inheritdoc />
+    public AccessDeniedException(string message) : base(message) { }
+    
+    /// <inheritdoc />
+    public AccessDeniedException(string message, Exception inner) 
+      : base(message, inner) { }
+  }
+}

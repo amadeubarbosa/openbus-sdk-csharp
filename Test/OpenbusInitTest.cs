@@ -57,7 +57,7 @@ namespace Test {
     /// </summary>
     [TestMethod]
     public void Instantiate() {
-      Openbus bus = new StandardOpenbus(_hostName, _hostPort, false);
+      OpenBus bus = new StandardOpenbus(_hostName, _hostPort, false);
       Connection conn = bus.Connect();
       conn.LoginByPassword(_entity, _password);
       conn.Logout();
