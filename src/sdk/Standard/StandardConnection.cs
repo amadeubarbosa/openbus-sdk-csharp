@@ -61,7 +61,7 @@ namespace tecgraf.openbus.sdk.Standard {
     //TODO: Maia vai criar constantes na IDL para os 3 casos abaixo
     private const byte MajorVersion = core.v2_00.MajorVersion.ConstVal;
     private const byte MinorVersion = core.v2_00.MinorVersion.ConstVal;
-    private readonly const int SecretSize = 16;
+    private const int SecretSize = 16;
 
     private readonly Codec _codec;
 
@@ -427,24 +427,27 @@ namespace tecgraf.openbus.sdk.Standard {
                        ri.effective_profile.profile_data.ToString();
       _profile2Login.TryAdd(profile, remoteLogin);
 
-      Session session;
-      if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
-        Logger.Info(
-          String.Format(
-            "Reuso de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-            session.Id, operation, remoteLogin));
-      }
-      else {
-        int sessionId = requestReset.session;
-        byte[] secret = Crypto.Decrypt(PrivateKey,
-                                       requestReset.challenge);
-        _outgoingLogin2Session.TryAdd(remoteLogin,
-                                      new Session(sessionId, secret,
-                                                  remoteLogin));
-        Logger.Info(
-          String.Format(
-            "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-            session.Id, operation, remoteLogin));
+      // lock necessário para garantir atomicidade entre o get e o add
+      lock (_outgoingLogin2Session) {
+        Session session;
+        if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
+          Logger.Info(
+            String.Format(
+              "Reuso de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
+              session.Id, operation, remoteLogin));
+        }
+        else {
+          int sessionId = requestReset.session;
+          byte[] secret = Crypto.Decrypt(PrivateKey,
+                                         requestReset.challenge);
+          _outgoingLogin2Session.TryAdd(remoteLogin,
+                                        new Session(sessionId, secret,
+                                                    remoteLogin));
+          Logger.Info(
+            String.Format(
+              "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
+              session.Id, operation, remoteLogin));
+        }
       }
       // pede que a chamada original seja relançada
       throw new ForwardRequest(ri.target);
@@ -591,24 +594,27 @@ namespace tecgraf.openbus.sdk.Standard {
 
         // lock para tornar esse trecho atomico
         lock (_lock) {
-          if (!_login2PubKey.TryGetValue(remoteLogin, out pubKey)) {
-            byte[] key;
-            try {
-              _lr.getLoginInfo(remoteLogin, out key);
-            }
-            catch (NO_PERMISSION e) {
-              if (e.Minor == InvalidLoginCode.ConstVal) {
-                Logger.Fatal(
-                  "Este servidor foi deslogado do barramento durante a interceptação desta requisição",
-                  e);
-                throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                        CompletionStatus.Completed_No);
+          // lock necessário para garantir atomicidade entre o get e o add
+          lock (_login2PubKey) {
+            if (!_login2PubKey.TryGetValue(remoteLogin, out pubKey)) {
+              byte[] key;
+              try {
+                _lr.getLoginInfo(remoteLogin, out key);
               }
-              throw;
+              catch (NO_PERMISSION e) {
+                if (e.Minor == InvalidLoginCode.ConstVal) {
+                  Logger.Fatal(
+                    "Este servidor foi deslogado do barramento durante a interceptação desta requisição",
+                    e);
+                  throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                          CompletionStatus.Completed_No);
+                }
+                throw;
+              }
+              pubKey = new RSACryptoServiceProvider();
+              pubKey.ImportCspBlob(key);
+              _login2PubKey.TryAdd(remoteLogin, pubKey);
             }
-            pubKey = new RSACryptoServiceProvider();
-            pubKey.ImportCspBlob(key);
-            _login2PubKey.TryAdd(remoteLogin, pubKey);
           }
           reset.challenge = Crypto.Encrypt(pubKey, reset.challenge);
 
