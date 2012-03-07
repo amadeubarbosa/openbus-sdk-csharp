@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -14,9 +13,9 @@ using scs.core;
 using tecgraf.openbus.core.v2_00.credential;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.sdk.Standard.Interceptors;
 using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.Security;
+using tecgraf.openbus.sdk.lease;
 using Encoding = omg.org.IOP.Encoding;
 using TypeCode = omg.org.CORBA.TypeCode;
 
@@ -35,6 +34,7 @@ namespace tecgraf.openbus.sdk.Standard {
     private readonly RSACryptoServiceProvider _busKey;
     private readonly X509Certificate2 _certificate;
     private LoginInfo? _login;
+    private LeaseRenewer _leaseRenewer;
 
     //TODO: avaliar a melhor forma de armazenar a chave. String é uma boa opção? Se fosse usar o array de bytes direto eu teria q criar uma classe com metodos de comparacao que criasse um hash, para nao ficar muito cara a comparacao...
     //TODO: caches ainda nao tem nenhuma politica de remocao ou de tamanho maximo
@@ -160,8 +160,8 @@ namespace tecgraf.openbus.sdk.Standard {
       }
 
       int lease;
-      _login = login.login(pubBlob, encrypted, out lease);
-      //TODO: utilizar o lease
+      Login = login.login(pubBlob, encrypted, out lease);
+      StartLeaseRenewer();
     }
 
     private Codec GetCodec() {
@@ -178,8 +178,23 @@ namespace tecgraf.openbus.sdk.Standard {
 
     private void LocalLogout() {
       _login = null;
+      StopLeaseRenewer();
       //TODO: resetar caches qdo forem implementados
-      //TODO: desagendar o renovador de credenciais
+    }
+
+    private void StartLeaseRenewer() {
+      _leaseRenewer = new LeaseRenewer(this, _acs);
+      _leaseRenewer.Start();
+      Logger.Debug("Thread de renovação de lease está ativa. Lease = "
+        + _leaseRenewer.GetLease() + " segundos.");
+    }
+
+    private void StopLeaseRenewer() {
+      if (_leaseRenewer != null) {
+        _leaseRenewer.Finish();
+        _leaseRenewer = null;
+        Logger.Debug("Thread de renovação de lease desativada.");
+      }
     }
 
     #endregion
@@ -221,8 +236,8 @@ namespace tecgraf.openbus.sdk.Standard {
       }
 
       int lease;
-      _login = _acs.loginByPassword(entity, pubBlob, encrypted, out lease);
-      //TODO: utilizar o lease
+      Login = _acs.loginByPassword(entity, pubBlob, encrypted, out lease);
+      StartLeaseRenewer();
     }
 
     public void LoginByCertificate(string entity, byte[] privKey) {
@@ -293,14 +308,10 @@ namespace tecgraf.openbus.sdk.Standard {
       }
       catch (Exception e) {
         Logger.Warn(String.Format("Erro capturado ao fechar conexão: {0}", e.Message));
-        throw;
       }
       finally {
         StandardOpenbus.RemoveConnection();
       }
-      //TODO: capturar qualquer exceção lançada
-      //TODO: remover conexao de cache se for o caso
-      //TODO: remover conexão do interceptador para que classe OpenBus possa criar nova conexão
     }
 
     #endregion

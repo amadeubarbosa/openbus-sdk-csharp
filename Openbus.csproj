@@ -81,19 +81,21 @@
     <Compile Include="src\sdk\exceptions\WrongPrivateKeyException.cs" />
     <Compile Include="src\sdk\exceptions\WrongSecretException.cs" />
     <Compile Include="src\sdk\InvalidLoginCallback.cs" />
-    <Compile Include="src\sdk\Multiplexed\MultiplexedConnection.cs" />
-    <Compile Include="src\sdk\Multiplexed\MultiplexedOpenbus.cs" />
-    <Compile Include="src\sdk\Standard\StandardConnection.cs" />
-    <Compile Include="src\sdk\Standard\StandardOpenbus.cs" />
-    <Compile Include="src\sdk\Standard\Interceptors\StandardClientInitializer.cs" />
-    <Compile Include="src\sdk\Standard\Interceptors\StandardClientInterceptor.cs" />
-    <Compile Include="src\sdk\Interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\sdk\Standard\Interceptors\StandardServerInitializer.cs" />
-    <Compile Include="src\sdk\Standard\Interceptors\StandardServerInterceptor.cs" />
+    <Compile Include="src\sdk\lease\LeaseRenewer.cs" />
+    <Compile Include="src\sdk\lease\RenewerTask.cs" />
+    <Compile Include="src\sdk\multiplexed\MultiplexedConnection.cs" />
+    <Compile Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
+    <Compile Include="src\sdk\standard\StandardConnection.cs" />
+    <Compile Include="src\sdk\standard\StandardOpenbus.cs" />
+    <Compile Include="src\sdk\standard\interceptors\StandardClientInitializer.cs" />
+    <Compile Include="src\sdk\standard\interceptors\StandardClientInterceptor.cs" />
+    <Compile Include="src\sdk\interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\sdk\standard\interceptors\StandardServerInitializer.cs" />
+    <Compile Include="src\sdk\standard\interceptors\StandardServerInterceptor.cs" />
     <Compile Include="src\sdk\Connection.cs" />
     <Compile Include="src\sdk\Openbus.cs" />
-    <Compile Include="src\sdk\Security\Crypto.cs" />
-    <Compile Include="src\sdk\Security\RSAPKCS8KeyFormatter.cs" />
+    <Compile Include="src\sdk\security\Crypto.cs" />
+    <Compile Include="src\sdk\security\RSAPKCS8KeyFormatter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -110,7 +112,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="src\sdk\Multiplexed\Interceptors\" />
+    <Folder Include="src\sdk\multiplexed\interceptors\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
