@@ -40,7 +40,7 @@ namespace tecgraf.openbus.sdk.Standard {
       _outgoingLogin2Session;
 
     private readonly ConcurrentDictionary<String, string> _profile2Login;
-    private volatile int _sessionId = 1;
+    private volatile int _sessionId;
     private readonly ConcurrentDictionary<int, Session> _sessionId2Session;
 
     private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
@@ -540,6 +540,9 @@ namespace tecgraf.openbus.sdk.Standard {
           // credencial valida
           // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
           CheckChain(credential.chain, credential.login);
+          lock (session) {
+            session.Ticket++;
+          }
           return;
         }
       }
@@ -565,11 +568,10 @@ namespace tecgraf.openbus.sdk.Standard {
         CredentialData credential = UnmarshalCredential(serviceContext);
         Logger.Info(String.Format("A operação '{0}' possui credencial.",
                                   interceptedOperation));
-        byte[] encodedReset;
         Session session;
         _sessionId2Session.TryGetValue(credential.session, out session);
         // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode
-        encodedReset = CreateCredentialReset(credential.login, session);
+        byte[] encodedReset = CreateCredentialReset(credential.login, session);
         ServiceContext replyServiceContext = new ServiceContext(ContextId,
                                                                 encodedReset);
         ri.add_reply_service_context(replyServiceContext, false);
