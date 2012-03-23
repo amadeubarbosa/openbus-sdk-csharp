@@ -1,25 +1,23 @@
 using System;
 using Client.Properties;
-using demoidl.hello;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
-using scs.core;
-using tecgraf.openbus.core.v1_05.registry_service;
-using Tecgraf.Openbus;
+using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.sdk;
+using tecgraf.openbus.sdk.Standard;
 
-namespace DemoHello_Client
+namespace tecgraf.openbus.demo.hello
 {
   /// <summary>
   /// Cliente do demo hello.
   /// </summary>
-  class HelloClient
-  {
-    private static Openbus openbus;
+  static class HelloClient {
+    private static Connection _conn;
 
     static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
+      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
@@ -31,19 +29,26 @@ namespace DemoHello_Client
       };
       BasicConfigurator.Configure(appender);
 
-      openbus = Openbus.GetInstance();
-      openbus.Init(hostName, hostPort);
+      OpenBus openbus = StandardOpenBus.Instance;
+      _conn = openbus.Connect(hostName, (short)hostPort);
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
+      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
-      IRegistryService registryService = openbus.Connect(userLogin, userPassword);
+      _conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
       Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
       Console.ReadLine();
 
-      string[] facets = new string[] { "IHello" };
-      ServiceOffer[] offers = registryService.find(facets);
+      // propriedades geradas automaticamente
+      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "demo");
+      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "hello");
+      // propriedade definida pelo servidor hello
+      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+
+      ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
+      ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
@@ -52,29 +57,26 @@ namespace DemoHello_Client
       if (offers.Length > 1)
         Console.WriteLine("Existe mais de um serviço Hello no barramento.");
 
-      IComponent component = offers[0].member;
-      MarshalByRefObject helloObj = component.getFacetByName("IHello");
-
-      if (helloObj == null) {
-        Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
-        Environment.Exit(1);
+      foreach (ServiceOfferDesc serviceOfferDesc in offers) {
+        MarshalByRefObject helloObj = serviceOfferDesc.service_ref.getFacetByName("IHello");
+        if (helloObj == null) {
+          Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
+          continue;
+        }
+        IHello hello = helloObj as IHello;
+        if (hello == null) {
+          Console.WriteLine("Faceta encontrada não implementa IHello.");
+          continue;
+        }
+        hello.sayHello();
       }
-
-      IHello hello = helloObj as IHello;
-      if (hello == null) {
-        Console.WriteLine("Faceta encontrada não implementa IHello.");
-        Environment.Exit(1);
-      }
-
-      hello.sayHello();
 
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }
 
     static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-      openbus.Disconnect();
-      openbus.Destroy();
+      _conn.Close();
     }
   }
 

@@ -1,71 +1,61 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Xml;
-using log4net.Config;
-using scs.core;
+using System.Threading;
+using Ch.Elca.Iiop.Idl;
 using Scs.Core;
-using Scs.Core.Builder;
+using Server;
+using log4net.Config;
 using Server.Properties;
-using tecgraf.openbus.core.v1_05.registry_service;
-using Tecgraf.Openbus;
-using Tecgraf.Openbus.Security;
+using scs.core;
+using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.sdk;
+using tecgraf.openbus.sdk.Security;
+using tecgraf.openbus.sdk.Standard;
 
-
-namespace Server
-{
+namespace tecgraf.openbus.demo.hello {
   /// <summary>
   /// Servidor do demo hello.
   /// </summary>
-  class HelloServer
-  {
-    static string offerIndentifier;
-
+  static class HelloServer {
+    //TODO: depois que colocar o getconnection (ou equivalente) no sdk, remover essas globais
+    public static Connection Conn;
+    private static ServiceOffer _offer;
     static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
+      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
-      Openbus openbus = Openbus.GetInstance();
-      openbus.Init(hostName, hostPort);
+      OpenBus openbus = StandardOpenBus.Instance;
+      Conn = openbus.Connect(hostName, (short)hostPort);
 
       string entityName = DemoConfig.Default.entityName;
       string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
-      string acsCertificateFile = DemoConfig.Default.acsCertificateFileName;
 
-      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(privaKeyFile);
-      X509Certificate2 acsCertificate =
-        Crypto.ReadCertificate(acsCertificateFile);
+      byte[] privateKey = File.ReadAllBytes(privaKeyFile);
 
-      String componentModel = Resources.ComponentModel;
-      TextReader file = new StringReader(componentModel);
-      XmlTextReader componentInformation = new XmlTextReader(file);
-      XmlComponentBuilder builder = new XmlComponentBuilder(componentInformation);
-      ComponentContext component = builder.build();
+      ComponentContext component =
+        new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));
+      component.AddFacet("hello", Repository.GetRepositoryID(typeof(IHello)), new HelloImpl(component, Conn));
 
-      IRegistryService registryService =
-        openbus.Connect(entityName, privateKey, acsCertificate);
+      Conn.LoginByCertificate(entityName, privateKey);
+      Conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(entityName, privateKey);
 
-      _Property[] properties = new _Property[0];
       IComponent member = component.GetIComponent();
-      ServiceOffer serviceOffer = new ServiceOffer(properties, member);
-      offerIndentifier = registryService.register(serviceOffer);
+      ServiceProperty[] properties = new[] {new ServiceProperty("offer.domain", "OpenBus Demos")};
+      _offer = Conn.OfferRegistry.registerService(member, properties);
 
       Console.WriteLine("Servidor no ar.");
 
-      openbus.Run();
+      Thread.Sleep(Timeout.Infinite);
     }
 
     static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-      Openbus openbus = Openbus.GetInstance();
-      IRegistryService registryService = openbus.GetRegistryService();
-      registryService.unregister(offerIndentifier);
-      openbus.Disconnect();
-      openbus.Destroy();
+      _offer.remove();
+      Conn.Close();
     }
   }
 }

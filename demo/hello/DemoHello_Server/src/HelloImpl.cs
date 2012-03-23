@@ -1,9 +1,8 @@
 using System;
-using demoidl.hello;
 using Scs.Core;
-using tecgraf.openbus.core.v1_05.access_control_service;
-using Tecgraf.Openbus;
-
+using tecgraf.openbus.demo.hello;
+using tecgraf.openbus.sdk;
+using tecgraf.openbus.sdk.Standard;
 
 namespace Server
 {
@@ -14,14 +13,16 @@ namespace Server
   {
     #region Fields
 
-    private ComponentContext context;
+    private ComponentContext _context;
+    private Connection _conn;
 
     #endregion
 
     #region Constructors
 
-    public HelloImpl(ComponentContext context) {
-      this.context = context;
+    public HelloImpl(ComponentContext context, Connection conn) {
+      _context = context;
+      _conn = conn;
     }
 
     #endregion
@@ -29,8 +30,7 @@ namespace Server
     #region IHello Members
 
     public void sayHello() {
-      Credential caller = Openbus.GetInstance().GetInterceptedCredential();
-      Console.WriteLine(String.Format("Hello {0}!", caller.owner));
+      Console.WriteLine(String.Format("Hello {0}!", HelloServer.Conn.GetCallerChain().Callers()[0].entity));
     }
 
     #endregion

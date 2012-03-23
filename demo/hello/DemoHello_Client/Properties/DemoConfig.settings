@@ -12,7 +12,7 @@
       <Value Profile="(Default)">ubu</Value>
     </Setting>
     <Setting Name="hostPort" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">3000</Value>
+      <Value Profile="(Default)">9000</Value>
     </Setting>
   </Settings>
 </SettingsFile>

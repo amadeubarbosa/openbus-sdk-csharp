@@ -5,20 +5,17 @@
     <Setting Name="hostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">ubu</Value>
     </Setting>
-    <Setting Name="acsCertificateFileName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">AccessControlService.crt</Value>
-    </Setting>
-    <Setting Name="entityName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">marosas</Value>
-    </Setting>
-    <Setting Name="hostPort" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">3000</Value>
-    </Setting>
     <Setting Name="logFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
+    <Setting Name="entityName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">TestEntity</Value>
+    </Setting>
+    <Setting Name="hostPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">9000</Value>
+    </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">marosas.key</Value>
+      <Value Profile="(Default)">TestEntity.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>

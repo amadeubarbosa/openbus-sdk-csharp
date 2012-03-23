@@ -1,12 +1,30 @@
-#ifndef HELLO_IDL
-#define HELLO_IDL
+#ifndef __TECGRAF_OPENBUS_DEMO_HELLO_IDL__
+#define __TECGRAF_OPENBUS_DEMO_HELLO_IDL__
 
-module demoidl {
-  module hello {
-    interface IHello {
-      void sayHello();
-    };
-  };
+/**
+ * \brief Módulo dos sistemas e aplicações do Tecgraf.
+ */
+module tecgraf {
+
+/**
+ * \brief Módulo do \e middleware OpenBus.
+ */
+module openbus {
+
+module demo {
+
+module hello {
+
+interface IHello {
+  void sayHello();
 };
+
+}; // hello
+
+}; // demo
+
+}; // openbus
+
+}; // tecgraf
 
 #endif
