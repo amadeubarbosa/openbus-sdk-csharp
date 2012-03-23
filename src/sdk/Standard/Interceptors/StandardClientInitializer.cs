@@ -18,17 +18,13 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors
     #region ORBInitializer Members
 
     /// <inheritdoc />
-    public void post_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      try {
-        Encoding encode = new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2);
-        Codec codec = info.codec_factory.create_codec(encode);
-        info.add_client_request_interceptor(new StandardClientInterceptor(codec));
+    public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
+      Codec codec = info.codec_factory.create_codec(
+                        new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
+      StandardClientInterceptor.Instance.Codec = codec;
+      info.add_client_request_interceptor(StandardClientInterceptor.Instance);
 
-        Logger.Info("Interceptador cliente registrado.");
-      }
-      catch (System.Exception e) {
-        Logger.Error("Erro no registro do interceptador cliente", e);
-      }
+      Logger.Info("Interceptador cliente registrado.");
     }
 
     #endregion
@@ -36,8 +32,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors
     #region ORBInitializer Not Implemented
 
     /// <inheritdoc />
-    public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      //Nada a fazer
+    public void post_init(omg.org.PortableInterceptor.ORBInitInfo info) {
     }
 
     #endregion

@@ -14,11 +14,11 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors
     #region ORBInitializer Members
 
     /// <inheritdoc />
-    public void post_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      CodecFactory codecFactory = info.codec_factory;
-      Encoding encode = new Encoding();
-      Codec codec = codecFactory.create_codec(encode);
-      info.add_server_request_interceptor(new StandardServerInterceptor(codec));
+    public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
+      Codec codec = info.codec_factory.create_codec(
+                        new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
+      StandardServerInterceptor.Instance.Codec = codec;
+      info.add_server_request_interceptor(StandardServerInterceptor.Instance);
 
       Logger.Info("O interceptador servidor foi registrado.");
     }
@@ -28,8 +28,7 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors
     #region ORBInitializer Not Implemented
 
     /// <inheritdoc />
-    public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      //Nada a fazer
+    public void post_init(omg.org.PortableInterceptor.ORBInitInfo info) {
     }
 
     #endregion

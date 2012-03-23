@@ -32,7 +32,7 @@ namespace tecgraf.openbus.sdk.lease
     /// </summary>
     private bool _mustContinue;
 
-    private int _lease;
+    private bool _justStarted;
 
     #endregion
 
@@ -44,10 +44,13 @@ namespace tecgraf.openbus.sdk.lease
     /// <param name="connection">A credencial.</param>
     /// <param name="accessControlFacet">A faceta do barramento que permite a 
     /// renovação de <i>lease</i>.</param>
-    public RenewerTask(Connection connection, AccessControl accessControlFacet) {
+    /// <param name="lease">O tempo de <i>lease</i>.</param>
+    public RenewerTask(Connection connection, AccessControl accessControlFacet, int lease) {
+      Lease = lease;
       _conn = connection;
       _ac = accessControlFacet;
       _mustContinue = true;
+      _justStarted = true;
     }
 
     #endregion
@@ -60,37 +63,39 @@ namespace tecgraf.openbus.sdk.lease
     public void Run() {
       try {
         while (_mustContinue) {
-          try {
-
+          if (!_justStarted) {
             try {
-              _lease = _ac.renew();
+              try {
+                Lease = _ac.renew();
+              }
+              catch (NO_PERMISSION) {
+                Logger.Debug("Impossível renovar a credencial pois a conexão não está logada no barramento.");
+              }
+
+              if (Lease == 0) {
+                _mustContinue = false;
+                Logger.Warn("Falha na renovação da credencial.");
+                if (_conn.OnInvalidLoginCallback != null)
+                  Logger.Debug(_conn.OnInvalidLoginCallback.InvalidLogin(_conn)
+                                 ? "Credencial renovada após callback de login inválido."
+                                 : "Credencial NÃO renovada após callback de login inválido.");
+              }
+              else {
+                StringBuilder msg = new StringBuilder();
+                msg.Append(DateTime.Now);
+                msg.Append(" - Lease renovado. Próxima renovação em ");
+                msg.Append(Lease + " segundos.");
+                Logger.Debug(msg.ToString());
+              }
             }
-            catch (NO_PERMISSION) {
-              Logger.Debug("Impossível renovar a credencial pois a conexão não está logada no barramento.");
+            catch (AbstractCORBASystemException e) {
+              Logger.Error("Erro ao tentar renovar o lease", e);
             }
 
-            if (_lease == 0) {
-              _mustContinue = false;
-              Logger.Warn("Falha na renovação da credencial.");
-              if (_conn.OnInvalidLoginCallback != null)
-                Logger.Debug(_conn.OnInvalidLoginCallback.InvalidLogin(_conn)
-                               ? "Credencial renovada após callback de login inválido."
-                               : "Credencial NÃO renovada após callback de login inválido.");
-            }
-            else {
-              StringBuilder msg = new StringBuilder();
-              msg.Append(DateTime.Now);
-              msg.Append(" - Lease renovado. Próxima renovação em ");
-              msg.Append(_lease + " segundos.");
-              Logger.Debug(msg.ToString());
-            }
           }
-          catch (AbstractCORBASystemException e) {
-            Logger.Error("Erro ao tentar renovar o lease", e);
-          }
-
           if (_mustContinue) {
-            Thread.Sleep(_lease * 1000);
+            Thread.Sleep(Lease * 1000);
+            _justStarted = false;
           }
         }
       }
@@ -106,9 +111,7 @@ namespace tecgraf.openbus.sdk.lease
       _mustContinue = false;
     }
 
-    public int Lease {
-      get { return _lease; }
-    }
+    public int Lease { get; private set; }
 
     #endregion
   }

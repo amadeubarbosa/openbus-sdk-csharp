@@ -5,8 +5,6 @@ using System.Security.Cryptography;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.Exceptions;
-using tecgraf.openbus.sdk.Interceptors;
 using log4net;
 using omg.org.CORBA;
 using scs.core;
@@ -17,11 +15,11 @@ namespace tecgraf.openbus.sdk.Multiplexed
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>
-  public class MultiplexedOpenbus : OpenBus
+  public class MultiplexedOpenBus : OpenBus
   {
     #region Fields
 
-    private static readonly ILog Logger = LogManager.GetLogger(typeof(MultiplexedOpenbus));
+    private static readonly ILog Logger = LogManager.GetLogger(typeof(MultiplexedOpenBus));
 
     private readonly String _host;
     private readonly long _port;
@@ -48,7 +46,7 @@ namespace tecgraf.openbus.sdk.Multiplexed
     /// <summary>
     /// Construtor da classe MultiplexedOpenbus
     /// </summary>
-    public MultiplexedOpenbus(String host, long port, bool hasServant) {
+    public MultiplexedOpenBus(String host, long port, bool hasServant) {
       if (string.IsNullOrEmpty(host))
         throw new ArgumentException("O campo 'host' não é válido");
       if (port < 0)

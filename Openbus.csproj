@@ -41,8 +41,10 @@
     <DocumentationFile>doc\Openbus.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=737d7ebb1cf8d684, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>lib\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="IIOPChannel">
       <HintPath>lib\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
@@ -52,18 +54,13 @@
     <Reference Include="OpenBus.Idl">
       <HintPath>lib\OpenBus.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Scs, Version=1.3.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\Scs.dll</HintPath>
+    <Reference Include="Scs.Core">
+      <HintPath>lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -83,8 +80,8 @@
     <Compile Include="src\sdk\InvalidLoginCallback.cs" />
     <Compile Include="src\sdk\lease\LeaseRenewer.cs" />
     <Compile Include="src\sdk\lease\RenewerTask.cs" />
-    <Compile Include="src\sdk\multiplexed\MultiplexedConnection.cs" />
-    <Compile Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
+    <None Include="src\sdk\multiplexed\MultiplexedConnection.cs" />
+    <None Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
     <Compile Include="src\sdk\standard\StandardConnection.cs" />
     <Compile Include="src\sdk\standard\StandardOpenbus.cs" />
     <Compile Include="src\sdk\standard\interceptors\StandardClientInitializer.cs" />
@@ -95,7 +92,6 @@
     <Compile Include="src\sdk\Connection.cs" />
     <Compile Include="src\sdk\Openbus.cs" />
     <Compile Include="src\sdk\security\Crypto.cs" />
-    <Compile Include="src\sdk\security\RSAPKCS8KeyFormatter.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

@@ -1,6 +1,5 @@
 using log4net;
 using omg.org.CORBA;
-using omg.org.IOP;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk.Interceptors;
@@ -19,10 +18,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
     private static StandardClientInterceptor _instance;
 
-    private static Codec _codec;
-
-    private StandardConnection _connection;
-
     #endregion
 
     #region Contructor
@@ -30,16 +25,14 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     /// <summary>
     /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardClientInterceptor
     /// </summary>
-    /// <param name="codec">Codificador.</param>
-    internal StandardClientInterceptor(Codec codec)
-      : base("StandardClientInterceptor", codec) {
-      _codec = codec;
+    private StandardClientInterceptor()
+      : base("StandardClientInterceptor") {
     }
 
     internal StandardConnection Connection { get; set; }
 
     internal static StandardClientInterceptor Instance {
-      get { return _instance ?? (_instance = new StandardClientInterceptor(_codec)); }
+      get { return _instance ?? (_instance = new StandardClientInterceptor()); }
     }
 
     #endregion
@@ -52,8 +45,8 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
       //TODO: talvez remover os metodos de interceptacao da classe connection para uma outra classe ou pra cá de volta e passar a connection aqui? Só da pra saber direito o melhor formato quando implementar a multiplexação...
-      if (_connection != null) {
-        _connection.SendRequest(ri);
+      if (Connection != null) {
+        Connection.SendRequest(ri);
         return;
       }
       Logger.Fatal("Sem conexão ao barramento, impossível realizar a chamada remota.");
@@ -62,8 +55,8 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
     /// <inheritdoc />
     public void receive_exception(ClientRequestInfo ri) {
-      if (_connection != null) {
-        _connection.ReceiveException(ri);
+      if (Connection != null) {
+        Connection.ReceiveException(ri);
       }
     }
 

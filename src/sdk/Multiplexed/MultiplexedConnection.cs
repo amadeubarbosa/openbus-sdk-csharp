@@ -5,8 +5,8 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.Exceptions;
 using tecgraf.openbus.sdk.Security;
+using tecgraf.openbus.sdk.exceptions;
 
 namespace tecgraf.openbus.sdk.Multiplexed {
   internal class MultiplexedConnection : Connection {

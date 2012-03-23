@@ -9,13 +9,13 @@ namespace tecgraf.openbus.sdk.Standard {
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>
-  public class StandardOpenbus : OpenBus {
+  public class StandardOpenBus : OpenBus {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (StandardOpenbus));
+      LogManager.GetLogger(typeof (StandardOpenBus));
 
-    private static StandardOpenbus _instance;
+    private static StandardOpenBus _instance;
 
     /// <summary>
     /// O Orb do IIOP.NET.
@@ -31,7 +31,7 @@ namespace tecgraf.openbus.sdk.Standard {
     /// <summary>
     /// Construtor da classe StandardOpenbus
     /// </summary>
-    private StandardOpenbus() {
+    private StandardOpenBus() {
       InitORB();
     }
 
@@ -40,7 +40,7 @@ namespace tecgraf.openbus.sdk.Standard {
     #region Public Members
 
     public static OpenBus Instance {
-      get { return _instance ?? (_instance = new StandardOpenbus()); }
+      get { return _instance ?? (_instance = new StandardOpenBus()); }
     }
 
     /// <summary>

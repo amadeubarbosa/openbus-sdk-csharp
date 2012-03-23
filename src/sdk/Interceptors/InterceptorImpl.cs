@@ -24,11 +24,7 @@ namespace tecgraf.openbus.sdk.Interceptors
     /// Fornece o objeto responsável pelo marshall/unmarshall de credenciais 
     /// para transporte/obtenção de contextos de requisições de servico.
     /// </summary>
-    protected Codec Codec {
-      get { return _codec; }
-    }
-
-    private readonly Codec _codec;
+    internal Codec Codec { get; set; }
 
     #endregion
 
@@ -38,10 +34,8 @@ namespace tecgraf.openbus.sdk.Interceptors
     /// Inicializa uma nova instância de OpenbusAPI.Interceptors.InterceptorImpl
     /// </summary>
     /// <param name="name">O nome do interceptador</param>
-    /// <param name="codec">Elemento codificador/decodificador</param>
-    protected InterceptorImpl(String name, Codec codec) {
+    protected InterceptorImpl(String name) {
       _name = name;
-      _codec = codec;
     }
 
     #endregion

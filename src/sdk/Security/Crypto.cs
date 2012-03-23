@@ -1,8 +1,9 @@
-using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using log4net;
+using System.Text;
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
+using tecgraf.openbus.core.v2_00;
 
 namespace tecgraf.openbus.sdk.Security {
   /// <summary>
@@ -11,128 +12,109 @@ namespace tecgraf.openbus.sdk.Security {
   public static class Crypto {
     #region Fields
 
-    private static readonly ILog Logger = LogManager.GetLogger(typeof (Crypto));
+    private const string CipherAlgorithm = "RSA/ECB/PKCS1Padding";
+    private const string SignerAlgorithm = "SHA256withRSA";
+    private const string HashAlgorithm = "SHA-256";
+
+    public static readonly Encoding TextEncoding = new ASCIIEncoding();
 
     #endregion
 
     #region Members
 
-    public static RSACryptoServiceProvider NewKey() {
-      return new RSACryptoServiceProvider(RSAPKCS8KeyFormatter.GetKeyLenght()) {PersistKeyInCsp = false};
-    }
-
-    public static X509Certificate2 NewCertificate() {
-      return new X509Certificate2();
-    }
-
-    public static RSACryptoServiceProvider GetPrivateKey(X509Certificate2 cert) {
-      RSACryptoServiceProvider key = cert.PrivateKey as RSACryptoServiceProvider;
-      key.KeySize = RSAPKCS8KeyFormatter.GetKeyLenght();
-      key.PersistKeyInCsp = false;
-      return key;
-    }
-
-    public static RSACryptoServiceProvider GetPublicKey(X509Certificate2 cert) {
-      return cert.PublicKey.Key as RSACryptoServiceProvider;
-    }
-
     /// <summary>
-    /// Lê uma chave privada a partir de um arquivo XML.
-    /// </summary>
-    /// <param name="privateKeyFileName">O arquivo XML.</param>
-    /// <returns>Uma instância de RSACryptoServiceProvider.</returns>
-    public static RSACryptoServiceProvider ReadPrivateKey(
-      String privateKeyFileName) {
-      StreamReader key = File.OpenText(privateKeyFileName);
-      String pemstr = key.ReadToEnd().Trim();
-      key.Close();
-
-      RSACryptoServiceProvider rsa = RSAPKCS8KeyFormatter.DecodePEMKey(pemstr);
-      if (rsa == null) {
-        Logger.Fatal("Não foi possível gerar um RSACryptoServiceProvider");
-      }
-
-      return rsa;
-    }
-
-    /// <summary>
-    /// Lê uma chave privada a partir de um array de bytes.
-    /// </summary>
-    /// <param name="privateKey">O array de bytes.</param>
-    /// <returns>Uma instância de RSACryptoServiceProvider.</returns>
-    public static RSACryptoServiceProvider ReadPrivateKey(Byte[] privateKey) {
-      RSACryptoServiceProvider rsa =
-        RSAPKCS8KeyFormatter.DecodePrivateKey(privateKey);
-      if (rsa == null) {
-        Logger.Fatal("Não foi possível gerar um RSACryptoServiceProvider");
-      }
-      return rsa;
-    }
-
-    /// <summary>
-    /// Lê um certificado digital a partir de um arquivo.
-    /// </summary>
-    /// <param name="certificateFile">O arquivo.</param>
-    /// <returns>O certificado formatado em X509.</returns>
-    /// <exception cref="System.Security.Cryptography.CryptographicException">
-    /// Caso o arquivo não exista, esteja incorreto ou inválido.</exception>
-    public static X509Certificate2 ReadCertificate(String certificateFile) {
-      return new X509Certificate2(certificateFile);
-    }
-
-    /// <summary>
-    /// Gera a resposta para o desafio enviado pelo serviço de controle 
-    /// de acesso.
-    /// </summary>
-    /// <param name="challenge">O desafio do serviço de controle de acesso.
-    /// </param>
-    /// <param name="privateKey">A chave privada originária de um arquivo 
-    /// XML.</param>
-    /// <param name="acsCertificate">O certificado formatado em X509.</param>
-    /// <returns>A resposta do desafio.</returns>
-    /// <exception cref="CryptographicException">As chaves não estão corretas.
-    /// </exception>
-    public static byte[] GenerateAnswer(byte[] challenge,
-                                        RSACryptoServiceProvider privateKey,
-                                        X509Certificate2 acsCertificate) {
-      byte[] plainChallenge = Decrypt(privateKey, challenge);
-      return Encrypt(acsCertificate, plainChallenge);
-    }
-
-    /// <summary>
-    /// Encripta uma informação utilizando um certificado digital.
-    /// </summary>
-    /// <param name="certificate">O certificado Digital.</param>
-    /// <param name="plainData">A informação descriptografada.</param>
-    /// <returns>A informação encriptografada.</returns>
-    public static byte[] Encrypt(X509Certificate2 certificate,
-                                  byte[] plainData) {
-      RSACryptoServiceProvider rsaProvider = certificate.PublicKey.Key as
-                        RSACryptoServiceProvider;
-      return rsaProvider.Encrypt(plainData, false);
-    }
-
-    /// <summary>
-    /// Encripta uma informação utilizando um certificado digital.
+    /// Encripta uma informação utilizando uma chave digital.
     /// </summary>
     /// <param name="key">A chave a ser usada para criptografar os dados.</param>
-    /// <param name="plainData">A informação descriptografada.</param>
+    /// <param name="data">A informação descriptografada.</param>
     /// <returns>A informação encriptografada.</returns>
-    public static byte[] Encrypt(RSACryptoServiceProvider key,
-                                  byte[] plainData) {
-      return key.Encrypt(plainData, false);
+    public static byte[] Encrypt(AsymmetricKeyParameter key, byte[] data) {
+      IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
+      cipher.Init(true, key);
+      return cipher.DoFinal(data);
+      /*
+      RsaEngine e = new RsaEngine();
+      e.Init(true, key);
+
+      int blockSize = e.GetInputBlockSize();
+
+      List<byte> output = new List<byte>();
+
+      for (int chunkPosition = 0;
+           chunkPosition < data.Length;
+           chunkPosition += blockSize) {
+        int chunkSize = Math.Min(blockSize, data.Length -
+                                            (chunkPosition * blockSize));
+        output.AddRange(e.ProcessBlock(data, chunkPosition,
+                                       chunkSize));
+      }
+      return output.ToArray();
+       */
     }
 
     /// <summary>
-    /// Descriptografa uma informação utilizando uma chave privada. 
+    /// Descriptografa uma informação utilizando uma chave digital.
     /// </summary>
-    /// <param name="privateKey">A chave privada originária de um arquivo 
-    /// XML.</param>
-    /// <param name="data">O desafio do serviço de controle de acesso.</param>
-    /// <returns>A informação descriptografado.</returns>
-    public static byte[] Decrypt(RSACryptoServiceProvider privateKey,
-                                  byte[] data) {
-      return privateKey.Decrypt(data, false);
+    /// <param name="key">A chave a ser usada para descriptografar os dados.</param>
+    /// <param name="data">A informação criptografada.</param>
+    /// <returns>A informação descriptografada.</returns>
+    public static byte[] Decrypt(AsymmetricKeyParameter key, byte[] data) {
+      IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
+      cipher.Init(false, key);
+      return cipher.DoFinal(data);
+      /*
+      RsaEngine e = new RsaEngine();
+      e.Init(false, key);
+
+      int blockSize = e.GetInputBlockSize();
+
+      List<byte> output = new List<byte>();
+
+      for (int chunkPosition = 0;
+           chunkPosition < data.Length;
+           chunkPosition += blockSize) {
+        int chunkSize = Math.Min(blockSize, data.Length -
+                                            (chunkPosition * blockSize));
+        output.AddRange(e.ProcessBlock(data, chunkPosition,
+                                       chunkSize));
+      }
+      return output.ToArray();
+       */
+    }
+
+    public static AsymmetricCipherKeyPair GenerateKeyPair() {
+      IAsymmetricCipherKeyPairGenerator kpGen =
+        GeneratorUtilities.GetKeyPairGenerator("RSA");
+      // EncryptedBlockSize is in bytes but expected parameter is in bits
+      kpGen.Init(new KeyGenerationParameters(new SecureRandom(),
+                                             EncryptedBlockSize.ConstVal * 8));
+      return kpGen.GenerateKeyPair();
+    }
+
+    public static AsymmetricKeyParameter CreatePublicKeyFromBytes (byte[] key) {
+      return PublicKeyFactory.CreateKey(key);
+    }
+
+    public static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
+      return PrivateKeyFactory.CreateKey(key);
+    }
+
+    public static byte[] GetPublicKeyInBytes(AsymmetricKeyParameter publicKey) {
+      SubjectPublicKeyInfo publicKeyInfo =
+        SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKey);
+      return publicKeyInfo.ToAsn1Object().GetDerEncoded();
+    }
+
+    public static bool VerifySignature(AsymmetricKeyParameter key,
+                                       byte[] message, byte[] signature) {
+      ISigner signer = SignerUtilities.GetSigner(SignerAlgorithm);
+      signer.Init(false, key);
+      signer.BlockUpdate(message, 0, message.Length);
+      return signer.VerifySignature(signature);
+    }
+
+    public static IDigest GetHashAlgorithm() {
+      return DigestUtilities.GetDigest(HashAlgorithm);
     }
 
     #endregion
