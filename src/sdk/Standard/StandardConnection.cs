@@ -40,7 +40,7 @@ namespace tecgraf.openbus.sdk.Standard {
       _outgoingLogin2Session;
 
     private readonly ConcurrentDictionary<String, string> _profile2Login;
-    private int _sessionId = 1;
+    private volatile int _sessionId = 1;
     private readonly ConcurrentDictionary<int, Session> _sessionId2Session;
 
     private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
@@ -378,13 +378,15 @@ namespace tecgraf.openbus.sdk.Standard {
 
       Session session;
       if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
-        sessionId = session.Id;
-        ticket = session.Ticket;
-        secret = new byte[session.Secret.Length];
-        session.Secret.CopyTo(secret, 0);
-        Logger.Info(String.Format("Reutilizando sessão {0} com ticket {1}.",
-                                  sessionId, ticket));
-        session.Ticket++;
+        lock (session) {
+          sessionId = session.Id;
+          ticket = session.Ticket;
+          secret = new byte[session.Secret.Length];
+          session.Secret.CopyTo(secret, 0);
+          Logger.Info(String.Format("Reutilizando sessão {0} com ticket {1}.",
+                                    sessionId, ticket));
+          session.Ticket++;
+        }
       }
 
       try {
@@ -474,10 +476,9 @@ namespace tecgraf.openbus.sdk.Standard {
                        ri.effective_profile.profile_data.ToString();
       _profile2Login.TryAdd(profile, remoteLogin);
 
-      // lock necessário para garantir atomicidade entre o get e o add
-      lock (_outgoingLogin2Session) {
-        Session session;
-        if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
+      Session session;
+      if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
+        lock (session) {
           Logger.Info(
             String.Format(
               "Reuso de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
@@ -485,18 +486,18 @@ namespace tecgraf.openbus.sdk.Standard {
           session.Secret = Crypto.Decrypt(InternalKey.Private,
                                           requestReset.challenge);
         }
-        else {
-          int sessionId = requestReset.session;
-          byte[] secret = Crypto.Decrypt(InternalKey.Private,
-                                         requestReset.challenge);
-          _outgoingLogin2Session.TryAdd(remoteLogin,
-                                        new Session(sessionId, secret,
-                                                    remoteLogin));
-          Logger.Info(
-            String.Format(
-              "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-              sessionId, operation, remoteLogin));
-        }
+      }
+      else {
+        int sessionId = requestReset.session;
+        byte[] secret = Crypto.Decrypt(InternalKey.Private,
+                                        requestReset.challenge);
+        _outgoingLogin2Session.TryAdd(remoteLogin,
+                                      new Session(sessionId, secret,
+                                                  remoteLogin));
+        Logger.Info(
+          String.Format(
+            "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
+            sessionId, operation, remoteLogin));
       }
       // pede que a chamada original seja relançada
       throw new ForwardRequest(ri.target);
@@ -507,25 +508,7 @@ namespace tecgraf.openbus.sdk.Standard {
       Logger.Info(String.Format(
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
-      ServiceContext serviceContext;
-      try {
-        serviceContext = ri.get_request_service_context(ContextId);
-      }
-      catch (BAD_PARAM) {
-        Logger.Warn(String.Format(
-          "A chamada à operação '{0}' não possui credencial.",
-          interceptedOperation));
-        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
-      }
-      if (serviceContext.context_data == null) {
-        Logger.Fatal(String.Format(
-          "A chamada à operação '{0}' não possui credencial.",
-          interceptedOperation));
-        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
-      }
-
+      ServiceContext serviceContext = GetContextFromRequestInfo(ri);
       CredentialData credential = UnmarshalCredential(serviceContext);
       Logger.Info(String.Format("A operação '{0}' possui credencial.",
                                 interceptedOperation));
@@ -543,11 +526,12 @@ namespace tecgraf.openbus.sdk.Standard {
 
       byte[] secret = new byte[0];
       int ticket = 0;
-      // TODO: é preciso lockar o mapa de sessões entre o primeiro get e até o CreateCredentialReset pois esse método modifica o ticket da sessão recuperada ou adiciona uma nova sessão.
       Session session;
       if (_sessionId2Session.TryGetValue(credential.session, out session)) {
-        secret = session.Secret;
-        ticket = session.Ticket;
+        lock (session) {
+          secret = session.Secret;
+          ticket = session.Ticket;
+        }
       }
 
       if (secret.Length > 0) {
@@ -568,62 +552,51 @@ namespace tecgraf.openbus.sdk.Standard {
     internal void SendException(ServerRequestInfo ri) {
       String interceptedOperation = ri.operation;
       Logger.Info(String.Format(
-        "O lançamento de uma exceção para a operação '{0}' foi interceptado no servidor.", interceptedOperation));
+        "O lançamento de uma exceção para a operação '{0}' foi interceptado no servidor.",
+        interceptedOperation));
 
       NO_PERMISSION ex = ri.sending_exception as NO_PERMISSION;
       if (ex == null) {
         return;
       }
       if (ex.Minor == InvalidCredentialCode.ConstVal) {
-        ServiceContext serviceContext;
-        try {
-          serviceContext = ri.get_request_service_context(ContextId);
-        }
-        catch (BAD_PARAM) {
-          Logger.Warn(String.Format(
-            "A chamada à operação '{0}' não possui credencial.",
-            interceptedOperation));
-          throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-        if (serviceContext.context_data == null) {
-          Logger.Fatal(String.Format(
-            "A chamada à operação '{0}' não possui credencial.",
-            interceptedOperation));
-          throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-
+        ServiceContext serviceContext = GetContextFromRequestInfo(ri);
+        // credencial é inválida
         CredentialData credential = UnmarshalCredential(serviceContext);
         Logger.Info(String.Format("A operação '{0}' possui credencial.",
                                   interceptedOperation));
-
-        byte[] secret = new byte[0];
-        int ticket = 0;
-        // é preciso lockar o mapa de sessões entre o primeiro get e até o CreateCredentialReset pois esse método modifica o ticket da sessão recuperada ou adiciona uma nova sessão.
-        lock (_sessionId2Session) {
-          Session session;
-          if (_sessionId2Session.TryGetValue(credential.session, out session)) {
-            secret = session.Secret;
-            ticket = session.Ticket;
-          }
-
-          if (secret.Length > 0) {
-            byte[] hash = CreateCredentialHash(ri.operation, ticket, secret);
-            if (hash.Equals(credential.hash)) {
-              // credencial valida
-              // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
-              CheckChain(credential.chain, credential.login);
-              return;
-            }
-          }
-          // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode
-          byte[] encodedReset = CreateCredentialReset(credential.login, session);
-          ServiceContext replyServiceContext = new ServiceContext(ContextId,
-                                                                  encodedReset);
-          ri.add_reply_service_context(replyServiceContext, false);
-        }
+        byte[] encodedReset;
+        Session session;
+        _sessionId2Session.TryGetValue(credential.session, out session);
+        // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode
+        encodedReset = CreateCredentialReset(credential.login, session);
+        ServiceContext replyServiceContext = new ServiceContext(ContextId,
+                                                                encodedReset);
+        ri.add_reply_service_context(replyServiceContext, false);
       }
+    }
+
+    private ServiceContext GetContextFromRequestInfo(RequestInfo ri) {
+      String interceptedOperation = ri.operation;
+      ServiceContext serviceContext;
+      try {
+        serviceContext = ri.get_request_service_context(ContextId);
+      }
+      catch (BAD_PARAM) {
+        Logger.Warn(String.Format(
+          "A chamada à operação '{0}' não possui credencial.",
+          interceptedOperation));
+        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+      if (serviceContext.context_data == null) {
+        Logger.Fatal(String.Format(
+          "A chamada à operação '{0}' não possui credencial.",
+          interceptedOperation));
+        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+      return serviceContext;
     }
 
     private byte[] CreateInvalidCredentialHash() {
@@ -666,7 +639,8 @@ namespace tecgraf.openbus.sdk.Standard {
             Repository.GetRepositoryID(resetType), resetType.Name);
 
         byte[] data = serviceContext.context_data;
-        requestReset = (CredentialReset) _codec.decode_value(data, resetTypeCode);
+        requestReset =
+          (CredentialReset) _codec.decode_value(data, resetTypeCode);
       }
       catch (Exception e) {
         Logger.Fatal(
@@ -725,17 +699,20 @@ namespace tecgraf.openbus.sdk.Standard {
           }
           catch (Exception) {
             //TODO: aqui deveria pela especificacao ser InvalidPublicKeyCode mas nao existe mais esse codigo.
-            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal, CompletionStatus.Completed_No);
+            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                    CompletionStatus.Completed_No);
           }
 
           if (session == null) {
             session = new Session(_sessionId, challenge,
-                                          remoteLogin);
+                                  remoteLogin);
             _sessionId2Session.TryAdd(reset.session, session);
             _sessionId++;
           }
-          reset.session = session.Id;
-          session.Ticket++;
+          lock (session) {
+            reset.session = session.Id;
+            session.Ticket++;
+          }
         }
         return _codec.encode_value(reset);
       }
