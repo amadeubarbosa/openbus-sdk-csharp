@@ -1,4 +1,5 @@
-﻿using tecgraf.openbus.sdk;
+﻿using System;
+using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.hello {
   class HelloInvalidLoginCallback : InvalidLoginCallback {
@@ -11,8 +12,15 @@ namespace tecgraf.openbus.demo.hello {
     }
 
     public bool InvalidLogin(Connection conn) {
-      conn.LoginByCertificate(_entity, _privKey);
-      return conn.Login != null;
+      try {
+        Console.WriteLine("Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
+        conn.LoginByCertificate(_entity, _privKey);
+        return conn.Login != null;
+      }
+      catch (Exception e) {
+        Console.WriteLine(e.StackTrace);
+      }
+      return false;
     }
   }
 }

@@ -58,7 +58,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Demo.Hello.Idl">
+    <Reference Include="Openbus.Demo.Hello.Idl, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\Openbus.Demo.Hello.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">

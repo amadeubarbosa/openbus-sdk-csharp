@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Runtime.Remoting;
 using System.Security.Cryptography;
@@ -16,6 +17,7 @@ using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk.Standard.Interceptors;
 using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.Security;
+using tecgraf.openbus.sdk.interceptors;
 using tecgraf.openbus.sdk.lease;
 using TypeCode = omg.org.CORBA.TypeCode;
 
@@ -34,19 +36,17 @@ namespace tecgraf.openbus.sdk.Standard {
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
-    //TODO: avaliar a melhor forma de armazenar a chave. String é uma boa opção? Se fosse usar o array de bytes direto eu teria q criar uma classe com metodos de comparacao que criasse um hash, para nao ficar muito cara a comparacao...
+    private volatile int _sessionId;
+    private readonly object _lock = new object();
     //TODO: caches ainda nao tem nenhuma politica de remocao ou de tamanho maximo
+    // client caches
+    private readonly ConcurrentDictionary<EffectiveProfile, string> _profile2Login;
     private readonly ConcurrentDictionary<string, Session>
       _outgoingLogin2Session;
-
-    private readonly ConcurrentDictionary<String, string> _profile2Login;
-    private volatile int _sessionId;
+    // server caches
     private readonly ConcurrentDictionary<int, Session> _sessionId2Session;
-
     private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
       _login2PubKey;
-
-    private readonly object _lock = new object();
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
@@ -89,7 +89,7 @@ namespace tecgraf.openbus.sdk.Standard {
       _sessionId2Session = new ConcurrentDictionary<int, Session>();
       _login2PubKey =
         new ConcurrentDictionary<string, AsymmetricKeyParameter>();
-      _profile2Login = new ConcurrentDictionary<String, string>();
+      _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
       _outgoingLogin2Session = new ConcurrentDictionary<String, Session>();
       //TODO: Adicionar cache de logins
     }
@@ -369,8 +369,7 @@ namespace tecgraf.openbus.sdk.Standard {
       int ticket = 0;
       byte[] secret = new byte[0];
 
-      string profile = ri.effective_profile.tag +
-                       ri.effective_profile.profile_data.ToString();
+      EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
       string remoteLogin;
       if (!_profile2Login.TryGetValue(profile, out remoteLogin)) {
         remoteLogin = String.Empty;
@@ -423,6 +422,7 @@ namespace tecgraf.openbus.sdk.Standard {
           Logger.Fatal(
             "Este cliente foi deslogado do barramento durante a interceptação desta requisição.",
             e);
+          LocalLogout();
           if ((OnInvalidLoginCallback != null) &&
               (OnInvalidLoginCallback.InvalidLogin(this))) {
             // pede que a chamada original seja relançada
@@ -459,6 +459,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
         if (exception.Minor == InvalidLoginCode.ConstVal) {
+          LocalLogout();
           if (OnInvalidLoginCallback.InvalidLogin(this)) {
             Logger.Info(
               String.Format(
@@ -472,33 +473,19 @@ namespace tecgraf.openbus.sdk.Standard {
 
       CredentialReset requestReset = ReadCredentialReset(ri, exception);
       string remoteLogin = requestReset.login;
-      string profile = ri.effective_profile.tag +
-                       ri.effective_profile.profile_data.ToString();
+      EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
       _profile2Login.TryAdd(profile, remoteLogin);
 
-      Session session;
-      if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
-        lock (session) {
-          Logger.Info(
-            String.Format(
-              "Reuso de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-              session.Id, operation, remoteLogin));
-          session.Secret = Crypto.Decrypt(InternalKey.Private,
-                                          requestReset.challenge);
-        }
-      }
-      else {
-        int sessionId = requestReset.session;
-        byte[] secret = Crypto.Decrypt(InternalKey.Private,
-                                        requestReset.challenge);
-        _outgoingLogin2Session.TryAdd(remoteLogin,
-                                      new Session(sessionId, secret,
-                                                  remoteLogin));
-        Logger.Info(
-          String.Format(
-            "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-            sessionId, operation, remoteLogin));
-      }
+      int sessionId = requestReset.session;
+      byte[] secret = Crypto.Decrypt(InternalKey.Private,
+                                      requestReset.challenge);
+      _outgoingLogin2Session.TryAdd(remoteLogin,
+                                    new Session(sessionId, secret,
+                                                remoteLogin));
+      Logger.Info(
+        String.Format(
+          "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
+          sessionId, operation, remoteLogin));
       // pede que a chamada original seja relançada
       throw new ForwardRequest(ri.target);
     }
@@ -536,7 +523,8 @@ namespace tecgraf.openbus.sdk.Standard {
 
       if (secret.Length > 0) {
         byte[] hash = CreateCredentialHash(ri.operation, ticket, secret);
-        if (hash.Equals(credential.hash)) {
+        IStructuralEquatable eqHash = hash;
+        if (eqHash.Equals(credential.hash, StructuralComparisons.StructuralEqualityComparer)) {
           // credencial valida
           // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
           CheckChain(credential.chain, credential.login);
@@ -568,10 +556,8 @@ namespace tecgraf.openbus.sdk.Standard {
         CredentialData credential = UnmarshalCredential(serviceContext);
         Logger.Info(String.Format("A operação '{0}' possui credencial.",
                                   interceptedOperation));
-        Session session;
-        _sessionId2Session.TryGetValue(credential.session, out session);
         // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode
-        byte[] encodedReset = CreateCredentialReset(credential.login, session);
+        byte[] encodedReset = CreateCredentialReset(credential.login);
         ServiceContext replyServiceContext = new ServiceContext(ContextId,
                                                                 encodedReset);
         ri.add_reply_service_context(replyServiceContext, false);
@@ -663,7 +649,7 @@ namespace tecgraf.openbus.sdk.Standard {
       return (CredentialData) _codec.decode_value(data, credentialTypeCode);
     }
 
-    private byte[] CreateCredentialReset(string remoteLogin, Session session) {
+    private byte[] CreateCredentialReset(string remoteLogin) {
       if (Login != null) {
         CredentialReset reset = new CredentialReset();
         reset.login = Login.Value.id;
@@ -705,16 +691,13 @@ namespace tecgraf.openbus.sdk.Standard {
                                     CompletionStatus.Completed_No);
           }
 
-          if (session == null) {
-            session = new Session(_sessionId, challenge,
-                                  remoteLogin);
-            _sessionId2Session.TryAdd(reset.session, session);
-            _sessionId++;
-          }
+          Session session = new Session(_sessionId, challenge,
+                                remoteLogin);
           lock (session) {
+            _sessionId2Session.TryAdd(session.Id, session);
             reset.session = session.Id;
-            session.Ticket++;
           }
+          _sessionId++;
         }
         return _codec.encode_value(reset);
       }
@@ -761,12 +744,10 @@ namespace tecgraf.openbus.sdk.Standard {
     private void CheckChain(SignedCallChain signed, string callerId) {
       CallChain chain = UnmarshalCallChain(signed);
       try {
-        if (!chain.target.Equals(Login.Value) ||
+        if (!chain.target.Equals(Login.Value.id) ||
             (!chain.callers[chain.callers.Length - 1].id.Equals(callerId)) ||
             (!Crypto.VerifySignature(_busKey, signed.encoded, signed.signature))) {
-//            (!_busKey.VerifyData(signed.encoded, SHA256.Create(),
-//                                 signed.signature))) {
-          Logger.Fatal("Credencial inválida, enviando CredentialReset.");
+          Logger.Fatal("Cadeia de credencial inválida.");
           throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }

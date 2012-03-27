@@ -1,8 +1,7 @@
 using System;
-using Scs.Core;
-using tecgraf.openbus.demo.hello;
+using demoidl.hello;
+using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.Standard;
 
 namespace Server
 {
@@ -13,15 +12,13 @@ namespace Server
   {
     #region Fields
 
-    private ComponentContext _context;
-    private Connection _conn;
+    private readonly Connection _conn;
 
     #endregion
 
     #region Constructors
 
-    public HelloImpl(ComponentContext context, Connection conn) {
-      _context = context;
+    public HelloImpl(Connection conn) {
       _conn = conn;
     }
 
@@ -30,7 +27,15 @@ namespace Server
     #region IHello Members
 
     public void sayHello() {
-      Console.WriteLine(String.Format("Hello {0}!", HelloServer.Conn.GetCallerChain().Callers()[0].entity));
+      try {
+        Console.WriteLine("Hello World!");
+        //TODO: trocar a linha atual pelas linhas abaixo quando estiver implementado
+        //LoginInfo[] callers = _conn.GetCallerChain().Callers();
+        //Console.WriteLine(String.Format("Hello {0}!", callers[0].entity));
+      }
+      catch (Exception e) {
+        Console.WriteLine(e.StackTrace);
+      }
     }
 
     #endregion

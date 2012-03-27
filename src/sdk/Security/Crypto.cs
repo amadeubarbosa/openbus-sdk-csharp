@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -13,8 +14,7 @@ namespace tecgraf.openbus.sdk.Security {
     #region Fields
 
     private const string CipherAlgorithm = "RSA/ECB/PKCS1Padding";
-    private const string SignerAlgorithm = "SHA256withRSA";
-    private const string HashAlgorithm = "SHA-256";
+    private const string SignerAlgorithm = "NONEwithRSA";
 
     public static readonly Encoding TextEncoding = new ASCIIEncoding();
 
@@ -109,12 +109,9 @@ namespace tecgraf.openbus.sdk.Security {
                                        byte[] message, byte[] signature) {
       ISigner signer = SignerUtilities.GetSigner(SignerAlgorithm);
       signer.Init(false, key);
-      signer.BlockUpdate(message, 0, message.Length);
+      byte[] hash = SHA256.Create().ComputeHash(message);
+      signer.BlockUpdate(hash, 0, hash.Length);
       return signer.VerifySignature(signature);
-    }
-
-    public static IDigest GetHashAlgorithm() {
-      return DigestUtilities.GetDigest(HashAlgorithm);
     }
 
     #endregion
