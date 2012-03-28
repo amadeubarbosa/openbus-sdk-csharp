@@ -202,6 +202,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
     public string BusId { get; private set; }
 
+    //TODO: avaliar se tem que tornar thread-safe
     public LoginInfo? Login { get; private set; }
 
     public void LoginByPassword(string entity, byte[] password) {
@@ -216,7 +217,6 @@ namespace tecgraf.openbus.sdk.Standard {
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
         try {
-          //encode password and hash of public key
           LoginAuthenticationInfo info = new LoginAuthenticationInfo {
                                                                        data = password,
                                                                        hash =
@@ -261,23 +261,17 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     public LoginProcess StartSingleSignOn(out byte[] secret) {
-      LoginProcess login;
-      try {
-        IgnoreLogin = true;
-        GetBusFacets();
-        byte[] challenge;
-        login = _acs.startLoginBySingleSignOn(out challenge);
-        secret = Crypto.Decrypt(InternalKey.Private, challenge);
-      }
-      finally {
-        IgnoreLogin = false;
-      }
+      byte[] challenge;
+      LoginProcess login = _acs.startLoginBySingleSignOn(out challenge);
+      secret = Crypto.Decrypt(InternalKey.Private, challenge);
       return login;
     }
 
     public void LoginBySingleSignOn(LoginProcess login, byte[] secret) {
-      try {
+      try
+      {
         IgnoreLogin = true;
+        GetBusFacets();
         LoginByObject(login, secret);
       }
       finally {
@@ -460,7 +454,7 @@ namespace tecgraf.openbus.sdk.Standard {
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
         if (exception.Minor == InvalidLoginCode.ConstVal) {
           LocalLogout();
-          if (OnInvalidLoginCallback.InvalidLogin(this)) {
+          if ((OnInvalidLoginCallback != null) && (OnInvalidLoginCallback.InvalidLogin(this))) {
             Logger.Info(
               String.Format(
                 "Login reestabelecido, solicitando que a chamada {0} seja refeita.",
