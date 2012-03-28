@@ -71,6 +71,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\sdk\CallerChain.cs" />
+    <Compile Include="src\sdk\CallerChainImpl.cs" />
     <Compile Include="src\sdk\exceptions\AccessDeniedException.cs" />
     <Compile Include="src\sdk\exceptions\AlreadyConnectedException.cs" />
     <Compile Include="src\sdk\exceptions\AlreadyLoggedInException.cs" />

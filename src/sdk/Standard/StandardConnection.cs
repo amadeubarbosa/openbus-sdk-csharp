@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Runtime.Remoting;
 using System.Security.Cryptography;
+using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Org.BouncyCastle.Crypto;
 using log4net;
@@ -47,6 +49,8 @@ namespace tecgraf.openbus.sdk.Standard {
     private readonly ConcurrentDictionary<int, Session> _sessionId2Session;
     private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
       _login2PubKey;
+    // chain caches
+    private readonly ConditionalWeakTable<Thread, CallerChain> _threadToCallerChain;
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
@@ -91,7 +95,7 @@ namespace tecgraf.openbus.sdk.Standard {
         new ConcurrentDictionary<string, AsymmetricKeyParameter>();
       _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
       _outgoingLogin2Session = new ConcurrentDictionary<String, Session>();
-      //TODO: Adicionar cache de logins
+      _threadToCallerChain = new ConditionalWeakTable<Thread, CallerChain>();
 
       StandardServerInterceptor.Instance.Connection = this;
       StandardClientInterceptor.Instance.Connection = this;
@@ -309,8 +313,11 @@ namespace tecgraf.openbus.sdk.Standard {
       throw new NotImplementedException();
     }
 
-    public CallerChain GetCallerChain() {
-      throw new NotImplementedException();
+    public CallerChain GetCallerChain()
+    {
+      CallerChain chain;
+      _threadToCallerChain.TryGetValue(Thread.CurrentThread, out chain);
+      return chain;
     }
 
     public void ExitChain() {
@@ -590,6 +597,7 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     private SignedCallChain CreateCredentialSignedCallChain(string remoteLogin) {
+      //TODO: talvez aqui esteja sempre criando uma nova cadeia, e nunca reaproveitando uma cadeia antiga, pois a chamada signChainFor será identificada como uma chamada ao barramento e incluirá uma cadeia vazia. Acho que o certo é incluir a cadeia existente no momento que chama signChainFor. Ou isso fica no joinChain?
       return !remoteLogin.Equals(BusId)
                ? _acs.signChainFor(remoteLogin)
                : CreateInvalidCredentialSignedCallChain();
@@ -749,6 +757,9 @@ namespace tecgraf.openbus.sdk.Standard {
           throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
+        CallerChain callerChain = new CallerChainImpl(BusId, chain.callers);
+        //TODO: verificar se precisa remover essa entrada na sendreply. Acho que não...
+        _threadToCallerChain.Add(Thread.CurrentThread, callerChain);
       }
       catch (InvalidOperationException) {
         Logger.Fatal(

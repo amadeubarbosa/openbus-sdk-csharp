@@ -4,8 +4,8 @@ namespace tecgraf.openbus.sdk {
   
   public interface CallerChain {
 
-    string BusId();
+    string BusId { get; }
 
-    LoginInfo[] Callers();
+    LoginInfo[] Callers { get; }
   }
 }
