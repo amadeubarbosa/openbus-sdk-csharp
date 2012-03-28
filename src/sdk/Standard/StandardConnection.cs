@@ -92,6 +92,9 @@ namespace tecgraf.openbus.sdk.Standard {
       _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
       _outgoingLogin2Session = new ConcurrentDictionary<String, Session>();
       //TODO: Adicionar cache de logins
+
+      StandardServerInterceptor.Instance.Connection = this;
+      StandardClientInterceptor.Instance.Connection = this;
     }
 
     #endregion
@@ -327,7 +330,8 @@ namespace tecgraf.openbus.sdk.Standard {
                                   e.Message));
       }
       finally {
-        StandardOpenBus.RemoveConnection();
+        StandardServerInterceptor.Instance.Connection = null;
+        StandardClientInterceptor.Instance.Connection = null;
       }
     }
 

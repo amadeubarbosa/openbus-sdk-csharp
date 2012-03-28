@@ -48,23 +48,15 @@ namespace tecgraf.openbus.sdk.Standard {
     /// <returns>A conexão.</returns>
     /// </summary>
     public Connection Connect(string host, short port) {
-      if ((StandardServerInterceptor.Instance.Connection == null) ||
+      if ((StandardServerInterceptor.Instance.Connection == null) &&
           (StandardClientInterceptor.Instance.Connection == null)) {
-        StandardConnection conn = new StandardConnection(host, port);
-        StandardServerInterceptor.Instance.Connection = conn;
-        StandardClientInterceptor.Instance.Connection = conn;
-        return conn;
+        return new StandardConnection(host, port);
       }
       throw new AlreadyConnectedException(
         "Utilizando o SDK sem suporte a multiplexação, só pode haver uma conexão com um barramento. Feche a conexão existente antes de realizar uma nova.");
     }
 
     #endregion
-
-    internal static void RemoveConnection() {
-      StandardServerInterceptor.Instance.Connection = null;
-      StandardClientInterceptor.Instance.Connection = null;
-    }
 
     private void InitORB() {
       // Adiciona interceptadores
