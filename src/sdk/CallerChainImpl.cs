@@ -1,13 +1,16 @@
-﻿using tecgraf.openbus.core.v2_00.services.access_control;
+﻿using System.Collections.Concurrent;
+using tecgraf.openbus.core.v2_00.services.access_control;
 
 namespace tecgraf.openbus.sdk
 {
-  class CallerChainImpl : CallerChain {
-
+  internal class CallerChainImpl : CallerChain {
     internal CallerChainImpl(string busId, LoginInfo[] callers) {
       BusId = busId;
       Callers = callers;
+      Joined = new ConcurrentDictionary<string, SignedCallChain>();
     }
+
+    internal ConcurrentDictionary<string, SignedCallChain> Joined { get; private set; }
 
     public string BusId { get; private set; }
 

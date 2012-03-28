@@ -28,9 +28,7 @@ namespace Server
 
     public void sayHello() {
       try {
-        //Console.WriteLine("Hello World!");
-        //TODO: trocar a linha atual pelas linhas abaixo quando estiver implementado
-        LoginInfo[] callers = _conn.GetCallerChain().Callers;
+        LoginInfo[] callers = _conn.CallerChain.Callers;
         Console.WriteLine(String.Format("Hello {0}!", callers[0].entity));
       }
       catch (Exception e) {

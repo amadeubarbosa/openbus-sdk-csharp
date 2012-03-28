@@ -42,15 +42,22 @@ namespace tecgraf.openbus.sdk.Standard {
     private readonly object _lock = new object();
     //TODO: caches ainda nao tem nenhuma politica de remocao ou de tamanho maximo
     // client caches
-    private readonly ConcurrentDictionary<EffectiveProfile, string> _profile2Login;
+    private readonly ConcurrentDictionary<EffectiveProfile, string>
+      _profile2Login;
+
     private readonly ConcurrentDictionary<string, Session>
       _outgoingLogin2Session;
+
+    private readonly ConditionalWeakTable<Thread, CallerChain> _joinedChainOf;
+
     // server caches
     private readonly ConcurrentDictionary<int, Session> _sessionId2Session;
+
     private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
       _login2PubKey;
-    // chain caches
-    private readonly ConditionalWeakTable<Thread, CallerChain> _threadToCallerChain;
+
+    private readonly ConditionalWeakTable<Thread, CallerChain>
+      _callerChainOf;
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
@@ -60,9 +67,9 @@ namespace tecgraf.openbus.sdk.Standard {
 
     private const int PrevContextId = 1234;
 
-    //TODO: Maia vai criar constantes na IDL para os 3 casos abaixo
     private const byte MajorVersion = core.v2_00.MajorVersion.ConstVal;
     private const byte MinorVersion = core.v2_00.MinorVersion.ConstVal;
+    //TODO: revisar se precisa desse SecretSize
     private const int SecretSize = 16;
 
     private readonly Codec _codec;
@@ -95,10 +102,15 @@ namespace tecgraf.openbus.sdk.Standard {
         new ConcurrentDictionary<string, AsymmetricKeyParameter>();
       _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
       _outgoingLogin2Session = new ConcurrentDictionary<String, Session>();
-      _threadToCallerChain = new ConditionalWeakTable<Thread, CallerChain>();
+      _callerChainOf = new ConditionalWeakTable<Thread, CallerChain>();
+      _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
       StandardServerInterceptor.Instance.Connection = this;
       StandardClientInterceptor.Instance.Connection = this;
+
+      IgnoreLogin = true;
+      GetBusFacets();
+      IgnoreLogin = false;
     }
 
     #endregion
@@ -219,15 +231,18 @@ namespace tecgraf.openbus.sdk.Standard {
 
       try {
         IgnoreLogin = true;
-        GetBusFacets();
-
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
         try {
           LoginAuthenticationInfo info = new LoginAuthenticationInfo {
-                                                                       data = password,
+                                                                       data =
+                                                                         password,
                                                                        hash =
-                                                                         SHA256.Create().ComputeHash(pubBytes)
+                                                                         SHA256.
+                                                                         Create()
+                                                                         .
+                                                                         ComputeHash
+                                                                         (pubBytes)
                                                                      };
           encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
         }
@@ -252,8 +267,6 @@ namespace tecgraf.openbus.sdk.Standard {
 
       try {
         IgnoreLogin = true;
-        GetBusFacets();
-
         byte[] challenge;
         LoginProcess login = _acs.startLoginByCertificate(entity,
                                                           out
@@ -275,10 +288,8 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     public void LoginBySingleSignOn(LoginProcess login, byte[] secret) {
-      try
-      {
+      try {
         IgnoreLogin = true;
-        GetBusFacets();
         LoginByObject(login, secret);
       }
       finally {
@@ -310,22 +321,34 @@ namespace tecgraf.openbus.sdk.Standard {
     public InvalidLoginCallback OnInvalidLoginCallback { get; set; }
 
     public void JoinChain(CallerChain chain) {
-      throw new NotImplementedException();
+      if (chain == null) {
+        _callerChainOf.TryGetValue(Thread.CurrentThread, out chain);
+      }
+      lock (_joinedChainOf) {
+        // o remove serve apenas para não lançar exceção na Add.
+        _joinedChainOf.Remove(Thread.CurrentThread);
+        _joinedChainOf.Add(Thread.CurrentThread, chain);
+      }
     }
 
-    public CallerChain GetCallerChain()
-    {
-      CallerChain chain;
-      _threadToCallerChain.TryGetValue(Thread.CurrentThread, out chain);
-      return chain;
+    public CallerChain CallerChain {
+      get {
+        CallerChain chain;
+        _callerChainOf.TryGetValue(Thread.CurrentThread, out chain);
+        return chain;
+      }
     }
 
     public void ExitChain() {
-      throw new NotImplementedException();
+      _joinedChainOf.Remove(Thread.CurrentThread);
     }
 
-    public CallerChain GetJoinedChain() {
-      throw new NotImplementedException();
+    public CallerChain JoinedChain {
+      get {
+        CallerChain chain;
+        _joinedChainOf.TryGetValue(Thread.CurrentThread, out chain);
+        return chain;
+      }
     }
 
     public void Close() {
@@ -398,7 +421,6 @@ namespace tecgraf.openbus.sdk.Standard {
         SignedCallChain chain;
         if (sessionId != 0) {
           hash = CreateCredentialHash(operation, ticket, secret);
-          //TODO: codigo abaixo assume que nao existe cache de cadeias ainda
           chain = CreateCredentialSignedCallChain(remoteLogin);
           Logger.Info(
             String.Format("Chamada à operação {0} no servidor de login {1}.",
@@ -447,7 +469,7 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     internal void SendReply(ServerRequestInfo ri) {
-      _threadToCallerChain.Remove(Thread.CurrentThread);
+      _callerChainOf.Remove(Thread.CurrentThread);
     }
 
     internal void ReceiveException(ClientRequestInfo ri) {
@@ -469,7 +491,8 @@ namespace tecgraf.openbus.sdk.Standard {
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
         if (exception.Minor == InvalidLoginCode.ConstVal) {
           LocalLogout();
-          if ((OnInvalidLoginCallback != null) && (OnInvalidLoginCallback.InvalidLogin(this))) {
+          if ((OnInvalidLoginCallback != null) &&
+              (OnInvalidLoginCallback.InvalidLogin(this))) {
             Logger.Info(
               String.Format(
                 "Login reestabelecido, solicitando que a chamada {0} seja refeita.",
@@ -487,7 +510,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
       int sessionId = requestReset.session;
       byte[] secret = Crypto.Decrypt(InternalKey.Private,
-                                      requestReset.challenge);
+                                     requestReset.challenge);
       _outgoingLogin2Session.TryAdd(remoteLogin,
                                     new Session(sessionId, secret,
                                                 remoteLogin));
@@ -533,7 +556,8 @@ namespace tecgraf.openbus.sdk.Standard {
       if (secret.Length > 0) {
         byte[] hash = CreateCredentialHash(ri.operation, ticket, secret);
         IStructuralEquatable eqHash = hash;
-        if (eqHash.Equals(credential.hash, StructuralComparisons.StructuralEqualityComparer)) {
+        if (eqHash.Equals(credential.hash,
+                          StructuralComparisons.StructuralEqualityComparer)) {
           // credencial valida
           // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
           CheckChain(credential.chain, credential.login);
@@ -601,10 +625,29 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     private SignedCallChain CreateCredentialSignedCallChain(string remoteLogin) {
-      //TODO: talvez aqui esteja sempre criando uma nova cadeia, e nunca reaproveitando uma cadeia antiga, pois a chamada signChainFor será identificada como uma chamada ao barramento e incluirá uma cadeia vazia. Acho que o certo é incluir a cadeia existente no momento que chama signChainFor. Ou isso fica no joinChain?
-      return !remoteLogin.Equals(BusId)
-               ? _acs.signChainFor(remoteLogin)
-               : CreateInvalidCredentialSignedCallChain();
+      SignedCallChain signed;
+      CallerChainImpl chain = JoinedChain as CallerChainImpl;
+      if ((chain == null) && ((remoteLogin.Equals(BusId)) || (remoteLogin.Equals(String.Empty)))) {
+        return CreateInvalidCredentialSignedCallChain();
+      }
+      if (chain == null) {
+        // na chamada a signChainFor vai criar uma nova chain e assinar
+        signed = _acs.signChainFor(remoteLogin);
+      }
+      else {
+        lock (chain) {
+          if (!remoteLogin.Equals(BusId)) {
+            if (!chain.Joined.TryGetValue(remoteLogin, out signed)) {
+              signed = _acs.signChainFor(remoteLogin);
+              chain.Joined.TryAdd(remoteLogin, signed);
+            }
+          }
+          else {
+            chain.Joined.TryGetValue(CallerChain.Callers[0].id, out signed);
+          }
+        }
+      }
+      return signed;
     }
 
     private SignedCallChain CreateInvalidCredentialSignedCallChain() {
@@ -661,16 +704,15 @@ namespace tecgraf.openbus.sdk.Standard {
 
     private byte[] CreateCredentialReset(string remoteLogin) {
       if (Login != null) {
-        CredentialReset reset = new CredentialReset();
-        reset.login = Login.Value.id;
+        CredentialReset reset = new CredentialReset {login = Login.Value.id};
         byte[] challenge = new byte[SecretSize];
         Random rand = new Random();
         rand.NextBytes(challenge);
-        AsymmetricKeyParameter pubKey;
 
         // lock para tornar esse trecho atomico
         lock (_lock) {
           // lock necessário para garantir atomicidade entre o get e o add
+          AsymmetricKeyParameter pubKey;
           lock (_login2PubKey) {
             if (!_login2PubKey.TryGetValue(remoteLogin, out pubKey)) {
               byte[] key;
@@ -701,7 +743,7 @@ namespace tecgraf.openbus.sdk.Standard {
           }
 
           Session session = new Session(_sessionId, challenge,
-                                remoteLogin);
+                                        remoteLogin);
           lock (session) {
             _sessionId2Session.TryAdd(session.Id, session);
             reset.session = session.Id;
@@ -760,8 +802,9 @@ namespace tecgraf.openbus.sdk.Standard {
           throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        CallerChain callerChain = new CallerChainImpl(BusId, chain.callers);
-        _threadToCallerChain.Add(Thread.CurrentThread, callerChain);
+        CallerChainImpl callerChain = new CallerChainImpl(BusId, chain.callers);
+        callerChain.Joined.TryAdd(callerId, signed);
+        _callerChainOf.Add(Thread.CurrentThread, callerChain);
       }
       catch (InvalidOperationException) {
         Logger.Fatal(

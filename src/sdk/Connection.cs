@@ -109,14 +109,14 @@ namespace tecgraf.openbus.sdk {
     /*************************************************************************
      * INSPEÇÃO DO CLIENTE DAS CHAMADAS **************************************
      *************************************************************************/
-     
+
     /// <summary>
     /// Caso a thread corrente seja a thread de execução de uma chamada remota
     /// oriunda do barramento dessa conexão, essa operação devolve um objeto que
     /// representa a cadeia de chamadas do barramento que esta chamada faz parte.
     /// Caso contrário devolve 'null'.
     /// </summary>
-    CallerChain GetCallerChain();
+    CallerChain CallerChain { get; }
      
     /*************************************************************************
      * DELEGAÇÃO DE DIREITOS EM CHAMADAS *************************************
@@ -137,15 +137,15 @@ namespace tecgraf.openbus.sdk {
     /// de chamada.
     /// </summary>
     void ExitChain();
-     
+
     /// <summary>
     /// Devolve um objeto que representa a cadeia de chamadas associada a thread
     /// atual nessa conexão. A cadeia de chamadas informada foi associada
     /// previamente pela operação 'joinChain'. Caso a thread corrente não tenha
     /// nenhuma cadeia associada, essa operação devolve 'null'.
     /// </summary>
-    CallerChain GetJoinedChain();
-     
+    CallerChain JoinedChain { get; }
+
     /*************************************************************************
      * GERÊNCIA DO CICLO DE VIDA DA CONEXÃO **********************************
      *************************************************************************/
