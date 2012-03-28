@@ -44,7 +44,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
-      //TODO: talvez remover os metodos de interceptacao da classe connection para uma outra classe ou pra cá de volta e passar a connection aqui? Só da pra saber direito o melhor formato quando implementar a multiplexação...
       if (Connection != null) {
         Connection.SendRequest(ri);
         return;

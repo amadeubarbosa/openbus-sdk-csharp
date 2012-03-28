@@ -37,7 +37,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
     /// <inheritdoc />
     public void receive_request(ServerRequestInfo ri) {
-      //TODO: talvez remover os metodos de interceptacao da classe connection para uma outra classe ou pra cá de volta e passar a connection aqui? Só da pra saber direito o melhor formato quando implementar a multiplexação...
       if (Connection != null) {
         Connection.ReceiveRequest(ri);
         return;
@@ -50,7 +49,6 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
 
     /// <inheritdoc />
     public void send_exception(ServerRequestInfo ri) {
-      //TODO: talvez remover os metodos de interceptacao da classe connection para uma outra classe ou pra cá de volta e passar a connection aqui? Só da pra saber direito o melhor formato quando implementar a multiplexação...
       if (Connection != null) {
         Connection.SendException(ri);
         return;
@@ -61,17 +59,24 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
                               CompletionStatus.Completed_No);
     }
 
+    /// <inheritdoc />
+    public virtual void send_reply(ServerRequestInfo ri) {
+      if (Connection != null) {
+        Connection.SendReply(ri);
+        return;
+      }
+      Logger.Fatal(
+        "Sem conexão ao barramento, impossível enviar resposta à chamada remota.");
+      throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                              CompletionStatus.Completed_No);
+    }
+
     #endregion
 
     #region ServerRequestInterceptor Not Implemented
 
     /// <inheritdoc />
     public virtual void receive_request_service_contexts(ServerRequestInfo ri) {
-      //Nada a ser feito
-    }
-
-    /// <inheritdoc />
-    public virtual void send_reply(ServerRequestInfo ri) {
       //Nada a ser feito
     }
 

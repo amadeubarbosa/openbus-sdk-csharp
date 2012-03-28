@@ -446,6 +446,10 @@ namespace tecgraf.openbus.sdk.Standard {
       }
     }
 
+    internal void SendReply(ServerRequestInfo ri) {
+      _threadToCallerChain.Remove(Thread.CurrentThread);
+    }
+
     internal void ReceiveException(ClientRequestInfo ri) {
       String operation = ri.operation;
       Logger.Info(String.Format(
@@ -758,7 +762,6 @@ namespace tecgraf.openbus.sdk.Standard {
                                   CompletionStatus.Completed_No);
         }
         CallerChain callerChain = new CallerChainImpl(BusId, chain.callers);
-        //TODO: verificar se precisa remover essa entrada na sendreply. Acho que não...
         _threadToCallerChain.Add(Thread.CurrentThread, callerChain);
       }
       catch (InvalidOperationException) {
