@@ -696,8 +696,7 @@ namespace tecgraf.openbus.sdk.Standard {
             reset.challenge = Crypto.Encrypt(pubKey, challenge);
           }
           catch (Exception) {
-            //TODO: aqui deveria pela especificacao ser InvalidPublicKeyCode mas nao existe mais esse codigo.
-            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+            throw new NO_PERMISSION(InvalidPublicKeyCode.ConstVal,
                                     CompletionStatus.Completed_No);
           }
 
@@ -804,7 +803,7 @@ namespace tecgraf.openbus.sdk.Standard {
 
       public string RemoteLogin { get; private set; }
 
-      public byte[] Secret { get; set; }
+      public byte[] Secret { get; private set; }
 
       public int Id { get; private set; }
 
