@@ -639,7 +639,7 @@ namespace tecgraf.openbus.sdk.Standard {
             }
           }
           else {
-            chain.Joined.TryGetValue(CallerChain.Callers[0].id, out signed);
+            signed = chain.Signed;
           }
         }
       }
@@ -799,8 +799,7 @@ namespace tecgraf.openbus.sdk.Standard {
           throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        CallerChainImpl callerChain = new CallerChainImpl(BusId, chain.callers);
-        callerChain.Joined.TryAdd(callerId, signed);
+        CallerChainImpl callerChain = new CallerChainImpl(BusId, chain.callers, signed);
         _callerChainOf.Add(Thread.CurrentThread, callerChain);
       }
       catch (InvalidOperationException) {
