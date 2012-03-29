@@ -80,11 +80,13 @@
     <Compile Include="src\sdk\exceptions\WrongPrivateKeyException.cs" />
     <Compile Include="src\sdk\exceptions\WrongSecretException.cs" />
     <Compile Include="src\sdk\interceptors\EffectiveProfile.cs" />
+    <Compile Include="src\sdk\interceptors\TicketsHistory.cs" />
     <Compile Include="src\sdk\InvalidLoginCallback.cs" />
     <Compile Include="src\sdk\lease\LeaseRenewer.cs" />
     <Compile Include="src\sdk\lease\RenewerTask.cs" />
     <None Include="src\sdk\multiplexed\MultiplexedConnection.cs" />
     <None Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
+    <Compile Include="src\sdk\interceptors\Session.cs" />
     <Compile Include="src\sdk\standard\StandardConnection.cs" />
     <Compile Include="src\sdk\standard\StandardOpenbus.cs" />
     <Compile Include="src\sdk\standard\interceptors\StandardClientInitializer.cs" />

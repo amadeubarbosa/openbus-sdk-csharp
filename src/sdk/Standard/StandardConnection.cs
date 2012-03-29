@@ -45,13 +45,14 @@ namespace tecgraf.openbus.sdk.Standard {
     private readonly ConcurrentDictionary<EffectiveProfile, string>
       _profile2Login;
 
-    private readonly ConcurrentDictionary<string, Session>
+    private readonly ConcurrentDictionary<string, ClientSideSession>
       _outgoingLogin2Session;
 
     private readonly ConditionalWeakTable<Thread, CallerChain> _joinedChainOf;
 
     // server caches
-    private readonly ConcurrentDictionary<int, Session> _sessionId2Session;
+    private readonly ConcurrentDictionary<int, ServerSideSession>
+      _sessionId2Session;
 
     private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
       _login2PubKey;
@@ -97,11 +98,12 @@ namespace tecgraf.openbus.sdk.Standard {
 
       InternalKey = Crypto.GenerateKeyPair();
 
-      _sessionId2Session = new ConcurrentDictionary<int, Session>();
+      _sessionId2Session = new ConcurrentDictionary<int, ServerSideSession>();
       _login2PubKey =
         new ConcurrentDictionary<string, AsymmetricKeyParameter>();
       _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
-      _outgoingLogin2Session = new ConcurrentDictionary<String, Session>();
+      _outgoingLogin2Session =
+        new ConcurrentDictionary<String, ClientSideSession>();
       _callerChainOf = new ConditionalWeakTable<Thread, CallerChain>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
@@ -403,7 +405,7 @@ namespace tecgraf.openbus.sdk.Standard {
         remoteLogin = String.Empty;
       }
 
-      Session session;
+      ClientSideSession session;
       if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
         lock (session) {
           sessionId = session.Id;
@@ -512,8 +514,8 @@ namespace tecgraf.openbus.sdk.Standard {
       byte[] secret = Crypto.Decrypt(InternalKey.Private,
                                      requestReset.challenge);
       _outgoingLogin2Session.TryAdd(remoteLogin,
-                                    new Session(sessionId, secret,
-                                                remoteLogin));
+                                    new ClientSideSession(sessionId, secret,
+                                                          remoteLogin));
       Logger.Info(
         String.Format(
           "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
@@ -543,31 +545,24 @@ namespace tecgraf.openbus.sdk.Standard {
       // CheckValidity lança exceção caso a validade tenha expirado
       CheckValidity(credential);
 
-      byte[] secret = new byte[0];
-      int ticket = 0;
-      Session session;
+      ServerSideSession session;
       if (_sessionId2Session.TryGetValue(credential.session, out session)) {
-        lock (session) {
-          secret = session.Secret;
-          ticket = session.Ticket;
+        // CheckTicket já faz o lock no ticket history da sessão
+        if (session.CheckTicket(credential.ticket)) {
+          byte[] hash = CreateCredentialHash(ri.operation, credential.ticket,
+                                             session.Secret);
+          IStructuralEquatable eqHash = hash;
+          if (eqHash.Equals(credential.hash,
+                            StructuralComparisons.StructuralEqualityComparer)) {
+            // credencial valida
+            // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
+            CheckChain(credential.chain, credential.login);
+            return;
+          }
         }
       }
 
-      if (secret.Length > 0) {
-        byte[] hash = CreateCredentialHash(ri.operation, ticket, secret);
-        IStructuralEquatable eqHash = hash;
-        if (eqHash.Equals(credential.hash,
-                          StructuralComparisons.StructuralEqualityComparer)) {
-          // credencial valida
-          // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
-          CheckChain(credential.chain, credential.login);
-          lock (session) {
-            session.Ticket++;
-          }
-          return;
-        }
-      }
-      // credendial invalida por nao ter sessao conhecida ou hash errado
+      // credendial invalida por nao ter sessao conhecida, ticket inválido ou hash errado
       Logger.Fatal("Credencial inválida, enviando CredentialReset.");
       throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
                               CompletionStatus.Completed_No);
@@ -627,7 +622,8 @@ namespace tecgraf.openbus.sdk.Standard {
     private SignedCallChain CreateCredentialSignedCallChain(string remoteLogin) {
       SignedCallChain signed;
       CallerChainImpl chain = JoinedChain as CallerChainImpl;
-      if ((chain == null) && ((remoteLogin.Equals(BusId)) || (remoteLogin.Equals(String.Empty)))) {
+      if ((chain == null) &&
+          ((remoteLogin.Equals(BusId)) || (remoteLogin.Equals(String.Empty)))) {
         return CreateInvalidCredentialSignedCallChain();
       }
       if (chain == null) {
@@ -742,8 +738,9 @@ namespace tecgraf.openbus.sdk.Standard {
                                     CompletionStatus.Completed_No);
           }
 
-          Session session = new Session(_sessionId, challenge,
-                                        remoteLogin);
+          ServerSideSession session = new ServerSideSession(_sessionId,
+                                                            challenge,
+                                                            remoteLogin);
           lock (session) {
             _sessionId2Session.TryAdd(session.Id, session);
             reset.session = session.Id;
@@ -834,23 +831,6 @@ namespace tecgraf.openbus.sdk.Standard {
       byte[] bOperation = enc.GetBytes(operation);
       bOperation.CopyTo(hash, index);
       return SHA256.Create().ComputeHash(hash);
-    }
-
-    private class Session {
-      public Session(int id, byte[] secret, string remoteLogin) {
-        Id = id;
-        Secret = secret;
-        RemoteLogin = remoteLogin;
-        Ticket = 0;
-      }
-
-      public string RemoteLogin { get; private set; }
-
-      public byte[] Secret { get; private set; }
-
-      public int Id { get; private set; }
-
-      public int Ticket { get; set; }
     }
 
     #endregion
