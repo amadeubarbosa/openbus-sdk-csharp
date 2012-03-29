@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Client.Properties {
+namespace Broadcaster.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -49,7 +49,7 @@ namespace Client.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TesteBarramento")]
+        [global::System.Configuration.DefaultSettingValueAttribute("TestEntity")]
         public string entityName {
             get {
                 return ((string)(this["entityName"]));
@@ -61,13 +61,25 @@ namespace Client.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TesteBarramento.key")]
+        [global::System.Configuration.DefaultSettingValueAttribute("TestEntity.key")]
         public string xmlPrivateKey {
             get {
                 return ((string)(this["xmlPrivateKey"]));
             }
             set {
                 this["xmlPrivateKey"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Broadcaster.log")]
+        public string logFile {
+            get {
+                return ((string)(this["logFile"]));
+            }
+            set {
+                this["logFile"] = value;
             }
         }
     }

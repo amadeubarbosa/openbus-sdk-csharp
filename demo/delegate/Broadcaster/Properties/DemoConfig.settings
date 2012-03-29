@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Client.Properties" GeneratedClassName="DemoConfig">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Broadcaster.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
     <Setting Name="hostName" Type="System.String" Scope="User">
@@ -9,10 +9,13 @@
       <Value Profile="(Default)">9000</Value>
     </Setting>
     <Setting Name="entityName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">TesteBarramento</Value>
+      <Value Profile="(Default)">TestEntity</Value>
     </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">TesteBarramento.key</Value>
+      <Value Profile="(Default)">TestEntity.key</Value>
+    </Setting>
+    <Setting Name="logFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Broadcaster.log</Value>
     </Setting>
   </Settings>
 </SettingsFile>
