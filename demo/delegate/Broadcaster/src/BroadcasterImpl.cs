@@ -4,7 +4,7 @@ using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
 
 namespace Broadcaster {
-  class BroadcasterImpl : MarshalByRefObject, tecgraf.openbus.demo.delegation.Broadcaster {
+  public class BroadcasterImpl : MarshalByRefObject, tecgraf.openbus.demo.delegation.Broadcaster {
     #region Fields
 
     private readonly Connection _conn;

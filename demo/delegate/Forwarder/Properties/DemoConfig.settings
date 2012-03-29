@@ -8,14 +8,11 @@
     <Setting Name="hostPort" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">9000</Value>
     </Setting>
-    <Setting Name="entityName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">TestEntity</Value>
+    <Setting Name="userLogin" Type="System.String" Scope="User">
+      <Value Profile="(Default)">forwarder</Value>
     </Setting>
-    <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">TestEntity.key</Value>
-    </Setting>
-    <Setting Name="logFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Forwarder.log</Value>
+    <Setting Name="userPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)">forwarder</Value>
     </Setting>
   </Settings>
 </SettingsFile>

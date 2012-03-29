@@ -70,17 +70,5 @@ namespace Client.Properties {
                 this["userPassword"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Client.log")]
-        public string logFile {
-            get {
-                return ((string)(this["logFile"]));
-            }
-            set {
-                this["logFile"] = value;
-            }
-        }
     }
 }

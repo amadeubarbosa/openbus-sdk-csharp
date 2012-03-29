@@ -1,9 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Client.Properties;
-using log4net.Config;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
@@ -20,9 +18,6 @@ namespace Client {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
-
-      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
-      XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       OpenBus openbus = StandardOpenBus.Instance;
       _conn = openbus.Connect(hostName, (short) hostPort);
@@ -69,6 +64,8 @@ namespace Client {
       _conn.LoginByPassword("willian", encoding.GetBytes("willian"));
       _forwarder.cancelForward("bill");
       _conn.Logout();
+      Console.WriteLine("Pressione qualquer tecla para terminar.");
+      Console.Read();
     }
 
     private static void ShowPostsOf(string user, PostDesc[] posts) {

@@ -38,9 +38,6 @@
     <Reference Include="IIOPChannel">
       <HintPath>..\..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\..\..\bin\Debug\log4net.dll</HintPath>
-    </Reference>
     <Reference Include="Openbus">
       <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
     </Reference>

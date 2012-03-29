@@ -1,10 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using Broadcaster.Properties;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
-using log4net.Config;
 using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
@@ -25,16 +23,17 @@ namespace Broadcaster {
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
-      XmlConfigurator.ConfigureAndWatch(logFileInfo);
-
       OpenBus openbus = StandardOpenBus.Instance;
       _conn = openbus.Connect(hostName, (short)hostPort);
 
-      string entityName = DemoConfig.Default.entityName;
-      string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
+      string userLogin = DemoConfig.Default.userLogin;
+      string userPassword = DemoConfig.Default.userPassword;
+      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+      byte[] password = encoding.GetBytes(userPassword);
 
-      byte[] privateKey = File.ReadAllBytes(privaKeyFile);
+      _conn.LoginByPassword(userLogin, password);
+      _conn.OnInvalidLoginCallback =
+        new BroadcasterInvalidLoginCallback(userLogin, password);
 
       Messenger messenger = GetMessenger();
       if (messenger == null) {
@@ -52,10 +51,6 @@ namespace Broadcaster {
                          Repository.GetRepositoryID(
                            typeof(tecgraf.openbus.demo.delegation.Broadcaster)),
                          broadcaster);
-
-      _conn.LoginByCertificate(entityName, privateKey);
-      _conn.OnInvalidLoginCallback =
-        new BroadcasterInvalidLoginCallback(entityName, privateKey);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",

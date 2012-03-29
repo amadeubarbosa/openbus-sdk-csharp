@@ -49,37 +49,25 @@ namespace Forwarder.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TestEntity")]
-        public string entityName {
+        [global::System.Configuration.DefaultSettingValueAttribute("forwarder")]
+        public string userLogin {
             get {
-                return ((string)(this["entityName"]));
+                return ((string)(this["userLogin"]));
             }
             set {
-                this["entityName"] = value;
+                this["userLogin"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TestEntity.key")]
-        public string xmlPrivateKey {
+        [global::System.Configuration.DefaultSettingValueAttribute("forwarder")]
+        public string userPassword {
             get {
-                return ((string)(this["xmlPrivateKey"]));
+                return ((string)(this["userPassword"]));
             }
             set {
-                this["xmlPrivateKey"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Forwarder.log")]
-        public string logFile {
-            get {
-                return ((string)(this["logFile"]));
-            }
-            set {
-                this["logFile"] = value;
+                this["userPassword"] = value;
             }
         }
     }

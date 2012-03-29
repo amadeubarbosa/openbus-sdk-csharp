@@ -6,7 +6,7 @@ using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
 
 namespace Forwarder {
-  class ForwarderImpl : MarshalByRefObject, tecgraf.openbus.demo.delegation.Forwarder {
+  public class ForwarderImpl : MarshalByRefObject, tecgraf.openbus.demo.delegation.Forwarder {
     #region Fields
 
     private readonly Connection _conn;

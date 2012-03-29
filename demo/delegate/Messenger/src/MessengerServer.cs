@@ -1,10 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Messenger.Properties;
 using Scs.Core;
-using log4net.Config;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
@@ -23,16 +21,17 @@ namespace Messenger {
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
-      XmlConfigurator.ConfigureAndWatch(logFileInfo);
-
       OpenBus openbus = StandardOpenBus.Instance;
       _conn = openbus.Connect(hostName, (short)hostPort);
 
-      string entityName = DemoConfig.Default.entityName;
-      string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
+      string userLogin = DemoConfig.Default.userLogin;
+      string userPassword = DemoConfig.Default.userPassword;
+      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+      byte[] password = encoding.GetBytes(userPassword);
 
-      byte[] privateKey = File.ReadAllBytes(privaKeyFile);
+      _conn.LoginByPassword(userLogin, password);
+      _conn.OnInvalidLoginCallback =
+        new MessengerInvalidLoginCallback(userLogin, password);
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Messenger", 1, 0, 0, ".net"));
@@ -41,10 +40,6 @@ namespace Messenger {
       component.AddFacet("messenger",
                          Repository.GetRepositoryID(
                            typeof(tecgraf.openbus.demo.delegation.Messenger)), messenger);
-
-      _conn.LoginByCertificate(entityName, privateKey);
-      _conn.OnInvalidLoginCallback =
-        new MessengerInvalidLoginCallback(entityName, privateKey);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",

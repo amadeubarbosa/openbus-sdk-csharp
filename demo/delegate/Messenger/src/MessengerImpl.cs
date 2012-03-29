@@ -5,7 +5,7 @@ using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
 
 namespace Messenger {
-  internal class MessengerImpl : MarshalByRefObject,
+  public class MessengerImpl : MarshalByRefObject,
                                  tecgraf.openbus.demo.delegation.Messenger {
     #region Fields
 
@@ -28,25 +28,29 @@ namespace Messenger {
       string from = chain.Callers[0].entity;
       Console.WriteLine("post to " + to + " by " + ChainToString.ToString(chain));
       List<PostDesc> inbox;
-      if (_inboxOf.TryGetValue(to, out inbox)) {
-        lock (inbox) {
-          inbox.Add(new PostDesc(from, message));
-        }
+      if (!_inboxOf.TryGetValue(to, out inbox)) {
+        inbox = new List<PostDesc>();
+        _inboxOf.TryAdd(to, inbox);
+      }
+      lock (inbox) {
+        inbox.Add(new PostDesc(from, message));
       }
     }
 
     public PostDesc[] receivePosts() {
       CallerChain chain = _conn.CallerChain;
       string owner = chain.Callers[0].entity;
-      Console.WriteLine("downdoad of messsages by " +
+      Console.WriteLine("download of messsages by " +
                         ChainToString.ToString(chain));
       List<PostDesc> inbox;
-      _inboxOf.TryRemove(owner, out inbox);
-      PostDesc[] descs;
-      lock (inbox) {
-        descs = inbox.ToArray();
+      if (_inboxOf.TryRemove(owner, out inbox)) {
+        PostDesc[] descs;
+        lock (inbox) {
+          descs = inbox.ToArray();
+        }
+        return descs;
       }
-      return descs;
+      return new PostDesc[0];
     }
   }
 }
