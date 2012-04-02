@@ -434,7 +434,9 @@ namespace tecgraf.openbus.sdk.Standard {
             ServiceContext legacyContext =
               new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
             ri.add_request_service_context(legacyContext, false);
-            return;
+            if (lastCaller.Equals(String.Empty)) {
+              return;
+            }
           }
           // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
           hash = CreateInvalidCredentialHash();
@@ -615,7 +617,7 @@ namespace tecgraf.openbus.sdk.Standard {
         Logger.Info(String.Format(
           "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
           interceptedOperation, credential.IsLegacy));
-        if (credential.IsLegacy) {
+        if (!credential.IsLegacy) {
           // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode
           byte[] encodedReset =
             CreateCredentialReset(credential.Credential.login);
