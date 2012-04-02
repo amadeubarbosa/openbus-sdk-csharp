@@ -589,6 +589,7 @@ namespace tecgraf.openbus.sdk.Standard {
         }
         CallerChainImpl callerChain = new CallerChainImpl(BusId, callers);
         _callerChainOf.Add(Thread.CurrentThread, callerChain);
+        return;
       }
 
       // credencial invalida por nao ter sessao conhecida, ticket inválido ou hash errado
