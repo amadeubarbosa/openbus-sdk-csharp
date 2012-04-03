@@ -72,7 +72,6 @@ namespace tecgraf.openbus.sdk.Standard {
 
     private const byte MajorVersion = core.v2_00.MajorVersion.ConstVal;
     private const byte MinorVersion = core.v2_00.MinorVersion.ConstVal;
-    //TODO: revisar se precisa desse SecretSize
     private const int SecretSize = 16;
 
     private readonly Codec _codec;
@@ -423,10 +422,15 @@ namespace tecgraf.openbus.sdk.Standard {
           if (_legacy) {
             // Testa se tem cadeia para enviar
             string lastCaller = String.Empty;
-            CallerChain callerChain = JoinedChain;
+            bool isLegacyOnly = false;
+            CallerChainImpl callerChain = JoinedChain as CallerChainImpl;
             if (callerChain != null) {
               if (callerChain.Callers.Length > 1) {
                 lastCaller = callerChain.Callers[0].entity;
+                if (callerChain.Signed.signature.Length == 0) {
+                  // é uma credencial somente 1.5
+                  isLegacyOnly = true;
+                }
               }
             }
             Credential legacyData = new Credential(loginId, loginEntity,
@@ -434,7 +438,8 @@ namespace tecgraf.openbus.sdk.Standard {
             ServiceContext legacyContext =
               new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
             ri.add_request_service_context(legacyContext, false);
-            if (lastCaller.Equals(String.Empty)) {
+            if (isLegacyOnly) {
+              // não adiciona credencial 2.0
               return;
             }
           }
