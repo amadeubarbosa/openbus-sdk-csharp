@@ -1,7 +1,7 @@
 ﻿using log4net;
 using omg.org.IOP;
 
-namespace tecgraf.openbus.sdk.Standard.Interceptors
+namespace tecgraf.openbus.sdk.standard.interceptors
 {
   internal class StandardServerInitializer : omg.org.PortableInterceptor.ORBInitializer
   {

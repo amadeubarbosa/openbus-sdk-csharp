@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace tecgraf.openbus.sdk.interceptors {
+﻿namespace tecgraf.openbus.sdk.interceptors {
   internal abstract class Session {
     protected Session(int id, byte[] secret, string remoteLogin) {
       Id = id;

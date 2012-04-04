@@ -2,9 +2,9 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.Interceptors;
+using tecgraf.openbus.sdk.interceptors;
 
-namespace tecgraf.openbus.sdk.Standard.Interceptors {
+namespace tecgraf.openbus.sdk.standard.interceptors {
   /// <summary>
   /// Representa o interceptador cliente.
   /// Implementa PortableInterceptor.ClientRequestInterceptor.

@@ -6,7 +6,7 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using tecgraf.openbus.core.v2_00;
 
-namespace tecgraf.openbus.sdk.Security {
+namespace tecgraf.openbus.sdk.security {
   /// <summary>
   /// Classe responsável pela segurança do OpenBus.
   /// </summary>

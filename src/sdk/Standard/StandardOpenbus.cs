@@ -2,10 +2,10 @@ using System.Runtime.Remoting.Channels;
 using Ch.Elca.Iiop;
 using log4net;
 using omg.org.CORBA;
-using tecgraf.openbus.sdk.Standard.Interceptors;
 using tecgraf.openbus.sdk.exceptions;
+using tecgraf.openbus.sdk.standard.interceptors;
 
-namespace tecgraf.openbus.sdk.Standard {
+namespace tecgraf.openbus.sdk.standard {
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>

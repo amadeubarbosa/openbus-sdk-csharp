@@ -8,7 +8,7 @@ using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk.Security;
 using tecgraf.openbus.sdk.exceptions;
 
-namespace tecgraf.openbus.sdk.Multiplexed {
+namespace tecgraf.openbus.sdk.multiplexed {
   internal class MultiplexedConnection : Connection {
     #region Fields
 

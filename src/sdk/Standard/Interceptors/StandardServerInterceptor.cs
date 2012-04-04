@@ -2,9 +2,9 @@
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.Interceptors;
+using tecgraf.openbus.sdk.interceptors;
 
-namespace tecgraf.openbus.sdk.Standard.Interceptors {
+namespace tecgraf.openbus.sdk.standard.interceptors {
   internal class StandardServerInterceptor : InterceptorImpl,
                                              ServerRequestInterceptor {
     #region Fields
@@ -13,6 +13,9 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
       LogManager.GetLogger(typeof (StandardServerInterceptor));
 
     private static StandardServerInterceptor _instance;
+
+    private StandardConnection _connection;
+    private readonly LoginCache _loginsCache;
 
     #endregion
 
@@ -23,11 +26,23 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     /// </summary>
     private StandardServerInterceptor()
       : base("StandardServerInterceptor") {
+      _loginsCache = new LoginCache();
     }
 
     #endregion
 
-    internal StandardConnection Connection { get; set; }
+    internal StandardConnection Connection {
+      get { return _connection;  }
+      set {
+        _connection = value;
+        if (value == null) {
+          //TODO: inutilizar conexão
+        }
+        else {
+          _connection.SetLoginsCache(_loginsCache);
+        }
+      }
+    }
 
     internal static StandardServerInterceptor Instance {
       get { return _instance ?? (_instance = new StandardServerInterceptor()); }
@@ -86,5 +101,5 @@ namespace tecgraf.openbus.sdk.Standard.Interceptors {
     }
 
     #endregion
-                                             }
+  }
 }

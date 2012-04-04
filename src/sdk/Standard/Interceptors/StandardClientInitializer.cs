@@ -1,7 +1,7 @@
 using log4net;
 using omg.org.IOP;
 
-namespace tecgraf.openbus.sdk.Standard.Interceptors
+namespace tecgraf.openbus.sdk.standard.interceptors
 {
   /// <summary>
   /// Classe responsável por inicializar o interceptador cliente.

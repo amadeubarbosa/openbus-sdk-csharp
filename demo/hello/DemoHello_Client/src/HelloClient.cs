@@ -8,7 +8,7 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.Standard;
+using tecgraf.openbus.sdk.standard;
 
 namespace tecgraf.openbus.demo.hello
 {
@@ -49,7 +49,8 @@ namespace tecgraf.openbus.demo.hello
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
-      ServiceProperty[] properties = new[] {prop};//autoProp1, autoProp2, prop};
+//      ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
+      ServiceProperty[] properties = new[] { new ServiceProperty("openbus.component.facet", "Hello"), };
       ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
@@ -61,7 +62,7 @@ namespace tecgraf.openbus.demo.hello
 
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          MarshalByRefObject helloObj = serviceOfferDesc.service_ref.getFacetByName("Hello");
+          MarshalByRefObject helloObj = serviceOfferDesc.service_ref.getFacet("IDL:demoidl/hello/IHello:1.0");
           if (helloObj == null) {
             Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
             continue;

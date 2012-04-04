@@ -90,6 +90,7 @@
     <None Include="src\sdk\multiplexed\MultiplexedConnection.cs" />
     <None Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
     <Compile Include="src\sdk\interceptors\Session.cs" />
+    <Compile Include="src\sdk\LoginCache.cs" />
     <Compile Include="src\sdk\standard\StandardConnection.cs" />
     <Compile Include="src\sdk\standard\StandardOpenbus.cs" />
     <Compile Include="src\sdk\standard\interceptors\StandardClientInitializer.cs" />

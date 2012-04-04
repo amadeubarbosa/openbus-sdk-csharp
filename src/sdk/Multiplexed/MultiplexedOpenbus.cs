@@ -10,7 +10,7 @@ using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.sdk.Security;
 
-namespace tecgraf.openbus.sdk.Multiplexed
+namespace tecgraf.openbus.sdk.multiplexed
 {
   /// <summary>
   /// API de acesso a um barramento OpenBus.

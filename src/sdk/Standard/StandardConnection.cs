@@ -17,14 +17,14 @@ using tecgraf.openbus.core.v2_00;
 using tecgraf.openbus.core.v2_00.credential;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.sdk.Standard.Interceptors;
 using tecgraf.openbus.sdk.exceptions;
-using tecgraf.openbus.sdk.Security;
 using tecgraf.openbus.sdk.interceptors;
 using tecgraf.openbus.sdk.lease;
+using tecgraf.openbus.sdk.security;
+using tecgraf.openbus.sdk.standard.interceptors;
 using TypeCode = omg.org.CORBA.TypeCode;
 
-namespace tecgraf.openbus.sdk.Standard {
+namespace tecgraf.openbus.sdk.standard {
   internal class StandardConnection : Connection {
     #region Fields
 
@@ -36,7 +36,6 @@ namespace tecgraf.openbus.sdk.Standard {
     private readonly bool _legacy;
     private readonly IComponent _acsComponent;
     private AccessControl _acs;
-    private LoginRegistry _lr;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
@@ -56,8 +55,7 @@ namespace tecgraf.openbus.sdk.Standard {
     private readonly ConcurrentDictionary<int, ServerSideSession>
       _sessionId2Session;
 
-    private readonly ConcurrentDictionary<string, AsymmetricKeyParameter>
-      _login2PubKey;
+    private LoginCache _loginsCache;
 
     private readonly ConditionalWeakTable<Thread, CallerChain>
       _callerChainOf;
@@ -100,8 +98,6 @@ namespace tecgraf.openbus.sdk.Standard {
       InternalKey = Crypto.GenerateKeyPair();
 
       _sessionId2Session = new ConcurrentDictionary<int, ServerSideSession>();
-      _login2PubKey =
-        new ConcurrentDictionary<string, AsymmetricKeyParameter>();
       _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
       _outgoingLogin2Session =
         new ConcurrentDictionary<String, ClientSideSession>();
@@ -133,9 +129,9 @@ namespace tecgraf.openbus.sdk.Standard {
       MarshalByRefObject orObjRef = _acsComponent.getFacet(orId);
 
       _acs = acsObjRef as AccessControl;
-      _lr = lrObjRef as LoginRegistry;
+      LoginRegistry = lrObjRef as LoginRegistry;
       OfferRegistry = orObjRef as OfferRegistry;
-      if ((_acs == null) || (_lr == null) || (OfferRegistry == null)) {
+      if ((_acs == null) || (LoginRegistry == null) || (OfferRegistry == null)) {
         Logger.Error("O serviço de controle de acesso não foi encontrado");
         return;
       }
@@ -186,8 +182,6 @@ namespace tecgraf.openbus.sdk.Standard {
     private void LocalLogout() {
       Login = null;
       StopLeaseRenewer();
-      //TODO: resetar caches restantes se e qdo forem implementados
-      _login2PubKey.Clear();
       _outgoingLogin2Session.Clear();
       _profile2Login.Clear();
       _sessionId2Session.Clear();
@@ -208,7 +202,13 @@ namespace tecgraf.openbus.sdk.Standard {
       }
     }
 
+    internal void SetLoginsCache(LoginCache cache) {
+      _loginsCache = cache;
+    }
+
     private bool IgnoreLogin { get; set; }
+
+    internal LoginRegistry LoginRegistry { get; private set; }
 
     #endregion
 
@@ -453,7 +453,7 @@ namespace tecgraf.openbus.sdk.Standard {
         }
 
         CredentialData data = new CredentialData(BusId, loginId, sessionId,
-                                                  ticket, hash, chain);
+                                                 ticket, hash, chain);
         ServiceContext serviceContext =
           new ServiceContext(ContextId, _codec.encode_value(data));
         ri.add_request_service_context(serviceContext, false);
@@ -604,6 +604,7 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     internal void SendException(ServerRequestInfo ri) {
+      // esse tratamento precisa ser feito aqui (não é possível na receive_request) por causa de bugs do IIOP.net, descritos em OPENBUS-1677.
       String interceptedOperation = ri.operation;
       Logger.Info(String.Format(
         "O lançamento de uma exceção para a operação '{0}' foi interceptado no servidor.",
@@ -624,7 +625,7 @@ namespace tecgraf.openbus.sdk.Standard {
           "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
           interceptedOperation, credential.IsLegacy));
         if (!credential.IsLegacy) {
-          // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode
+          // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode e InvalidPublicKeyCode
           byte[] encodedReset =
             CreateCredentialReset(credential.Credential.login);
           ServiceContext replyServiceContext = new ServiceContext(ContextId,
@@ -775,29 +776,14 @@ namespace tecgraf.openbus.sdk.Standard {
 
         // lock para tornar esse trecho atomico
         lock (_lock) {
-          // lock necessário para garantir atomicidade entre o get e o add
           AsymmetricKeyParameter pubKey;
-          lock (_login2PubKey) {
-            if (!_login2PubKey.TryGetValue(remoteLogin, out pubKey)) {
-              byte[] key;
-              try {
-                _lr.getLoginInfo(remoteLogin, out key);
-              }
-              catch (NO_PERMISSION e) {
-                if (e.Minor == InvalidLoginCode.ConstVal) {
-                  Logger.Fatal(
-                    "Este servidor foi deslogado do barramento durante a interceptação desta requisição",
-                    e);
-                  throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                          CompletionStatus.Completed_No);
-                }
-                throw;
-              }
-              pubKey = Crypto.CreatePublicKeyFromBytes(key);
-              _login2PubKey.TryAdd(remoteLogin, pubKey);
-            }
+          string entity;
+          if (
+            !_loginsCache.GetLoginEntity(remoteLogin, this, out entity,
+                                         out pubKey)) {
+            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                    CompletionStatus.Completed_No);
           }
-
           try {
             reset.challenge = Crypto.Encrypt(pubKey, challenge);
           }
@@ -824,12 +810,16 @@ namespace tecgraf.openbus.sdk.Standard {
     }
 
     private void CheckValidity(AnyCredential anyCredential) {
-      int validity;
       string login = anyCredential.IsLegacy
                        ? anyCredential.LegacyCredential.identifier
                        : anyCredential.Credential.login;
       try {
-        validity = _lr.getValidity(new[] {login})[0];
+        if (!_loginsCache.ValidateLogin(login, this)) {
+          Logger.Warn(String.Format("A credencial {0} está fora da validade.",
+                                    login));
+          throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
+                                  CompletionStatus.Completed_No);
+        }
       }
       catch (NO_PERMISSION e) {
         if (e.Minor == InvalidLoginCode.ConstVal) {
@@ -840,12 +830,6 @@ namespace tecgraf.openbus.sdk.Standard {
                                   CompletionStatus.Completed_No);
         }
         throw;
-      }
-      if (validity <= 0) {
-        Logger.Warn(String.Format("A credencial {0} está fora da validade.",
-                                  login));
-        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
       }
       Logger.Info(String.Format("A credencial {0} está na validade.", login));
     }
