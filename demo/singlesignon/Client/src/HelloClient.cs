@@ -10,7 +10,7 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.Standard;
+using tecgraf.openbus.sdk.standard;
 
 namespace Client {
   /// <summary>

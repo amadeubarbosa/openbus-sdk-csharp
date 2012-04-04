@@ -8,7 +8,7 @@ using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.Standard;
+using tecgraf.openbus.sdk.standard;
 
 namespace Broadcaster {
   /// <summary>
