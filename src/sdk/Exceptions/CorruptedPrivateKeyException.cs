@@ -6,7 +6,7 @@ namespace tecgraf.openbus.sdk.exceptions
   /// Indica uma execeção de falha no serviço de controle de acesso. 
   /// </summary>
   [Serializable]
-  public class CorruptedPrivateKeyException : OpenbusException
+  public class CorruptedPrivateKeyException : OpenBusException
   {
     /// <inheritdoc />
     public CorruptedPrivateKeyException() { }

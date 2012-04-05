@@ -6,25 +6,25 @@ namespace tecgraf.openbus.sdk.exceptions
   /// Indica uma exceção do OpenBus.
   /// </summary>
   [Serializable]
-  public class OpenbusException : ApplicationException
+  public class OpenBusException : ApplicationException
   {
     /// <summary>
     /// Cria uma execeção do OpenBus
     /// </summary>
-    public OpenbusException() { }
+    public OpenBusException() { }
     
     /// <summary>
     /// Cria uma exceção do OpenBus com uma mensagem associada.
     /// </summary>
     /// <param name="message">A mensagem de erro</param>
-    public OpenbusException(string message) : base(message) { }
+    public OpenBusException(string message) : base(message) { }
 
     /// <summary>
     /// Cria uma exceção do OpenBus com uma mensagem e uma causa associada.
     /// </summary>
     /// <param name="message">A mensagem de erro</param>
     /// <param name="inner">A exceção associada</param>
-    public OpenbusException(string message, Exception inner) 
+    public OpenBusException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

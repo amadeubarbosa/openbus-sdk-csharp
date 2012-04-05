@@ -6,7 +6,7 @@ namespace tecgraf.openbus.sdk.exceptions
   /// Indica uma execeção de falha no serviço de controle de acesso. 
   /// </summary>
   [Serializable]
-  public class AlreadyLoggedInException : OpenbusException
+  public class AlreadyLoggedInException : OpenBusException
   {
     /// <inheritdoc />
     public AlreadyLoggedInException() { }
