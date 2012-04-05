@@ -75,11 +75,15 @@
     </Compile>
     <Compile Include="src\sdk\CallerChain.cs" />
     <Compile Include="src\sdk\CallerChainImpl.cs" />
+    <Compile Include="src\sdk\multiplexed\ConnectionMultiplexer.cs" />
+    <Compile Include="src\sdk\multiplexed\ConnectionMultiplexerImpl.cs" />
     <Compile Include="src\sdk\exceptions\AccessDeniedException.cs" />
     <Compile Include="src\sdk\exceptions\AlreadyConnectedException.cs" />
     <Compile Include="src\sdk\exceptions\AlreadyLoggedInException.cs" />
     <Compile Include="src\sdk\exceptions\CorruptedPrivateKeyException.cs" />
-    <Compile Include="src\sdk\exceptions\OpenbusException.cs" />
+    <Compile Include="src\sdk\exceptions\OpenbusException.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="src\sdk\exceptions\WrongPrivateKeyException.cs" />
     <Compile Include="src\sdk\exceptions\WrongSecretException.cs" />
     <Compile Include="src\sdk\interceptors\EffectiveProfile.cs" />
@@ -87,8 +91,7 @@
     <Compile Include="src\sdk\InvalidLoginCallback.cs" />
     <Compile Include="src\sdk\lease\LeaseRenewer.cs" />
     <Compile Include="src\sdk\lease\RenewerTask.cs" />
-    <None Include="src\sdk\multiplexed\MultiplexedConnection.cs" />
-    <None Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
+    <Compile Include="src\sdk\multiplexed\MultiplexedOpenbus.cs" />
     <Compile Include="src\sdk\interceptors\Session.cs" />
     <Compile Include="src\sdk\LoginCache.cs" />
     <Compile Include="src\sdk\standard\StandardConnection.cs" />
@@ -96,7 +99,6 @@
     <Compile Include="src\sdk\standard\interceptors\StandardClientInitializer.cs" />
     <Compile Include="src\sdk\standard\interceptors\StandardClientInterceptor.cs" />
     <Compile Include="src\sdk\interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\sdk\standard\interceptors\StandardServerInitializer.cs" />
     <Compile Include="src\sdk\standard\interceptors\StandardServerInterceptor.cs" />
     <Compile Include="src\sdk\Connection.cs" />
     <Compile Include="src\sdk\Openbus.cs" />
@@ -116,9 +118,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="src\sdk\multiplexed\interceptors\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -9,7 +9,7 @@ namespace tecgraf.openbus.sdk.standard {
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>
-  public class StandardOpenBus : OpenBus {
+  public sealed class StandardOpenBus : OpenBus {
     #region Fields
 
     private static readonly ILog Logger =
@@ -29,7 +29,7 @@ namespace tecgraf.openbus.sdk.standard {
     #region Constructors
 
     /// <summary>
-    /// Construtor da classe StandardOpenbus
+    /// Construtor da classe StandardOpenBus
     /// </summary>
     private StandardOpenBus() {
       InitORB();
@@ -60,8 +60,7 @@ namespace tecgraf.openbus.sdk.standard {
 
     private void InitORB() {
       // Adiciona interceptadores
-      _orb.RegisterPortableInterceptorInitalizer(new StandardClientInitializer());
-      _orb.RegisterPortableInterceptorInitalizer(new StandardServerInitializer());
+      _orb.RegisterPortableInterceptorInitalizer(new InterceptorsInitializer(false));
       _orb.CompleteInterceptorRegistration();
 
       ChannelServices.RegisterChannel(new IiopChannel(0), false);

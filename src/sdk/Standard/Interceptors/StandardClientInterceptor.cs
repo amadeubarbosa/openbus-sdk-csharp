@@ -17,6 +17,7 @@ namespace tecgraf.openbus.sdk.standard.interceptors {
       LogManager.GetLogger(typeof (StandardClientInterceptor));
 
     private static StandardClientInterceptor _instance;
+    internal bool IsMultiplexed;
 
     #endregion
 
