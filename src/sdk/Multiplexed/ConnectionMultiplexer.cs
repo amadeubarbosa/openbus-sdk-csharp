@@ -1,4 +1,4 @@
-﻿namespace tecgraf.openbus.sdk {
+﻿namespace tecgraf.openbus.sdk.multiplexed {
 /**
  * Interface com operações para gerenciar acesso multiplexado a diferentes
  * barramentos OpenBus usando um mesmo ORB.

@@ -7,7 +7,7 @@ using omg.org.PortableInterceptor;
 using tecgraf.openbus.sdk.exceptions;
 using Current = omg.org.PortableInterceptor.Current;
 
-namespace tecgraf.openbus.sdk {
+namespace tecgraf.openbus.sdk.multiplexed {
   internal class ConnectionMultiplexerImpl : ConnectionMultiplexer {
     #region Fields
 

@@ -1,5 +1,6 @@
 using log4net;
 using omg.org.IOP;
+using tecgraf.openbus.sdk.multiplexed;
 
 namespace tecgraf.openbus.sdk.standard.interceptors
 {

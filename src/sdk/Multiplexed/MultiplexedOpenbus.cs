@@ -24,8 +24,6 @@ namespace tecgraf.openbus.sdk.multiplexed {
     /// </summary>
     private readonly OrbServices _orb = OrbServices.GetSingleton();
 
-    private ConnectionMultiplexerImpl _multiplexer;
-
     #endregion
 
     #region Constructors
@@ -45,6 +43,8 @@ namespace tecgraf.openbus.sdk.multiplexed {
       get { return _instance ?? (_instance = new MultiplexedOpenBus()); }
     }
 
+    public ConnectionMultiplexer Multiplexer { get; private set; }
+
     /// <summary>
     /// Cria uma conexão com um barramento. Somente uma conexão é possível na API padrão, sem multiplexação.
     /// <returns>A conexão.</returns>
@@ -59,7 +59,7 @@ namespace tecgraf.openbus.sdk.multiplexed {
     private void InitORB() {
       // Adiciona interceptadores
       InterceptorsInitializer initializer = new InterceptorsInitializer(true);
-      _multiplexer = initializer.Multiplexer;
+      Multiplexer = initializer.Multiplexer;
       _orb.RegisterPortableInterceptorInitalizer(initializer);
       _orb.CompleteInterceptorRegistration();
 
