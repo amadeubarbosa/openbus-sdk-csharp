@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MultiplexingClient.Properties" GeneratedClassName="DemoConfig">
+  <Profiles />
+  <Settings>
+    <Setting Name="hostName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ubu</Value>
+    </Setting>
+    <Setting Name="hostPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">9000</Value>
+    </Setting>
+    <Setting Name="hostPort2" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">11000</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
