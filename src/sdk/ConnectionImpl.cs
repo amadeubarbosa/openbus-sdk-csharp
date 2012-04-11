@@ -21,15 +21,14 @@ using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.interceptors;
 using tecgraf.openbus.sdk.lease;
 using tecgraf.openbus.sdk.security;
-using tecgraf.openbus.sdk.standard.interceptors;
 using TypeCode = omg.org.CORBA.TypeCode;
 
-namespace tecgraf.openbus.sdk.standard {
-  internal class StandardConnection : Connection {
+namespace tecgraf.openbus.sdk {
+  internal class ConnectionImpl : Connection {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (StandardConnection));
+      LogManager.GetLogger(typeof (ConnectionImpl));
 
     private readonly string _host;
     private readonly short _port;
@@ -78,7 +77,7 @@ namespace tecgraf.openbus.sdk.standard {
 
     #region Constructors
 
-    internal StandardConnection(string host, short port) {
+    internal ConnectionImpl(string host, short port) {
       if (string.IsNullOrEmpty(host)) {
         throw new ArgumentException("O campo 'host' não é válido");
       }
@@ -89,7 +88,7 @@ namespace tecgraf.openbus.sdk.standard {
       _port = port;
       //TODO: transformar o valor de _legacy num parâmetro futuramente, caso seja decidido dar suporte a ligar/desligar a comunicação com clientes legados na API.
       _legacy = true;
-      _codec = StandardServerInterceptor.Instance.Codec;
+      _codec = ServerInterceptor.Instance.Codec;
       _acsComponent = RemotingServices.Connect(
         typeof (IComponent),
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
@@ -104,8 +103,8 @@ namespace tecgraf.openbus.sdk.standard {
       _callerChainOf = new ConditionalWeakTable<Thread, CallerChain>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
-      StandardServerInterceptor.Instance.Connection = this;
-      StandardClientInterceptor.Instance.Connection = this;
+      ServerInterceptor.Instance.Connection = this;
+      ClientInterceptor.Instance.Connection = this;
 
       IgnoreLogin = true;
       GetBusFacets();
@@ -350,8 +349,8 @@ namespace tecgraf.openbus.sdk.standard {
                                   e.Message));
       }
       finally {
-        StandardServerInterceptor.Instance.Connection = null;
-        StandardClientInterceptor.Instance.Connection = null;
+        ServerInterceptor.Instance.Connection = null;
+        ClientInterceptor.Instance.Connection = null;
       }
     }
 

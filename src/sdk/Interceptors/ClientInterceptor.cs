@@ -2,21 +2,20 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.interceptors;
 
-namespace tecgraf.openbus.sdk.standard.interceptors {
+namespace tecgraf.openbus.sdk.interceptors {
   /// <summary>
   /// Representa o interceptador cliente.
   /// Implementa PortableInterceptor.ClientRequestInterceptor.
   /// </summary>
-  internal class StandardClientInterceptor : InterceptorImpl,
+  internal class ClientInterceptor : InterceptorImpl,
                                              ClientRequestInterceptor {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (StandardClientInterceptor));
+      LogManager.GetLogger(typeof(ClientInterceptor));
 
-    private static StandardClientInterceptor _instance;
+    private static ClientInterceptor _instance;
     internal bool IsMultiplexed;
 
     #endregion
@@ -26,14 +25,14 @@ namespace tecgraf.openbus.sdk.standard.interceptors {
     /// <summary>
     /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardClientInterceptor
     /// </summary>
-    private StandardClientInterceptor()
-      : base("StandardClientInterceptor") {
+    private ClientInterceptor()
+      : base("ClientInterceptor") {
     }
 
-    internal StandardConnection Connection { get; set; }
+    internal ConnectionImpl Connection { get; set; }
 
-    internal static StandardClientInterceptor Instance {
-      get { return _instance ?? (_instance = new StandardClientInterceptor()); }
+    internal static ClientInterceptor Instance {
+      get { return _instance ?? (_instance = new ClientInterceptor()); }
     }
 
     #endregion

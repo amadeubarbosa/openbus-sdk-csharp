@@ -2,7 +2,7 @@ using log4net;
 using omg.org.IOP;
 using tecgraf.openbus.sdk.multiplexed;
 
-namespace tecgraf.openbus.sdk.standard.interceptors
+namespace tecgraf.openbus.sdk.interceptors
 {
   /// <summary>
   /// Classe responsável por inicializar os interceptadores.
@@ -45,13 +45,13 @@ namespace tecgraf.openbus.sdk.standard.interceptors
       }
       Codec codec = info.codec_factory.create_codec(
                         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
-      StandardServerInterceptor.Instance.Codec = codec;
-      StandardServerInterceptor.Instance.IsMultiplexed = _isMultiplexed;
-      StandardClientInterceptor.Instance.Codec = codec;
-      StandardClientInterceptor.Instance.IsMultiplexed = _isMultiplexed;
-      info.add_server_request_interceptor(StandardServerInterceptor.Instance);
+      ServerInterceptor.Instance.Codec = codec;
+      ServerInterceptor.Instance.IsMultiplexed = _isMultiplexed;
+      ClientInterceptor.Instance.Codec = codec;
+      ClientInterceptor.Instance.IsMultiplexed = _isMultiplexed;
+      info.add_server_request_interceptor(ServerInterceptor.Instance);
       Logger.Info("Interceptador servidor registrado.");
-      info.add_client_request_interceptor(StandardClientInterceptor.Instance);
+      info.add_client_request_interceptor(ClientInterceptor.Instance);
       Logger.Info("Interceptador cliente registrado.");
     }
 

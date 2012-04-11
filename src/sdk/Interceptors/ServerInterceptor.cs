@@ -2,18 +2,17 @@
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.interceptors;
 
-namespace tecgraf.openbus.sdk.standard.interceptors {
-  internal class StandardServerInterceptor : InterceptorImpl,
+namespace tecgraf.openbus.sdk.interceptors {
+  internal class ServerInterceptor : InterceptorImpl,
                                              ServerRequestInterceptor {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (StandardServerInterceptor));
+      LogManager.GetLogger(typeof (ServerInterceptor));
 
-    private static StandardServerInterceptor _instance;
-    private StandardConnection _connection;
+    private static ServerInterceptor _instance;
+    private ConnectionImpl _connection;
     private readonly LoginCache _loginsCache;
 
     internal bool IsMultiplexed;
@@ -25,14 +24,14 @@ namespace tecgraf.openbus.sdk.standard.interceptors {
     /// <summary>
     /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardServerInterceptor.   
     /// </summary>
-    private StandardServerInterceptor()
-      : base("StandardServerInterceptor") {
+    private ServerInterceptor()
+      : base("ServerInterceptor") {
       _loginsCache = new LoginCache();
     }
 
     #endregion
 
-    internal StandardConnection Connection {
+    internal ConnectionImpl Connection {
       get { return _connection;  }
       set {
         _connection = value;
@@ -45,8 +44,8 @@ namespace tecgraf.openbus.sdk.standard.interceptors {
       }
     }
 
-    internal static StandardServerInterceptor Instance {
-      get { return _instance ?? (_instance = new StandardServerInterceptor()); }
+    internal static ServerInterceptor Instance {
+      get { return _instance ?? (_instance = new ServerInterceptor()); }
     }
 
     #region ServerRequestInterceptor Implemented

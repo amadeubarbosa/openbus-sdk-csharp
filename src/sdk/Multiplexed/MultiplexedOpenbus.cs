@@ -2,8 +2,7 @@ using System.Runtime.Remoting.Channels;
 using Ch.Elca.Iiop;
 using log4net;
 using omg.org.CORBA;
-using tecgraf.openbus.sdk.standard;
-using tecgraf.openbus.sdk.standard.interceptors;
+using tecgraf.openbus.sdk.interceptors;
 
 namespace tecgraf.openbus.sdk.multiplexed {
   /// <summary>
@@ -51,7 +50,7 @@ namespace tecgraf.openbus.sdk.multiplexed {
     /// </summary>
     public Connection Connect(string host, short port) {
       //TODO: adicionar conexão
-      return new StandardConnection(host, port);
+      return new ConnectionImpl(host, port);
     }
 
     #endregion

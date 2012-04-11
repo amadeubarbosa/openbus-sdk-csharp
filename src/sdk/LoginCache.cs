@@ -3,11 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Org.BouncyCastle.Crypto;
-using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.security;
-using tecgraf.openbus.sdk.standard;
 
 namespace tecgraf.openbus.sdk {
   internal class LoginCache {
@@ -18,7 +15,7 @@ namespace tecgraf.openbus.sdk {
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
-    public bool ValidateLogin(String loginId, StandardConnection conn) {
+    public bool ValidateLogin(String loginId, ConnectionImpl conn) {
       long time = DateTime.Now.Ticks;
       LoginEntry entry;
       bool contains = false;
@@ -76,7 +73,7 @@ namespace tecgraf.openbus.sdk {
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
-    public bool GetLoginEntity(String loginId, StandardConnection conn,
+    public bool GetLoginEntity(String loginId, ConnectionImpl conn,
                                out string entity,
                                out AsymmetricKeyParameter pubkey) {
       LoginEntry entry;

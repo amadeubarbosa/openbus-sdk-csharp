@@ -3,7 +3,7 @@ using Ch.Elca.Iiop;
 using log4net;
 using omg.org.CORBA;
 using tecgraf.openbus.sdk.exceptions;
-using tecgraf.openbus.sdk.standard.interceptors;
+using tecgraf.openbus.sdk.interceptors;
 
 namespace tecgraf.openbus.sdk.standard {
   /// <summary>
@@ -48,9 +48,9 @@ namespace tecgraf.openbus.sdk.standard {
     /// <returns>A conexão.</returns>
     /// </summary>
     public Connection Connect(string host, short port) {
-      if ((StandardServerInterceptor.Instance.Connection == null) &&
-          (StandardClientInterceptor.Instance.Connection == null)) {
-        return new StandardConnection(host, port);
+      if ((ServerInterceptor.Instance.Connection == null) &&
+          (ClientInterceptor.Instance.Connection == null)) {
+        return new ConnectionImpl(host, port);
       }
       throw new AlreadyConnectedException(
         "Utilizando o SDK sem suporte a multiplexação, só pode haver uma conexão com um barramento. Feche a conexão existente antes de realizar uma nova.");
