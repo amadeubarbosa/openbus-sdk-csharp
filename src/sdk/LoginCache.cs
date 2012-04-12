@@ -3,11 +3,16 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Org.BouncyCastle.Crypto;
+using log4net;
+using omg.org.CORBA;
+using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk.security;
 
 namespace tecgraf.openbus.sdk {
   internal class LoginCache {
+    private static readonly ILog Logger = LogManager.GetLogger(typeof(LoginCache));
+
     private readonly ConcurrentDictionary<string, LoginEntry> _logins;
 
     public LoginCache() {
@@ -85,7 +90,7 @@ namespace tecgraf.openbus.sdk {
           pubkey = entry.Publickey;
           return true;
         }
-        info = conn.LoginRegistry.getLoginInfo(loginId, out key);
+        info = GetLoginInfo(conn, loginId, out key);
         entry.Entity = info.entity;
         entry.Publickey = Crypto.CreatePublicKeyFromBytes(key);
         entity = entry.Entity;
@@ -95,7 +100,7 @@ namespace tecgraf.openbus.sdk {
       // A entrada pode ter sido validada e removida antes de entrar nesse
       // método. Obtém a entrada mas com validade 0 para que seja checada.
       entry = new LoginEntry();
-      info = conn.LoginRegistry.getLoginInfo(loginId, out key);
+      info = GetLoginInfo(conn, loginId, out key);
       entry.Publickey = Crypto.CreatePublicKeyFromBytes(key);
       entry.Entity = info.entity;
       entry.LoginId = info.id;
@@ -110,6 +115,20 @@ namespace tecgraf.openbus.sdk {
       entity = null;
       pubkey = null;
       return false;
+    }
+
+    private LoginInfo GetLoginInfo(ConnectionImpl conn, string loginId, out byte[] key) {
+      try {
+        return conn.LoginRegistry.getLoginInfo(loginId, out key);
+      }
+      catch (InvalidLogins il) {
+        Logger.Fatal(String.Format("Erro InvalidLogins ao obter informações do login {0}.", loginId), il);
+        throw new NO_PERMISSION(InvalidLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      catch (ServiceFailure sf) {
+        Logger.Fatal(String.Format("Erro ServiceFailure ao obter informações do login {0}.", loginId), sf);
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
     }
 
     /**
