@@ -76,6 +76,8 @@ namespace tecgraf.openbus.sdk {
     public bool GetLoginEntity(String loginId, ConnectionImpl conn,
                                out string entity,
                                out AsymmetricKeyParameter pubkey) {
+      byte[] key;
+      LoginInfo info;
       LoginEntry entry;
       if (_logins.TryGetValue(loginId, out entry)) {
         if (entry.Entity != null) {
@@ -83,10 +85,24 @@ namespace tecgraf.openbus.sdk {
           pubkey = entry.Publickey;
           return true;
         }
-        byte[] key;
-        LoginInfo info = conn.LoginRegistry.getLoginInfo(loginId, out key);
+        info = conn.LoginRegistry.getLoginInfo(loginId, out key);
         entry.Entity = info.entity;
         entry.Publickey = Crypto.CreatePublicKeyFromBytes(key);
+        entity = entry.Entity;
+        pubkey = entry.Publickey;
+        return true;
+      }
+      // A entrada pode ter sido validada e removida antes de entrar nesse
+      // método. Obtém a entrada mas com validade 0 para que seja checada.
+      entry = new LoginEntry();
+      info = conn.LoginRegistry.getLoginInfo(loginId, out key);
+      entry.Publickey = Crypto.CreatePublicKeyFromBytes(key);
+      entry.Entity = info.entity;
+      entry.LoginId = info.id;
+      entry.BusId = conn.BusId;
+      entry.LastTime = DateTime.Now.Ticks;
+      entry.Validity = 0;
+      if (_logins.TryAdd(loginId, entry)) {
         entity = entry.Entity;
         pubkey = entry.Publickey;
         return true;
