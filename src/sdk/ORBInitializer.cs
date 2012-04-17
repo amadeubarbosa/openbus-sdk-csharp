@@ -3,11 +3,11 @@ using Ch.Elca.Iiop;
 using omg.org.CORBA;
 using tecgraf.openbus.sdk.interceptors;
 
-namespace tecgraf.openbus.sdk.multiplexed {
+namespace tecgraf.openbus.sdk {
   /// <summary>
   /// API de acesso a um barramento OpenBus.
   /// </summary>
-  public static class MultiplexedOpenBus {
+  public static class ORBInitializer {
     #region Fields
 
     /// <summary>
@@ -17,13 +17,13 @@ namespace tecgraf.openbus.sdk.multiplexed {
     /// </summary>
     private static readonly OrbServices ORB = OrbServices.GetSingleton();
     private static bool _initialized;
-    private static ConnectionMultiplexerImpl _manager;
+    private static ConnectionManagerImpl _manager;
 
     #endregion
 
     #region Public Members
 
-    public static ConnectionMultiplexer Manager { 
+    public static ConnectionManager Manager { 
       get {
         if (!_initialized) {
           InitORB();
@@ -31,7 +31,7 @@ namespace tecgraf.openbus.sdk.multiplexed {
         return _manager;
       } 
       private set {
-        _manager = value as ConnectionMultiplexerImpl;
+        _manager = value as ConnectionManagerImpl;
       } 
     }
 

@@ -9,12 +9,12 @@ using omg.org.PortableInterceptor;
 using tecgraf.openbus.sdk.exceptions;
 using Current = omg.org.PortableInterceptor.Current;
 
-namespace tecgraf.openbus.sdk.multiplexed {
-  internal class ConnectionMultiplexerImpl : ConnectionMultiplexer {
+namespace tecgraf.openbus.sdk {
+  internal class ConnectionManagerImpl : ConnectionManager {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (ConnectionMultiplexerImpl));
+      LogManager.GetLogger(typeof (ConnectionManagerImpl));
 
     /** Mapa de conexão que trata requisições de entrada por barramento */
     private readonly ConcurrentDictionary<String, Connection> _incomingDispatcherConn;
@@ -34,9 +34,9 @@ namespace tecgraf.openbus.sdk.multiplexed {
 
     #endregion
 
-    #region ConnectionMultiplexer methods
+    #region ConnectionManager methods
 
-    public ConnectionMultiplexerImpl(int currentThreadSlotId, bool legacySupport) {
+    public ConnectionManagerImpl(int currentThreadSlotId, bool legacySupport) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
       _ignoredThreads = new ConditionalWeakTable<Thread, string>();

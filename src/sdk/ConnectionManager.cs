@@ -1,6 +1,6 @@
 ﻿using omg.org.CORBA;
 
-namespace tecgraf.openbus.sdk.multiplexed {
+namespace tecgraf.openbus.sdk {
 /**
  * Interface com operações para gerenciar acesso multiplexado a diferentes
  * barramentos OpenBus usando um mesmo ORB.
@@ -8,7 +8,7 @@ namespace tecgraf.openbus.sdk.multiplexed {
  * @author Tecgraf
  */
 
-  public interface ConnectionMultiplexer {
+  public interface ConnectionManager {
 
     /// <summary>
     /// ORB utilizado pela conexão. Como o IIOP.Net atualmente o ORB é um 

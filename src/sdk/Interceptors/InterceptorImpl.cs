@@ -1,7 +1,6 @@
 using System;
 using omg.org.IOP;
 using tecgraf.openbus.core.v2_00.credential;
-using tecgraf.openbus.sdk.multiplexed;
 
 namespace tecgraf.openbus.sdk.interceptors
 {
@@ -30,7 +29,7 @@ namespace tecgraf.openbus.sdk.interceptors
     internal int CredentialSlotId;
     internal int ConnectionSlotId;
 
-    internal ConnectionMultiplexerImpl Manager;
+    internal ConnectionManagerImpl Manager;
 
     internal bool Legacy;
 

@@ -1,6 +1,5 @@
 using log4net;
 using omg.org.IOP;
-using tecgraf.openbus.sdk.multiplexed;
 
 namespace tecgraf.openbus.sdk.interceptors
 {
@@ -14,7 +13,7 @@ namespace tecgraf.openbus.sdk.interceptors
 
     private static readonly ILog Logger = LogManager.GetLogger(typeof(InterceptorsInitializer));
 
-    public ConnectionMultiplexerImpl Manager;
+    public ConnectionManagerImpl Manager;
 
     #endregion
 
@@ -26,7 +25,7 @@ namespace tecgraf.openbus.sdk.interceptors
       int credentialSlotId = info.allocate_slot_id();
       int currentThreadSlotId = info.allocate_slot_id();
       int connectionSlotId = info.allocate_slot_id();
-      Manager = new ConnectionMultiplexerImpl(currentThreadSlotId, legacy);
+      Manager = new ConnectionManagerImpl(currentThreadSlotId, legacy);
 
       Codec codec = info.codec_factory.create_codec(
                         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));

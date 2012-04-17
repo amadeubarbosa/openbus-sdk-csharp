@@ -20,7 +20,6 @@ using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.interceptors;
 using tecgraf.openbus.sdk.lease;
-using tecgraf.openbus.sdk.multiplexed;
 using tecgraf.openbus.sdk.security;
 using Current = omg.org.PortableInterceptor.Current;
 using TypeCode = omg.org.CORBA.TypeCode;
@@ -40,7 +39,7 @@ namespace tecgraf.openbus.sdk {
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
-    internal readonly ConnectionMultiplexerImpl Manager;
+    internal readonly ConnectionManagerImpl Manager;
 
     private volatile int _sessionId;
     private readonly object _lock = new object();
@@ -82,7 +81,7 @@ namespace tecgraf.openbus.sdk {
     #region Constructors
 
     internal ConnectionImpl(string host, short port,
-                            ConnectionMultiplexerImpl manager, bool legacy) {
+                            ConnectionManagerImpl manager, bool legacy) {
       if (string.IsNullOrEmpty(host)) {
         throw new ArgumentException("O campo 'host' não é válido");
       }
