@@ -8,7 +8,6 @@ using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace Broadcaster {
   /// <summary>
@@ -23,8 +22,9 @@ namespace Broadcaster {
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short)hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      _conn = manager.CreateConnection(hostName, (short) hostPort);
+      manager.DefaultConnection = _conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
@@ -44,16 +44,17 @@ namespace Broadcaster {
       }
 
       ComponentContext component =
-        new DefaultComponentContext(new ComponentId("Broadcaster", 1, 0, 0, ".net"));
-      //TODO: depois que colocar o getconnection (ou equivalente) no sdk, remover esse parâmetro do construtor
+        new DefaultComponentContext(new ComponentId("Broadcaster", 1, 0, 0,
+                                                    ".net"));
       BroadcasterImpl broadcaster = new BroadcasterImpl(_conn, messenger);
       component.AddFacet("broadcaster",
                          Repository.GetRepositoryID(
-                           typeof(tecgraf.openbus.demo.delegation.Broadcaster)),
+                           typeof (tecgraf.openbus.demo.delegation.Broadcaster)),
                          broadcaster);
 
       IComponent member = component.GetIComponent();
-      ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",
+      ServiceProperty[] properties = new[] {
+                                             new ServiceProperty("offer.domain",
                                                                  "OpenBus Demos")
                                            };
       _offer = _conn.OfferRegistry.registerService(member, properties);
@@ -72,7 +73,7 @@ namespace Broadcaster {
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
-      ServiceProperty[] properties = new[] { autoProp1, autoProp2, prop };
+      ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
       ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
@@ -109,7 +110,6 @@ namespace Broadcaster {
 
     private static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
       _offer.remove();
-      _conn.Close();
     }
   }
 }

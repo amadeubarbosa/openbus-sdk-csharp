@@ -6,7 +6,6 @@ using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace Messenger {
   /// <summary>
@@ -21,8 +20,9 @@ namespace Messenger {
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short)hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      _conn = manager.CreateConnection(hostName, (short)hostPort);
+      manager.DefaultConnection = _conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
@@ -35,7 +35,6 @@ namespace Messenger {
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Messenger", 1, 0, 0, ".net"));
-      //TODO: depois que colocar o getconnection (ou equivalente) no sdk, remover esse parâmetro do construtor
       MessengerImpl messenger = new MessengerImpl(_conn);
       component.AddFacet("messenger",
                          Repository.GetRepositoryID(
@@ -54,7 +53,6 @@ namespace Messenger {
 
     private static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
       _offer.remove();
-      _conn.Close();
     }
   }
 }

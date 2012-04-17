@@ -5,49 +5,47 @@ using Client.Properties;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace Client {
   internal static class DelegationClient {
-    private static Connection _conn;
     private static Messenger _messenger;
     private static Broadcaster _broadcaster;
     private static Forwarder _forwarder;
 
     private static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short) hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      Connection conn = manager.CreateConnection(hostName, (short) hostPort);
+      manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-      _conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
+      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
-      GetServices();
+      GetServices(conn);
 
-      _conn.Logout();
+      conn.Logout();
 
-      _conn.LoginByPassword("willian", encoding.GetBytes("willian"));
+      conn.LoginByPassword("willian", encoding.GetBytes("willian"));
       _forwarder.setForward("bill");
       _broadcaster.subscribe();
-      _conn.Logout();
+      conn.Logout();
 
-      _conn.LoginByPassword("paul", encoding.GetBytes("paul"));
+      conn.LoginByPassword("paul", encoding.GetBytes("paul"));
       _broadcaster.subscribe();
-      _conn.Logout();
+      conn.Logout();
 
-      _conn.LoginByPassword("mary", encoding.GetBytes("mary"));
+      conn.LoginByPassword("mary", encoding.GetBytes("mary"));
       _broadcaster.subscribe();
-      _conn.Logout();
+      conn.Logout();
 
-      _conn.LoginByPassword("steve", encoding.GetBytes("steve"));
+      conn.LoginByPassword("steve", encoding.GetBytes("steve"));
       _broadcaster.subscribe();
       _broadcaster.post("Testando a lista!");
-      _conn.Logout();
+      conn.Logout();
 
       Console.WriteLine("Esperando as mensagens propagarem.");
       Thread.Sleep(10000);
@@ -55,15 +53,15 @@ namespace Client {
 
       string[] names = new[]{"willian", "bill", "paul", "mary", "steve"};
       foreach (string name in names) {
-        _conn.LoginByPassword(name, encoding.GetBytes(name));
+        conn.LoginByPassword(name, encoding.GetBytes(name));
         ShowPostsOf(name, _messenger.receivePosts());
         _broadcaster.unsubscribe();
-        _conn.Logout();
+        conn.Logout();
       }
       
-      _conn.LoginByPassword("willian", encoding.GetBytes("willian"));
+      conn.LoginByPassword("willian", encoding.GetBytes("willian"));
       _forwarder.cancelForward("bill");
-      _conn.Logout();
+      conn.Logout();
       Console.WriteLine("Pressione qualquer tecla para terminar.");
       Console.Read();
     }
@@ -76,12 +74,12 @@ namespace Client {
       Console.WriteLine();
     }
 
-    private static void GetServices() {
+    private static void GetServices(Connection conn) {
       // propriedade definida pelos servidores
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
       ServiceProperty[] properties = new[] {prop};
-      ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
+      ServiceOfferDesc[] offers = conn.OfferRegistry.findServices(properties);
 
       if (offers.Length != 3) {
         Console.WriteLine("Há mais serviços do que o esperado no barramento.");
@@ -116,10 +114,6 @@ namespace Client {
           _forwarder = obj as Forwarder;
         }
       }
-    }
-
-    private static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-      _conn.Close();
     }
   }
 }

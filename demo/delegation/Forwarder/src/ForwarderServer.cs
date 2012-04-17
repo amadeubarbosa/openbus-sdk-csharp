@@ -8,7 +8,6 @@ using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.delegation;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace Forwarder {
   /// <summary>
@@ -23,8 +22,9 @@ namespace Forwarder {
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short) hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      _conn = manager.CreateConnection(hostName, (short)hostPort);
+      manager.DefaultConnection = _conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
@@ -43,7 +43,6 @@ namespace Forwarder {
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Forwarder", 1, 0, 0, ".net"));
-      //TODO: depois que colocar o getconnection (ou equivalente) no sdk, remover esse parâmetro do construtor
       ForwarderImpl forwarder = new ForwarderImpl(_conn, messenger);
       component.AddFacet("forwarder",
                          Repository.GetRepositoryID(
@@ -110,7 +109,6 @@ namespace Forwarder {
 
     private static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
       _offer.remove();
-      _conn.Close();
     }
   }
 }

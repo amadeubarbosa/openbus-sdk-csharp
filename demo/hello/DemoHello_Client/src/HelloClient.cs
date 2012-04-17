@@ -15,8 +15,6 @@ namespace tecgraf.openbus.demo.hello
   /// Cliente do demo hello.
   /// </summary>
   static class HelloClient {
-    private static Connection _conn;
-
     static void Main(string[] args) {
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
@@ -29,14 +27,14 @@ namespace tecgraf.openbus.demo.hello
       BasicConfigurator.Configure(appender);
 
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, (short)hostPort);
-      manager.DefaultConnection = _conn;
+      Connection conn = manager.CreateConnection(hostName, (short)hostPort);
+      manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
-      _conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
+      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
       Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
       Console.ReadLine();
@@ -48,7 +46,7 @@ namespace tecgraf.openbus.demo.hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
       ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
-      ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
+      ServiceOfferDesc[] offers = conn.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
