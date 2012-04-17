@@ -73,15 +73,17 @@ namespace tecgraf.openbus.sdk.interceptors {
           throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
         }
         conn = Manager.GetBusDispatcher(busId) as ConnectionImpl;
-        if (conn != null) {
-          SetCurrentConnection(ri, conn);
-          conn.ReceiveRequest(ri, anyCredential);
-          return;
+        if (conn == null) {
+          conn = Manager.DefaultConnection as ConnectionImpl;
+          if (conn == null) {
+            Logger.Fatal(
+              "Sem conexão ao barramento, impossível receber a chamada remota.");
+            throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                    CompletionStatus.Completed_No);
+          }
         }
-        Logger.Fatal(
-          "Sem conexão ao barramento, impossível receber a chamada remota.");
-        throw new NO_PERMISSION(UnknownBusCode.ConstVal,
-                                CompletionStatus.Completed_No);
+        SetCurrentConnection(ri, conn);
+        conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
         const string msg = "Falha ao inserir a credencial em seu slot.";

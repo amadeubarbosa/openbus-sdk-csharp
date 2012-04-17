@@ -84,8 +84,10 @@ namespace tecgraf.openbus.sdk {
         }
 
         Connection connection;
-        _connectedThreads.TryGetValue(id, out connection);
-        return connection ?? DefaultConnection;
+        if (_connectedThreads.TryGetValue(id, out connection)) {
+          return connection;
+        }
+        return null;
       }
       set {
         const string message =
@@ -118,8 +120,10 @@ namespace tecgraf.openbus.sdk {
 
     public Connection GetBusDispatcher(string busId) {
       Connection incoming;
-      _incomingDispatcherConn.TryGetValue(busId, out incoming);
-      return incoming ?? DefaultConnection;
+      if (_incomingDispatcherConn.TryGetValue(busId, out incoming)) {
+        return incoming;
+      }
+      return null;
     }
 
     public Connection RemoveBusDispatcher(string busId) {
@@ -144,8 +148,10 @@ namespace tecgraf.openbus.sdk {
 
     internal Connection GetConnectionByThreadId(int threadId) {
       Connection conn;
-      _connectedThreads.TryGetValue(threadId, out conn);
-      return conn ?? DefaultConnection;
+      if (_connectedThreads.TryGetValue(threadId, out conn)) {
+        return conn;
+      }
+      return null;
     }
 
     internal string DiscoverCredentialBus(AnyCredential anyCredential) {

@@ -95,8 +95,11 @@ namespace tecgraf.openbus.sdk.interceptors {
         }
         Connection connection = Manager.GetConnectionByThreadId(Convert.ToInt32(id));
         if (connection == null) {
-          Logger.Fatal("Impossível retornar conexão corrente, pois não foi definida.");
-          throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+          connection = Manager.DefaultConnection;
+          if (connection == null) {
+            Logger.Fatal("Impossível retornar conexão corrente, pois não foi definida.");
+            throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+          }
         }
         return connection;
       }
