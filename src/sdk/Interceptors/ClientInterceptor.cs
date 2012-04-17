@@ -1,7 +1,9 @@
+using System;
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.sdk.exceptions;
 
 namespace tecgraf.openbus.sdk.interceptors {
   /// <summary>
@@ -16,7 +18,6 @@ namespace tecgraf.openbus.sdk.interceptors {
       LogManager.GetLogger(typeof(ClientInterceptor));
 
     private static ClientInterceptor _instance;
-    internal bool IsMultiplexed;
 
     #endregion
 
@@ -28,8 +29,6 @@ namespace tecgraf.openbus.sdk.interceptors {
     private ClientInterceptor()
       : base("ClientInterceptor") {
     }
-
-    internal ConnectionImpl Connection { get; set; }
 
     internal static ClientInterceptor Instance {
       get { return _instance ?? (_instance = new ClientInterceptor()); }
@@ -44,19 +43,26 @@ namespace tecgraf.openbus.sdk.interceptors {
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
-      if (Connection != null) {
-        Connection.SendRequest(ri);
-        return;
+      if (!Manager.IsCurrentThreadIgnored()) {
+        ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
+        if (conn != null) {
+          conn.SendRequest(ri);
+          return;
+        }
+        Logger.Fatal("Sem conexão ao barramento, impossível realizar a chamada remota.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
       }
-      Logger.Fatal("Sem conexão ao barramento, impossível realizar a chamada remota.");
-      throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      Logger.Info("O login está sendo ignorado para esta chamada.");
     }
 
     /// <inheritdoc />
     public void receive_exception(ClientRequestInfo ri) {
-      if (Connection != null) {
-        Connection.ReceiveException(ri);
+      ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
+      if (conn != null) {
+        conn.ReceiveException(ri);
+        return;
       }
+      Logger.Fatal("Sem conexão ao barramento para receber uma exceção.");
     }
 
     #endregion
@@ -79,5 +85,25 @@ namespace tecgraf.openbus.sdk.interceptors {
     }
 
     #endregion
+
+    private Connection GetCurrentConnection(RequestInfo ri) {
+      try {
+        string id = "-1";
+        object obj = ri.get_slot(Manager.CurrentThreadSlotId);
+        if (obj != null) {
+          id = obj.ToString();
+        }
+        Connection connection = Manager.GetConnectionByThreadId(Convert.ToInt32(id));
+        if (connection == null) {
+          Logger.Fatal("Impossível retornar conexão corrente, pois não foi definida.");
+          throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+        }
+        return connection;
+      }
+      catch (InvalidSlot e) {
+        const string message = "Falha inesperada ao obter o slot da conexão corrente";
+        throw new OpenBusException(message, e);
+      }
+    }
   }
 }

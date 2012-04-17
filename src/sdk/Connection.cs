@@ -145,14 +145,5 @@ namespace tecgraf.openbus.sdk {
     /// nenhuma cadeia associada, essa operação devolve 'null'.
     /// </summary>
     CallerChain JoinedChain { get; }
-
-    /*************************************************************************
-     * GERÊNCIA DO CICLO DE VIDA DA CONEXÃO **********************************
-     *************************************************************************/
-     
-    /// <summary>
-    /// Encerra essa conexão, tornando-a inválida daqui em diante.
-    /// </summary>
-    void Close();
    }
 }

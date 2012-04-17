@@ -4,6 +4,7 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.sdk.exceptions;
 
 namespace tecgraf.openbus.sdk.lease
 {
@@ -20,7 +21,7 @@ namespace tecgraf.openbus.sdk.lease
     /// <summary>
     /// A conexão que deve ser mantida ativa.
     /// </summary>
-    private readonly Connection _conn;
+    private readonly ConnectionImpl _conn;
 
     /// <summary>
     /// Faceta de controle de acesso do barramento.
@@ -47,7 +48,10 @@ namespace tecgraf.openbus.sdk.lease
     /// <param name="lease">O tempo de <i>lease</i>.</param>
     public RenewerTask(Connection connection, AccessControl accessControlFacet, int lease) {
       Lease = lease;
-      _conn = connection;
+      _conn = connection as ConnectionImpl;
+      if (_conn == null) {
+        throw new OpenBusException("Impossível criar renovador de credencial com conexão nula.");
+      }
       _ac = accessControlFacet;
       _mustContinue = true;
       _justStarted = true;
@@ -66,6 +70,7 @@ namespace tecgraf.openbus.sdk.lease
           if (!_justStarted) {
             try {
               try {
+                _conn.Manager.ThreadRequester = _conn;
                 Lease = _ac.renew();
               }
               catch (NO_PERMISSION) {

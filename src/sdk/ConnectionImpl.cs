@@ -20,7 +20,9 @@ using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.interceptors;
 using tecgraf.openbus.sdk.lease;
+using tecgraf.openbus.sdk.multiplexed;
 using tecgraf.openbus.sdk.security;
+using Current = omg.org.PortableInterceptor.Current;
 using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus.sdk {
@@ -37,6 +39,8 @@ namespace tecgraf.openbus.sdk {
     private AccessControl _acs;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
+
+    internal readonly ConnectionMultiplexerImpl Manager;
 
     private volatile int _sessionId;
     private readonly object _lock = new object();
@@ -56,9 +60,6 @@ namespace tecgraf.openbus.sdk {
 
     private LoginCache _loginsCache;
 
-    private readonly ConditionalWeakTable<Thread, CallerChain>
-      _callerChainOf;
-
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
     /// para transporte de credenciais em requisições de serviço.
@@ -73,11 +74,15 @@ namespace tecgraf.openbus.sdk {
 
     private readonly Codec _codec;
 
+    private readonly int _credentialSlotId;
+    private readonly int _connectionSlotId;
+
     #endregion
 
     #region Constructors
 
-    internal ConnectionImpl(string host, short port) {
+    internal ConnectionImpl(string host, short port,
+                            ConnectionMultiplexerImpl manager, bool legacy) {
       if (string.IsNullOrEmpty(host)) {
         throw new ArgumentException("O campo 'host' não é válido");
       }
@@ -86,9 +91,11 @@ namespace tecgraf.openbus.sdk {
       }
       _host = host;
       _port = port;
-      //TODO: transformar o valor de _legacy num parâmetro futuramente, caso seja decidido dar suporte a ligar/desligar a comunicação com clientes legados na API.
-      _legacy = true;
+      Manager = manager;
+      _legacy = legacy;
       _codec = ServerInterceptor.Instance.Codec;
+      _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
+      _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
       _acsComponent = RemotingServices.Connect(
         typeof (IComponent),
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
@@ -100,23 +107,32 @@ namespace tecgraf.openbus.sdk {
       _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
       _outgoingLogin2Session =
         new ConcurrentDictionary<String, ClientSideSession>();
-      _callerChainOf = new ConditionalWeakTable<Thread, CallerChain>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
-      ServerInterceptor.Instance.Connection = this;
-      ClientInterceptor.Instance.Connection = this;
-
-      IgnoreLogin = true;
+      Manager.IgnoreCurrentThread();
       GetBusFacets();
-      IgnoreLogin = false;
+      Manager.UnignoreCurrentThread();
     }
 
     #endregion
 
     #region Internal Members
 
+    private Current GetPICurrent() {
+      ORB orb = OrbServices.GetSingleton();
+      Current current =
+        orb.resolve_initial_references("PICurrent") as Current;
+      if (current == null) {
+        const string message =
+          "Falha inesperada ao acessar o slot da thread corrente";
+        Logger.Fatal(message);
+        throw new OpenBusException(message);
+      }
+      return current;
+    }
+
     private void GetBusFacets() {
-      if (IsLoggedIn()) {
+      if (Login != null) {
         return;
       }
       String acsId = Repository.GetRepositoryID(typeof (AccessControl));
@@ -141,12 +157,8 @@ namespace tecgraf.openbus.sdk {
 
     private AsymmetricCipherKeyPair InternalKey { get; set; }
 
-    private bool IsLoggedIn() {
-      return (Login != null);
-    }
-
     private void LoginByObject(LoginProcess login, byte[] secret) {
-      if (IsLoggedIn()) {
+      if (Login != null) {
         login.cancel();
         throw new AlreadyLoggedInException();
       }
@@ -205,8 +217,6 @@ namespace tecgraf.openbus.sdk {
       _loginsCache = cache;
     }
 
-    private bool IgnoreLogin { get; set; }
-
     internal LoginRegistry LoginRegistry { get; private set; }
 
     #endregion
@@ -221,12 +231,12 @@ namespace tecgraf.openbus.sdk {
     public LoginInfo? Login { get; private set; }
 
     public void LoginByPassword(string entity, byte[] password) {
-      if (IsLoggedIn()) {
+      if (Login != null) {
         throw new AlreadyLoggedInException();
       }
 
       try {
-        IgnoreLogin = true;
+        Manager.IgnoreCurrentThread();
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
         try {
@@ -245,17 +255,17 @@ namespace tecgraf.openbus.sdk {
         StartLeaseRenewer(lease);
       }
       finally {
-        IgnoreLogin = false;
+        Manager.UnignoreCurrentThread();
       }
     }
 
     public void LoginByCertificate(string entity, byte[] privKey) {
-      if (IsLoggedIn()) {
+      if (Login != null) {
         throw new AlreadyLoggedInException();
       }
 
       try {
-        IgnoreLogin = true;
+        Manager.IgnoreCurrentThread();
         byte[] challenge;
         LoginProcess login = _acs.startLoginByCertificate(entity,
                                                           out
@@ -265,7 +275,7 @@ namespace tecgraf.openbus.sdk {
         LoginByObject(login, answer);
       }
       finally {
-        IgnoreLogin = false;
+        Manager.UnignoreCurrentThread();
       }
     }
 
@@ -278,11 +288,11 @@ namespace tecgraf.openbus.sdk {
 
     public void LoginBySingleSignOn(LoginProcess login, byte[] secret) {
       try {
-        IgnoreLogin = true;
+        Manager.IgnoreCurrentThread();
         LoginByObject(login, secret);
       }
       finally {
-        IgnoreLogin = false;
+        Manager.UnignoreCurrentThread();
       }
     }
 
@@ -311,7 +321,7 @@ namespace tecgraf.openbus.sdk {
 
     public void JoinChain(CallerChain chain) {
       if (chain == null) {
-        _callerChainOf.TryGetValue(Thread.CurrentThread, out chain);
+        chain = CallerChain;
       }
       lock (_joinedChainOf) {
         // o remove serve apenas para não lançar exceção na Add.
@@ -322,9 +332,47 @@ namespace tecgraf.openbus.sdk {
 
     public CallerChain CallerChain {
       get {
-        CallerChain chain;
-        _callerChainOf.TryGetValue(Thread.CurrentThread, out chain);
-        return chain;
+        Current current = GetPICurrent();
+        string loginId;
+        try {
+          loginId = current.get_slot(_connectionSlotId) as string;
+        }
+        catch (InvalidSlot e) {
+          const string message =
+            "Falha inesperada ao acessar o slot da conexão corrente";
+          Logger.Fatal(message, e);
+          throw new OpenBusException(message);
+        }
+        if ((Login == null) || (loginId == null) ||
+            (!Login.Value.id.Equals(loginId))) {
+          return null;
+        }
+        try {
+          AnyCredential anyCredential =
+            (AnyCredential) current.get_slot(_credentialSlotId);
+          if (anyCredential.IsLegacy) {
+            Credential credential = anyCredential.LegacyCredential;
+            LoginInfo[] callers;
+            if (credential._delegate.Equals(String.Empty)) {
+              callers = new[]
+                        {new LoginInfo(credential.identifier, credential.owner)};
+            }
+            else {
+              LoginInfo caller = new LoginInfo("unknown", credential._delegate);
+              callers = new[] {caller, caller};
+            }
+            return new CallerChainImpl(BusId, callers);
+          }
+          CallChain chain = UnmarshalCallChain(anyCredential.Credential.chain);
+          return new CallerChainImpl(BusId, chain.callers,
+                                     anyCredential.Credential.chain);
+        }
+        catch (InvalidSlot e) {
+          const string message =
+            "Falha inesperada ao acessar o slot da credencial corrente";
+          Logger.Fatal(message, e);
+          throw new OpenBusException(message);
+        }
       }
     }
 
@@ -340,20 +388,6 @@ namespace tecgraf.openbus.sdk {
       }
     }
 
-    public void Close() {
-      try {
-        Logout();
-      }
-      catch (Exception e) {
-        Logger.Warn(String.Format("Erro capturado ao fechar conexão: {0}",
-                                  e.Message));
-      }
-      finally {
-        ServerInterceptor.Instance.Connection = null;
-        ClientInterceptor.Instance.Connection = null;
-      }
-    }
-
     #endregion
 
     #region Interceptor Methods
@@ -365,24 +399,16 @@ namespace tecgraf.openbus.sdk {
           "Interceptador cliente iniciando tentativa de chamada à operação {0}.",
           operation));
 
-      string loginId;
-      string loginEntity;
-      if (!IgnoreLogin) {
-        if (!Login.HasValue) {
-          Logger.Debug(
-            String.Format(
-              "Chamada à operação {0} cancelada devido a não existir login.",
-              operation));
-          throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-        loginId = Login.Value.id;
-        loginEntity = Login.Value.entity;
+      if (!Login.HasValue) {
+        Logger.Debug(
+          String.Format(
+            "Chamada à operação {0} cancelada devido a não existir login.",
+            operation));
+        throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
-      else {
-        Logger.Info("O login está sendo ignorado para esta chamada.");
-        return;
-      }
+      string loginId = Login.Value.id;
+      string loginEntity = Login.Value.entity;
 
       int sessionId = 0;
       int ticket = 0;
@@ -481,10 +507,6 @@ namespace tecgraf.openbus.sdk {
       }
     }
 
-    internal void SendReply(ServerRequestInfo ri) {
-      _callerChainOf.Remove(Thread.CurrentThread);
-    }
-
     internal void ReceiveException(ClientRequestInfo ri) {
       String operation = ri.operation;
       Logger.Info(String.Format(
@@ -502,11 +524,18 @@ namespace tecgraf.openbus.sdk {
       }
 
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
+        if (exception.Minor == NoCredentialCode.ConstVal) {
+          Logger.Warn(String.Format(
+            "Servidor remoto alega falta de credencial para a chamada {0}, portanto deve ser um servidor incompatível ou com erro.",
+            operation));
+          throw new NO_PERMISSION(InvalidRemoteCode.ConstVal,
+                                  CompletionStatus.Completed_No);
+        }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
           LocalLogout();
           if ((OnInvalidLoginCallback != null) &&
               (OnInvalidLoginCallback.InvalidLogin(this))) {
-            Logger.Info(String.Format(
+            Logger.Warn(String.Format(
               "Login reestabelecido, solicitando que a chamada {0} seja refeita.",
               operation));
             throw new ForwardRequest(ri.target);
@@ -534,21 +563,10 @@ namespace tecgraf.openbus.sdk {
       throw new ForwardRequest(ri.target);
     }
 
-    internal void ReceiveRequest(ServerRequestInfo ri) {
-      String interceptedOperation = ri.operation;
-      Logger.Info(String.Format(
-        "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
-
-      bool legacyContext;
-      ServiceContext serviceContext =
-        GetContextFromRequestInfo(ri, out legacyContext);
-      AnyCredential anyCredential = UnmarshalCredential(serviceContext,
-                                                        legacyContext);
-      Logger.Info(
-        String.Format("A operação '{0}' possui credencial. É legada? {1}.",
-                      interceptedOperation, legacyContext));
+    internal void ReceiveRequest(ServerRequestInfo ri,
+                                 AnyCredential anyCredential) {
+      string interceptedOperation = ri.operation;
       if (!anyCredential.IsLegacy) {
-        // aqui só tenho uma conexão com um barramento, então a chamada CheckValidity abaixo já garante que a credencial legacy recebida é do mesmo barramento (não precisa entrar nesse bloco).
         if (!anyCredential.Credential.bus.Equals(BusId)) {
           Logger.Fatal(String.Format(
             "A identificação do barramento está errada. O valor recebido foi '{0}' e o esperado era '{1}'.",
@@ -567,7 +585,8 @@ namespace tecgraf.openbus.sdk {
         if (_sessionId2Session.TryGetValue(credential.session, out session)) {
           // CheckTicket já faz o lock no ticket history da sessão
           if (session.CheckTicket(credential.ticket)) {
-            byte[] hash = CreateCredentialHash(ri.operation, credential.ticket,
+            byte[] hash = CreateCredentialHash(interceptedOperation,
+                                               credential.ticket,
                                                session.Secret);
             IStructuralEquatable eqHash = hash;
             if (eqHash.Equals(credential.hash,
@@ -575,103 +594,56 @@ namespace tecgraf.openbus.sdk {
               // credencial valida
               // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
               CheckChain(credential.chain, credential.login);
+              // insere o login no slot para a getCallerChain usar
+              if (Login != null) {
+                try {
+                  ri.set_slot(_connectionSlotId, Login.Value.id);
+                }
+                catch (InvalidSlot e) {
+                  const string msg =
+                    "Falha ao inserir o identificador de login em seu slot.";
+                  Logger.Fatal(msg, e);
+                  throw new OpenBusException(msg, e);
+                }
+              }
               return;
             }
           }
         }
       }
       else {
-        Credential credential = anyCredential.LegacyCredential;
-        LoginInfo[] callers;
-        if (credential._delegate.Equals(String.Empty)) {
-          callers = new[]
-                    {new LoginInfo(credential.identifier, credential.owner)};
+        if (Login != null) {
+          try {
+            ri.set_slot(_connectionSlotId, Login.Value.id);
+          }
+          catch (InvalidSlot e) {
+            const string msg =
+              "Falha ao inserir o identificador de login em seu slot.";
+            Logger.Fatal(msg, e);
+            throw new OpenBusException(msg, e);
+          }
         }
-        else {
-          LoginInfo caller = new LoginInfo("unknown", credential._delegate);
-          callers = new[] {caller, caller};
-        }
-        CallerChainImpl callerChain = new CallerChainImpl(BusId, callers);
-        _callerChainOf.Add(Thread.CurrentThread, callerChain);
         return;
       }
 
       // credencial invalida por nao ter sessao conhecida, ticket inválido ou hash errado
       Logger.Fatal("Credencial inválida, enviando CredentialReset.");
-      throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
-                              CompletionStatus.Completed_No);
+      // TODO FIXME
+      // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
+      // no código do interceptador servidor, no método receive_reply.
+      ri.set_slot(_credentialSlotId, "reset");
     }
 
-    internal void SendException(ServerRequestInfo ri) {
-      // esse tratamento precisa ser feito aqui (não é possível na receive_request) por causa de bugs do IIOP.net, descritos em OPENBUS-1677.
-      String interceptedOperation = ri.operation;
-      Logger.Info(String.Format(
-        "O lançamento de uma exceção para a operação '{0}' foi interceptado no servidor.",
-        interceptedOperation));
-
-      NO_PERMISSION ex = ri.sending_exception as NO_PERMISSION;
-      if (ex == null) {
-        return;
+    internal void SendException(ServerRequestInfo ri,
+                                AnyCredential anyCredential) {
+      if (!anyCredential.IsLegacy) {
+        // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode e InvalidPublicKeyCode
+        byte[] encodedReset =
+          CreateCredentialReset(anyCredential.Credential.login);
+        ServiceContext replyServiceContext = new ServiceContext(ContextId,
+                                                                encodedReset);
+        ri.add_reply_service_context(replyServiceContext, false);
       }
-      if (ex.Minor == InvalidCredentialCode.ConstVal) {
-        bool legacyContext;
-        ServiceContext serviceContext =
-          GetContextFromRequestInfo(ri, out legacyContext);
-        // credencial é inválida
-        AnyCredential credential = UnmarshalCredential(serviceContext,
-                                                       legacyContext);
-        Logger.Info(String.Format(
-          "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
-          interceptedOperation, credential.IsLegacy));
-        if (!credential.IsLegacy) {
-          // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode e InvalidPublicKeyCode
-          byte[] encodedReset =
-            CreateCredentialReset(credential.Credential.login);
-          ServiceContext replyServiceContext = new ServiceContext(ContextId,
-                                                                  encodedReset);
-          ri.add_reply_service_context(replyServiceContext, false);
-        }
-      }
-    }
-
-    private ServiceContext GetContextFromRequestInfo(RequestInfo ri,
-                                                     out bool legacyContext) {
-      legacyContext = false;
-      String interceptedOperation = ri.operation;
-      ServiceContext serviceContext;
-      try {
-        serviceContext = ri.get_request_service_context(ContextId);
-      }
-      catch (BAD_PARAM) {
-        if (_legacy) {
-          return GetLegacyContextFromRequestInfo(ri, out legacyContext);
-        }
-        Logger.Warn(String.Format(
-          "A chamada à operação '{0}' não possui credencial.",
-          interceptedOperation));
-        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
-      }
-      return serviceContext;
-    }
-
-    private ServiceContext GetLegacyContextFromRequestInfo(RequestInfo ri,
-                                                           out bool
-                                                             legacyContext) {
-      String interceptedOperation = ri.operation;
-      ServiceContext serviceContext;
-      try {
-        serviceContext = ri.get_request_service_context(PrevContextId);
-      }
-      catch (BAD_PARAM) {
-        Logger.Warn(String.Format(
-          "A chamada à operação '{0}' não possui credencial.",
-          interceptedOperation));
-        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
-      }
-      legacyContext = true;
-      return serviceContext;
     }
 
     private byte[] CreateInvalidCredentialHash() {
@@ -735,37 +707,6 @@ namespace tecgraf.openbus.sdk {
       return requestReset;
     }
 
-    private AnyCredential UnmarshalCredential(ServiceContext serviceContext,
-                                              bool legacyContext) {
-      OrbServices orb = OrbServices.GetSingleton();
-      if (legacyContext) {
-        return UnmarshalLegacyCredential(serviceContext);
-      }
-      Type credentialType = typeof (CredentialData);
-      TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
-
-      byte[] data = serviceContext.context_data;
-      return new AnyCredential(
-        (CredentialData) _codec.decode_value(data, credentialTypeCode));
-    }
-
-    private AnyCredential UnmarshalLegacyCredential(
-      ServiceContext serviceContext) {
-      // will use bus value for delegate
-      OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof (Credential);
-      TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
-
-      byte[] data = serviceContext.context_data;
-      Credential cred =
-        (Credential) _codec.decode_value(data, credentialTypeCode);
-      return new AnyCredential(cred);
-    }
-
     private byte[] CreateCredentialReset(string remoteLogin) {
       if (Login != null) {
         CredentialReset reset = new CredentialReset {login = Login.Value.id};
@@ -820,15 +761,18 @@ namespace tecgraf.openbus.sdk {
                                   CompletionStatus.Completed_No);
         }
       }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == InvalidLoginCode.ConstVal) {
+      catch (Exception e) {
+        NO_PERMISSION noPermission = e as NO_PERMISSION;
+        if ((noPermission != null) &&
+            (noPermission.Minor == InvalidLoginCode.ConstVal)) {
           Logger.Fatal(
             "Este servidor foi deslogado do barramento durante a interceptação desta requisição",
             e);
-          throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
         }
-        throw;
+        Logger.Fatal(
+          "Não foi possível validar a credencial. Erro: " + e.Message, e);
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
       Logger.Info(String.Format("A credencial {0} está na validade.", login));
     }
@@ -852,9 +796,6 @@ namespace tecgraf.openbus.sdk {
           throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        CallerChainImpl callerChain = new CallerChainImpl(BusId, chain.callers,
-                                                          signed);
-        _callerChainOf.Add(Thread.CurrentThread, callerChain);
       }
       catch (InvalidOperationException) {
         Logger.Fatal(
@@ -887,21 +828,5 @@ namespace tecgraf.openbus.sdk {
     }
 
     #endregion
-
-    private class AnyCredential {
-      public CredentialData Credential;
-      public Credential LegacyCredential;
-      public readonly bool IsLegacy;
-
-      public AnyCredential(CredentialData credential) {
-        IsLegacy = false;
-        Credential = credential;
-      }
-
-      public AnyCredential(Credential credential) {
-        IsLegacy = true;
-        LegacyCredential = credential;
-      }
-    }
   }
 }

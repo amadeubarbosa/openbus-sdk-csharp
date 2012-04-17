@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -14,33 +16,55 @@ namespace tecgraf.openbus.sdk.multiplexed {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (ConnectionMultiplexerImpl));
 
-    /// <summary> Conexões por barramento.</summary>
-    private readonly ConcurrentDictionary<string, ConcurrentBag<Connection>> _buses;
-
-    /// <summary> Mapa de conexão default por barramento.</summary>
-    private readonly ConcurrentDictionary<string, Connection> _busDefaultConn;
-
-    /// <summary> Mapa de conexão por thread.</summary>
+    /** Mapa de conexão que trata requisições de entrada por barramento */
+    private readonly ConcurrentDictionary<String, Connection> _incomingDispatcherConn;
+    /** Mapa de conexão por thread */
     private readonly ConcurrentDictionary<int, Connection> _connectedThreads;
+    /** Threads com interceptação ignorada */
+    private readonly ConditionalWeakTable<Thread, string> _ignoredThreads;
 
     private readonly ORB _orb;
 
+    private readonly LoginCache _loginsCache;
+
+    private readonly bool _legacy;
+
     /// <summary> Identificador do slot de thread corrente.</summary>
-    public int CurrentThreadSlotId { get; private set; }
+    internal int CurrentThreadSlotId { get; private set; }
 
     #endregion
 
     #region ConnectionMultiplexer methods
 
-    public ConnectionMultiplexerImpl(int currentThreadSlotId) {
-      _buses = new ConcurrentDictionary<string, ConcurrentBag<Connection>>();
-      _busDefaultConn = new ConcurrentDictionary<string, Connection>();
+    public ConnectionMultiplexerImpl(int currentThreadSlotId, bool legacySupport) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
+      _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
+      _ignoredThreads = new ConditionalWeakTable<Thread, string>();
+      _loginsCache = new LoginCache();
       CurrentThreadSlotId = currentThreadSlotId;
+      _legacy = legacySupport;
       _orb = OrbServices.GetSingleton();
     }
 
-    public Connection CurrentConnection {
+    public ORB ORB {
+      get { return _orb; }
+    }
+
+    public Connection DefaultConnection { get; set; }
+
+    public Connection CreateConnection(string host, short port) {
+      IgnoreCurrentThread();
+      try {
+        ConnectionImpl conn = new ConnectionImpl(host, port, this, _legacy);
+        conn.SetLoginsCache(_loginsCache);
+        return conn;
+      }
+      finally {
+        UnignoreCurrentThread();
+      }
+    }
+
+    public Connection ThreadRequester {
       get {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
@@ -61,8 +85,7 @@ namespace tecgraf.openbus.sdk.multiplexed {
 
         Connection connection;
         _connectedThreads.TryGetValue(id, out connection);
-        // Todo: deixo retornar null ou lanço algum tipo de exceção?
-        return connection;
+        return connection ?? DefaultConnection;
       }
       set {
         const string message =
@@ -85,87 +108,81 @@ namespace tecgraf.openbus.sdk.multiplexed {
       }
     }
 
-    public void SetIncomingConnection(string busId, Connection conn) {
-      lock (_busDefaultConn) {
+    public void SetupBusDispatcher(Connection conn) {
+      lock (_incomingDispatcherConn) {
         Connection removed;
-        _busDefaultConn.TryRemove(busId, out removed);
-        if (conn != null) {
-          _busDefaultConn.TryAdd(busId, conn);
-        }
+        _incomingDispatcherConn.TryRemove(conn.BusId, out removed);
+        _incomingDispatcherConn.TryAdd(conn.BusId, conn);
       }
     }
 
-    public Connection GetIncomingConnection(string busId) {
+    public Connection GetBusDispatcher(string busId) {
       Connection incoming;
-      _busDefaultConn.TryGetValue(busId, out incoming);
+      _incomingDispatcherConn.TryGetValue(busId, out incoming);
+      return incoming ?? DefaultConnection;
+    }
+
+    public Connection RemoveBusDispatcher(string busId) {
+      Connection incoming;
+      _incomingDispatcherConn.TryRemove(busId, out incoming);
       return incoming;
     }
 
     #endregion
 
-    private void SetConnectionByThreadId(int threadId, Connection conn) {
+    internal ICollection<Connection> GetIncomingConnections() {
+      return _incomingDispatcherConn.Values;
+    }
+
+    internal void SetConnectionByThreadId(int threadId, Connection conn) {
       lock (_connectedThreads) {
         Connection removed;
         _connectedThreads.TryRemove(threadId, out removed);
-        if (conn != null) {
-          _connectedThreads.TryAdd(threadId, conn);
-        }
+        _connectedThreads.TryAdd(threadId, conn);
       }
     }
 
-    public Connection GetConnectionByThreadId(int threadId) {
+    internal Connection GetConnectionByThreadId(int threadId) {
       Connection conn;
       _connectedThreads.TryGetValue(threadId, out conn);
-      return conn;
+      return conn ?? DefaultConnection;
     }
 
-    public bool HasBus(string busid) {
-      return _buses.ContainsKey(busid);
+    internal string DiscoverCredentialBus(AnyCredential anyCredential) {
+      if (!anyCredential.IsLegacy) {
+        return anyCredential.Credential.bus;
+      }
+      throw new NotImplementedException();
+      /*
+      foreach (KeyValuePair<string, ConcurrentBag<Connection>> keyValuePair in _buses) {
+        foreach (ConnectionImpl connection in keyValuePair.Value) {
+          //TODO: usar faceta legada da conexão para checar
+          throw new NotImplementedException();
+          //if (connection.Faceta.Validate()) {
+          //  return connection.BusId;
+          //}
+          // só precisa checar através de uma conexão
+          break;
+        }
+      }
+      return String.Empty;
+       */
     }
 
-    public void AddConnection(Connection conn) {
-    lock (_buses) {
-      ConcurrentBag<Connection> bag;
-      if (!_buses.TryGetValue(conn.BusId, out bag)) {
-        bag = new ConcurrentBag<Connection>();
-        _buses.TryAdd(conn.BusId, bag);
+    internal void IgnoreCurrentThread() {
+      lock (_ignoredThreads) {
+        _ignoredThreads.Remove(Thread.CurrentThread);
+        _ignoredThreads.Add(Thread.CurrentThread, String.Empty);
       }
-      bag.Add(conn);
     }
-  }
 
-    public void RemoveConnection(Connection conn) {
-      string busId = conn.BusId;
-      // mapa de conexões por barramentos
-      lock (_buses) {
-        ConcurrentBag<Connection> bag;
-        if (_buses.TryGetValue(busId, out bag)) {
-          bag.TryTake(out conn);
-        }
-      }
-      // mapa de conexão default por barramento
-      lock (_busDefaultConn) {
-        Connection defconn;
-        if (_busDefaultConn.TryGetValue(busId, out defconn)) {
-          if (ReferenceEquals(defconn, conn)) {
-            Connection removed;
-            _busDefaultConn.TryRemove(busId, out removed);
-          }
-        }
-      }
-      // mapa de conexão por thread
-      IList<int> toRemove = new List<int>();
-      lock (_connectedThreads) {
-        foreach (KeyValuePair<int, Connection> entry in _connectedThreads) {
-          if (ReferenceEquals(entry.Value, conn)) {
-            toRemove.Add(entry.Key);
-          }
-        }
-        foreach (int id in toRemove) {
-          Connection removed;
-          _connectedThreads.TryRemove(id, out removed);
-        }
-      }
+    internal void UnignoreCurrentThread() {
+      _ignoredThreads.Remove(Thread.CurrentThread);
+    }
+
+    internal bool IsCurrentThreadIgnored() {
+      string s;
+      return _ignoredThreads.TryGetValue(Thread.CurrentThread, out s);
     }
   }
 }

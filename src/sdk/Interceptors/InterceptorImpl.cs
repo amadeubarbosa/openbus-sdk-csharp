@@ -1,6 +1,7 @@
 using System;
 using omg.org.IOP;
-
+using tecgraf.openbus.core.v2_00.credential;
+using tecgraf.openbus.sdk.multiplexed;
 
 namespace tecgraf.openbus.sdk.interceptors
 {
@@ -25,6 +26,21 @@ namespace tecgraf.openbus.sdk.interceptors
     /// para transporte/obtenção de contextos de requisições de servico.
     /// </summary>
     internal Codec Codec { get; set; }
+
+    internal int CredentialSlotId;
+    internal int ConnectionSlotId;
+
+    internal ConnectionMultiplexerImpl Manager;
+
+    internal bool Legacy;
+
+    /// <summary>
+    /// Representam a identificação dos "service contexts" (contextos) utilizados
+    /// para transporte de credenciais em requisições de serviço.
+    /// </summary>
+    protected const int ContextId = CredentialContextId.ConstVal;
+
+    protected const int PrevContextId = 1234;
 
     #endregion
 

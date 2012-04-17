@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using tecgraf.openbus.core.v2_00.credential;
 using tecgraf.openbus.core.v2_00.services.access_control;
 
 namespace tecgraf.openbus.sdk {
