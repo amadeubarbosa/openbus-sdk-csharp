@@ -10,18 +10,13 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace Client {
   /// <summary>
   /// Cliente do demo hello.
   /// </summary>
   static class HelloClient {
-    private static Connection _conn;
-
     static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
@@ -31,8 +26,9 @@ namespace Client {
       };
       BasicConfigurator.Configure(appender);
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short)hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      Connection conn = manager.CreateConnection(hostName, (short)hostPort);
+      manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
@@ -40,9 +36,9 @@ namespace Client {
       string loginFile = DemoConfig.Default.loginFile;
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
-      _conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
+      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
       byte[] secret;
-      LoginProcess login = _conn.StartSingleSignOn(out secret);
+      LoginProcess login = conn.StartSingleSignOn(out secret);
 
       using (FileStream fs = new FileStream(secretFile, FileMode.Create)) {
         using (BinaryWriter w = new BinaryWriter(fs)) {
@@ -58,13 +54,13 @@ namespace Client {
 
       Console.WriteLine("Chamando a faceta IHello por este cliente.");
       // propriedades geradas automaticamente
-      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "demo");
-      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "hello");
+      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "TestEntity");
+      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "Hello");
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
-      ServiceProperty[] properties = new[] { prop };//autoProp1, autoProp2, prop};
-      ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
+      ServiceProperty[] properties = new[] { autoProp1, autoProp2, prop};
+      ServiceOfferDesc[] offers = conn.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
@@ -100,10 +96,5 @@ namespace Client {
       Console.WriteLine("Execute o cliente que fará o login por single sign on e, após seu término, pressione qualquer tecla para finalizar este cliente.");
       Console.ReadLine();
     }
-
-    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-      _conn.Close();
-    }
   }
-
 }
