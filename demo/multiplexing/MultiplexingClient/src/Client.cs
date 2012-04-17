@@ -3,18 +3,11 @@ using MultiplexingClient.Properties;
 using demoidl.hello;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.multiplexed;
 
 namespace MultiplexingClient
 {
-  public class Client
+  public static class Client
   {
-    /**
-     * Função principal.
-     * 
-     * @param args
-     */
-
     public static void Main(string[] args)
     {
       try
@@ -24,7 +17,7 @@ namespace MultiplexingClient
         int hostPort2 = DemoConfig.Default.hostPort2;
         System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
-        MultiplexedOpenBus openbus = MultiplexedOpenBus.Instance as MultiplexedOpenBus;
+        ConnectionManager manager = ORBInitializer.Manager;
 
         Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
         Console.ReadLine();
@@ -33,7 +26,9 @@ namespace MultiplexingClient
 
         foreach (short port in ports)
         {
-          Connection conn = openbus.Connect(hostName, port);
+          Connection conn = manager.CreateConnection(hostName, port);
+          manager.SetupBusDispatcher(conn);
+          manager.ThreadRequester = conn;
           String login = "demo@" + port;
           conn.LoginByPassword(login, encoding.GetBytes(login));
 
@@ -54,7 +49,6 @@ namespace MultiplexingClient
             IHello hello = obj as IHello;
             hello.sayHello();
           }
-          conn.Close();
         }
       }
       catch (Exception e)

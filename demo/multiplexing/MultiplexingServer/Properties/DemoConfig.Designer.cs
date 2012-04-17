@@ -25,7 +25,7 @@ namespace MultiplexingServer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192.168.1.102")]
+        [global::System.Configuration.DefaultSettingValueAttribute("ubu")]
         public string hostName {
             get {
                 return ((string)(this["hostName"]));
