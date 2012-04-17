@@ -8,7 +8,6 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace tecgraf.openbus.demo.hello
 {
@@ -19,20 +18,19 @@ namespace tecgraf.openbus.demo.hello
     private static Connection _conn;
 
     static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
       string hostName = DemoConfig.Default.hostName;
       int hostPort = DemoConfig.Default.hostPort;
 
-      ConsoleAppender appender = new ConsoleAppender()
+      ConsoleAppender appender = new ConsoleAppender
       {
         Threshold = Level.Info,
         Layout = new SimpleLayout(),
       };
       BasicConfigurator.Configure(appender);
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short)hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      _conn = manager.CreateConnection(hostName, (short)hostPort);
+      manager.DefaultConnection = _conn;
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
@@ -44,13 +42,12 @@ namespace tecgraf.openbus.demo.hello
       Console.ReadLine();
 
       // propriedades geradas automaticamente
-      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "demo");
-      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "hello");
+      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "TestEntity");
+      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "Hello");
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
-//      ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
-      ServiceProperty[] properties = new[] { new ServiceProperty("openbus.component.facet", "Hello"), };
+      ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
       ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
@@ -82,10 +79,5 @@ namespace tecgraf.openbus.demo.hello
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }
-
-    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-      _conn.Close();
-    }
   }
-
 }

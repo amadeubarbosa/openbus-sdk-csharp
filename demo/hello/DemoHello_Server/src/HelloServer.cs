@@ -10,7 +10,6 @@ using Server.Properties;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
-using tecgraf.openbus.sdk.standard;
 
 namespace tecgraf.openbus.demo.hello {
   /// <summary>
@@ -27,8 +26,9 @@ namespace tecgraf.openbus.demo.hello {
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
-      OpenBus openbus = StandardOpenBus.Instance;
-      _conn = openbus.Connect(hostName, (short)hostPort);
+      ConnectionManager manager = ORBInitializer.Manager;
+      _conn = manager.CreateConnection(hostName, (short)hostPort);
+      manager.DefaultConnection = _conn;
 
       string entityName = DemoConfig.Default.entityName;
       string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
@@ -37,11 +37,10 @@ namespace tecgraf.openbus.demo.hello {
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));
-      //TODO: depois que colocar o getconnection (ou equivalente) no sdk, remover esse parâmetro do construtor
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof(IHello)), new HelloImpl(_conn));
 
       _conn.LoginByCertificate(entityName, privateKey);
-      _conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(entityName, privateKey);
+      _conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(entityName, privateKey, manager);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] {new ServiceProperty("offer.domain", "OpenBus Demos")};
@@ -54,7 +53,6 @@ namespace tecgraf.openbus.demo.hello {
 
     static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
       _offer.remove();
-      _conn.Close();
     }
   }
 }
