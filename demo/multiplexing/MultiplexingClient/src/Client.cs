@@ -55,6 +55,8 @@ namespace MultiplexingClient
       {
         Console.WriteLine(e.StackTrace);
       }
+      Console.WriteLine("Pressione qualquer tecla para finalizar.");
+      Console.ReadKey();
     }
   }
 }

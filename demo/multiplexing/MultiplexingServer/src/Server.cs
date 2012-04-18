@@ -36,9 +36,9 @@ namespace MultiplexingServer
         Conns.Add(connAtBus2);
 
         // setup action on login termination
-        conn1AtBus1.OnInvalidLoginCallback = new HelloInvalidLoginCallback("Conn1AtBus1");
-        conn2AtBus1.OnInvalidLoginCallback = new HelloInvalidLoginCallback("Conn2AtBus1");
-        connAtBus2.OnInvalidLoginCallback = new HelloInvalidLoginCallback("ConnAtBus2");
+        conn1AtBus1.OnInvalidLoginCallback = new HelloInvalidLoginCallback("Conn1AtBus1", manager);
+        conn2AtBus1.OnInvalidLoginCallback = new HelloInvalidLoginCallback("Conn2AtBus1", manager);
+        connAtBus2.OnInvalidLoginCallback = new HelloInvalidLoginCallback("ConnAtBus2", manager);
 
         // create service SCS component
         ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
@@ -69,6 +69,10 @@ namespace MultiplexingServer
 
         manager.ThreadRequester = connAtBus2;
         connAtBus2.OfferRegistry.registerService(context1.GetIComponent(), GetProps());
+
+        Console.WriteLine("Servidor no ar.");
+
+        Thread.Sleep(Timeout.Infinite);
       }
       catch (Exception e)
       {
