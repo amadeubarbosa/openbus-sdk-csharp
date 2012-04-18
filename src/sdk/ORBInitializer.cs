@@ -37,7 +37,7 @@ namespace tecgraf.openbus.sdk {
 
     #endregion
 
-    public static ORB InitORB() {
+    private static ORB InitORB() {
       if (!_initialized) {
         // Adiciona interceptadores
         InterceptorsInitializer initializer = new InterceptorsInitializer();

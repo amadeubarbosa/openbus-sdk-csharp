@@ -100,7 +100,9 @@ namespace tecgraf.openbus.sdk.interceptors {
             Logger.Fatal("Impossível retornar conexão corrente, pois não foi definida.");
             throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
           }
+          Logger.Debug("Utilizando a conexão padrão para realizar a chamada.");
         }
+        Logger.Debug("Utilizando a conexão da thread para realizar a chamada.");
         return connection;
       }
       catch (InvalidSlot e) {

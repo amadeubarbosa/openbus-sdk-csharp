@@ -21,7 +21,6 @@ namespace tecgraf.openbus.sdk {
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     public bool ValidateLogin(String loginId, ConnectionImpl conn) {
-      conn.Manager.ThreadRequester = conn;
       long time = DateTime.Now.Ticks;
       LoginEntry entry;
       bool contains = false;
@@ -47,6 +46,7 @@ namespace tecgraf.openbus.sdk {
       time = DateTime.Now.Ticks;
       string[] idsArray = new string[ids.Count];
       ids.CopyTo(idsArray, 0);
+      conn.Manager.ThreadRequester = conn;
       int[] validities =
         conn.LoginRegistry.getValidity(idsArray);
       bool isValid = false;

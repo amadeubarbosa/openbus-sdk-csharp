@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using log4net;
@@ -22,9 +21,7 @@ namespace tecgraf.openbus.sdk.interceptors {
 
     private static ServerInterceptor _instance;
 
-    //TODO: modificar, nao pode ser por request_id porque eles podem se repetir entre clientes diferentes.
-    // Mapa que guarda a conexão utilizada no receive request para a send exception / send reply
-    private readonly ConcurrentDictionary<string, ConnectionImpl> _receivingConn;
+    internal int ReceivingConnectionSlotId;
 
     #endregion
 
@@ -35,7 +32,6 @@ namespace tecgraf.openbus.sdk.interceptors {
     /// </summary>
     private ServerInterceptor()
       : base("ServerInterceptor") {
-      _receivingConn = new ConcurrentDictionary<string, ConnectionImpl>();
     }
 
     #endregion
@@ -93,7 +89,7 @@ namespace tecgraf.openbus.sdk.interceptors {
       finally {
         RemoveCurrentConnection(ri);
         if (conn != null) {
-          _receivingConn.TryAdd(ri.request_id.ToString(), conn);
+          ri.set_slot(ReceivingConnectionSlotId, conn);
         }
       }
     }
@@ -151,10 +147,17 @@ namespace tecgraf.openbus.sdk.interceptors {
             "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
             interceptedOperation, anyCredential.IsLegacy));
 
-          ConnectionImpl conn;
-          if (_receivingConn.TryRemove(ri.request_id.ToString(), out conn)) {
-            conn.SendException(ri, anyCredential);
-            return;
+          try {
+            ConnectionImpl conn = ri.get_slot(ReceivingConnectionSlotId) as ConnectionImpl;
+            if (conn != null) {
+              conn.SendException(ri, anyCredential);
+              return;
+            }
+          }
+          catch (InvalidSlot e) {
+            const string msg = "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.";
+            Logger.Fatal(msg, e);
+            throw new OpenBusException(msg, e);
           }
           Logger.Fatal(
             "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
@@ -184,9 +187,8 @@ namespace tecgraf.openbus.sdk.interceptors {
     #endregion
 
     private void ClearRequest(ServerRequestInfo ri) {
-      ConnectionImpl conn;
-      _receivingConn.TryRemove(ri.request_id.ToString(), out conn);
       try {
+        ri.set_slot(ReceivingConnectionSlotId, null);
         ri.set_slot(CredentialSlotId, null);
         ri.set_slot(ConnectionSlotId, null);
       }

@@ -108,9 +108,7 @@ namespace tecgraf.openbus.sdk {
         new ConcurrentDictionary<String, ClientSideSession>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
-      Manager.IgnoreCurrentThread();
       GetBusFacets();
-      Manager.UnignoreCurrentThread();
     }
 
     #endregion
@@ -150,6 +148,7 @@ namespace tecgraf.openbus.sdk {
         return;
       }
 
+      Manager.ThreadRequester = this;
       BusId = _acs.busid;
       _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
     }
@@ -250,6 +249,7 @@ namespace tecgraf.openbus.sdk {
         }
 
         int lease;
+        Manager.ThreadRequester = this;
         Login = _acs.loginByPassword(entity, pubBytes, encrypted, out lease);
         StartLeaseRenewer(lease);
       }
@@ -266,6 +266,7 @@ namespace tecgraf.openbus.sdk {
       try {
         Manager.IgnoreCurrentThread();
         byte[] challenge;
+        Manager.ThreadRequester = this;
         LoginProcess login = _acs.startLoginByCertificate(entity,
                                                           out
                                                             challenge);
@@ -280,6 +281,7 @@ namespace tecgraf.openbus.sdk {
 
     public LoginProcess StartSingleSignOn(out byte[] secret) {
       byte[] challenge;
+      Manager.ThreadRequester = this;
       LoginProcess login = _acs.startLoginBySingleSignOn(out challenge);
       secret = Crypto.Decrypt(InternalKey.Private, challenge);
       return login;
@@ -301,6 +303,7 @@ namespace tecgraf.openbus.sdk {
       }
 
       try {
+        Manager.ThreadRequester = this;
         _acs.logout();
       }
       catch (NO_PERMISSION e) {
@@ -656,6 +659,7 @@ namespace tecgraf.openbus.sdk {
           ((remoteLogin.Equals(BusId)) || (remoteLogin.Equals(String.Empty)))) {
         return CreateInvalidCredentialSignedCallChain();
       }
+      Manager.ThreadRequester = this;
       if (chain == null) {
         // na chamada a signChainFor vai criar uma nova chain e assinar
         signed = _acs.signChainFor(remoteLogin);
@@ -720,6 +724,7 @@ namespace tecgraf.openbus.sdk {
           if (
             !_loginsCache.GetLoginEntity(remoteLogin, this, out entity,
                                          out pubKey)) {
+            Logger.Warn("Não foi encontrada uma entrada na cache de logins para o login " + remoteLogin);
             throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                     CompletionStatus.Completed_No);
           }
@@ -753,6 +758,7 @@ namespace tecgraf.openbus.sdk {
                        ? anyCredential.LegacyCredential.identifier
                        : anyCredential.Credential.login;
       try {
+        Manager.ThreadRequester = this;
         if (!_loginsCache.ValidateLogin(login, this)) {
           Logger.Warn(String.Format("A credencial {0} está fora da validade.",
                                     login));

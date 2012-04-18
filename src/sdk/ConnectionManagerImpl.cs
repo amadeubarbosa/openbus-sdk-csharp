@@ -17,7 +17,10 @@ namespace tecgraf.openbus.sdk {
       LogManager.GetLogger(typeof (ConnectionManagerImpl));
 
     /** Mapa de conexão que trata requisições de entrada por barramento */
-    private readonly ConcurrentDictionary<String, Connection> _incomingDispatcherConn;
+
+    private readonly ConcurrentDictionary<String, Connection>
+      _incomingDispatcherConn;
+
     /** Mapa de conexão por thread */
     private readonly ConcurrentDictionary<int, Connection> _connectedThreads;
     /** Threads com interceptação ignorada */

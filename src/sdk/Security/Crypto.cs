@@ -32,24 +32,6 @@ namespace tecgraf.openbus.sdk.security {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       cipher.Init(true, key);
       return cipher.DoFinal(data);
-      /*
-      RsaEngine e = new RsaEngine();
-      e.Init(true, key);
-
-      int blockSize = e.GetInputBlockSize();
-
-      List<byte> output = new List<byte>();
-
-      for (int chunkPosition = 0;
-           chunkPosition < data.Length;
-           chunkPosition += blockSize) {
-        int chunkSize = Math.Min(blockSize, data.Length -
-                                            (chunkPosition * blockSize));
-        output.AddRange(e.ProcessBlock(data, chunkPosition,
-                                       chunkSize));
-      }
-      return output.ToArray();
-       */
     }
 
     /// <summary>
@@ -62,24 +44,6 @@ namespace tecgraf.openbus.sdk.security {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       cipher.Init(false, key);
       return cipher.DoFinal(data);
-      /*
-      RsaEngine e = new RsaEngine();
-      e.Init(false, key);
-
-      int blockSize = e.GetInputBlockSize();
-
-      List<byte> output = new List<byte>();
-
-      for (int chunkPosition = 0;
-           chunkPosition < data.Length;
-           chunkPosition += blockSize) {
-        int chunkSize = Math.Min(blockSize, data.Length -
-                                            (chunkPosition * blockSize));
-        output.AddRange(e.ProcessBlock(data, chunkPosition,
-                                       chunkSize));
-      }
-      return output.ToArray();
-       */
     }
 
     public static AsymmetricCipherKeyPair GenerateKeyPair() {
