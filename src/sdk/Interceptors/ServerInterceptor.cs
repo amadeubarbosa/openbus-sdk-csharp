@@ -62,11 +62,35 @@ namespace tecgraf.openbus.sdk.interceptors {
       ConnectionImpl conn = null;
       try {
         ri.set_slot(CredentialSlotId, anyCredential);
-        string busId = Manager.DiscoverCredentialBus(anyCredential);
-        if (busId == String.Empty) {
-          Logger.Fatal(
-            "Não foi possível encontrar um barramento que aceite a credencial recebida.");
-          throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
+        string busId = string.Empty;
+        if (!anyCredential.IsLegacy) {
+          busId = anyCredential.Credential.bus;
+        }
+        else {
+          bool valid = false;
+          foreach (Connection incoming in Manager.GetIncomingConnections()) {
+            conn = incoming as ConnectionImpl;
+            if ((conn == null) || (!conn.Legacy)) {
+              continue;
+            }
+            SetCurrentConnection(ri, conn);
+            try {
+              if (Manager.LoginsCache.ValidateLogin(anyCredential, conn)) {
+                valid = true;
+                busId = conn.BusId;
+                break;
+              }
+            }
+            catch (Exception e) {
+              const string message = "Erro ao validar o login 1.5.";
+              Logger.Error(message, e);
+            }
+          }
+          if (!valid) {
+            Logger.Fatal(
+              "Não foi possível encontrar um barramento que aceite a credencial recebida.");
+            throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
+          }
         }
         conn = Manager.GetBusDispatcher(busId) as ConnectionImpl;
         if (conn == null) {

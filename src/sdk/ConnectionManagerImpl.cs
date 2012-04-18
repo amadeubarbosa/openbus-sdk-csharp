@@ -28,7 +28,7 @@ namespace tecgraf.openbus.sdk {
 
     private readonly ORB _orb;
 
-    private readonly LoginCache _loginsCache;
+    internal readonly LoginCache LoginsCache;
 
     private readonly bool _legacy;
 
@@ -43,7 +43,7 @@ namespace tecgraf.openbus.sdk {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
       _ignoredThreads = new ConditionalWeakTable<Thread, string>();
-      _loginsCache = new LoginCache();
+      LoginsCache = new LoginCache();
       CurrentThreadSlotId = currentThreadSlotId;
       _legacy = legacySupport;
       _orb = OrbServices.GetSingleton();
@@ -59,7 +59,7 @@ namespace tecgraf.openbus.sdk {
       IgnoreCurrentThread();
       try {
         ConnectionImpl conn = new ConnectionImpl(host, port, this, _legacy);
-        conn.SetLoginsCache(_loginsCache);
+        conn.SetLoginsCache(LoginsCache);
         return conn;
       }
       finally {
@@ -137,8 +137,12 @@ namespace tecgraf.openbus.sdk {
 
     #endregion
 
-    internal ICollection<Connection> GetIncomingConnections() {
-      return _incomingDispatcherConn.Values;
+    internal IEnumerable<Connection> GetIncomingConnections() {
+      IList<Connection> list = new List<Connection>(_incomingDispatcherConn.Values);
+      if (DefaultConnection != null) {
+        list.Add(DefaultConnection);
+      }
+      return list;
     }
 
     internal void SetConnectionByThreadId(int threadId, Connection conn) {
@@ -155,27 +159,6 @@ namespace tecgraf.openbus.sdk {
         return conn;
       }
       return null;
-    }
-
-    internal string DiscoverCredentialBus(AnyCredential anyCredential) {
-      if (!anyCredential.IsLegacy) {
-        return anyCredential.Credential.bus;
-      }
-      throw new NotImplementedException();
-      /*
-      foreach (KeyValuePair<string, ConcurrentBag<Connection>> keyValuePair in _buses) {
-        foreach (ConnectionImpl connection in keyValuePair.Value) {
-          //TODO: usar faceta legada da conexão para checar
-          throw new NotImplementedException();
-          //if (connection.Faceta.Validate()) {
-          //  return connection.BusId;
-          //}
-          // só precisa checar através de uma conexão
-          break;
-        }
-      }
-      return String.Empty;
-       */
     }
 
     internal void IgnoreCurrentThread() {

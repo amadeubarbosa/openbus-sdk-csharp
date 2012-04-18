@@ -33,12 +33,12 @@ namespace tecgraf.openbus.sdk {
 
     private readonly string _host;
     private readonly short _port;
-    private readonly bool _legacy;
     private readonly IComponent _acsComponent;
     private AccessControl _acs;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
+    internal bool Legacy;
     internal readonly ConnectionManagerImpl Manager;
 
     private volatile int _sessionId;
@@ -91,7 +91,7 @@ namespace tecgraf.openbus.sdk {
       _host = host;
       _port = port;
       Manager = manager;
-      _legacy = legacy;
+      Legacy = legacy;
       _codec = ServerInterceptor.Instance.Codec;
       _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
       _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
@@ -132,9 +132,9 @@ namespace tecgraf.openbus.sdk {
       if (Login != null) {
         return;
       }
-      String acsId = Repository.GetRepositoryID(typeof (AccessControl));
-      String lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
-      String orId = Repository.GetRepositoryID(typeof (OfferRegistry));
+      string acsId = Repository.GetRepositoryID(typeof (AccessControl));
+      string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
+      string orId = Repository.GetRepositoryID(typeof (OfferRegistry));
 
       MarshalByRefObject acsObjRef = _acsComponent.getFacet(acsId);
       MarshalByRefObject lrObjRef = _acsComponent.getFacet(lrId);
@@ -144,13 +144,32 @@ namespace tecgraf.openbus.sdk {
       LoginRegistry = lrObjRef as LoginRegistry;
       OfferRegistry = orObjRef as OfferRegistry;
       if ((_acs == null) || (LoginRegistry == null) || (OfferRegistry == null)) {
-        Logger.Error("O serviço de controle de acesso não foi encontrado");
+        Logger.Error("O serviço de controle de acesso não foi encontrado.");
         return;
       }
 
       Manager.ThreadRequester = this;
       BusId = _acs.busid;
       _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
+
+      if (Legacy) {
+        try {
+          IComponent legacy = RemotingServices.Connect(
+            typeof(IComponent),
+            "corbaloc::1.0@" + _host + ":" + _port + "/" + "openbus_v1_05") as IComponent;
+          string legacyId = Repository.GetRepositoryID(typeof(IAccessControlService));
+          MarshalByRefObject legacyObjRef = legacy.getFacet(legacyId);
+          LegacyAccess = legacyObjRef as IAccessControlService;
+          if (LegacyAccess == null) {
+            Legacy = false;
+            Logger.Error("O serviço de controle de acesso 1.5 não foi encontrado. O suporte a conexões legadas foi desabilitado.");
+          }
+        }
+        catch (Exception e) {
+          Legacy = false;
+          Logger.Error("Erro ao tentar obter a faceta IAccessControlService da versão 1.5. O suporte a conexões legadas foi desabilitado.", e);
+        }
+      }
     }
 
     private AsymmetricCipherKeyPair InternalKey { get; set; }
@@ -216,6 +235,8 @@ namespace tecgraf.openbus.sdk {
     }
 
     internal LoginRegistry LoginRegistry { get; private set; }
+
+    internal IAccessControlService LegacyAccess { get; private set; }
 
     #endregion
 
@@ -446,7 +467,7 @@ namespace tecgraf.openbus.sdk {
                           operation, remoteLogin));
         }
         else {
-          if (_legacy) {
+          if (Legacy) {
             // Testa se tem cadeia para enviar
             string lastCaller = String.Empty;
             bool isLegacyOnly = false;
@@ -759,7 +780,7 @@ namespace tecgraf.openbus.sdk {
                        : anyCredential.Credential.login;
       try {
         Manager.ThreadRequester = this;
-        if (!_loginsCache.ValidateLogin(login, this)) {
+        if (!_loginsCache.ValidateLogin(anyCredential, this)) {
           Logger.Warn(String.Format("A credencial {0} está fora da validade.",
                                     login));
           throw new NO_PERMISSION(InvalidLoginCode.ConstVal,

@@ -5,22 +5,31 @@ using System.Runtime.CompilerServices;
 using Org.BouncyCastle.Crypto;
 using log4net;
 using omg.org.CORBA;
+using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk.security;
 
 namespace tecgraf.openbus.sdk {
   internal class LoginCache {
-    private static readonly ILog Logger = LogManager.GetLogger(typeof(LoginCache));
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof (LoginCache));
 
     private readonly ConcurrentDictionary<string, LoginEntry> _logins;
+    private readonly IsValidCache _legacyCache;
 
     public LoginCache() {
       _logins = new ConcurrentDictionary<string, LoginEntry>();
+      //TODO modificar número mágico abaixo para o tamanho padrão quando implementar LRU
+      _legacyCache = new IsValidCache(32);
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
-    public bool ValidateLogin(String loginId, ConnectionImpl conn) {
+    public bool ValidateLogin(AnyCredential anyCredential, ConnectionImpl conn) {
+      if (anyCredential.IsLegacy) {
+        return _legacyCache.IsValid(anyCredential.LegacyCredential, conn);
+      }
+      string loginId = anyCredential.Credential.login;
       long time = DateTime.Now.Ticks;
       LoginEntry entry;
       bool contains = false;
@@ -118,18 +127,27 @@ namespace tecgraf.openbus.sdk {
       return false;
     }
 
-    private LoginInfo GetLoginInfo(ConnectionImpl conn, string loginId, out byte[] key) {
+    private LoginInfo GetLoginInfo(ConnectionImpl conn, string loginId,
+                                   out byte[] key) {
       conn.Manager.ThreadRequester = conn;
       try {
         return conn.LoginRegistry.getLoginInfo(loginId, out key);
       }
       catch (InvalidLogins il) {
-        Logger.Fatal(String.Format("Erro InvalidLogins ao obter informações do login {0}.", loginId), il);
-        throw new NO_PERMISSION(InvalidLoginCode.ConstVal, CompletionStatus.Completed_No);
+        Logger.Fatal(
+          String.Format(
+            "Erro InvalidLogins ao obter informações do login {0}.", loginId),
+          il);
+        throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
       catch (ServiceFailure sf) {
-        Logger.Fatal(String.Format("Erro ServiceFailure ao obter informações do login {0}.", loginId), sf);
-        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal, CompletionStatus.Completed_No);
+        Logger.Fatal(
+          String.Format(
+            "Erro ServiceFailure ao obter informações do login {0}.", loginId),
+          sf);
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
     }
 
@@ -146,6 +164,91 @@ namespace tecgraf.openbus.sdk {
       public int Validity;
       public long LastTime;
       public AsymmetricKeyParameter Publickey;
+    }
+
+    private class IsValidCache {
+      /**
+       * O mapa da cache de logins.
+       */
+      private readonly ConcurrentDictionary<IsValidKey, Boolean> _cache;
+
+      /**
+       * Construtor.
+       * 
+       * @param cacheSize tamanho da cache.
+       */
+      public IsValidCache(int cacheSize) {
+        //TODO colocar LRU
+        _cache = new ConcurrentDictionary<IsValidKey, bool>();
+      }
+
+      public bool IsValid(Credential credential, ConnectionImpl conn) {
+        IsValidKey key = new IsValidKey(credential.identifier, credential.owner);
+        bool valid;
+        _cache.TryGetValue(key, out valid);
+        if (!valid) {
+          if (conn.Legacy) {
+            valid = conn.LegacyAccess.isValid(credential);
+            _cache.TryAdd(key, valid);
+          }
+        }
+        return valid;
+      }
+
+    }
+
+    private class IsValidKey {
+      private readonly string _id;
+      private readonly string _owner;
+
+      public IsValidKey(string id, string owner) {
+        _id = id;
+        _owner = owner;
+      }
+
+      public override int GetHashCode() {
+        const int prime = 31;
+        int result = 1;
+        result = prime * result + GetOuterType().GetHashCode();
+        result = prime * result + ((_id == null) ? 0 : _id.GetHashCode());
+        result = prime * result + ((_owner == null) ? 0 : _owner.GetHashCode());
+        return result;
+      }
+
+      public override bool Equals(Object obj) {
+        if (ReferenceEquals(null, obj)) {
+          return false;
+        }
+        if (ReferenceEquals(this, obj)) {
+          return true;
+        }
+
+        IsValidKey other = (IsValidKey) obj;
+        if (!(GetOuterType() == other.GetOuterType())) {
+          return false;
+        }
+        if (_id == null) {
+          if (other._id != null) {
+            return false;
+          }
+        }
+        else if (!_id.Equals(other._id)) {
+          return false;
+        }
+        if (_owner == null) {
+          if (other._owner != null) {
+            return false;
+          }
+        }
+        else if (!_owner.Equals(other._owner)) {
+          return false;
+        }
+        return true;
+      }
+
+      private Type GetOuterType() {
+        return GetType();
+      }
     }
   }
 }
