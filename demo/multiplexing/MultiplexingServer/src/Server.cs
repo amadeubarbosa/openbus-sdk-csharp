@@ -9,16 +9,12 @@ using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
 
-namespace MultiplexingServer
-{
-  public static class Server
-  {
+namespace MultiplexingServer {
+  public static class Server {
     private static readonly IList<Connection> Conns = new List<Connection>();
 
-    public static void Main(string[] args)
-    {
-      try
-      {
+    public static void Main(string[] args) {
+      try {
         string hostName = DemoConfig.Default.hostName;
         int hostPort = DemoConfig.Default.hostPort;
         int hostPort2 = DemoConfig.Default.hostPort2;
@@ -27,23 +23,30 @@ namespace MultiplexingServer
         ConnectionManager manager = ORBInitializer.Manager;
 
         // connect to the bus
-        Connection conn1AtBus1 = manager.CreateConnection(hostName, (short)hostPort);
-        Connection conn2AtBus1 = manager.CreateConnection(hostName, (short)hostPort);
-        Connection connAtBus2 = manager.CreateConnection(hostName, (short)hostPort2);
+        Connection conn1AtBus1 = manager.CreateConnection(hostName,
+                                                          (short) hostPort);
+        Connection conn2AtBus1 = manager.CreateConnection(hostName,
+                                                          (short) hostPort);
+        Connection connAtBus2 = manager.CreateConnection(hostName,
+                                                         (short) hostPort2);
 
         Conns.Add(conn1AtBus1);
         Conns.Add(conn2AtBus1);
         Conns.Add(connAtBus2);
 
         // setup action on login termination
-        conn1AtBus1.OnInvalidLoginCallback = new HelloInvalidLoginCallback("Conn1AtBus1", manager);
-        conn2AtBus1.OnInvalidLoginCallback = new HelloInvalidLoginCallback("Conn2AtBus1", manager);
-        connAtBus2.OnInvalidLoginCallback = new HelloInvalidLoginCallback("ConnAtBus2", manager);
+        conn1AtBus1.OnInvalidLoginCallback =
+          new HelloInvalidLoginCallback("Conn1AtBus1", manager);
+        conn2AtBus1.OnInvalidLoginCallback =
+          new HelloInvalidLoginCallback("Conn2AtBus1", manager);
+        connAtBus2.OnInvalidLoginCallback =
+          new HelloInvalidLoginCallback("ConnAtBus2", manager);
 
         // create service SCS component
         ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
-        ComponentContext context1 = new DefaultComponentContext(id);
-        context1.AddFacet("Hello", Repository.GetRepositoryID(typeof(IHello)), new HelloImpl(Conns));
+        ComponentContext component = new DefaultComponentContext(id);
+        component.AddFacet("Hello", Repository.GetRepositoryID(typeof (IHello)),
+                           new HelloImpl(Conns));
 
         // set incoming connection
         manager.SetupBusDispatcher(conn1AtBus1);
@@ -59,23 +62,30 @@ namespace MultiplexingServer
         connAtBus2.LoginByPassword("conn3", encoding.GetBytes("conn3"));
         manager.ThreadRequester = null;
 
-        RegisterThreadStart start1 = new RegisterThreadStart(conn1AtBus1, manager, context1.GetIComponent());
+        RegisterThreadStart start1 = new RegisterThreadStart(conn1AtBus1,
+                                                             manager,
+                                                             component.
+                                                               GetIComponent());
         Thread thread1 = new Thread(start1.Run);
         thread1.Start();
 
-        RegisterThreadStart start2 = new RegisterThreadStart(conn2AtBus1, manager, context1.GetIComponent());
+        RegisterThreadStart start2 = new RegisterThreadStart(conn2AtBus1,
+                                                             manager,
+                                                             component.
+                                                               GetIComponent());
         Thread thread2 = new Thread(start2.Run);
         thread2.Start();
 
         manager.ThreadRequester = connAtBus2;
-        connAtBus2.OfferRegistry.registerService(context1.GetIComponent(), GetProps());
+        connAtBus2.OfferRegistry.registerService(component.GetIComponent(),
+                                                 GetProps());
 
         Console.WriteLine("Servidor no ar.");
 
         Thread.Sleep(Timeout.Infinite);
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
+        Console.WriteLine(e.Message);
         Console.WriteLine(e.StackTrace);
       }
     }
@@ -91,7 +101,8 @@ namespace MultiplexingServer
       private readonly ConnectionManager _manager;
       private readonly IComponent _component;
 
-      public RegisterThreadStart(Connection conn, ConnectionManager manager, IComponent component) {
+      public RegisterThreadStart(Connection conn, ConnectionManager manager,
+                                 IComponent component) {
         _conn = conn;
         _manager = manager;
         _component = component;
@@ -102,8 +113,8 @@ namespace MultiplexingServer
         try {
           _conn.OfferRegistry.registerService(_component, GetProps());
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
+          Console.WriteLine(e.Message);
           Console.WriteLine(e.StackTrace);
         }
       }

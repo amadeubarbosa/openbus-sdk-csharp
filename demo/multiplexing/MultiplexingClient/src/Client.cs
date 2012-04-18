@@ -1,6 +1,7 @@
 ﻿using System;
 using MultiplexingClient.Properties;
 using demoidl.hello;
+using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.sdk;
 
@@ -45,9 +46,22 @@ namespace MultiplexingClient
                 Console.WriteLine("found offer from " + prop.value + " on bus at port " + port);
               }
             }
-            MarshalByRefObject obj = offer.service_ref.getFacetByName("Hello");
-            IHello hello = obj as IHello;
-            hello.sayHello();
+            try {
+              MarshalByRefObject obj = offer.service_ref.getFacet("IDL:demoidl/hello/IHello:1.0");
+              if (obj == null) {
+                Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
+                continue;
+              }
+              IHello hello = obj as IHello;
+              if (hello == null) {
+                Console.WriteLine("Faceta encontrada não implementa IHello.");
+                continue;
+              }
+              hello.sayHello();
+            }
+            catch (TRANSIENT) {
+              Console.WriteLine("Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
+            }
           }
         }
       }

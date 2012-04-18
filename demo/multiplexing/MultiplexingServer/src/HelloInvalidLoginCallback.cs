@@ -16,10 +16,8 @@ namespace MultiplexingServer {
     public bool InvalidLogin(Connection conn) {
       try {
         Console.WriteLine("Callback de InvalidLogin da conexão " + _login + " foi chamada, tentando logar novamente no barramento.");
-        lock (_manager.ThreadRequester) {
-          _manager.ThreadRequester = conn;
-          conn.LoginByPassword(_login, _encoding.GetBytes(_login));
-        }
+        _manager.ThreadRequester = conn;
+        conn.LoginByPassword(_login, _encoding.GetBytes(_login));
         return conn.Login != null;
       }
       catch (Exception e) {
