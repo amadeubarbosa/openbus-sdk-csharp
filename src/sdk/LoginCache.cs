@@ -8,6 +8,7 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.sdk.caches;
 using tecgraf.openbus.sdk.security;
 
 namespace tecgraf.openbus.sdk {
@@ -15,13 +16,13 @@ namespace tecgraf.openbus.sdk {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (LoginCache));
 
+    // não uso cache LRU pois há uma política de remoção específica
     private readonly ConcurrentDictionary<string, LoginEntry> _logins;
     private readonly IsValidCache _legacyCache;
 
     public LoginCache() {
       _logins = new ConcurrentDictionary<string, LoginEntry>();
-      //TODO modificar número mágico abaixo para o tamanho padrão quando implementar LRU
-      _legacyCache = new IsValidCache(32);
+      _legacyCache = new IsValidCache();
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
@@ -166,20 +167,15 @@ namespace tecgraf.openbus.sdk {
       public AsymmetricKeyParameter Publickey;
     }
 
+    //TODO verificar se dá para fazer esse cache de uma forma melhor, de acordo com a implementação lua que o maia fez.
     private class IsValidCache {
       /**
        * O mapa da cache de logins.
        */
-      private readonly ConcurrentDictionary<IsValidKey, Boolean> _cache;
+      private readonly LRUConcurrentDictionaryCache<IsValidKey, Boolean> _cache;
 
-      /**
-       * Construtor.
-       * 
-       * @param cacheSize tamanho da cache.
-       */
-      public IsValidCache(int cacheSize) {
-        //TODO colocar LRU
-        _cache = new ConcurrentDictionary<IsValidKey, bool>();
+      public IsValidCache() {
+        _cache = new LRUConcurrentDictionaryCache<IsValidKey, bool>();
       }
 
       public bool IsValid(Credential credential, ConnectionImpl conn) {

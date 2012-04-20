@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting;
 using System.Security.Cryptography;
@@ -17,6 +16,7 @@ using tecgraf.openbus.core.v2_00;
 using tecgraf.openbus.core.v2_00.credential;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.sdk.caches;
 using tecgraf.openbus.sdk.exceptions;
 using tecgraf.openbus.sdk.interceptors;
 using tecgraf.openbus.sdk.lease;
@@ -43,18 +43,17 @@ namespace tecgraf.openbus.sdk {
 
     private volatile int _sessionId;
     private readonly object _lock = new object();
-    //TODO: caches ainda nao tem nenhuma politica de remocao ou de tamanho maximo
     // client caches
-    private readonly ConcurrentDictionary<EffectiveProfile, string>
+    private readonly LRUConcurrentDictionaryCache<EffectiveProfile, string>
       _profile2Login;
 
-    private readonly ConcurrentDictionary<string, ClientSideSession>
+    private readonly LRUConcurrentDictionaryCache<string, ClientSideSession>
       _outgoingLogin2Session;
 
     private readonly ConditionalWeakTable<Thread, CallerChain> _joinedChainOf;
 
     // server caches
-    private readonly ConcurrentDictionary<int, ServerSideSession>
+    private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
       _sessionId2Session;
 
     private LoginCache _loginsCache;
@@ -99,13 +98,16 @@ namespace tecgraf.openbus.sdk {
         typeof (IComponent),
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
                       as IComponent;
+      if (_acsComponent == null) {
+        throw new OpenBusException("Não foi possível conectar ao barramento com o host e porta fornecidos.");
+      }
 
       InternalKey = Crypto.GenerateKeyPair();
 
-      _sessionId2Session = new ConcurrentDictionary<int, ServerSideSession>();
-      _profile2Login = new ConcurrentDictionary<EffectiveProfile, string>();
+      _sessionId2Session = new LRUConcurrentDictionaryCache<int, ServerSideSession>();
+      _profile2Login = new LRUConcurrentDictionaryCache<EffectiveProfile, string>();
       _outgoingLogin2Session =
-        new ConcurrentDictionary<String, ClientSideSession>();
+        new LRUConcurrentDictionaryCache<String, ClientSideSession>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
       GetBusFacets();
@@ -158,11 +160,17 @@ namespace tecgraf.openbus.sdk {
             typeof(IComponent),
             "corbaloc::1.0@" + _host + ":" + _port + "/" + "openbus_v1_05") as IComponent;
           string legacyId = Repository.GetRepositoryID(typeof(IAccessControlService));
-          MarshalByRefObject legacyObjRef = legacy.getFacet(legacyId);
-          LegacyAccess = legacyObjRef as IAccessControlService;
-          if (LegacyAccess == null) {
+          if (legacy == null) {
             Legacy = false;
             Logger.Error("O serviço de controle de acesso 1.5 não foi encontrado. O suporte a conexões legadas foi desabilitado.");
+          }
+          else {
+            MarshalByRefObject legacyObjRef = legacy.getFacet(legacyId);
+            LegacyAccess = legacyObjRef as IAccessControlService;
+            if (LegacyAccess == null) {
+              Legacy = false;
+              Logger.Error("A faceta IAccessControlService do serviço de controle de acesso 1.5 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
+            }
           }
         }
         catch (Exception e) {

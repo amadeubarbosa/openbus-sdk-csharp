@@ -74,6 +74,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\sdk\AnyCredential.cs" />
+    <Compile Include="src\sdk\caches\LRUConcurrentDictionaryCache.cs" />
     <Compile Include="src\sdk\CallerChain.cs" />
     <Compile Include="src\sdk\CallerChainImpl.cs" />
     <Compile Include="src\sdk\ConnectionImpl.cs" />
