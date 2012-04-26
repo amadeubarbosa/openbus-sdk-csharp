@@ -30,8 +30,10 @@ namespace tecgraf.openbus.sdk.security {
     /// <returns>A informação encriptografada.</returns>
     public static byte[] Encrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
-      cipher.Init(true, key);
-      return cipher.DoFinal(data);
+      lock (cipher) {
+        cipher.Init(true, key);
+        return cipher.DoFinal(data);
+      }
     }
 
     /// <summary>
@@ -42,20 +44,24 @@ namespace tecgraf.openbus.sdk.security {
     /// <returns>A informação descriptografada.</returns>
     public static byte[] Decrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
-      cipher.Init(false, key);
-      return cipher.DoFinal(data);
+      lock (cipher) {
+        cipher.Init(false, key);
+        return cipher.DoFinal(data);
+      }
     }
 
     public static AsymmetricCipherKeyPair GenerateKeyPair() {
       IAsymmetricCipherKeyPairGenerator kpGen =
         GeneratorUtilities.GetKeyPairGenerator("RSA");
-      // EncryptedBlockSize is in bytes but expected parameter is in bits
-      kpGen.Init(new KeyGenerationParameters(new SecureRandom(),
-                                             EncryptedBlockSize.ConstVal * 8));
-      return kpGen.GenerateKeyPair();
+      lock (kpGen) {
+        // EncryptedBlockSize is in bytes but expected parameter is in bits
+        kpGen.Init(new KeyGenerationParameters(new SecureRandom(),
+                                               EncryptedBlockSize.ConstVal * 8));
+        return kpGen.GenerateKeyPair();
+      }
     }
 
-    public static AsymmetricKeyParameter CreatePublicKeyFromBytes (byte[] key) {
+    public static AsymmetricKeyParameter CreatePublicKeyFromBytes(byte[] key) {
       return PublicKeyFactory.CreateKey(key);
     }
 
@@ -72,10 +78,12 @@ namespace tecgraf.openbus.sdk.security {
     public static bool VerifySignature(AsymmetricKeyParameter key,
                                        byte[] message, byte[] signature) {
       ISigner signer = SignerUtilities.GetSigner(SignerAlgorithm);
-      signer.Init(false, key);
-      byte[] hash = SHA256.Create().ComputeHash(message);
-      signer.BlockUpdate(hash, 0, hash.Length);
-      return signer.VerifySignature(signature);
+      lock (signer) {
+        signer.Init(false, key);
+        byte[] hash = SHA256.Create().ComputeHash(message);
+        signer.BlockUpdate(hash, 0, hash.Length);
+        return signer.VerifySignature(signature);
+      }
     }
 
     #endregion
