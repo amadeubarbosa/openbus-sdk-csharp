@@ -62,9 +62,9 @@ namespace Client.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("9000")]
-        public int hostPort {
+        public short hostPort {
             get {
-                return ((int)(this["hostPort"]));
+                return ((short)(this["hostPort"]));
             }
             set {
                 this["hostPort"] = value;

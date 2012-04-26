@@ -13,22 +13,19 @@ namespace MultiplexingServer {
   public static class Server {
     private static readonly IList<Connection> Conns = new List<Connection>();
 
-    public static void Main(string[] args) {
+    public static void Main() {
       try {
         string hostName = DemoConfig.Default.hostName;
-        int hostPort = DemoConfig.Default.hostPort;
-        int hostPort2 = DemoConfig.Default.hostPort2;
+        short hostPort = DemoConfig.Default.hostPort;
+        short hostPort2 = DemoConfig.Default.hostPort2;
 
         // setup and start the orb
         ConnectionManager manager = ORBInitializer.Manager;
 
         // connect to the bus
-        Connection conn1AtBus1 = manager.CreateConnection(hostName,
-                                                          (short) hostPort);
-        Connection conn2AtBus1 = manager.CreateConnection(hostName,
-                                                          (short) hostPort);
-        Connection connAtBus2 = manager.CreateConnection(hostName,
-                                                         (short) hostPort2);
+        Connection conn1AtBus1 = manager.CreateConnection(hostName, hostPort);
+        Connection conn2AtBus1 = manager.CreateConnection(hostName, hostPort);
+        Connection connAtBus2 = manager.CreateConnection(hostName, hostPort2);
 
         Conns.Add(conn1AtBus1);
         Conns.Add(conn2AtBus1);

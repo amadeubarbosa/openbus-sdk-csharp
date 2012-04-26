@@ -17,13 +17,13 @@ namespace Broadcaster {
     private static Connection _conn;
     private static ServiceOffer _offer;
 
-    private static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+    private static void Main() {
+      AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.hostName;
-      int hostPort = DemoConfig.Default.hostPort;
+      short hostPort = DemoConfig.Default.hostPort;
 
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, (short) hostPort);
+      _conn = manager.CreateConnection(hostName, hostPort);
       manager.DefaultConnection = _conn;
 
       string userLogin = DemoConfig.Default.userLogin;
@@ -108,7 +108,7 @@ namespace Broadcaster {
       return null;
     }
 
-    private static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+    private static void CurrentDomainProcessExit(object sender, EventArgs e) {
       _offer.remove();
     }
   }

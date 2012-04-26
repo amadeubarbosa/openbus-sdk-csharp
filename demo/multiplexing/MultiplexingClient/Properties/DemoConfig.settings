@@ -5,10 +5,10 @@
     <Setting Name="hostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">ubu</Value>
     </Setting>
-    <Setting Name="hostPort" Type="System.Int32" Scope="User">
+    <Setting Name="hostPort" Type="System.Int16" Scope="User">
       <Value Profile="(Default)">9000</Value>
     </Setting>
-    <Setting Name="hostPort2" Type="System.Int32" Scope="User">
+    <Setting Name="hostPort2" Type="System.Int16" Scope="User">
       <Value Profile="(Default)">11000</Value>
     </Setting>
   </Settings>

@@ -18,16 +18,16 @@ namespace tecgraf.openbus.demo.hello {
   static class HelloServer {
     private static Connection _conn;
     private static ServiceOffer _offer;
-    static void Main(string[] args) {
-      AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+    static void Main() {
+      AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.hostName;
-      int hostPort = DemoConfig.Default.hostPort;
+      short hostPort = DemoConfig.Default.hostPort;
 
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, (short)hostPort);
+      _conn = manager.CreateConnection(hostName, hostPort);
       manager.DefaultConnection = _conn;
 
       string entityName = DemoConfig.Default.entityName;
@@ -51,7 +51,7 @@ namespace tecgraf.openbus.demo.hello {
       Thread.Sleep(Timeout.Infinite);
     }
 
-    static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
+    static void CurrentDomainProcessExit(object sender, EventArgs e) {
       _offer.remove();
     }
   }

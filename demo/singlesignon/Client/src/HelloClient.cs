@@ -16,9 +16,9 @@ namespace Client {
   /// Cliente do demo hello.
   /// </summary>
   static class HelloClient {
-    static void Main(string[] args) {
+    static void Main() {
       string hostName = DemoConfig.Default.hostName;
-      int hostPort = DemoConfig.Default.hostPort;
+      short hostPort = DemoConfig.Default.hostPort;
 
       ConsoleAppender appender = new ConsoleAppender {
         Threshold = Level.Info,
@@ -27,7 +27,7 @@ namespace Client {
       BasicConfigurator.Configure(appender);
 
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, (short)hostPort);
+      Connection conn = manager.CreateConnection(hostName, hostPort);
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;

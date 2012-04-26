@@ -38,9 +38,9 @@ namespace MultiplexingServer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("9000")]
-        public int hostPort {
+        public short hostPort {
             get {
-                return ((int)(this["hostPort"]));
+                return ((short)(this["hostPort"]));
             }
             set {
                 this["hostPort"] = value;
@@ -50,9 +50,9 @@ namespace MultiplexingServer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("11000")]
-        public int hostPort2 {
+        public short hostPort2 {
             get {
-                return ((int)(this["hostPort2"]));
+                return ((short)(this["hostPort2"]));
             }
             set {
                 this["hostPort2"] = value;

@@ -12,12 +12,12 @@ namespace Client {
     private static Broadcaster _broadcaster;
     private static Forwarder _forwarder;
 
-    private static void Main(string[] args) {
+    private static void Main() {
       string hostName = DemoConfig.Default.hostName;
-      int hostPort = DemoConfig.Default.hostPort;
+      short hostPort = DemoConfig.Default.hostPort;
 
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, (short) hostPort);
+      Connection conn = manager.CreateConnection(hostName, hostPort);
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;

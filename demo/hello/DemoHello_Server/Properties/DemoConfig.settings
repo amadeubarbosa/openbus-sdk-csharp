@@ -11,7 +11,7 @@
     <Setting Name="entityName" Type="System.String" Scope="User">
       <Value Profile="(Default)">TestEntity</Value>
     </Setting>
-    <Setting Name="hostPort" Type="System.Int32" Scope="User">
+    <Setting Name="hostPort" Type="System.Int16" Scope="User">
       <Value Profile="(Default)">9000</Value>
     </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">

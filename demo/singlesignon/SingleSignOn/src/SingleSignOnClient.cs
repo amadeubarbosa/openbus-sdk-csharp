@@ -16,9 +16,9 @@ namespace SingleSignOn {
   /// Cliente do demo hello.
   /// </summary>
   static class SingleSignOnClient {
-    static void Main(string[] args) {
+    static void Main() {
       string hostName = DemoConfig.Default.hostName;
-      int hostPort = DemoConfig.Default.hostPort;
+      short hostPort = DemoConfig.Default.hostPort;
       string secretFile = DemoConfig.Default.secretFile;
       string loginFile = DemoConfig.Default.loginFile;
 
@@ -29,7 +29,7 @@ namespace SingleSignOn {
       BasicConfigurator.Configure(appender);
 
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, (short)hostPort);
+      Connection conn = manager.CreateConnection(hostName, hostPort);
       manager.DefaultConnection = conn;
 
       byte[] secret = File.ReadAllBytes(secretFile);
