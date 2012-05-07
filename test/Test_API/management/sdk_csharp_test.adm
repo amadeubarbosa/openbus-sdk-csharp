@@ -26,13 +26,13 @@ Certificate {
 }
 
 Interface {
-  id = "IDL:testidl/hello/IHello:1.0",
+  id = "IDL:demoidl/hello/IHello:1.0",
 }
 
 Grant {
   id = "sdk_csharp_legacy_integration",
   interfaces = {
-    "IDL:testidl/hello/IHello:1.0",
+    "IDL:demoidl/hello/IHello:1.0",
   }
 }
 
