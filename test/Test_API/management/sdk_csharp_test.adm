@@ -1,0 +1,38 @@
+Category {
+  id = "OpenbusLegacyTest_CSharp",
+  name = "Categoria para testes legados do SDK CSharp",
+}
+
+Entity {
+  id = "sdk_csharp_legacy",
+  category = "OpenbusLegacyTest_CSharp",
+  name = "Testes unitários legados do SDK CSharp",
+}
+
+Certificate {
+  id = "sdk_csharp_legacy",
+  certificate = "TesteBarramento.crt",
+}
+
+Entity {
+  id = "sdk_csharp_legacy_integration",
+  category = "OpenbusLegacyTest_CSharp",
+  name = "Os testes de integração legados do SDK CSharp",
+}
+
+Certificate {
+  id = "sdk_csharp_legacy_integration",
+  certificate = "TesteBarramento.crt",
+}
+
+Interface {
+  id = "IDL:testidl/hello/IHello:1.0",
+}
+
+Grant {
+  id = "sdk_csharp_legacy_integration",
+  interfaces = {
+    "IDL:testidl/hello/IHello:1.0",
+  }
+}
+

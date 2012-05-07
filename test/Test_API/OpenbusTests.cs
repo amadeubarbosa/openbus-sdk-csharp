@@ -144,7 +144,7 @@ namespace Test_API
       Openbus openbus = Openbus.GetInstance();
       IRegistryService registryService = null;
       try {
-        registryService = openbus.Connect("null", "null");
+        registryService = openbus.Connect("null", "nullnull");
       }
       finally {
         Assert.Null(registryService);
