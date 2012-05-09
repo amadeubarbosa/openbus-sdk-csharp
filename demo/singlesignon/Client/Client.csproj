@@ -8,7 +8,7 @@
     <ProjectGuid>{AD45B9B5-3440-400E-A5CE-4EEA48813127}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Client</RootNamespace>
+    <RootNamespace>tecgraf.openbus.demo.singlesignon</RootNamespace>
     <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>

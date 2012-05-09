@@ -1,14 +1,13 @@
 using System;
-using demoidl.hello;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.sdk;
 
-namespace Server
+namespace tecgraf.openbus.demo.hello
 {
   /// <summary>
   /// Implementação do servant IHello.
   /// </summary>  
-  public class HelloImpl : MarshalByRefObject, IHello
+  public class HelloImpl : MarshalByRefObject, Hello
   {
     #region Fields
 

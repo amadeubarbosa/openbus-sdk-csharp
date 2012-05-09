@@ -1,7 +1,7 @@
 ﻿using System;
 using tecgraf.openbus.sdk;
 
-namespace MultiplexingServer {
+namespace tecgraf.openbus.demo.multiplexing {
   class HelloInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _login;
     private readonly System.Text.UTF8Encoding _encoding;

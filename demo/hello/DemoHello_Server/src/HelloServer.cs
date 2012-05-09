@@ -3,12 +3,10 @@ using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
-using Server;
-using demoidl.hello;
 using log4net.Config;
-using Server.Properties;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.demo.hello.Properties;
 using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.hello {
@@ -37,7 +35,7 @@ namespace tecgraf.openbus.demo.hello {
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));
-      component.AddFacet("Hello", Repository.GetRepositoryID(typeof(IHello)), new HelloImpl(_conn));
+      component.AddFacet("Hello", Repository.GetRepositoryID(typeof(Hello)), new HelloImpl(_conn));
 
       _conn.LoginByCertificate(entityName, privateKey);
       _conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(entityName, privateKey, manager);

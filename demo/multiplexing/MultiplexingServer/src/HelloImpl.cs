@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using demoidl.hello;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.demo.hello;
 using tecgraf.openbus.sdk;
 
-namespace MultiplexingServer
+namespace tecgraf.openbus.demo.multiplexing
 {
   /// <summary>
   /// Implementação do servant IHello.
   /// </summary>  
-  public class HelloImpl : MarshalByRefObject, IHello
+  public class HelloImpl : MarshalByRefObject, Hello
   {
     #region Fields
 

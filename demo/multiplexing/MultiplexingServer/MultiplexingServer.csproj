@@ -8,7 +8,7 @@
     <ProjectGuid>{DDDC4E93-0735-40CF-8EBF-C3747310729D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MultiplexingServer</RootNamespace>
+    <RootNamespace>tecgraf.openbus.demo.multiplexing</RootNamespace>
     <AssemblyName>MultiplexingServer</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>

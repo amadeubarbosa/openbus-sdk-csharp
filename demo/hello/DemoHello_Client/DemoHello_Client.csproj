@@ -8,7 +8,7 @@
     <ProjectGuid>{0C5DA1DF-CFC7-4708-B90D-8C187DD270FA}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Client</RootNamespace>
+    <RootNamespace>tecgraf.openbus.demo.hello</RootNamespace>
     <AssemblyName>DemoHello.Client</AssemblyName>
     <FileUpgradeFlags>
     </FileUpgradeFlags>

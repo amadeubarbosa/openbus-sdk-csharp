@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
-using MultiplexingServer.Properties;
 using Scs.Core;
-using demoidl.hello;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.demo.hello;
+using tecgraf.openbus.demo.multiplexing.Properties;
 using tecgraf.openbus.sdk;
 
-namespace MultiplexingServer {
+namespace tecgraf.openbus.demo.multiplexing {
   public static class Server {
     private static readonly IList<Connection> Conns = new List<Connection>();
 
@@ -42,7 +42,7 @@ namespace MultiplexingServer {
         // create service SCS component
         ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
         ComponentContext component = new DefaultComponentContext(id);
-        component.AddFacet("Hello", Repository.GetRepositoryID(typeof (IHello)),
+        component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
                            new HelloImpl(Conns));
 
         // set incoming connection

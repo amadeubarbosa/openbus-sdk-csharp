@@ -1,11 +1,11 @@
 ﻿using System;
-using MultiplexingClient.Properties;
-using demoidl.hello;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.demo.hello;
+using tecgraf.openbus.demo.multiplexing.Properties;
 using tecgraf.openbus.sdk;
 
-namespace MultiplexingClient {
+namespace tecgraf.openbus.demo.multiplexing {
   public static class Client {
     public static void Main() {
       try {
@@ -50,7 +50,7 @@ namespace MultiplexingClient {
                   "Não foi possível encontrar uma faceta com esse nome.");
                 continue;
               }
-              IHello hello = obj as IHello;
+              Hello hello = obj as Hello;
               if (hello == null) {
                 Console.WriteLine("Faceta encontrada não implementa IHello.");
                 continue;

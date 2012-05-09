@@ -1,12 +1,11 @@
 using System;
-using Client.Properties;
-using demoidl.hello;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.demo.hello.Properties;
 using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.hello
@@ -62,7 +61,7 @@ namespace tecgraf.openbus.demo.hello
             Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
             continue;
           }
-          IHello hello = helloObj as IHello;
+          Hello hello = helloObj as Hello;
           if (hello == null) {
             Console.WriteLine("Faceta encontrada não implementa IHello.");
             continue;
