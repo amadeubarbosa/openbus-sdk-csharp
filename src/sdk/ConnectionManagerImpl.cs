@@ -6,6 +6,7 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
+using tecgraf.openbus.sdk.caches;
 using tecgraf.openbus.sdk.exceptions;
 using Current = omg.org.PortableInterceptor.Current;
 

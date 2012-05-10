@@ -8,10 +8,9 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk.caches;
 using tecgraf.openbus.sdk.security;
 
-namespace tecgraf.openbus.sdk {
+namespace tecgraf.openbus.sdk.caches {
   internal class LoginCache {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (LoginCache));

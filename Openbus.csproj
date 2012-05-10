@@ -74,6 +74,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\sdk\AnyCredential.cs" />
+    <Compile Include="src\sdk\caches\LoginCache.cs" />
     <Compile Include="src\sdk\caches\LRUConcurrentDictionaryCache.cs" />
     <Compile Include="src\sdk\CallerChain.cs" />
     <Compile Include="src\sdk\CallerChainImpl.cs" />
@@ -98,7 +99,6 @@
     <Compile Include="src\sdk\lease\LeaseRenewer.cs" />
     <Compile Include="src\sdk\lease\RenewerTask.cs" />
     <Compile Include="src\sdk\interceptors\Session.cs" />
-    <Compile Include="src\sdk\LoginCache.cs" />
     <Compile Include="src\sdk\interceptors\InterceptorImpl.cs" />
     <Compile Include="src\sdk\Connection.cs" />
     <Compile Include="src\sdk\ORBInitializer.cs" />
