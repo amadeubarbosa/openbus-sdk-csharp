@@ -1,6 +1,5 @@
 using System;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.hello
 {

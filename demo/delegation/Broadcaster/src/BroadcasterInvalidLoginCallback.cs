@@ -1,7 +1,6 @@
 ﻿using System;
-using tecgraf.openbus.sdk;
 
-namespace Broadcaster {
+namespace tecgraf.openbus.demo.delegation {
   class BroadcasterInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;

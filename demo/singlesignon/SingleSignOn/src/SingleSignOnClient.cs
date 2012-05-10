@@ -9,7 +9,6 @@ using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.hello;
 using tecgraf.openbus.demo.singlesignon.Properties;
-using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.singlesignon
 {

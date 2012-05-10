@@ -1,7 +1,6 @@
 ﻿using System;
-using tecgraf.openbus.sdk;
 
-namespace Messenger {
+namespace tecgraf.openbus.demo.delegation {
   class MessengerInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;

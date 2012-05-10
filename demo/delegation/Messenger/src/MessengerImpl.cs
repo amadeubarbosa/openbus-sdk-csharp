@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using tecgraf.openbus.demo.delegation;
-using tecgraf.openbus.sdk;
 
-namespace Messenger {
-  public class MessengerImpl : MarshalByRefObject,
-                                 tecgraf.openbus.demo.delegation.Messenger {
+namespace tecgraf.openbus.demo.delegation {
+  public class MessengerImpl : MarshalByRefObject, Messenger {
     #region Fields
 
     private readonly Connection _conn;

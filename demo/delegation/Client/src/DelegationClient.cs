@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
-using Client.Properties;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.delegation;
-using tecgraf.openbus.sdk;
+using tecgraf.openbus.demo.delegation.Properties;
 
-namespace Client {
+namespace tecgraf.openbus.demo.delegation {
   internal static class DelegationClient {
     private static Messenger _messenger;
     private static Broadcaster _broadcaster;

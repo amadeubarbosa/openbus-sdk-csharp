@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
-using Forwarder.Properties;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.delegation;
-using tecgraf.openbus.sdk;
+using tecgraf.openbus.demo.delegation.Properties;
 
-namespace Forwarder {
+namespace tecgraf.openbus.demo.delegation {
   /// <summary>
   /// Servidor do demo hello.
   /// </summary>
@@ -44,10 +42,7 @@ namespace Forwarder {
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Forwarder", 1, 0, 0, ".net"));
       ForwarderImpl forwarder = new ForwarderImpl(_conn, messenger);
-      component.AddFacet("forwarder",
-                         Repository.GetRepositoryID(
-                           typeof (tecgraf.openbus.demo.delegation.Forwarder)),
-                         forwarder);
+      component.AddFacet("forwarder", Repository.GetRepositoryID(typeof (Forwarder)), forwarder);
 
       _conn.OnInvalidLoginCallback =
         new ForwarderInvalidLoginCallback(userLogin, password, forwarder);

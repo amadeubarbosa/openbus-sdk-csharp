@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Threading;
-using Broadcaster.Properties;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.delegation;
-using tecgraf.openbus.sdk;
+using tecgraf.openbus.demo.delegation.Properties;
 
-namespace Broadcaster {
+namespace tecgraf.openbus.demo.delegation {
   /// <summary>
   /// Servidor do demo hello.
   /// </summary>
@@ -47,10 +45,7 @@ namespace Broadcaster {
         new DefaultComponentContext(new ComponentId("Broadcaster", 1, 0, 0,
                                                     ".net"));
       BroadcasterImpl broadcaster = new BroadcasterImpl(_conn, messenger);
-      component.AddFacet("broadcaster",
-                         Repository.GetRepositoryID(
-                           typeof (tecgraf.openbus.demo.delegation.Broadcaster)),
-                         broadcaster);
+      component.AddFacet("broadcaster", Repository.GetRepositoryID(typeof (Broadcaster)), broadcaster);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] {

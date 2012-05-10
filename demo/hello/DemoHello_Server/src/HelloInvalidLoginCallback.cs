@@ -1,5 +1,4 @@
 ﻿using System;
-using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.hello {
   class HelloInvalidLoginCallback : InvalidLoginCallback {

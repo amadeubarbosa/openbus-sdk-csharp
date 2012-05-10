@@ -2,11 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Timers;
-using tecgraf.openbus.demo.delegation;
-using tecgraf.openbus.sdk;
 
-namespace Forwarder {
-  public class ForwarderImpl : MarshalByRefObject, tecgraf.openbus.demo.delegation.Forwarder {
+namespace tecgraf.openbus.demo.delegation {
+  public class ForwarderImpl : MarshalByRefObject, Forwarder {
     #region Fields
 
     private readonly Connection _conn;

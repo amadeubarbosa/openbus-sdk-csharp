@@ -3,7 +3,6 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.hello;
 using tecgraf.openbus.demo.multiplexing.Properties;
-using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.multiplexing {
   public static class Client {

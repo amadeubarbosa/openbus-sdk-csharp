@@ -1,7 +1,7 @@
-﻿  using System;
-  using tecgraf.openbus.sdk;
+﻿using System;
 
-static class ChainToString {
+namespace tecgraf.openbus.demo.delegation {
+  static class ChainToString {
     public static string ToString(CallerChain chain) {
       string ret = String.Empty;
       for (int i = 0; i < chain.Callers.Length; i++) {
@@ -9,5 +9,5 @@ static class ChainToString {
       }
       return ret.Substring(0, ret.Length - 1);
     }
-
   }
+}

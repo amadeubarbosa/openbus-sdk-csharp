@@ -6,7 +6,6 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.demo.hello.Properties;
-using tecgraf.openbus.sdk;
 
 namespace tecgraf.openbus.demo.hello
 {

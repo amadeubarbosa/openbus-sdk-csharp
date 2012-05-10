@@ -1,7 +1,6 @@
 ﻿using System;
-using tecgraf.openbus.sdk;
 
-namespace Forwarder {
+namespace tecgraf.openbus.demo.delegation {
   class ForwarderInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;

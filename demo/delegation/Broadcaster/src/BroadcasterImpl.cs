@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using tecgraf.openbus.demo.delegation;
-using tecgraf.openbus.sdk;
 
-namespace Broadcaster {
-  public class BroadcasterImpl : MarshalByRefObject, tecgraf.openbus.demo.delegation.Broadcaster {
+namespace tecgraf.openbus.demo.delegation {
+  public class BroadcasterImpl : MarshalByRefObject, Broadcaster {
     #region Fields
 
     private readonly Connection _conn;

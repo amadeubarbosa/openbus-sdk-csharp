@@ -73,36 +73,34 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="src\sdk\AnyCredential.cs" />
-    <Compile Include="src\sdk\caches\LoginCache.cs" />
-    <Compile Include="src\sdk\caches\LRUConcurrentDictionaryCache.cs" />
-    <Compile Include="src\sdk\CallerChain.cs" />
-    <Compile Include="src\sdk\CallerChainImpl.cs" />
-    <Compile Include="src\sdk\ConnectionImpl.cs" />
-    <Compile Include="src\sdk\ConnectionManager.cs" />
-    <Compile Include="src\sdk\ConnectionManagerImpl.cs" />
-    <Compile Include="src\sdk\interceptors\ClientInterceptor.cs" />
-    <Compile Include="src\sdk\interceptors\InterceptorsInitializer.cs" />
-    <Compile Include="src\sdk\interceptors\ServerInterceptor.cs" />
-    <Compile Include="src\sdk\exceptions\AccessDeniedException.cs" />
-    <Compile Include="src\sdk\exceptions\AlreadyConnectedException.cs" />
-    <Compile Include="src\sdk\exceptions\AlreadyLoggedInException.cs" />
-    <Compile Include="src\sdk\exceptions\CorruptedPrivateKeyException.cs" />
-    <Compile Include="src\sdk\exceptions\OpenbusException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="src\sdk\exceptions\WrongPrivateKeyException.cs" />
-    <Compile Include="src\sdk\exceptions\WrongSecretException.cs" />
-    <Compile Include="src\sdk\interceptors\EffectiveProfile.cs" />
-    <Compile Include="src\sdk\interceptors\TicketsHistory.cs" />
-    <Compile Include="src\sdk\InvalidLoginCallback.cs" />
-    <Compile Include="src\sdk\lease\LeaseRenewer.cs" />
-    <Compile Include="src\sdk\lease\RenewerTask.cs" />
-    <Compile Include="src\sdk\interceptors\Session.cs" />
-    <Compile Include="src\sdk\interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\sdk\Connection.cs" />
-    <Compile Include="src\sdk\ORBInitializer.cs" />
-    <Compile Include="src\sdk\security\Crypto.cs" />
+    <Compile Include="src\AnyCredential.cs" />
+    <Compile Include="src\caches\LoginCache.cs" />
+    <Compile Include="src\caches\LRUConcurrentDictionaryCache.cs" />
+    <Compile Include="src\CallerChain.cs" />
+    <Compile Include="src\CallerChainImpl.cs" />
+    <Compile Include="src\Connection.cs" />
+    <Compile Include="src\ConnectionImpl.cs" />
+    <Compile Include="src\ConnectionManager.cs" />
+    <Compile Include="src\ConnectionManagerImpl.cs" />
+    <Compile Include="src\exceptions\AccessDeniedException.cs" />
+    <Compile Include="src\exceptions\AlreadyConnectedException.cs" />
+    <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
+    <Compile Include="src\exceptions\CorruptedPrivateKeyException.cs" />
+    <Compile Include="src\exceptions\OpenBusException.cs" />
+    <Compile Include="src\exceptions\WrongPrivateKeyException.cs" />
+    <Compile Include="src\exceptions\WrongSecretException.cs" />
+    <Compile Include="src\interceptors\ClientInterceptor.cs" />
+    <Compile Include="src\interceptors\EffectiveProfile.cs" />
+    <Compile Include="src\interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\interceptors\InterceptorsInitializer.cs" />
+    <Compile Include="src\interceptors\ServerInterceptor.cs" />
+    <Compile Include="src\interceptors\Session.cs" />
+    <Compile Include="src\interceptors\TicketsHistory.cs" />
+    <Compile Include="src\InvalidLoginCallback.cs" />
+    <Compile Include="src\lease\LeaseRenewer.cs" />
+    <Compile Include="src\lease\RenewerTask.cs" />
+    <Compile Include="src\ORBInitializer.cs" />
+    <Compile Include="src\security\Crypto.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -118,7 +116,9 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="src\sdk\" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

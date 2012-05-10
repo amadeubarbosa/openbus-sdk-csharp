@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
-using Messenger.Properties;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.sdk;
+using tecgraf.openbus.demo.delegation.Properties;
 
-namespace Messenger {
+namespace tecgraf.openbus.demo.delegation {
   /// <summary>
   /// Servidor do demo hello.
   /// </summary>
@@ -36,9 +35,7 @@ namespace Messenger {
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Messenger", 1, 0, 0, ".net"));
       MessengerImpl messenger = new MessengerImpl(_conn);
-      component.AddFacet("messenger",
-                         Repository.GetRepositoryID(
-                           typeof(tecgraf.openbus.demo.delegation.Messenger)), messenger);
+      component.AddFacet("messenger", Repository.GetRepositoryID(typeof(Messenger)), messenger);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",

@@ -8,7 +8,7 @@
     <ProjectGuid>{095300D3-0D10-4D43-9323-D7F81D6E7462}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Forwarder</RootNamespace>
+    <RootNamespace>tecgraf.openbus.demo.delegation</RootNamespace>
     <AssemblyName>Forwarder</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
@@ -42,7 +42,7 @@
       <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
     </Reference>
     <Reference Include="Openbus.Demo.Delegation.Idl">
-      <HintPath>..\lib\generated\Openbus.Demo.Delegation.Idl.dll</HintPath>
+      <HintPath>..\..\..\lib\Openbus.Demo.Delegation.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
