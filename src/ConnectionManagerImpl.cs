@@ -88,10 +88,7 @@ namespace tecgraf.openbus {
         }
 
         Connection connection;
-        if (_connectedThreads.TryGetValue(id, out connection)) {
-          return connection;
-        }
-        return null;
+        return _connectedThreads.TryGetValue(id, out connection) ? connection : null;
       }
       set {
         const string message =
@@ -124,10 +121,7 @@ namespace tecgraf.openbus {
 
     public Connection GetBusDispatcher(string busId) {
       Connection incoming;
-      if (_incomingDispatcherConn.TryGetValue(busId, out incoming)) {
-        return incoming;
-      }
-      return null;
+      return _incomingDispatcherConn.TryGetValue(busId, out incoming) ? incoming : null;
     }
 
     public Connection RemoveBusDispatcher(string busId) {
@@ -150,16 +144,15 @@ namespace tecgraf.openbus {
       lock (_connectedThreads) {
         Connection removed;
         _connectedThreads.TryRemove(threadId, out removed);
-        _connectedThreads.TryAdd(threadId, conn);
+        if (conn != null) {
+          _connectedThreads.TryAdd(threadId, conn);
+        }
       }
     }
 
     internal Connection GetConnectionByThreadId(int threadId) {
       Connection conn;
-      if (_connectedThreads.TryGetValue(threadId, out conn)) {
-        return conn;
-      }
-      return null;
+      return _connectedThreads.TryGetValue(threadId, out conn) ? conn : null;
     }
 
     internal void IgnoreCurrentThread() {

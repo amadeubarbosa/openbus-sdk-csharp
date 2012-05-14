@@ -152,6 +152,7 @@ namespace tecgraf.openbus {
 
       Manager.ThreadRequester = this;
       BusId = _acs.busid;
+      Manager.ThreadRequester = null;
       _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
 
       if (Legacy) {
