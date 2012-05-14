@@ -5,7 +5,7 @@
     <DeploymentItem filename="Test\AccessControlService.crt" />
     <DeploymentItem filename="Test\marosas.key" />
   </Deployment>
-  <Execution>
+  <Execution hostProcessPlatform="MSIL">
     <TestTypeSpecific>
       <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
         <AssemblyResolution>
