@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using tecgraf.openbus.demo.utils;
 
 namespace tecgraf.openbus.demo.delegation {
   public class BroadcasterImpl : MarshalByRefObject, Broadcaster {

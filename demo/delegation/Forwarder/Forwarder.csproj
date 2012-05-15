@@ -55,6 +55,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Utils">
+      <HintPath>..\..\utils\bin\Debug\Utils.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -62,9 +65,6 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>DemoConfig.settings</DependentUpon>
-    </Compile>
-    <Compile Include="src\ChainToString.cs">
-      <SubType>Code</SubType>
     </Compile>
     <Compile Include="src\ForwarderImpl.cs" />
     <Compile Include="src\ForwarderInvalidLoginCallback.cs" />

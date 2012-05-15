@@ -55,6 +55,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Utils">
+      <HintPath>..\..\utils\bin\Debug\Utils.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -66,9 +69,6 @@
     <Compile Include="src\BroadcasterImpl.cs" />
     <Compile Include="src\BroadcasterInvalidLoginCallback.cs" />
     <Compile Include="src\BroadcasterServer.cs" />
-    <Compile Include="src\ChainToString.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Timers;
+using tecgraf.openbus.demo.utils;
 
 namespace tecgraf.openbus.demo.delegation {
   public class ForwarderImpl : MarshalByRefObject, Forwarder {

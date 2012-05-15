@@ -1,7 +1,7 @@
 ﻿using System;
 
-namespace tecgraf.openbus.demo.delegation {
-  static class ChainToString {
+namespace tecgraf.openbus.demo.utils {
+  public static class ChainToString {
     public static string ToString(CallerChain chain) {
       string ret = String.Empty;
       for (int i = 0; i < chain.Callers.Length; i++) {
