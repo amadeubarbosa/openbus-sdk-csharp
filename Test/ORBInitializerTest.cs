@@ -1,7 +1,6 @@
-﻿using tecgraf.openbus;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Test
+namespace tecgraf.openbus.Test
 {
     /// <summary>
     ///This is a test class for ORBInitializerTest and is intended

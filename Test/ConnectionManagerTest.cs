@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Configuration;
-using tecgraf.openbus;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Test {
+namespace tecgraf.openbus.Test {
   /// <summary>
   ///This is a test class for ConnectionManagerTest and is intended
   ///to contain all ConnectionManagerTest Unit Tests
