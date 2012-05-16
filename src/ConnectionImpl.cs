@@ -89,7 +89,7 @@ namespace tecgraf.openbus {
       }
       _host = host;
       _port = port;
-      Orb = OrbServices.GetSingleton();
+      ORB = OrbServices.GetSingleton();
       Manager = manager;
       Legacy = legacy;
       _codec = ServerInterceptor.Instance.Codec;
@@ -122,7 +122,7 @@ namespace tecgraf.openbus {
     #region Internal Members
 
     private Current GetPICurrent() {
-      Current current = Orb.resolve_initial_references("PICurrent") as Current;
+      Current current = ORB.resolve_initial_references("PICurrent") as Current;
       if (current == null) {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
@@ -259,7 +259,7 @@ namespace tecgraf.openbus {
 
     #region Connection Members
 
-    public ORB Orb { get; private set; }
+    public ORB ORB { get; private set; }
 
     public OfferRegistry OfferRegistry { get; private set; }
 
@@ -734,7 +734,7 @@ namespace tecgraf.openbus {
           ri.get_reply_service_context(ContextId);
 
         Type resetType = typeof (CredentialReset);
-        TypeCode resetTypeCode = Orb.create_interface_tc(
+        TypeCode resetTypeCode = ORB.create_interface_tc(
           Repository.GetRepositoryID(resetType), resetType.Name);
 
         byte[] data = serviceContext.context_data;
@@ -826,7 +826,7 @@ namespace tecgraf.openbus {
     private CallChain UnmarshalCallChain(SignedCallChain signed) {
       Type chainType = typeof (CallChain);
       TypeCode chainTypeCode =
-        Orb.create_interface_tc(Repository.GetRepositoryID(chainType),
+        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
                                 chainType.Name);
       return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
     }
