@@ -89,6 +89,7 @@ namespace tecgraf.openbus {
       }
       _host = host;
       _port = port;
+      Orb = OrbServices.GetSingleton();
       Manager = manager;
       Legacy = legacy;
       _codec = ServerInterceptor.Instance.Codec;
@@ -99,13 +100,16 @@ namespace tecgraf.openbus {
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
                       as IComponent;
       if (_acsComponent == null) {
-        throw new OpenBusException("Não foi possível conectar ao barramento com o host e porta fornecidos.");
+        throw new OpenBusException(
+          "Não foi possível conectar ao barramento com o host e porta fornecidos.");
       }
 
       InternalKey = Crypto.GenerateKeyPair();
 
-      _sessionId2Session = new LRUConcurrentDictionaryCache<int, ServerSideSession>();
-      _profile2Login = new LRUConcurrentDictionaryCache<EffectiveProfile, string>();
+      _sessionId2Session =
+        new LRUConcurrentDictionaryCache<int, ServerSideSession>();
+      _profile2Login =
+        new LRUConcurrentDictionaryCache<EffectiveProfile, string>();
       _outgoingLogin2Session =
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
@@ -118,9 +122,7 @@ namespace tecgraf.openbus {
     #region Internal Members
 
     private Current GetPICurrent() {
-      ORB orb = OrbServices.GetSingleton();
-      Current current =
-        orb.resolve_initial_references("PICurrent") as Current;
+      Current current = Orb.resolve_initial_references("PICurrent") as Current;
       if (current == null) {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
@@ -158,25 +160,31 @@ namespace tecgraf.openbus {
       if (Legacy) {
         try {
           IComponent legacy = RemotingServices.Connect(
-            typeof(IComponent),
-            "corbaloc::1.0@" + _host + ":" + _port + "/" + "openbus_v1_05") as IComponent;
-          string legacyId = Repository.GetRepositoryID(typeof(IAccessControlService));
+            typeof (IComponent),
+            "corbaloc::1.0@" + _host + ":" + _port + "/" + "openbus_v1_05") as
+                              IComponent;
+          string legacyId =
+            Repository.GetRepositoryID(typeof (IAccessControlService));
           if (legacy == null) {
             Legacy = false;
-            Logger.Error("O serviço de controle de acesso 1.5 não foi encontrado. O suporte a conexões legadas foi desabilitado.");
+            Logger.Error(
+              "O serviço de controle de acesso 1.5 não foi encontrado. O suporte a conexões legadas foi desabilitado.");
           }
           else {
             MarshalByRefObject legacyObjRef = legacy.getFacet(legacyId);
             LegacyAccess = legacyObjRef as IAccessControlService;
             if (LegacyAccess == null) {
               Legacy = false;
-              Logger.Error("A faceta IAccessControlService do serviço de controle de acesso 1.5 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
+              Logger.Error(
+                "A faceta IAccessControlService do serviço de controle de acesso 1.5 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
             }
           }
         }
         catch (Exception e) {
           Legacy = false;
-          Logger.Error("Erro ao tentar obter a faceta IAccessControlService da versão 1.5. O suporte a conexões legadas foi desabilitado.", e);
+          Logger.Error(
+            "Erro ao tentar obter a faceta IAccessControlService da versão 1.5. O suporte a conexões legadas foi desabilitado.",
+            e);
         }
       }
     }
@@ -250,6 +258,8 @@ namespace tecgraf.openbus {
     #endregion
 
     #region Connection Members
+
+    public ORB Orb { get; private set; }
 
     public OfferRegistry OfferRegistry { get; private set; }
 
@@ -723,9 +733,8 @@ namespace tecgraf.openbus {
         ServiceContext serviceContext =
           ri.get_reply_service_context(ContextId);
 
-        OrbServices orb = OrbServices.GetSingleton();
         Type resetType = typeof (CredentialReset);
-        TypeCode resetTypeCode = orb.create_interface_tc(
+        TypeCode resetTypeCode = Orb.create_interface_tc(
           Repository.GetRepositoryID(resetType), resetType.Name);
 
         byte[] data = serviceContext.context_data;
@@ -754,7 +763,9 @@ namespace tecgraf.openbus {
           if (
             !_loginsCache.GetLoginEntity(remoteLogin, this, out entity,
                                          out pubKey)) {
-            Logger.Warn("Não foi encontrada uma entrada na cache de logins para o login " + remoteLogin);
+            Logger.Warn(
+              "Não foi encontrada uma entrada na cache de logins para o login " +
+              remoteLogin);
             throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                     CompletionStatus.Completed_No);
           }
@@ -813,10 +824,9 @@ namespace tecgraf.openbus {
     }
 
     private CallChain UnmarshalCallChain(SignedCallChain signed) {
-      OrbServices orb = OrbServices.GetSingleton();
       Type chainType = typeof (CallChain);
       TypeCode chainTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(chainType),
+        Orb.create_interface_tc(Repository.GetRepositoryID(chainType),
                                 chainType.Name);
       return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
     }

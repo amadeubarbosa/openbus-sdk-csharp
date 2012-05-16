@@ -1,10 +1,18 @@
 ﻿using System;
+using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus {
   public interface Connection {
+
+    /*************************************************************************
+     * ACESSO AO ORB *********************************************************
+     *************************************************************************/
+
+    ORB Orb { get; }
 
     /*************************************************************************
      * OBTENÇÃO DOS SERVICOS DO BARRAMENTO ***********************************
@@ -37,7 +45,7 @@ namespace tecgraf.openbus {
     /// <param name="password">Senha de autenticação da entidade no barramento.</param>
     /// <exception cref="AccessDenied"> A senha fornecida para autenticação da 
     /// entidade não foi validada pelo barramento.</exception>
-    /// <exception cref="AlreadyLoggedIn">A conexão já está feita.</exception>
+    /// <exception cref="AlreadyLoggedInException">A conexão já está feita.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do
     /// barramento que impediu o estabelecimento da conexão.</exception>
     void LoginByPassword(String entity, Byte[] password);
@@ -50,11 +58,11 @@ namespace tecgraf.openbus {
     /// <param name="privKey"> Chave privada da entidade utilizada na autenticação.</param>
     /// <exception cref="MissingCertificate"> Não há certificado para essa entidade
     /// registrado no barramento indicado.</exception>
-    /// <exception cref="CorruptedPrivateKey"> A chave privada fornecida está 
+    /// <exception cref="CorruptedPrivateKeyException"> A chave privada fornecida está 
     /// corrompida.</exception>
-    /// <exception cref="WrongPrivateKey"> A chave privada fornecida não 
+    /// <exception cref="WrongPrivateKeyException"> A chave privada fornecida não 
     /// corresponde ao certificado da entidade registrado no barramento indicado.</exception>
-    /// <exception cref="AlreadyLoggedIn"> A conexão já está logada.</exception>
+    /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
     void LoginByCertificate(String entity, Byte[] privKey);
@@ -81,8 +89,8 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="login"> Objeto de login a ser utilizado.</param>
     /// <param name="secret"> Segredo decodificado a partir de outro login.</param>
-    /// <exception cref="WrongSecret"> O segredo não corresponde ao esperado.</exception>
-    /// <exception cref="AlreadyLoggedIn"> A conexão já está logada.</exception>
+    /// <exception cref="WrongSecretException"> O segredo não corresponde ao esperado.</exception>
+    /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
     void LoginBySingleSignOn(LoginProcess login, Byte[] secret);
