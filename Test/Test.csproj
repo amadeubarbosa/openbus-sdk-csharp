@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="ConnectionManagerTest.cs" />
     <Compile Include="ConnectionTest.cs" />
+    <Compile Include="InvalidLoginCallbackMock.cs" />
     <Compile Include="ORBInitializerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Shadow Include="Test References\Openbus.accessor" />

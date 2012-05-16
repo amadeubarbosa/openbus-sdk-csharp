@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using System.IO;
+using System.Runtime.CompilerServices;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -21,6 +22,7 @@ namespace tecgraf.openbus.Test {
     private static short _hostPort;
     private static String _entity;
     private static String _entityNoCert;
+    private static string _login;
     private static byte[] _password;
     private static byte[] _privKey;
     private static byte[] _wrongKey;
@@ -78,6 +80,11 @@ namespace tecgraf.openbus.Test {
         throw new ArgumentNullException("entityWithoutCert");
       }
 
+      _login = ConfigurationManager.AppSettings["userLogin"];
+      if (String.IsNullOrEmpty(_login)) {
+        throw new ArgumentNullException("userLogin");
+      }
+
       string password = ConfigurationManager.AppSettings["userPassword"];
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("userPassword");
@@ -99,7 +106,7 @@ namespace tecgraf.openbus.Test {
       _manager = ORBInitializer.Manager;
     }
 
-    protected virtual Connection CreateConnection() {
+    private Connection CreateConnection() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
       _manager.DefaultConnection = conn;
       return conn;
@@ -109,23 +116,26 @@ namespace tecgraf.openbus.Test {
     /// Teste da auto-propriedade ORB.
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void ORBTest() {
-      //TODO: implementar ou remover
-      Assert.Inconclusive("Esse teste deve existir mesmo?");
+      Connection conn = CreateConnection();
+      Assert.IsNotNull(conn.ORB);
+      Assert.AreEqual(conn.ORB, _manager.ORB);
     }
 
     /// <summary>
     /// Teste da auto-propriedade OfferRegistry
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void OfferRegistryTest() {
       Connection conn = CreateConnection();
       try {
-        conn.OfferRegistry.findServices(new[] { new ServiceProperty("a", "b") });
+        conn.OfferRegistry.findServices(new[] {new ServiceProperty("a", "b")});
       }
       catch (NO_PERMISSION) {
       }
-      catch(Exception e) {
+      catch (Exception e) {
         Assert.Fail(e.Message);
       }
     }
@@ -134,6 +144,7 @@ namespace tecgraf.openbus.Test {
     /// Teste da auto-propriedade BusId
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void BusIdTest() {
       Connection conn = CreateConnection();
       Assert.IsNotNull(conn.BusId);
@@ -143,10 +154,11 @@ namespace tecgraf.openbus.Test {
     /// Teste da auto-propriedade Login
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void LoginTest() {
       Connection conn = CreateConnection();
       Assert.IsNull(conn.Login);
-      conn.LoginByPassword(_entity, _password);
+      conn.LoginByPassword(_login, _password);
       Assert.IsNotNull(conn.Login);
       conn.Logout();
       Assert.IsNull(conn.Login);
@@ -156,6 +168,7 @@ namespace tecgraf.openbus.Test {
     /// Testes do método LoginByPassword
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void LoginByPasswordTest() {
       Connection conn = CreateConnection();
       // entidade errada
@@ -163,7 +176,7 @@ namespace tecgraf.openbus.Test {
       try {
         conn.LoginByPassword("", _password);
       }
-      catch(AccessDenied) {
+      catch (AccessDenied) {
         failed = true;
       }
       catch (Exception e) {
@@ -175,7 +188,7 @@ namespace tecgraf.openbus.Test {
       // senha errada
       failed = false;
       try {
-        conn.LoginByPassword(_entity, new byte[0]);
+        conn.LoginByPassword(_login, new byte[0]);
       }
       catch (AccessDenied) {
         failed = true;
@@ -188,21 +201,23 @@ namespace tecgraf.openbus.Test {
       }
       // login válido
       Assert.IsNull(conn.Login);
-      conn.LoginByPassword(_entity, _password);
+      conn.LoginByPassword(_login, _password);
       Assert.IsNotNull(conn.Login);
       conn.Logout();
       Assert.IsNull(conn.Login);
       // login repetido
       failed = false;
       try {
-        conn.LoginByPassword(_entity, _password);
-        conn.LoginByPassword(_entity, _password);
+        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password);
       }
       catch (AlreadyLoggedInException) {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " +
+          e);
       }
       if (!failed) {
         Assert.Fail("O login com entidade já autenticada foi bem-sucedido.");
@@ -214,6 +229,7 @@ namespace tecgraf.openbus.Test {
     /// Testes do método LoginByCertificate
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void LoginByCertificateTest() {
       Connection conn = CreateConnection();
       // entidade errada
@@ -239,10 +255,12 @@ namespace tecgraf.openbus.Test {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser MissingCertificate. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser MissingCertificate. Exceção recebida: " + e);
       }
       if (!failed) {
-        Assert.Fail("O login de entidade sem certificado cadastrado foi bem-sucedido.");
+        Assert.Fail(
+          "O login de entidade sem certificado cadastrado foi bem-sucedido.");
       }
       // chave privada corrompida
       failed = false;
@@ -253,7 +271,9 @@ namespace tecgraf.openbus.Test {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser CorruptedPrivateKeyException. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser CorruptedPrivateKeyException. Exceção recebida: " +
+          e);
       }
       if (!failed) {
         Assert.Fail("O login de entidade com chave corrompida foi bem-sucedido.");
@@ -267,7 +287,9 @@ namespace tecgraf.openbus.Test {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser WrongPrivateKeyException. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser WrongPrivateKeyException. Exceção recebida: " +
+          e);
       }
       if (!failed) {
         Assert.Fail("O login de entidade com chave errada foi bem-sucedido.");
@@ -288,7 +310,9 @@ namespace tecgraf.openbus.Test {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " +
+          e);
       }
       if (!failed) {
         Assert.Fail("O login com entidade já autenticada foi bem-sucedido.");
@@ -300,48 +324,57 @@ namespace tecgraf.openbus.Test {
     /// Testes de SingleSignOn
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void SingleSignOnTest() {
+      //TODO teste de singlesignon e de loginbycertificate ainda estao com erros.
+      //TODO remover linhas [MethodImpl(MethodImplOptions.Synchronized)] pois nao resolveu o problema de concorrencia do MSTests. Tentar sincronizar na mão.
       Connection conn = CreateConnection();
+      Connection conn2 = CreateConnection();
+      conn.LoginByPassword(_login, _password);
       // segredo errado
       bool failed = false;
       byte[] secret;
       LoginProcess login;
       try {
         login = conn.StartSingleSignOn(out secret);
-        conn.LoginBySingleSignOn(login, new byte[0]);
+        conn2.LoginBySingleSignOn(login, new byte[0]);
       }
       catch (WrongSecretException) {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser WrongSecretException. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser WrongSecretException. Exceção recebida: " + e);
       }
       if (!failed) {
         Assert.Fail("O login com segredo errado foi bem-sucedido.");
       }
       // login válido
-      Assert.IsNull(conn.Login);
+      Assert.IsNull(conn2.Login);
       login = conn.StartSingleSignOn(out secret);
-      conn.LoginBySingleSignOn(login, secret);
-      Assert.IsNotNull(conn.Login);
-      conn.Logout();
-      Assert.IsNull(conn.Login);
+      conn2.LoginBySingleSignOn(login, secret);
+      Assert.IsNotNull(conn2.Login);
+      conn2.Logout();
+      Assert.IsNull(conn2.Login);
       // login repetido
       failed = false;
       try {
         login = conn.StartSingleSignOn(out secret);
-        conn.LoginBySingleSignOn(login, secret);
-        conn.LoginBySingleSignOn(login, secret);
+        conn2.LoginBySingleSignOn(login, secret);
+        conn2.LoginBySingleSignOn(login, secret);
       }
       catch (AlreadyLoggedInException) {
         failed = true;
       }
       catch (Exception e) {
-        Assert.Fail("A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " + e);
+        Assert.Fail(
+          "A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " +
+          e);
       }
       if (!failed) {
         Assert.Fail("O login com entidade já autenticada foi bem-sucedido.");
       }
+      conn2.Logout();
       conn.Logout();
     }
 
@@ -349,79 +382,91 @@ namespace tecgraf.openbus.Test {
     /// Testes do método Logout
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void LogoutTest() {
-      Connection target = CreateConnection();
-      // TODO: Initialize to an appropriate value
-      bool expected = false; // TODO: Initialize to an appropriate value
-      bool actual;
-      actual = target.Logout();
-      Assert.AreEqual(expected, actual);
-      Assert.Inconclusive("Verify the correctness of this test method.");
+      Connection conn = CreateConnection();
+      Assert.IsFalse(conn.Logout());
+      conn.LoginByPassword(_login, _password);
+      Assert.IsTrue(conn.Logout());
+      Assert.IsNull(conn.Login);
+      bool failed = false;
+      try {
+        conn.OfferRegistry.findServices(new ServiceProperty[0]);
+      }
+      catch (NO_PERMISSION e) {
+        failed = true;
+        if (e.Minor != NoLoginCode.ConstVal) {
+          Assert.Fail(
+            "A exceção é NO_PERMISSION mas o minor code não é NoLoginCode. Minor code recebido: " +
+            e.Minor);
+        }
+      }
+      catch (Exception e) {
+        Assert.Fail("A exceção deveria ser NO_PERMISSION. Exceção recebida: " +
+                    e);
+      }
+      if (!failed) {
+        Assert.Fail("Uma busca sem login foi bem-sucedida.");
+      }
     }
 
     /// <summary>
-    /// Testes do método ExitChain
+    /// Testes da auto-propriedade OnInvalidLoginCallback
     ///</summary>
     [TestMethod]
-    public void ExitChainTest() {
-      Connection target = CreateConnection();
-      // TODO: Initialize to an appropriate value
-      target.ExitChain();
-      Assert.Inconclusive(
-        "A method that does not return a value cannot be verified.");
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void OnInvalidLoginCallbackTest() {
+      Connection conn = CreateConnection();
+      Assert.IsNull(conn.OnInvalidLoginCallback);
+      InvalidLoginCallback callback = new InvalidLoginCallbackMock();
+      conn.OnInvalidLoginCallback = callback;
+      Assert.AreEqual(callback, conn.OnInvalidLoginCallback);
+    }
+
+    /// <summary>
+    /// Testes da auto-propriedade CallerChain
+    ///</summary>
+    [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void CallerChainTest() {
+      Connection conn = CreateConnection();
+      Assert.IsNull(conn.CallerChain);
+      //TODO: adicionar testes para caso exista uma callerchain ou os testes de interoperabilidade ja cobrem isso de forma suficiente?
     }
 
     /// <summary>
     /// Testes do método JoinChain
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void JoinChainTest() {
-      Connection target = CreateConnection();
-      // TODO: Initialize to an appropriate value
-      CallerChain chain = null; // TODO: Initialize to an appropriate value
-      target.JoinChain(chain);
-      Assert.Inconclusive(
-        "A method that does not return a value cannot be verified.");
+      Connection conn = CreateConnection();
+      Assert.IsNull(conn.JoinedChain);
+      // adiciona a chain da getCallerChain
+      conn.JoinChain(null);
+      Assert.IsNull(conn.JoinedChain);
+      //TODO testar caso em que a chain da getCallerChain não é vazia
+      conn.JoinChain(new CallerChainImpl("mock", new []{new LoginInfo("a", "b")}));
+      Assert.IsNotNull(conn.JoinedChain);
+      Assert.AreEqual("mock", conn.JoinedChain.BusId);
+      Assert.AreEqual("a", conn.JoinedChain.Callers[0].id);
+      Assert.AreEqual("b", conn.JoinedChain.Callers[0].entity);
+      conn.ExitChain();
     }
 
     /// <summary>
-    /// Testes do método CallerChain
+    /// Testes do método ExitChain
     ///</summary>
     [TestMethod]
-    public void CallerChainTest() {
-      Connection target = CreateConnection();
-      // TODO: Initialize to an appropriate value
-      CallerChain actual;
-      actual = target.CallerChain;
-      Assert.Inconclusive("Verify the correctness of this test method.");
-    }
-
-    /// <summary>
-    /// Testes do método JoinedChain
-    ///</summary>
-    [TestMethod]
-    public void JoinedChainTest() {
-      Connection target = CreateConnection();
-      // TODO: Initialize to an appropriate value
-      CallerChain actual;
-      actual = target.JoinedChain;
-      Assert.Inconclusive("Verify the correctness of this test method.");
-    }
-
-    /// <summary>
-    /// Testes do método OnInvalidLoginCallback
-    ///</summary>
-    [TestMethod]
-    public void OnInvalidLoginCallbackTest() {
-      Connection target = CreateConnection();
-      // TODO: Initialize to an appropriate value
-      InvalidLoginCallback expected = null;
-      // TODO: Initialize to an appropriate value
-      InvalidLoginCallback actual;
-      target.OnInvalidLoginCallback = expected;
-      actual = target.OnInvalidLoginCallback;
-      Assert.AreEqual(expected, actual);
-      Assert.Inconclusive("Verify the correctness of this test method.");
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void ExitChainTest() {
+      Connection conn = CreateConnection();
+      Assert.IsNull(conn.JoinedChain);
+      conn.ExitChain();
+      Assert.IsNull(conn.JoinedChain);
+      conn.JoinChain(new CallerChainImpl("mock", new[] { new LoginInfo("a", "b") }));
+      conn.ExitChain();
+      Assert.IsNull(conn.JoinedChain);
     }
   }
 }

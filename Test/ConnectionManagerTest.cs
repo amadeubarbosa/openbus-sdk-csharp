@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace tecgraf.openbus.Test {
@@ -70,17 +71,19 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///A test for ORB
+    /// Teste da auto-propriedade ORB
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void ORBTest() {
       Assert.IsNotNull(ORBInitializer.Manager.ORB);
     }
 
     /// <summary>
-    ///A test for CreateConnection
+    /// Testes do método CreateConnection
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void CreateConnectionTest() {
       // cria conexão válida
       Connection valid = _manager.CreateConnection(_hostName, _hostPort);
@@ -106,9 +109,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///A test for GetBusDispatcher
+    /// Testes do método GetBusDispatcher
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void GetBusDispatcherTest() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
       Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
@@ -123,9 +127,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///A test for RemoveBusDispatcher
+    /// Testes do método RemoveBusDispatcher
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void RemoveBusDispatcherTest() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
       Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
@@ -139,9 +144,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///A test for SetupBusDispatcher
+    /// Testes do método SetupBusDispatcher
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void SetupBusDispatcherTest() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
       Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
@@ -158,9 +164,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///A test for DefaultConnection
+    /// Teste da auto-propriedade DefaultConnection
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void DefaultConnectionTest() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
       Assert.IsNull(_manager.DefaultConnection);
@@ -175,9 +182,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///A test for ThreadRequester
+    /// Teste da auto-propriedade ThreadRequester
     ///</summary>
     [TestMethod]
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void ThreadRequesterTest() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
       Assert.IsNull(_manager.ThreadRequester);
