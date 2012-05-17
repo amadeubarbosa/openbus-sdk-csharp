@@ -52,7 +52,7 @@ namespace tecgraf.openbus.demo.delegation {
                                              new ServiceProperty("offer.domain",
                                                                  "OpenBus Demos")
                                            };
-      _offer = _conn.OfferRegistry.registerService(member, properties);
+      _offer = _conn.Offers.registerService(member, properties);
 
       Console.WriteLine("Broadcaster no ar.");
 
@@ -69,7 +69,7 @@ namespace tecgraf.openbus.demo.delegation {
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
       ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
-      ServiceOfferDesc[] offers = _conn.OfferRegistry.findServices(properties);
+      ServiceOfferDesc[] offers = _conn.Offers.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Messenger não se encontra no barramento.");

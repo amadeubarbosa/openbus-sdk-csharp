@@ -1,3 +1,4 @@
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Asn1.X509;
@@ -5,6 +6,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using tecgraf.openbus.core.v2_00;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.security {
   /// <summary>
@@ -31,8 +33,15 @@ namespace tecgraf.openbus.security {
     public static byte[] Encrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       lock (cipher) {
-        cipher.Init(true, key);
-        return cipher.DoFinal(data);
+        byte[] value;
+        try {
+          cipher.Init(true, key);
+          value = cipher.DoFinal(data);
+        }
+        catch (InvalidCipherTextException e) {
+          throw new WrongPrivateKeyException(e.Message, e);
+        }
+        return value;
       }
     }
 
@@ -45,8 +54,15 @@ namespace tecgraf.openbus.security {
     public static byte[] Decrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       lock (cipher) {
-        cipher.Init(false, key);
-        return cipher.DoFinal(data);
+        byte[] value;
+        try {
+          cipher.Init(false, key);
+          value = cipher.DoFinal(data);
+        }
+        catch (InvalidCipherTextException e) {
+          throw new WrongPrivateKeyException(e.Message, e);
+        }
+        return value;
       }
     }
 
@@ -62,11 +78,25 @@ namespace tecgraf.openbus.security {
     }
 
     public static AsymmetricKeyParameter CreatePublicKeyFromBytes(byte[] key) {
-      return PublicKeyFactory.CreateKey(key);
+      AsymmetricKeyParameter k;
+      try {
+        k = PublicKeyFactory.CreateKey(key);
+      }
+      catch (NullReferenceException e) {
+        throw new CorruptedPrivateKeyException(e.Message, e);
+      }
+      return k;
     }
 
     public static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
-      return PrivateKeyFactory.CreateKey(key);
+      AsymmetricKeyParameter k;
+      try {
+        k = PrivateKeyFactory.CreateKey(key);
+      }
+      catch (NullReferenceException e) {
+        throw new CorruptedPrivateKeyException(e.Message, e);
+      }
+      return k;
     }
 
     public static byte[] GetPublicKeyInBytes(AsymmetricKeyParameter publicKey) {

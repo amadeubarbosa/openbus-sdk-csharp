@@ -146,8 +146,8 @@ namespace tecgraf.openbus {
 
       _acs = acsObjRef as AccessControl;
       LoginRegistry = lrObjRef as LoginRegistry;
-      OfferRegistry = orObjRef as OfferRegistry;
-      if ((_acs == null) || (LoginRegistry == null) || (OfferRegistry == null)) {
+      Offers = orObjRef as OfferRegistry;
+      if ((_acs == null) || (LoginRegistry == null) || (Offers == null)) {
         Logger.Error("O serviço de controle de acesso não foi encontrado.");
         return;
       }
@@ -261,7 +261,7 @@ namespace tecgraf.openbus {
 
     public ORB ORB { get; private set; }
 
-    public OfferRegistry OfferRegistry { get; private set; }
+    public OfferRegistry Offers { get; private set; }
 
     public string BusId { get; private set; }
 
@@ -331,6 +331,12 @@ namespace tecgraf.openbus {
       try {
         Manager.IgnoreCurrentThread();
         LoginByObject(login, secret);
+      }
+      catch(AccessDenied e) {
+        throw new WrongSecretException(e.Message, e);
+      }
+      catch (WrongEncoding e) {
+        throw new WrongSecretException(e.Message, e);
       }
       finally {
         Manager.UnignoreCurrentThread();

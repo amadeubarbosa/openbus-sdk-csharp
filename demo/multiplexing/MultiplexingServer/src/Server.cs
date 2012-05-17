@@ -73,7 +73,7 @@ namespace tecgraf.openbus.demo.multiplexing {
         thread2.Start();
 
         manager.ThreadRequester = connAtBus2;
-        connAtBus2.OfferRegistry.registerService(component.GetIComponent(),
+        connAtBus2.Offers.registerService(component.GetIComponent(),
                                                  GetProps());
 
         Console.WriteLine("Servidor no ar.");
@@ -107,7 +107,7 @@ namespace tecgraf.openbus.demo.multiplexing {
       public void Run() {
         _manager.ThreadRequester = _conn;
         try {
-          _conn.OfferRegistry.registerService(_component, GetProps());
+          _conn.Offers.registerService(_component, GetProps());
         }
         catch (Exception e) {
           Console.WriteLine(e.Message);

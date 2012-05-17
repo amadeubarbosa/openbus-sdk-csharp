@@ -18,7 +18,7 @@ namespace tecgraf.openbus {
      * OBTENÇÃO DOS SERVICOS DO BARRAMENTO ***********************************
      *************************************************************************/
 
-    OfferRegistry OfferRegistry { get; }
+    OfferRegistry Offers { get; }
 
     /*************************************************************************
      * INFORMAÇÕES DO LOGIN **************************************************

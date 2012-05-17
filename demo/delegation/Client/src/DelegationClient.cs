@@ -77,7 +77,7 @@ namespace tecgraf.openbus.demo.delegation {
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
       ServiceProperty[] properties = new[] {prop};
-      ServiceOfferDesc[] offers = conn.OfferRegistry.findServices(properties);
+      ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
 
       if (offers.Length != 3) {
         Console.WriteLine("Há mais serviços do que o esperado no barramento.");

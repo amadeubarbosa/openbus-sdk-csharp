@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace tecgraf.openbus.Test {
   /// <summary>
@@ -50,7 +49,6 @@ namespace tecgraf.openbus.Test {
     /// Teste da auto-propriedade Manager
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     [DeploymentItem("Openbus.dll")]
     public void ManagerTest() {
       Assert.IsNotNull(ORBInitializer.Manager);

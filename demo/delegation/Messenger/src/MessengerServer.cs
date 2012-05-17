@@ -41,7 +41,7 @@ namespace tecgraf.openbus.demo.delegation {
       ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",
                                                                  "OpenBus Demos")
                                            };
-      _offer = _conn.OfferRegistry.registerService(member, properties);
+      _offer = _conn.Offers.registerService(member, properties);
 
       Console.WriteLine("Messenger no ar.");
 

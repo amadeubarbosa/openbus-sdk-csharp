@@ -53,7 +53,7 @@ namespace tecgraf.openbus.demo.singlesignon
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
 
       ServiceProperty[] properties = new[] { autoProp1, autoProp2, prop};
-      ServiceOfferDesc[] offers = conn.OfferRegistry.findServices(properties);
+      ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");

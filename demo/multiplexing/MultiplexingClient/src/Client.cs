@@ -33,7 +33,7 @@ namespace tecgraf.openbus.demo.multiplexing {
           serviceProperties[1] = new ServiceProperty("offer.domain",
                                                      "OpenBus Demos");
           ServiceOfferDesc[] services =
-            conn.OfferRegistry.findServices(serviceProperties);
+            conn.Offers.findServices(serviceProperties);
           foreach (ServiceOfferDesc offer in services) {
             foreach (ServiceProperty prop in offer.properties) {
               if (prop.name.Equals("openbus.offer.entity")) {

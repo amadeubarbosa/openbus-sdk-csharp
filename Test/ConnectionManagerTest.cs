@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace tecgraf.openbus.Test {
@@ -74,37 +73,39 @@ namespace tecgraf.openbus.Test {
     /// Teste da auto-propriedade ORB
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void ORBTest() {
-      Assert.IsNotNull(ORBInitializer.Manager.ORB);
+      lock (_manager) {
+        Assert.IsNotNull(ORBInitializer.Manager.ORB);
+      }
     }
 
     /// <summary>
     /// Testes do método CreateConnection
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void CreateConnectionTest() {
-      // cria conexão válida
-      Connection valid = _manager.CreateConnection(_hostName, _hostPort);
-      Assert.IsNotNull(valid);
-      // tenta criar conexão com hosts inválidos
-      Connection invalid = null;
-      try {
-        invalid = _manager.CreateConnection("", _hostPort);
-      }
-      catch (Exception) {
-      }
-      finally {
-        Assert.IsNull(invalid);
-      }
-      try {
-        invalid = _manager.CreateConnection(_hostName, -1);
-      }
-      catch (Exception) {
-      }
-      finally {
-        Assert.IsNull(invalid);
+      lock (_manager) {
+        // cria conexão válida
+        Connection valid = _manager.CreateConnection(_hostName, _hostPort);
+        Assert.IsNotNull(valid);
+        // tenta criar conexão com hosts inválidos
+        Connection invalid = null;
+        try {
+          invalid = _manager.CreateConnection("", _hostPort);
+        }
+        catch (Exception) {
+        }
+        finally {
+          Assert.IsNull(invalid);
+        }
+        try {
+          invalid = _manager.CreateConnection(_hostName, -1);
+        }
+        catch (Exception) {
+        }
+        finally {
+          Assert.IsNull(invalid);
+        }
       }
     }
 
@@ -112,91 +113,97 @@ namespace tecgraf.openbus.Test {
     /// Testes do método GetBusDispatcher
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void GetBusDispatcherTest() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-      Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
-      _manager.DefaultConnection = conn;
-      Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
-      _manager.SetupBusDispatcher(conn2);
-      Assert.AreEqual(_manager.GetBusDispatcher(conn.BusId), conn2);
-      _manager.RemoveBusDispatcher(conn.BusId);
-      Assert.IsNull(_manager.GetBusDispatcher(conn2.BusId));
-      _manager.DefaultConnection = null;
-      Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+      lock (_manager) {
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
+        _manager.DefaultConnection = conn;
+        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+        _manager.SetupBusDispatcher(conn2);
+        Assert.AreEqual(_manager.GetBusDispatcher(conn.BusId), conn2);
+        _manager.RemoveBusDispatcher(conn.BusId);
+        Assert.IsNull(_manager.GetBusDispatcher(conn2.BusId));
+        _manager.DefaultConnection = null;
+        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+      }
     }
 
     /// <summary>
     /// Testes do método RemoveBusDispatcher
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void RemoveBusDispatcherTest() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-      Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
-      Connection removed = _manager.RemoveBusDispatcher(conn.BusId);
-      Assert.IsNull(removed);
-      _manager.DefaultConnection = conn;
-      _manager.SetupBusDispatcher(conn2);
-      removed = _manager.RemoveBusDispatcher(conn.BusId);
-      Assert.AreEqual(removed, conn2);
-      _manager.DefaultConnection = null;
+      lock (_manager) {
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
+        Connection removed = _manager.RemoveBusDispatcher(conn.BusId);
+        Assert.IsNull(removed);
+        _manager.DefaultConnection = conn;
+        _manager.SetupBusDispatcher(conn2);
+        removed = _manager.RemoveBusDispatcher(conn.BusId);
+        Assert.AreEqual(removed, conn2);
+        _manager.DefaultConnection = null;
+      }
     }
 
     /// <summary>
     /// Testes do método SetupBusDispatcher
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void SetupBusDispatcherTest() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-      Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
-      Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
-      _manager.DefaultConnection = conn;
-      _manager.ThreadRequester = conn;
-      Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
-      _manager.SetupBusDispatcher(conn2);
-      Assert.AreEqual(_manager.GetBusDispatcher(conn.BusId), conn2);
-      _manager.RemoveBusDispatcher(conn.BusId);
-      _manager.DefaultConnection = null;
-      _manager.ThreadRequester = null;
-      Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+      lock (_manager) {
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
+        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+        _manager.DefaultConnection = conn;
+        _manager.ThreadRequester = conn;
+        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+        _manager.SetupBusDispatcher(conn2);
+        Assert.AreEqual(_manager.GetBusDispatcher(conn.BusId), conn2);
+        _manager.RemoveBusDispatcher(conn.BusId);
+        _manager.DefaultConnection = null;
+        _manager.ThreadRequester = null;
+        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+      }
     }
 
     /// <summary>
     /// Teste da auto-propriedade DefaultConnection
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void DefaultConnectionTest() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-      Assert.IsNull(_manager.DefaultConnection);
-      _manager.SetupBusDispatcher(conn);
-      _manager.ThreadRequester = conn;
-      Assert.IsNull(_manager.DefaultConnection);
-      _manager.DefaultConnection = conn;
-      Assert.AreEqual(_manager.DefaultConnection, conn);
-      _manager.DefaultConnection = null;
-      _manager.RemoveBusDispatcher(conn.BusId);
-      _manager.ThreadRequester = null;
+      lock (_manager) {
+        _manager.DefaultConnection = null;
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Assert.IsNull(_manager.DefaultConnection);
+        _manager.SetupBusDispatcher(conn);
+        _manager.ThreadRequester = conn;
+        Assert.IsNull(_manager.DefaultConnection);
+        _manager.DefaultConnection = conn;
+        Assert.AreEqual(_manager.DefaultConnection, conn);
+        _manager.DefaultConnection = null;
+        _manager.RemoveBusDispatcher(conn.BusId);
+        _manager.ThreadRequester = null;
+      }
     }
 
     /// <summary>
     /// Teste da auto-propriedade ThreadRequester
     ///</summary>
     [TestMethod]
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void ThreadRequesterTest() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-      Assert.IsNull(_manager.ThreadRequester);
-      _manager.SetupBusDispatcher(conn);
-      _manager.DefaultConnection = conn;
-      Assert.IsNull(_manager.ThreadRequester);
-      _manager.ThreadRequester = conn;
-      Assert.AreEqual(_manager.ThreadRequester, conn);
-      _manager.DefaultConnection = null;
-      _manager.RemoveBusDispatcher(conn.BusId);
-      _manager.ThreadRequester = null;
+      lock (_manager) {
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Assert.IsNull(_manager.ThreadRequester);
+        _manager.SetupBusDispatcher(conn);
+        _manager.DefaultConnection = conn;
+        Assert.IsNull(_manager.ThreadRequester);
+        _manager.ThreadRequester = conn;
+        Assert.AreEqual(_manager.ThreadRequester, conn);
+        _manager.DefaultConnection = null;
+        _manager.RemoveBusDispatcher(conn.BusId);
+        _manager.ThreadRequester = null;
+      }
     }
   }
 }
