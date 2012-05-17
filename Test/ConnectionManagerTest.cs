@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using omg.org.CORBA;
+using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.Test {
   /// <summary>
@@ -14,6 +18,8 @@ namespace tecgraf.openbus.Test {
     private static String _hostName;
     private static short _hostPort;
     private static String _entity;
+    private static string _login;
+    private static byte[] _password;
     private static ConnectionManager _manager;
 
     /// <summary>
@@ -65,6 +71,17 @@ namespace tecgraf.openbus.Test {
       if (String.IsNullOrEmpty(_entity)) {
         throw new ArgumentNullException("entityName");
       }
+
+      _login = ConfigurationManager.AppSettings["userLogin"];
+      if (String.IsNullOrEmpty(_login)) {
+        throw new ArgumentNullException("userLogin");
+      }
+
+      string password = ConfigurationManager.AppSettings["userPassword"];
+      if (String.IsNullOrEmpty(password)) {
+        throw new ArgumentNullException("userPassword");
+      }
+      _password = Crypto.TextEncoding.GetBytes(password);
 
       _manager = ORBInitializer.Manager;
     }
@@ -203,6 +220,40 @@ namespace tecgraf.openbus.Test {
         _manager.DefaultConnection = null;
         _manager.RemoveBusDispatcher(conn.BusId);
         _manager.ThreadRequester = null;
+
+        // tentativa de chamada sem threadrequester setado
+        conn.LoginByPassword(_login, _password);
+        Assert.AreEqual(conn, _manager.ThreadRequester);
+        bool failed = false;
+        ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
+        _manager.ThreadRequester = null;
+        try {
+          conn.Offers.findServices(props);
+        }
+        catch (NO_PERMISSION e) {
+          failed = true;
+          if (e.Minor != NoLoginCode.ConstVal) {
+            Assert.Fail(
+              "A exceção deveria ser NO_PERMISSION com minor code NoLoginCode. Minor code recebido: " +
+              e.Minor);
+          }
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser NO_PERMISSION com minor code NoLoginCode. Exceção recebida: " +
+            e);
+        }
+        Assert.IsTrue(failed);
+        // tentativa com threadrequester setado
+        _manager.ThreadRequester = conn;
+        try {
+          conn.Offers.findServices(props);
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A chamada com ThreadRequester setado deveria ser bem-sucedida. Exceção recebida: " +
+            e);
+        }
       }
     }
   }
