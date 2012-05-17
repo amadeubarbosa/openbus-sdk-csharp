@@ -186,9 +186,7 @@ namespace tecgraf.openbus.Test {
           Assert.Fail("A exceção deveria ser AccessDenied. Exceção recebida: " +
                       e);
         }
-        if (!failed) {
-          Assert.Fail("O login com entidade vazia foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed, "O login com entidade vazia foi bem-sucedido.");
         // senha errada
         failed = false;
         try {
@@ -201,9 +199,7 @@ namespace tecgraf.openbus.Test {
           Assert.Fail("A exceção deveria ser AccessDenied. Exceção recebida: " +
                       e);
         }
-        if (!failed) {
-          Assert.Fail("O login com senha vazia foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed, "O login com senha vazia foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn.Login);
         conn.LoginByPassword(_login, _password);
@@ -224,9 +220,8 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " +
             e);
         }
-        if (!failed) {
-          Assert.Fail("O login com entidade já autenticada foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed,
+                      "O login com entidade já autenticada foi bem-sucedido.");
         conn.Logout();
       }
     }
@@ -250,10 +245,8 @@ namespace tecgraf.openbus.Test {
           Assert.Fail(
             "A exceção deveria ser MissingCertificate. Exceção recebida: " + e);
         }
-        if (!failed) {
-          Assert.Fail(
-            "O login de entidade sem certificado cadastrado foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed,
+                      "O login de entidade sem certificado cadastrado foi bem-sucedido.");
         // chave privada corrompida
         failed = false;
         try {
@@ -267,10 +260,8 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser CorruptedPrivateKeyException. Exceção recebida: " +
             e);
         }
-        if (!failed) {
-          Assert.Fail(
-            "O login de entidade com chave corrompida foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed,
+                      "O login de entidade com chave corrompida foi bem-sucedido.");
         // chave privada inválida
         failed = false;
         try {
@@ -284,9 +275,8 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser WrongPrivateKeyException. Exceção recebida: " +
             e);
         }
-        if (!failed) {
-          Assert.Fail("O login de entidade com chave errada foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed,
+                      "O login de entidade com chave errada foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn.Login);
         conn.LoginByCertificate(_entity, _privKey);
@@ -307,9 +297,8 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " +
             e);
         }
-        if (!failed) {
-          Assert.Fail("O login com entidade já autenticada foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed,
+                      "O login com entidade já autenticada foi bem-sucedido.");
         conn.Logout();
       }
     }
@@ -340,9 +329,7 @@ namespace tecgraf.openbus.Test {
           Assert.Fail(
             "A exceção deveria ser WrongSecretException. Exceção recebida: " + e);
         }
-        if (!failed) {
-          Assert.Fail("O login com segredo errado foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed, "O login com segredo errado foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn2.Login);
         login = conn.StartSingleSignOn(out secret);
@@ -365,9 +352,8 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser AlreadyLoggedInException. Exceção recebida: " +
             e);
         }
-        if (!failed) {
-          Assert.Fail("O login com entidade já autenticada foi bem-sucedido.");
-        }
+        Assert.IsTrue(failed,
+                      "O login com entidade já autenticada foi bem-sucedido.");
         conn2.Logout();
         conn.Logout();
       }
@@ -401,9 +387,7 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser NO_PERMISSION. Exceção recebida: " +
             e);
         }
-        if (!failed) {
-          Assert.Fail("Uma busca sem login foi bem-sucedida.");
-        }
+        Assert.IsTrue(failed, "Uma busca sem login foi bem-sucedida.");
       }
     }
 
