@@ -8,7 +8,7 @@
     <ProjectGuid>{1C1045E7-E1AA-4267-8CC1-A37666E40D96}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.demo.delegation</RootNamespace>
+    <RootNamespace>tecgraf.openbus.interop.delegation</RootNamespace>
     <AssemblyName>Messenger</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
@@ -41,11 +41,11 @@
     <Reference Include="Openbus">
       <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Demo.Delegation.Idl">
-      <HintPath>..\..\..\lib\Openbus.Demo.Delegation.Idl.dll</HintPath>
-    </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Openbus.Interop.Delegation.Idl">
+      <HintPath>..\..\..\lib\Openbus.Interop.Delegation.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs">
       <HintPath>..\..\..\lib\Scs.dll</HintPath>

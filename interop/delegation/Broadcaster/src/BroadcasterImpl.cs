@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using tecgraf.openbus.demo.utils;
 
-namespace tecgraf.openbus.demo.delegation {
+namespace tecgraf.openbus.interop.delegation {
   public class BroadcasterImpl : MarshalByRefObject, Broadcaster {
     #region Fields
 

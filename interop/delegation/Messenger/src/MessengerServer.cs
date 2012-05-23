@@ -4,9 +4,9 @@ using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.delegation.Properties;
+using tecgraf.openbus.interop.delegation.Properties;
 
-namespace tecgraf.openbus.demo.delegation {
+namespace tecgraf.openbus.interop.delegation {
   /// <summary>
   /// Servidor do demo hello.
   /// </summary>

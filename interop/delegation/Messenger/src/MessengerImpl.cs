@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using tecgraf.openbus.demo.utils;
 
-namespace tecgraf.openbus.demo.delegation {
+namespace tecgraf.openbus.interop.delegation {
   public class MessengerImpl : MarshalByRefObject, Messenger {
     #region Fields
 
