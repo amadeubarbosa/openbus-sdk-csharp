@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace tecgraf.openbus.demo.singlesignon.Properties {
+namespace tecgraf.openbus.interop.singlesignon.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

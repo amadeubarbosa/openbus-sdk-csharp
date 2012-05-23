@@ -7,10 +7,10 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.hello;
-using tecgraf.openbus.demo.singlesignon.Properties;
+using tecgraf.openbus.interop.hello;
+using tecgraf.openbus.interop.singlesignon.Properties;
 
-namespace tecgraf.openbus.demo.singlesignon
+namespace tecgraf.openbus.interop.singlesignon
 {
   /// <summary>
   /// Cliente do demo hello.
