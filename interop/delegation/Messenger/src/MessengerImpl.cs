@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using tecgraf.openbus.demo.utils;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.delegation {
   public class MessengerImpl : MarshalByRefObject, Messenger {

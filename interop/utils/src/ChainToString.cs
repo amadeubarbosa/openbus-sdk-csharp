@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace tecgraf.openbus.demo.utils {
+namespace tecgraf.openbus.interop.utils {
   public static class ChainToString {
     public static string ToString(CallerChain chain) {
       string ret = String.Empty;

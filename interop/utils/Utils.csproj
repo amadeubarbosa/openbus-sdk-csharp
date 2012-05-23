@@ -8,8 +8,8 @@
     <ProjectGuid>{E5E41A19-E3B5-4E78-8ACD-B0C6F45E98F6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.demo.Utils</RootNamespace>
-    <AssemblyName>Utils</AssemblyName>
+    <RootNamespace>tecgraf.openbus.interop.utils</RootNamespace>
+    <AssemblyName>InteropUtils</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -41,6 +41,10 @@
     <Reference Include="IIOPChannel">
       <HintPath>..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
+    <Reference Include="Openbus, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\bin\Debug\Openbus.dll</HintPath>
+    </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
@@ -54,12 +58,6 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <ProjectReference Include="..\..\OpenBus.csproj">
-      <Project>{F7F4E7D6-0952-43B7-9468-A211E5153A15}</Project>
-      <Name>OpenBus</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
