@@ -1,10 +1,10 @@
 ﻿using System;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.hello;
-using tecgraf.openbus.demo.multiplexing.Properties;
+using tecgraf.openbus.interop.hello;
+using tecgraf.openbus.interop.multiplexing.Properties;
 
-namespace tecgraf.openbus.demo.multiplexing {
+namespace tecgraf.openbus.interop.multiplexing {
   public static class Client {
     public static void Main() {
       try {

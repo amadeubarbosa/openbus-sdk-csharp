@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.demo.hello;
+using tecgraf.openbus.interop.hello;
 
-namespace tecgraf.openbus.demo.multiplexing
+namespace tecgraf.openbus.interop.multiplexing
 {
   /// <summary>
   /// Implementação do servant IHello.
