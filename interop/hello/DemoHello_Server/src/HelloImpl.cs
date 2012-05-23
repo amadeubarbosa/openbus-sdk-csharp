@@ -1,7 +1,7 @@
 using System;
 using tecgraf.openbus.core.v2_00.services.access_control;
 
-namespace tecgraf.openbus.demo.hello
+namespace tecgraf.openbus.interop.hello
 {
   /// <summary>
   /// Implementação do servant IHello.

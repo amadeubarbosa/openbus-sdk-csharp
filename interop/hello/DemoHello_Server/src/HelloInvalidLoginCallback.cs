@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace tecgraf.openbus.demo.hello {
+namespace tecgraf.openbus.interop.hello {
   class HelloInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;

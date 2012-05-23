@@ -8,7 +8,7 @@
     <ProjectGuid>{790104DB-FAB0-4E39-A62B-72A596C20A3D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.demo.hello</RootNamespace>
+    <RootNamespace>tecgraf.openbus.interop.hello</RootNamespace>
     <AssemblyName>DemoHello.Server</AssemblyName>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -58,13 +58,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Demo.Hello.Idl, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\lib\Openbus.Demo.Hello.Idl.dll</HintPath>
+    <Reference Include="Openbus">
+      <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Openbus.Interop.Hello.Idl">
+      <HintPath>..\..\..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs">
       <HintPath>..\..\..\lib\Scs.dll</HintPath>
@@ -123,12 +125,6 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\OpenBus.csproj">
-      <Project>{F7F4E7D6-0952-43B7-9468-A211E5153A15}</Project>
-      <Name>OpenBus</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

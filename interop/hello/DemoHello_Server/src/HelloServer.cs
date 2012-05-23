@@ -6,9 +6,9 @@ using Scs.Core;
 using log4net.Config;
 using scs.core;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.demo.hello.Properties;
+using tecgraf.openbus.interop.hello.Properties;
 
-namespace tecgraf.openbus.demo.hello {
+namespace tecgraf.openbus.interop.hello {
   /// <summary>
   /// Servidor do demo hello.
   /// </summary>

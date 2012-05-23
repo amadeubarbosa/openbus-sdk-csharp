@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace tecgraf.openbus.demo.hello.Properties {
+namespace tecgraf.openbus.interop.hello.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace tecgraf.openbus.demo.hello.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("tecgraf.openbus.demo.hello.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("tecgraf.openbus.interop.hello.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
