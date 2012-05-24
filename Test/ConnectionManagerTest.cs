@@ -223,10 +223,9 @@ namespace tecgraf.openbus.Test {
 
         // tentativa de chamada sem threadrequester setado
         conn.LoginByPassword(_login, _password);
-        Assert.AreEqual(conn, _manager.ThreadRequester);
+        Assert.IsNull(_manager.ThreadRequester);
         bool failed = false;
         ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
-        _manager.ThreadRequester = null;
         try {
           conn.Offers.findServices(props);
         }

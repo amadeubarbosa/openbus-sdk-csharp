@@ -66,11 +66,11 @@ namespace tecgraf.openbus.lease
     /// </summary>
     public void Run() {
       try {
+        _conn.Manager.ThreadRequester = _conn;
         while (_mustContinue) {
           if (!_justStarted) {
             try {
               try {
-                _conn.Manager.ThreadRequester = _conn;
                 Lease = _ac.renew();
               }
               catch (NO_PERMISSION) {

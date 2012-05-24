@@ -308,11 +308,10 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void SingleSignOnTest() {
-      //TODO teste de singlesignon ainda estao com erros.
-      //TODO nao resolveu o problema de concorrencia do MSTests. Tentar sincronizar na mão dando lock no this.
       lock (this) {
         Connection conn = CreateConnection();
         Connection conn2 = CreateConnection();
+        _manager.ThreadRequester = conn;
         conn.LoginByPassword(_login, _password);
         // segredo errado
         bool failed = false;
@@ -320,6 +319,7 @@ namespace tecgraf.openbus.Test {
         LoginProcess login;
         try {
           login = conn.StartSingleSignOn(out secret);
+          _manager.ThreadRequester = conn2;
           conn2.LoginBySingleSignOn(login, new byte[0]);
         }
         catch (WrongSecretException) {
@@ -332,7 +332,9 @@ namespace tecgraf.openbus.Test {
         Assert.IsTrue(failed, "O login com segredo errado foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn2.Login);
+        _manager.ThreadRequester = conn;
         login = conn.StartSingleSignOn(out secret);
+        _manager.ThreadRequester = conn2;
         conn2.LoginBySingleSignOn(login, secret);
         Assert.IsNotNull(conn2.Login);
         conn2.Logout();
@@ -340,8 +342,11 @@ namespace tecgraf.openbus.Test {
         // login repetido
         failed = false;
         try {
+          _manager.ThreadRequester = conn;
           login = conn.StartSingleSignOn(out secret);
+          _manager.ThreadRequester = conn2;
           conn2.LoginBySingleSignOn(login, secret);
+          Assert.IsNotNull(conn2.Login);
           conn2.LoginBySingleSignOn(login, secret);
         }
         catch (AlreadyLoggedInException) {
@@ -354,7 +359,9 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
+        _manager.ThreadRequester = conn2;
         conn2.Logout();
+        _manager.ThreadRequester = conn;
         conn.Logout();
       }
     }

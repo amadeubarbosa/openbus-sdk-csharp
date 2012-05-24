@@ -80,7 +80,11 @@ namespace tecgraf.openbus {
         }
         int id;
         try {
-          id = (int) current.get_slot(CurrentThreadSlotId);
+          Object obj = current.get_slot(CurrentThreadSlotId);
+          if (obj == null) {
+            return null;
+          }
+          id = Convert.ToInt32(obj);
         }
         catch (InvalidSlot e) {
           Logger.Fatal(message, e);

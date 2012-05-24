@@ -152,9 +152,7 @@ namespace tecgraf.openbus {
         return;
       }
 
-      Manager.ThreadRequester = this;
       BusId = _acs.busid;
-      Manager.ThreadRequester = null;
       _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
 
       if (Legacy) {
@@ -289,7 +287,6 @@ namespace tecgraf.openbus {
         }
 
         int lease;
-        Manager.ThreadRequester = this;
         Login = _acs.loginByPassword(entity, pubBytes, encrypted, out lease);
         StartLeaseRenewer(lease);
       }
@@ -306,7 +303,6 @@ namespace tecgraf.openbus {
       try {
         Manager.IgnoreCurrentThread();
         byte[] challenge;
-        Manager.ThreadRequester = this;
         LoginProcess login = _acs.startLoginByCertificate(entity,
                                                           out
                                                             challenge);
@@ -321,7 +317,6 @@ namespace tecgraf.openbus {
 
     public LoginProcess StartSingleSignOn(out byte[] secret) {
       byte[] challenge;
-      Manager.ThreadRequester = this;
       LoginProcess login = _acs.startLoginBySingleSignOn(out challenge);
       secret = Crypto.Decrypt(InternalKey.Private, challenge);
       return login;
@@ -349,7 +344,6 @@ namespace tecgraf.openbus {
       }
 
       try {
-        Manager.ThreadRequester = this;
         _acs.logout();
       }
       catch (NO_PERMISSION e) {
@@ -705,7 +699,6 @@ namespace tecgraf.openbus {
           ((remoteLogin.Equals(BusId)) || (remoteLogin.Equals(String.Empty)))) {
         return CreateInvalidCredentialSignedCallChain();
       }
-      Manager.ThreadRequester = this;
       if (chain == null) {
         // na chamada a signChainFor vai criar uma nova chain e assinar
         signed = _acs.signChainFor(remoteLogin);
@@ -805,7 +798,6 @@ namespace tecgraf.openbus {
                        ? anyCredential.LegacyCredential.identifier
                        : anyCredential.Credential.login;
       try {
-        Manager.ThreadRequester = this;
         if (!_loginsCache.ValidateLogin(anyCredential, this)) {
           Logger.Warn(String.Format("A credencial {0} está fora da validade.",
                                     login));
