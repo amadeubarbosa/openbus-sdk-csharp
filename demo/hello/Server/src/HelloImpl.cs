@@ -1,5 +1,6 @@
 using System;
 using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.demo.hello
 {
@@ -26,14 +27,20 @@ namespace tecgraf.openbus.demo.hello
 
     public void sayHello() {
       try {
-        LoginInfo[] callers = _conn.CallerChain.Callers;
+        CallerChain chain = _conn.CallerChain;
+        if (chain == null) {
+          Console.WriteLine("A cadeia de chamadas é nula, talvez o serviço não esteja logado no barramento. Impossível descobrir quem fez a chamada.");
+          Console.WriteLine("Hello World!");
+          return;
+        }
+        LoginInfo[] callers = chain.Callers;
         Console.WriteLine(String.Format("Hello {0}!", callers[0].entity));
       }
-      catch (Exception e) {
+      catch (OpenBusException e) {
+        Console.WriteLine("Erro no método sayHello ao obter a cadeia de chamadas:");
         Console.WriteLine(e.StackTrace);
       }
     }
-
     #endregion
   }
 }
