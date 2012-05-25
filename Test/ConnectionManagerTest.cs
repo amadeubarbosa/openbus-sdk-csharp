@@ -135,13 +135,13 @@ namespace tecgraf.openbus.Test {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
         _manager.DefaultConnection = conn;
-        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
-        _manager.SetupBusDispatcher(conn2);
-        Assert.AreEqual(_manager.GetBusDispatcher(conn.BusId), conn2);
-        _manager.RemoveBusDispatcher(conn.BusId);
-        Assert.IsNull(_manager.GetBusDispatcher(conn2.BusId));
+        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
+        _manager.SetupDispatcher(conn2);
+        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn2);
+        _manager.RemoveDispatcher(conn.BusId);
+        Assert.IsNull(_manager.GetDispatcher(conn2.BusId));
         _manager.DefaultConnection = null;
-        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
       }
     }
 
@@ -153,11 +153,11 @@ namespace tecgraf.openbus.Test {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
-        Connection removed = _manager.RemoveBusDispatcher(conn.BusId);
+        Connection removed = _manager.RemoveDispatcher(conn.BusId);
         Assert.IsNull(removed);
         _manager.DefaultConnection = conn;
-        _manager.SetupBusDispatcher(conn2);
-        removed = _manager.RemoveBusDispatcher(conn.BusId);
+        _manager.SetupDispatcher(conn2);
+        removed = _manager.RemoveDispatcher(conn.BusId);
         Assert.AreEqual(removed, conn2);
         _manager.DefaultConnection = null;
       }
@@ -171,16 +171,16 @@ namespace tecgraf.openbus.Test {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
-        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
         _manager.DefaultConnection = conn;
-        _manager.ThreadRequester = conn;
-        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
-        _manager.SetupBusDispatcher(conn2);
-        Assert.AreEqual(_manager.GetBusDispatcher(conn.BusId), conn2);
-        _manager.RemoveBusDispatcher(conn.BusId);
+        _manager.Requester = conn;
+        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
+        _manager.SetupDispatcher(conn2);
+        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn2);
+        _manager.RemoveDispatcher(conn.BusId);
         _manager.DefaultConnection = null;
-        _manager.ThreadRequester = null;
-        Assert.IsNull(_manager.GetBusDispatcher(conn.BusId));
+        _manager.Requester = null;
+        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
       }
     }
 
@@ -193,14 +193,14 @@ namespace tecgraf.openbus.Test {
         _manager.DefaultConnection = null;
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         Assert.IsNull(_manager.DefaultConnection);
-        _manager.SetupBusDispatcher(conn);
-        _manager.ThreadRequester = conn;
+        _manager.SetupDispatcher(conn);
+        _manager.Requester = conn;
         Assert.IsNull(_manager.DefaultConnection);
         _manager.DefaultConnection = conn;
         Assert.AreEqual(_manager.DefaultConnection, conn);
         _manager.DefaultConnection = null;
-        _manager.RemoveBusDispatcher(conn.BusId);
-        _manager.ThreadRequester = null;
+        _manager.RemoveDispatcher(conn.BusId);
+        _manager.Requester = null;
       }
     }
 
@@ -211,19 +211,19 @@ namespace tecgraf.openbus.Test {
     public void ThreadRequesterTest() {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-        Assert.IsNull(_manager.ThreadRequester);
-        _manager.SetupBusDispatcher(conn);
+        Assert.IsNull(_manager.Requester);
+        _manager.SetupDispatcher(conn);
         _manager.DefaultConnection = conn;
-        Assert.IsNull(_manager.ThreadRequester);
-        _manager.ThreadRequester = conn;
-        Assert.AreEqual(_manager.ThreadRequester, conn);
+        Assert.IsNull(_manager.Requester);
+        _manager.Requester = conn;
+        Assert.AreEqual(_manager.Requester, conn);
         _manager.DefaultConnection = null;
-        _manager.RemoveBusDispatcher(conn.BusId);
-        _manager.ThreadRequester = null;
+        _manager.RemoveDispatcher(conn.BusId);
+        _manager.Requester = null;
 
         // tentativa de chamada sem threadrequester setado
         conn.LoginByPassword(_login, _password);
-        Assert.IsNull(_manager.ThreadRequester);
+        Assert.IsNull(_manager.Requester);
         bool failed = false;
         ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
         try {
@@ -244,7 +244,7 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed);
         // tentativa com threadrequester setado
-        _manager.ThreadRequester = conn;
+        _manager.Requester = conn;
         try {
           conn.Offers.findServices(props);
         }

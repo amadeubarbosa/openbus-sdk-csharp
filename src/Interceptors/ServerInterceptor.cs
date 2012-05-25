@@ -92,7 +92,7 @@ namespace tecgraf.openbus.interceptors {
             throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
           }
         }
-        conn = Manager.GetBusDispatcher(busId) as ConnectionImpl;
+        conn = Manager.GetDispatcher(busId) as ConnectionImpl;
         if (conn == null) {
           conn = Manager.DefaultConnection as ConnectionImpl;
           if (conn == null) {

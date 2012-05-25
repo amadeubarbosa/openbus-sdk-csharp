@@ -66,7 +66,7 @@ namespace tecgraf.openbus.lease
     /// </summary>
     public void Run() {
       try {
-        _conn.Manager.ThreadRequester = _conn;
+                _conn.Manager.Requester = _conn;
         while (_mustContinue) {
           if (!_justStarted) {
             try {

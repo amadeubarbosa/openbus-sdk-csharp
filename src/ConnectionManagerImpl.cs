@@ -68,7 +68,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public Connection ThreadRequester {
+    public Connection Requester {
       get {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
@@ -115,7 +115,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void SetupBusDispatcher(Connection conn) {
+    public void SetupDispatcher(Connection conn) {
       lock (_incomingDispatcherConn) {
         Connection removed;
         _incomingDispatcherConn.TryRemove(conn.BusId, out removed);
@@ -123,12 +123,12 @@ namespace tecgraf.openbus {
       }
     }
 
-    public Connection GetBusDispatcher(string busId) {
+    public Connection GetDispatcher(string busId) {
       Connection incoming;
       return _incomingDispatcherConn.TryGetValue(busId, out incoming) ? incoming : null;
     }
 
-    public Connection RemoveBusDispatcher(string busId) {
+    public Connection RemoveDispatcher(string busId) {
       Connection incoming;
       _incomingDispatcherConn.TryRemove(busId, out incoming);
       return incoming;
