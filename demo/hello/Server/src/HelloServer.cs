@@ -58,7 +58,7 @@ namespace tecgraf.openbus.demo.hello {
       }
 
       // Registra uma callback para o caso do login ser perdido
-      _conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(
+      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(
         "HelloServer", privateKey, ic, properties);
 
       // Mantém a thread ativa para aguardar requisições
