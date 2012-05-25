@@ -5,7 +5,7 @@ using tecgraf.openbus.exceptions;
 namespace tecgraf.openbus.demo.hello
 {
   /// <summary>
-  /// Implementação do servant IHello.
+  /// Implementação do servant Hello.
   /// </summary>  
   public class HelloImpl : MarshalByRefObject, Hello
   {
