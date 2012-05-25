@@ -10,7 +10,7 @@ using tecgraf.openbus.interop.hello.Properties;
 namespace tecgraf.openbus.interop.hello
 {
   /// <summary>
-  /// Cliente do demo hello.
+  /// Cliente do teste de interoperabilidade hello.
   /// </summary>
   static class HelloClient {
     static void Main() {
@@ -41,7 +41,7 @@ namespace tecgraf.openbus.interop.hello
       ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "TestEntity");
       ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "Hello");
       // propriedade definida pelo servidor hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
@@ -55,7 +55,7 @@ namespace tecgraf.openbus.interop.hello
 
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          MarshalByRefObject helloObj = serviceOfferDesc.service_ref.getFacet("IDL:demoidl/hello/IHello:1.0");
+          MarshalByRefObject helloObj = serviceOfferDesc.service_ref.getFacet("IDL:tecgraf/openbus/interop/hello/Hello:1.0");
           if (helloObj == null) {
             Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
             continue;
@@ -71,7 +71,6 @@ namespace tecgraf.openbus.interop.hello
           Console.WriteLine("Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
         }
       }
-
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }

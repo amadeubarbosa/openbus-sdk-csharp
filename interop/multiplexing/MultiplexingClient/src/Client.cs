@@ -24,14 +24,14 @@ namespace tecgraf.openbus.interop.multiplexing {
           Connection conn = manager.CreateConnection(hostName, port);
           manager.SetupBusDispatcher(conn);
           manager.ThreadRequester = conn;
-          String login = "demo@" + port;
+          String login = "interop@" + port;
           conn.LoginByPassword(login, encoding.GetBytes(login));
 
           ServiceProperty[] serviceProperties = new ServiceProperty[2];
           serviceProperties[0] = new ServiceProperty("openbus.component.facet",
                                                      "Hello");
           serviceProperties[1] = new ServiceProperty("offer.domain",
-                                                     "OpenBus Demos");
+                                                     "Interoperability Tests");
           ServiceOfferDesc[] services =
             conn.Offers.findServices(serviceProperties);
           foreach (ServiceOfferDesc offer in services) {
@@ -43,7 +43,7 @@ namespace tecgraf.openbus.interop.multiplexing {
             }
             try {
               MarshalByRefObject obj =
-                offer.service_ref.getFacet("IDL:demoidl/hello/IHello:1.0");
+                offer.service_ref.getFacet("IDL:tecgraf/openbus/interop/hello/Hello:1.0");
               if (obj == null) {
                 Console.WriteLine(
                   "Não foi possível encontrar uma faceta com esse nome.");
@@ -51,7 +51,7 @@ namespace tecgraf.openbus.interop.multiplexing {
               }
               Hello hello = obj as Hello;
               if (hello == null) {
-                Console.WriteLine("Faceta encontrada não implementa IHello.");
+                Console.WriteLine("Faceta encontrada não implementa Hello.");
                 continue;
               }
               hello.sayHello();

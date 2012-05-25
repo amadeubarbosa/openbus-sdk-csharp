@@ -9,7 +9,7 @@ using tecgraf.openbus.interop.delegation.Properties;
 
 namespace tecgraf.openbus.interop.delegation {
   /// <summary>
-  /// Servidor do demo hello.
+  /// Servidor broadcaster do teste de interoperabilidade delegation.
   /// </summary>
   internal static class BroadcasterServer {
     private static Connection _conn;
@@ -50,7 +50,7 @@ namespace tecgraf.openbus.interop.delegation {
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] {
                                              new ServiceProperty("offer.domain",
-                                                                 "OpenBus Demos")
+                                                                 "Interoperability Tests")
                                            };
       _offer = _conn.Offers.registerService(member, properties);
 
@@ -66,7 +66,7 @@ namespace tecgraf.openbus.interop.delegation {
       ServiceProperty autoProp2 = new ServiceProperty(
         "openbus.component.facet", "messenger");
       // propriedade definida pelo servidor hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
       ServiceOfferDesc[] offers = _conn.Offers.findServices(properties);

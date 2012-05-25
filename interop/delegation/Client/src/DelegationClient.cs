@@ -74,7 +74,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void GetServices(Connection conn) {
       // propriedade definida pelos servidores
-      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {prop};
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);

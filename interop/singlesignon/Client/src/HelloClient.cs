@@ -12,7 +12,7 @@ using tecgraf.openbus.interop.singlesignon.Properties;
 
 namespace tecgraf.openbus.interop.singlesignon {
   /// <summary>
-  /// Cliente do demo hello.
+  /// Cliente do teste de interoperabilidade single sign-on.
   /// </summary>
   static class HelloClient {
     static void Main() {
@@ -56,7 +56,7 @@ namespace tecgraf.openbus.interop.singlesignon {
       ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "TestEntity");
       ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "Hello");
       // propriedade definida pelo servidor hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
       ServiceProperty[] properties = new[] { autoProp1, autoProp2, prop};
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);

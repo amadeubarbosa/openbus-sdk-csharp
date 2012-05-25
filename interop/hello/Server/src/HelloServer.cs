@@ -10,7 +10,7 @@ using tecgraf.openbus.interop.hello.Properties;
 
 namespace tecgraf.openbus.interop.hello {
   /// <summary>
-  /// Servidor do demo hello.
+  /// Servidor do teste de interoperabilidade hello.
   /// </summary>
   static class HelloServer {
     private static Connection _conn;
@@ -40,7 +40,7 @@ namespace tecgraf.openbus.interop.hello {
       _conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(entityName, privateKey, manager);
 
       IComponent member = component.GetIComponent();
-      ServiceProperty[] properties = new[] {new ServiceProperty("offer.domain", "OpenBus Demos")};
+      ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain", "Interoperability Tests") };
       _offer = _conn.Offers.registerService(member, properties);
 
       Console.WriteLine("Servidor no ar.");

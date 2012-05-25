@@ -88,7 +88,7 @@ namespace tecgraf.openbus.interop.multiplexing {
 
     private static ServiceProperty[] GetProps() {
       ServiceProperty[] serviceProperties = new ServiceProperty[1];
-      serviceProperties[0] = new ServiceProperty("offer.domain", "OpenBus Demos");
+      serviceProperties[0] = new ServiceProperty("offer.domain", "Interoperability Tests");
       return serviceProperties;
     }
 

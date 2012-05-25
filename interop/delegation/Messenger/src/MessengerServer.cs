@@ -8,7 +8,7 @@ using tecgraf.openbus.interop.delegation.Properties;
 
 namespace tecgraf.openbus.interop.delegation {
   /// <summary>
-  /// Servidor do demo hello.
+  /// Servidor messenger do teste de interoperabilidade delegation.
   /// </summary>
   internal static class MessengerServer {
     private static Connection _conn;
@@ -39,7 +39,7 @@ namespace tecgraf.openbus.interop.delegation {
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",
-                                                                 "OpenBus Demos")
+                                                                 "Interoperability Tests")
                                            };
       _offer = _conn.Offers.registerService(member, properties);
 
