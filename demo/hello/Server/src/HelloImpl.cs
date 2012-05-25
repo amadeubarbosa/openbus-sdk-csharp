@@ -23,7 +23,7 @@ namespace tecgraf.openbus.demo.hello
 
     #endregion
 
-    #region IHello Members
+    #region Hello Members
 
     public void sayHello() {
       try {
