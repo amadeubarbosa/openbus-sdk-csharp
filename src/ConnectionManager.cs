@@ -46,7 +46,7 @@ namespace tecgraf.openbus {
     /// barramento ao qual está conectada, denominada conexão de despacho.
     /// </summary>
     /// <param name="conn"> Conexão a barramento a ser associada a thread corrente.</param>
-    void SetupDispatcher(Connection conn);
+    void SetDispatcher(Connection conn);
 
     /// <summary>
     /// Devolve a conexão de despacho associada ao barramento indicado, se 
@@ -64,6 +64,6 @@ namespace tecgraf.openbus {
     ///  associada.</param>
     /// <returns> Conexão a barramento associada ao barramento ou 'null' se não
     ///  houver nenhuma conexão associada.</returns>
-	  Connection RemoveDispatcher(string busId);
+	  Connection ClearDispatcher(string busId);
   }
 }

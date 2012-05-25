@@ -80,8 +80,8 @@ namespace tecgraf.openbus.lease
               if (Lease == 0) {
                 _mustContinue = false;
                 Logger.Warn("Falha na renovação da credencial.");
-                if (_conn.OnInvalidLoginCallback != null)
-                  Logger.Debug(_conn.OnInvalidLoginCallback.InvalidLogin(_conn)
+                if (_conn.OnInvalidLogin != null)
+                  Logger.Debug(_conn.OnInvalidLogin.InvalidLogin(_conn)
                                  ? "Credencial renovada após callback de login inválido."
                                  : "Credencial NÃO renovada após callback de login inválido.");
               }

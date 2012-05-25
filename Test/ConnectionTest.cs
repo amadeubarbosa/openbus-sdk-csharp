@@ -405,10 +405,10 @@ namespace tecgraf.openbus.Test {
     public void OnInvalidLoginCallbackTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        Assert.IsNull(conn.OnInvalidLoginCallback);
+        Assert.IsNull(conn.OnInvalidLogin);
         InvalidLoginCallback callback = new InvalidLoginCallbackMock();
-        conn.OnInvalidLoginCallback = callback;
-        Assert.AreEqual(callback, conn.OnInvalidLoginCallback);
+        conn.OnInvalidLogin = callback;
+        Assert.AreEqual(callback, conn.OnInvalidLogin);
       }
     }
 

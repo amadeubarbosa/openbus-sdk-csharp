@@ -359,7 +359,7 @@ namespace tecgraf.openbus {
       return true;
     }
 
-    public InvalidLoginCallback OnInvalidLoginCallback { get; set; }
+    public InvalidLoginCallback OnInvalidLogin { get; set; }
 
     public void JoinChain(CallerChain chain) {
       if (chain == null) {
@@ -531,8 +531,8 @@ namespace tecgraf.openbus {
             "Este cliente foi deslogado do barramento durante a interceptação desta requisição.",
             e);
           LocalLogout();
-          if ((OnInvalidLoginCallback != null) &&
-              (OnInvalidLoginCallback.InvalidLogin(this))) {
+          if ((OnInvalidLogin != null) &&
+              (OnInvalidLogin.InvalidLogin(this))) {
             // pede que a chamada original seja relançada
             throw new ForwardRequest(ri.target);
           }
@@ -575,8 +575,8 @@ namespace tecgraf.openbus {
         }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
           LocalLogout();
-          if ((OnInvalidLoginCallback != null) &&
-              (OnInvalidLoginCallback.InvalidLogin(this))) {
+          if ((OnInvalidLogin != null) &&
+              (OnInvalidLogin.InvalidLogin(this))) {
             Logger.Warn(String.Format(
               "Login reestabelecido, solicitando que a chamada {0} seja refeita.",
               operation));

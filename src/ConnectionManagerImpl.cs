@@ -115,7 +115,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void SetupDispatcher(Connection conn) {
+    public void SetDispatcher(Connection conn) {
       lock (_incomingDispatcherConn) {
         Connection removed;
         _incomingDispatcherConn.TryRemove(conn.BusId, out removed);
@@ -128,7 +128,7 @@ namespace tecgraf.openbus {
       return _incomingDispatcherConn.TryGetValue(busId, out incoming) ? incoming : null;
     }
 
-    public Connection RemoveDispatcher(string busId) {
+    public Connection ClearDispatcher(string busId) {
       Connection incoming;
       _incomingDispatcherConn.TryRemove(busId, out incoming);
       return incoming;

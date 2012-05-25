@@ -112,7 +112,7 @@ namespace tecgraf.openbus {
     /// chamada ou 'null' caso nenhum objeto deva ser chamado na
     /// ocorrência desse evento.
     /// </summary>
-    InvalidLoginCallback OnInvalidLoginCallback { get; set; }
+    InvalidLoginCallback OnInvalidLogin { get; set; }
      
     /*************************************************************************
      * INSPEÇÃO DO CLIENTE DAS CHAMADAS **************************************
