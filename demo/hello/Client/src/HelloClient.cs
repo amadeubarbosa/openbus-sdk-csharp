@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
@@ -19,7 +20,7 @@ namespace tecgraf.openbus.demo.hello {
 
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-      if (!Login("HelloServer", encoding.GetBytes("tester"), conn)) {
+      if (!Login("tester", encoding.GetBytes("tester"), conn)) {
         Console.ReadLine();
         Environment.Exit(1);
       }
@@ -53,13 +54,13 @@ namespace tecgraf.openbus.demo.hello {
       Console.ReadLine();
     }
 
-    private static Hello GetHello(ServiceOfferDesc[] offers) {
-      if (offers.Length < 1) {
+    private static Hello GetHello(ICollection<ServiceOfferDesc> offers) {
+      if (offers.Count < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
         return null;
       }
 
-      if (offers.Length > 1) {
+      if (offers.Count > 1) {
         Console.WriteLine(
           "Existe mais de um serviço Hello no barramento. Tentaremos encontrar uma funcional.");
       }

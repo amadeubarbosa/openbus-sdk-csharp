@@ -38,7 +38,7 @@ namespace tecgraf.openbus.demo.hello {
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
                          new HelloImpl(_conn));
 
-      // Cria uma oferta de serviço a ser registrada no barramento
+      // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
       ServiceProperty[] properties = new[] {
                                              new ServiceProperty("offer.domain",
@@ -46,12 +46,13 @@ namespace tecgraf.openbus.demo.hello {
                                            };
 
       // Faz o login
-      if (!Login("HelloServer", privateKey)) {
+      const string login = "HelloServer";
+      if (!Login(login, privateKey)) {
         Console.ReadLine();
         Environment.Exit(1);
       }
 
-      // Registra a oferta de serviço criada no barramento
+      // Registra a oferta no barramento
       if (!Register(ic, properties)) {
         Console.ReadLine();
         Environment.Exit(1);
@@ -59,7 +60,7 @@ namespace tecgraf.openbus.demo.hello {
 
       // Registra uma callback para o caso do login ser perdido
       _conn.OnInvalidLogin = new HelloInvalidLoginCallback(
-        "HelloServer", privateKey, ic, properties);
+        login, privateKey, ic, properties);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine("Servidor no ar.");
@@ -134,6 +135,7 @@ namespace tecgraf.openbus.demo.hello {
         Console.WriteLine(
           "Removendo oferta do barramento antes de terminar o processo...");
         _offer.remove();
+        Console.WriteLine("Oferta removida do barramento.");
       }
       catch (UnauthorizedOperation) {
         Console.WriteLine(
@@ -144,7 +146,11 @@ namespace tecgraf.openbus.demo.hello {
           "Erro ao tentar remover a oferta do barramento: erro no serviço remoto. Causa:");
         Console.WriteLine(exc.StackTrace);
       }
-      Console.ReadLine();
+      catch (Exception exc) {
+        Console.WriteLine(
+          "Erro inesperado ao tentar remover a oferta do barramento:");
+        Console.WriteLine(exc.StackTrace);
+      }
     }
   }
 }
