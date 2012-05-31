@@ -672,7 +672,7 @@ namespace tecgraf.openbus {
       Logger.Fatal("Credencial inválida, enviando CredentialReset.");
       // TODO FIXME
       // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
-      // no código do interceptador servidor, no método receive_reply.
+      // no código do interceptador servidor, no método receive_request.
       ri.set_slot(_credentialSlotId, "reset");
     }
 
