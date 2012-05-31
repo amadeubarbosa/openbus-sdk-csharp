@@ -15,7 +15,7 @@ namespace tecgraf.openbus.interop.multiplexing {
     public bool InvalidLogin(Connection conn) {
       try {
         Console.WriteLine("Callback de InvalidLogin da conexão " + _login + " foi chamada, tentando logar novamente no barramento.");
-        _manager.ThreadRequester = conn;
+        _manager.Requester = conn;
         conn.LoginByPassword(_login, _encoding.GetBytes(_login));
         return conn.Login != null;
       }

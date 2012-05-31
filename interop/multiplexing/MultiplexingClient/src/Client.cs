@@ -22,8 +22,8 @@ namespace tecgraf.openbus.interop.multiplexing {
 
         foreach (short port in ports) {
           Connection conn = manager.CreateConnection(hostName, port);
-          manager.SetupBusDispatcher(conn);
-          manager.ThreadRequester = conn;
+          manager.SetDispatcher(conn);
+          manager.Requester = conn;
           String login = "interop@" + port;
           conn.LoginByPassword(login, encoding.GetBytes(login));
 

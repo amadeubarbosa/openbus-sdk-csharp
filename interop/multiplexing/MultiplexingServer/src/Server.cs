@@ -31,11 +31,11 @@ namespace tecgraf.openbus.interop.multiplexing {
         Conns.Add(connAtBus2);
 
         // setup action on login termination
-        conn1AtBus1.OnInvalidLoginCallback =
+        conn1AtBus1.OnInvalidLogin =
           new HelloInvalidLoginCallback("Conn1AtBus1", manager);
-        conn2AtBus1.OnInvalidLoginCallback =
+        conn2AtBus1.OnInvalidLogin =
           new HelloInvalidLoginCallback("Conn2AtBus1", manager);
-        connAtBus2.OnInvalidLoginCallback =
+        connAtBus2.OnInvalidLogin =
           new HelloInvalidLoginCallback("ConnAtBus2", manager);
 
         // create service SCS component
@@ -45,18 +45,18 @@ namespace tecgraf.openbus.interop.multiplexing {
                            new HelloImpl(Conns));
 
         // set incoming connection
-        manager.SetupBusDispatcher(conn1AtBus1);
-        manager.SetupBusDispatcher(connAtBus2);
+        manager.SetDispatcher(conn1AtBus1);
+        manager.SetDispatcher(connAtBus2);
 
         // login to the bus
         System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-        manager.ThreadRequester = conn1AtBus1;
+        manager.Requester = conn1AtBus1;
         conn1AtBus1.LoginByPassword("conn1", encoding.GetBytes("conn1"));
-        manager.ThreadRequester = conn2AtBus1;
+        manager.Requester = conn2AtBus1;
         conn2AtBus1.LoginByPassword("conn2", encoding.GetBytes("conn2"));
-        manager.ThreadRequester = connAtBus2;
+        manager.Requester = connAtBus2;
         connAtBus2.LoginByPassword("conn3", encoding.GetBytes("conn3"));
-        manager.ThreadRequester = null;
+        manager.Requester = null;
 
         RegisterThreadStart start1 = new RegisterThreadStart(conn1AtBus1,
                                                              manager,
@@ -72,7 +72,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         Thread thread2 = new Thread(start2.Run);
         thread2.Start();
 
-        manager.ThreadRequester = connAtBus2;
+        manager.Requester = connAtBus2;
         connAtBus2.Offers.registerService(component.GetIComponent(),
                                                  GetProps());
 
@@ -105,7 +105,7 @@ namespace tecgraf.openbus.interop.multiplexing {
       }
 
       public void Run() {
-        _manager.ThreadRequester = _conn;
+        _manager.Requester = _conn;
         try {
           _conn.Offers.registerService(_component, GetProps());
         }
