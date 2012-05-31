@@ -37,6 +37,8 @@ namespace tecgraf.openbus.demo.chainvalidation
         }
         string caller = chain.Callers[0].entity;
         Console.WriteLine(String.Format("Pedido de reunião recebido de {0}.", caller));
+        // faz join na própria caller chain
+        _conn.JoinChain(null);
         _executive.sendMessage(String.Format("Você tem uma reunião às {0}h com {1}.", _hour, caller));
         int ret = _hour;
         if (_hour >= 18) {

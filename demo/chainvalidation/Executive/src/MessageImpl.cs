@@ -33,7 +33,9 @@ namespace tecgraf.openbus.demo.chainvalidation
           Console.WriteLine("Uma mensagem foi ignorada pois não veio da secretária.");
           throw new Unavailable();
         }
-        Console.WriteLine(String.Format("Mensagem recebida de {0}: {1}", chain.Callers[0].entity, message));
+        string caller = chain.Callers[0].entity;
+        string originalCaller = chain.Callers[chain.Callers.Length - 1].entity;
+        Console.WriteLine(String.Format("Mensagem recebida de {0} em nome de {1}: {2}", caller, originalCaller, message));
       }
       catch (OpenBusException e) {
         Console.WriteLine("Erro no método sendMessage ao obter a cadeia de chamadas:");
