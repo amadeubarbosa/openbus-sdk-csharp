@@ -13,7 +13,7 @@ namespace tecgraf.openbus.interop.hello {
     }
 
     public bool InvalidLogin(Connection conn) {
-      _manager.ThreadRequester = conn;
+      _manager.Requester = conn;
       try {
         Console.WriteLine("Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(_entity, _privKey);

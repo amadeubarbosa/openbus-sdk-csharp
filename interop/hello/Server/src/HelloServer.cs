@@ -37,7 +37,7 @@ namespace tecgraf.openbus.interop.hello {
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof(Hello)), new HelloImpl(_conn));
 
       _conn.LoginByCertificate(entityName, privateKey);
-      _conn.OnInvalidLoginCallback = new HelloInvalidLoginCallback(entityName, privateKey, manager);
+      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(entityName, privateKey, manager);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain", "Interoperability Tests") };
