@@ -29,7 +29,7 @@ namespace tecgraf.openbus.interop.delegation {
       byte[] password = encoding.GetBytes(userPassword);
 
       _conn.LoginByPassword(userLogin, password);
-      _conn.OnInvalidLoginCallback =
+      _conn.OnInvalidLogin =
         new MessengerInvalidLoginCallback(userLogin, password);
 
       ComponentContext component =

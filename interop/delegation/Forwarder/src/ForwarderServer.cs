@@ -44,7 +44,7 @@ namespace tecgraf.openbus.interop.delegation {
       ForwarderImpl forwarder = new ForwarderImpl(_conn, messenger);
       component.AddFacet("forwarder", Repository.GetRepositoryID(typeof (Forwarder)), forwarder);
 
-      _conn.OnInvalidLoginCallback =
+      _conn.OnInvalidLogin =
         new ForwarderInvalidLoginCallback(userLogin, password, forwarder);
 
       IComponent member = component.GetIComponent();
