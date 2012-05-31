@@ -51,7 +51,7 @@ namespace tecgraf.openbus.demo.chainvalidation
       }
       catch (OpenBusException e) {
         Console.WriteLine("Erro no método bookMeeting ao obter a cadeia de chamadas:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return -1;
     }

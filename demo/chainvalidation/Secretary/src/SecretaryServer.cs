@@ -80,12 +80,12 @@ namespace tecgraf.openbus.demo.chainvalidation {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar a busca por um serviço no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar a busca por um serviço no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return null;
     }
@@ -179,7 +179,7 @@ namespace tecgraf.openbus.demo.chainvalidation {
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar registrar a oferta no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }
@@ -187,6 +187,7 @@ namespace tecgraf.openbus.demo.chainvalidation {
     internal static bool Login(string entity, byte[] privateKey) {
       try {
         _conn.LoginByCertificate(entity, privateKey);
+        return true;
       }
       catch (AlreadyLoggedInException) {
         Console.WriteLine(
@@ -209,12 +210,12 @@ namespace tecgraf.openbus.demo.chainvalidation {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar o login por certificado no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }
@@ -236,12 +237,12 @@ namespace tecgraf.openbus.demo.chainvalidation {
       catch (ServiceFailure exc) {
         Console.WriteLine(
           "Erro ao tentar remover a oferta do barramento: erro no serviço remoto. Causa:");
-        Console.WriteLine(exc.StackTrace);
+        Console.WriteLine(exc);
       }
       catch (Exception exc) {
         Console.WriteLine(
           "Erro inesperado ao tentar remover a oferta do barramento:");
-        Console.WriteLine(exc.StackTrace);
+        Console.WriteLine(exc);
       }
     }
   }

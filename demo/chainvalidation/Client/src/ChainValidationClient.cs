@@ -144,12 +144,12 @@ namespace tecgraf.openbus.demo.chainvalidation {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar a busca por um serviço no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar a busca por um serviço no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return null;
     }
@@ -157,6 +157,7 @@ namespace tecgraf.openbus.demo.chainvalidation {
     private static bool Login(string login, byte[] password, Connection conn) {
       try {
         conn.LoginByPassword(login, password);
+        return true;
       }
       catch (AlreadyLoggedInException) {
         Console.WriteLine(
@@ -171,12 +172,12 @@ namespace tecgraf.openbus.demo.chainvalidation {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar o login por senha no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }
