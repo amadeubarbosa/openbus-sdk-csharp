@@ -11,11 +11,18 @@ namespace tecgraf.openbus.demo.greetings {
   /// Cliente da demo greetings.
   /// </summary>
   internal static class GreetingsClient {
-    private static void Main() {
+    private static void Main(String[] args) {
+      // Obtém dados através dos argumentos
+      string host = args[0];
+      short port = Convert.ToInt16(args[1]);
+      string entity = args[2];
+      string password = args[3];
+      string greetingsEntity = args[4];
+
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection("localhost", 2089);
+      Connection conn = manager.CreateConnection(host, port);
       manager.DefaultConnection = conn;
 
       // Pergunta ao usuário qual língua deseja utilizar
@@ -29,7 +36,7 @@ namespace tecgraf.openbus.demo.greetings {
 
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-      if (!Login("tester", encoding.GetBytes("tester"), conn)) {
+      if (!Login(entity, encoding.GetBytes(password), conn)) {
         Console.ReadLine();
         Environment.Exit(1);
       }
@@ -40,7 +47,7 @@ namespace tecgraf.openbus.demo.greetings {
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
       // propriedades geradas automaticamente
       ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity",
-                                                      "TestEntity");
+                                                      greetingsEntity);
       if (!language.Equals("")) {
         ServiceProperty autoProp2 = new ServiceProperty(
           "openbus.component.name", language.ToLower());
@@ -133,12 +140,12 @@ namespace tecgraf.openbus.demo.greetings {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar a busca por um serviço no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar a busca por um serviço no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return null;
     }
@@ -146,6 +153,7 @@ namespace tecgraf.openbus.demo.greetings {
     private static bool Login(string login, byte[] password, Connection conn) {
       try {
         conn.LoginByPassword(login, password);
+        return true;
       }
       catch (AlreadyLoggedInException) {
         Console.WriteLine(
@@ -160,12 +168,12 @@ namespace tecgraf.openbus.demo.greetings {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar o login por senha no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }
