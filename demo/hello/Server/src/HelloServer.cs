@@ -17,18 +17,24 @@ namespace tecgraf.openbus.demo.hello {
     private static Connection _conn;
     private static ServiceOffer _offer;
 
-    private static void Main() {
+    private static void Main(String[] args) {
       // Registra handler para o caso do processo ser finalizado
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
+
+      // Obtém dados através dos argumentos
+      string host = args[0];
+      short port = Convert.ToInt16(args[1]);
+      string entity = args[2];
+      string key = args[3];
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection("localhost", 2089);
+      _conn = manager.CreateConnection(host, port);
       manager.DefaultConnection = _conn;
 
       // Lê a chave privada de um arquivo
-      byte[] privateKey = File.ReadAllBytes("DemoHello.key");
+      byte[] privateKey = File.ReadAllBytes(key);
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =
@@ -46,8 +52,7 @@ namespace tecgraf.openbus.demo.hello {
                                            };
 
       // Faz o login
-      const string login = "HelloServer";
-      if (!Login(login, privateKey)) {
+      if (!Login(entity, privateKey)) {
         Console.ReadLine();
         Environment.Exit(1);
       }
@@ -60,7 +65,7 @@ namespace tecgraf.openbus.demo.hello {
 
       // Registra uma callback para o caso do login ser perdido
       _conn.OnInvalidLogin = new HelloInvalidLoginCallback(
-        login, privateKey, ic, properties);
+        entity, privateKey, ic, properties);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine("Servidor no ar.");
@@ -87,7 +92,7 @@ namespace tecgraf.openbus.demo.hello {
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar registrar a oferta no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }
@@ -95,6 +100,7 @@ namespace tecgraf.openbus.demo.hello {
     internal static bool Login(string entity, byte[] privateKey) {
       try {
         _conn.LoginByCertificate(entity, privateKey);
+        return true;
       }
       catch (AlreadyLoggedInException) {
         Console.WriteLine(
@@ -117,12 +123,12 @@ namespace tecgraf.openbus.demo.hello {
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       catch (Exception e) {
         Console.WriteLine(
           "Erro inesperado ao tentar realizar o login por certificado no barramento:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }
@@ -144,12 +150,12 @@ namespace tecgraf.openbus.demo.hello {
       catch (ServiceFailure exc) {
         Console.WriteLine(
           "Erro ao tentar remover a oferta do barramento: erro no serviço remoto. Causa:");
-        Console.WriteLine(exc.StackTrace);
+        Console.WriteLine(exc);
       }
       catch (Exception exc) {
         Console.WriteLine(
           "Erro inesperado ao tentar remover a oferta do barramento:");
-        Console.WriteLine(exc.StackTrace);
+        Console.WriteLine(exc);
       }
     }
   }

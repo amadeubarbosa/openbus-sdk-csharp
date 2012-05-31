@@ -38,7 +38,7 @@ namespace tecgraf.openbus.demo.hello
       }
       catch (OpenBusException e) {
         Console.WriteLine("Erro no método sayHello ao obter a cadeia de chamadas:");
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
     }
     #endregion
