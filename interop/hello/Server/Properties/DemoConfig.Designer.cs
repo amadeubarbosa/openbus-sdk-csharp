@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace tecgraf.openbus.interop.hello.Properties {
+namespace tecgraf.openbus.interop.simple.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

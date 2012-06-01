@@ -8,7 +8,7 @@
     <ProjectGuid>{790104DB-FAB0-4E39-A62B-72A596C20A3D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.interop.hello</RootNamespace>
+    <RootNamespace>tecgraf.openbus.interop.simple</RootNamespace>
     <AssemblyName>HelloServer</AssemblyName>
     <FileUpgradeFlags>
     </FileUpgradeFlags>

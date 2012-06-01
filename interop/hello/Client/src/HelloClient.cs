@@ -5,9 +5,9 @@ using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
-using tecgraf.openbus.interop.hello.Properties;
+using tecgraf.openbus.interop.simple.Properties;
 
-namespace tecgraf.openbus.interop.hello
+namespace tecgraf.openbus.interop.simple
 {
   /// <summary>
   /// Cliente do teste de interoperabilidade hello.
