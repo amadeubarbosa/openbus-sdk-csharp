@@ -1,8 +1,9 @@
 using System;
+using tecgraf.openbus;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.exceptions;
 
-namespace tecgraf.openbus.demo.hello
+namespace hello
 {
   /// <summary>
   /// Implementação do servant Hello.
