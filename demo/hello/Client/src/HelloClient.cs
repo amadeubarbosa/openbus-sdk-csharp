@@ -75,7 +75,7 @@ namespace hello {
         try {
           MarshalByRefObject helloObj =
             serviceOfferDesc.service_ref.getFacet(
-              "IDL:tecgraf/openbus/demo/hello/Hello:1.0");
+              "IDL:Hello:1.0");
           if (helloObj == null) {
             Console.WriteLine(
               "Não foi possível encontrar uma faceta Hello na oferta.");
