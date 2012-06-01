@@ -5,12 +5,13 @@ using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using scs.core;
+using tecgraf.openbus;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.exceptions;
 
-namespace tecgraf.openbus.demo.greetings {
+namespace greetings {
   /// <summary>
   /// Servidor da demo greetings.
   /// </summary>

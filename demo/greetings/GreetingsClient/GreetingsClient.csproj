@@ -8,7 +8,7 @@
     <ProjectGuid>{075E6064-E2E4-41FC-B31B-F1C476B96F6E}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.demo.greetings</RootNamespace>
+    <RootNamespace>greetings</RootNamespace>
     <AssemblyName>GreetingsClient</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>

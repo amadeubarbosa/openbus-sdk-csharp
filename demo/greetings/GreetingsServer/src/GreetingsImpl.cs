@@ -1,6 +1,7 @@
 using System;
+using tecgraf.openbus;
 
-namespace tecgraf.openbus.demo.greetings
+namespace greetings
 {
   /// <summary>
   /// Implementação do servant Greetings.
