@@ -49,7 +49,7 @@ namespace tecgraf.openbus.interop.simple.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TestEntity")]
+        [global::System.Configuration.DefaultSettingValueAttribute("interop_hello_csharp")]
         public string entityName {
             get {
                 return ((string)(this["entityName"]));
@@ -73,7 +73,7 @@ namespace tecgraf.openbus.interop.simple.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("TestEntity.key")]
+        [global::System.Configuration.DefaultSettingValueAttribute("InteropHello.key")]
         public string xmlPrivateKey {
             get {
                 return ((string)(this["xmlPrivateKey"]));

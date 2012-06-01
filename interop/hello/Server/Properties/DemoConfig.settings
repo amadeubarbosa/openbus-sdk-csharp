@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.hello.Properties" GeneratedClassName="DemoConfig">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.simple.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
     <Setting Name="hostName" Type="System.String" Scope="User">
@@ -9,13 +9,13 @@
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
     <Setting Name="entityName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">TestEntity</Value>
+      <Value Profile="(Default)">interop_hello_csharp</Value>
     </Setting>
     <Setting Name="hostPort" Type="System.Int16" Scope="User">
       <Value Profile="(Default)">11000</Value>
     </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">TestEntity.key</Value>
+      <Value Profile="(Default)">InteropHello.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>
