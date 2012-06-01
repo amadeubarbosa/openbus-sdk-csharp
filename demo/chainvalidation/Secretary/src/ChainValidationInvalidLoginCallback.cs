@@ -1,4 +1,6 @@
-﻿namespace tecgraf.openbus.demo.chainvalidation {
+﻿using tecgraf.openbus;
+
+namespace chainvalidation {
   class ChainValidationInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;

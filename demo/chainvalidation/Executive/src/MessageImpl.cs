@@ -1,7 +1,8 @@
 using System;
+using tecgraf.openbus;
 using tecgraf.openbus.exceptions;
 
-namespace tecgraf.openbus.demo.chainvalidation
+namespace chainvalidation
 {
   /// <summary>
   /// Implementação do servant Message.

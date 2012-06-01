@@ -4,12 +4,13 @@ using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using scs.core;
+using tecgraf.openbus;
 using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.exceptions;
 
-namespace tecgraf.openbus.demo.chainvalidation {
+namespace chainvalidation {
   /// <summary>
   /// Servidor Executivo da demo ChainValidation.
   /// </summary>

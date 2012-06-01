@@ -1,7 +1,8 @@
 ﻿using scs.core;
+using tecgraf.openbus;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 
-namespace tecgraf.openbus.demo.chainvalidation {
+namespace chainvalidation {
   internal class ChainValidationInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;

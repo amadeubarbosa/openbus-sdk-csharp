@@ -8,7 +8,7 @@
     <ProjectGuid>{D4424475-59D9-4DBE-AC5B-4C73FB3052BB}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.demo.chainvalidation</RootNamespace>
+    <RootNamespace>chainvalidation</RootNamespace>
     <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
