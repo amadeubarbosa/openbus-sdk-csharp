@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.interop.hello;
+using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.multiplexing
 {
