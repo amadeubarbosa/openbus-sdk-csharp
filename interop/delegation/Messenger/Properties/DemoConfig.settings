@@ -1,18 +1,18 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Messenger.Properties" GeneratedClassName="DemoConfig">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.delegation.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
     <Setting Name="hostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">ubu</Value>
     </Setting>
     <Setting Name="hostPort" Type="System.Int16" Scope="User">
-      <Value Profile="(Default)">9000</Value>
+      <Value Profile="(Default)">11000</Value>
     </Setting>
-    <Setting Name="userLogin" Type="System.String" Scope="User">
-      <Value Profile="(Default)">messenger</Value>
+    <Setting Name="entity" Type="System.String" Scope="User">
+      <Value Profile="(Default)">interop_delegation_csharp_messenger</Value>
     </Setting>
-    <Setting Name="userPassword" Type="System.String" Scope="User">
-      <Value Profile="(Default)">messenger</Value>
+    <Setting Name="privateKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">InteropDelegation.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>

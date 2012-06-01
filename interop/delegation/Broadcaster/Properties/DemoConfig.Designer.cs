@@ -37,7 +37,7 @@ namespace tecgraf.openbus.interop.delegation.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("9000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("11000")]
         public short hostPort {
             get {
                 return ((short)(this["hostPort"]));
@@ -49,25 +49,25 @@ namespace tecgraf.openbus.interop.delegation.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("broadcaster")]
-        public string userLogin {
+        [global::System.Configuration.DefaultSettingValueAttribute("interop_delegation_csharp_broadcaster")]
+        public string entity {
             get {
-                return ((string)(this["userLogin"]));
+                return ((string)(this["entity"]));
             }
             set {
-                this["userLogin"] = value;
+                this["entity"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("broadcaster")]
-        public string userPassword {
+        [global::System.Configuration.DefaultSettingValueAttribute("InteropDelegation.key")]
+        public string privateKey {
             get {
-                return ((string)(this["userPassword"]));
+                return ((string)(this["privateKey"]));
             }
             set {
-                this["userPassword"] = value;
+                this["privateKey"] = value;
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -23,14 +24,13 @@ namespace tecgraf.openbus.interop.delegation {
       _conn = manager.CreateConnection(hostName, hostPort);
       manager.DefaultConnection = _conn;
 
-      string userLogin = DemoConfig.Default.userLogin;
-      string userPassword = DemoConfig.Default.userPassword;
-      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-      byte[] password = encoding.GetBytes(userPassword);
+      string entity = DemoConfig.Default.entity;
+      string privateKey = DemoConfig.Default.privateKey;
+      byte[] key = File.ReadAllBytes(privateKey);
 
-      _conn.LoginByPassword(userLogin, password);
+      _conn.LoginByCertificate(entity, key);
       _conn.OnInvalidLogin =
-        new MessengerInvalidLoginCallback(userLogin, password);
+        new MessengerInvalidLoginCallback(entity, key);
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Messenger", 1, 0, 0, ".net"));
@@ -49,7 +49,9 @@ namespace tecgraf.openbus.interop.delegation {
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
-      _offer.remove();
+      if (_offer != null) {
+        _offer.remove();
+      }
     }
   }
 }
