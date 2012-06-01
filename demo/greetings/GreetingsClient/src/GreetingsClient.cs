@@ -82,7 +82,8 @@ namespace greetings {
       Console.ReadLine();
     }
 
-    private static IEnumerable<Greetings> GetGreetings(ICollection<ServiceOfferDesc> offers) {
+    private static IEnumerable<Greetings> GetGreetings(
+      ICollection<ServiceOfferDesc> offers) {
       if (offers.Count < 1) {
         Console.WriteLine(
           "O serviço Greetings na língua especificada não se encontra no barramento.");
@@ -97,16 +98,14 @@ namespace greetings {
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         Console.WriteLine("Testando uma das ofertas recebidas...");
         try {
-          MarshalByRefObject greetObj = DateTime.Today.TimeOfDay.Hours < 12
+          int hours = DateTime.Now.TimeOfDay.Hours;
+          MarshalByRefObject greetObj = hours < 12
                                           ? serviceOfferDesc.service_ref.
-                                              getFacetByName(
-                                                "GoodMorning")
+                                              getFacetByName("GoodMorning")
                                           : serviceOfferDesc.service_ref.
-                                              getFacetByName(
-                                                DateTime.Today.TimeOfDay.Hours >=
-                                                18
-                                                  ? "GoodNight"
-                                                  : "GoodAfternoon");
+                                              getFacetByName(hours >= 18
+                                                               ? "GoodNight"
+                                                               : "GoodAfternoon");
           if (greetObj == null) {
             Console.WriteLine(
               "Não foi possível encontrar uma faceta Greetings na oferta.");
