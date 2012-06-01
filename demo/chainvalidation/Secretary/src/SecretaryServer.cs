@@ -105,8 +105,7 @@ namespace chainvalidation {
         Console.WriteLine("Testando uma das ofertas recebidas...");
         try {
           MarshalByRefObject executiveObj =
-            serviceOfferDesc.service_ref.getFacet(
-              "IDL:tecgraf/openbus/demo/chainvalidation/Message:1.0");
+            serviceOfferDesc.service_ref.getFacet("IDL:Message:1.0");
           if (executiveObj == null) {
             Console.WriteLine(
               "Não foi possível encontrar uma faceta Message na oferta.");

@@ -43,7 +43,7 @@ namespace chainvalidation {
       // utiliza o serviço
       bool failed = false;
       try {
-        executiveMsg.sendMessage("Hi!");
+        executiveMsg.sendMessage("Olá!");
       }
       catch (Unavailable) {
         failed = true;
@@ -53,7 +53,7 @@ namespace chainvalidation {
         Console.ReadLine();
         Environment.Exit(1);
       }
-      secretaryMessage.sendMessage("Hello, I would like to book a meeting with your boss.");
+      secretaryMessage.sendMessage("Olá, eu gostaria de agendar uma reunião com seu chefe.");
       int hour = secretaryMeeting.bookMeeting();
       Console.WriteLine(String.Format("Uma reunião foi agendada para as {0}h.", hour));
 
@@ -87,8 +87,7 @@ namespace chainvalidation {
         Console.WriteLine("Testando uma das ofertas recebidas...");
         try {
           MarshalByRefObject msgObj =
-            serviceOfferDesc.service_ref.getFacet(
-              "IDL:tecgraf/openbus/demo/chainvalidation/Message:1.0");
+            serviceOfferDesc.service_ref.getFacet("IDL:Message:1.0");
           if (msgObj == null) {
             Console.WriteLine(
               "Não foi possível encontrar uma faceta Message na oferta.");
@@ -107,8 +106,7 @@ namespace chainvalidation {
           }
           else {
             MarshalByRefObject mtnObj =
-              serviceOfferDesc.service_ref.getFacet(
-                "IDL:tecgraf/openbus/demo/chainvalidation/Meeting:1.0");
+              serviceOfferDesc.service_ref.getFacet("IDL:Meeting:1.0");
             if (mtnObj == null) {
               Console.WriteLine(
                 "Não foi possível encontrar uma faceta Meeting na oferta.");

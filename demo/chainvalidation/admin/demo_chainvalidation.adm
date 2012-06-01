@@ -26,25 +26,25 @@ Certificate {
 }
 
 Interface {
-  id = "IDL:tecgraf/openbus/demo/chainvalidation/Message:1.0",
+  id = "IDL:Message:1.0",
 }
 
 Interface {
-  id = "IDL:tecgraf/openbus/demo/chainvalidation/Meeting:1.0",
+  id = "IDL:Meeting:1.0",
 }
 
 Grant {
   id = "demo_chainvalidation_csharp_executive",
   interfaces = {
-	"IDL:tecgraf/openbus/demo/chainvalidation/Message:1.0",
+	"IDL:Message:1.0",
   }
 }
 
 Grant {
   id = "demo_chainvalidation_csharp_secretary",
   interfaces = {
-	"IDL:tecgraf/openbus/demo/chainvalidation/Meeting:1.0",
-	"IDL:tecgraf/openbus/demo/chainvalidation/Message:1.0",
+	"IDL:Meeting:1.0",
+	"IDL:Message:1.0",
   }
 }
 
