@@ -1,0 +1,26 @@
+﻿using scs.core;
+using tecgraf.openbus;
+using tecgraf.openbus.core.v2_00.services.offer_registry;
+
+namespace multiplexing {
+  internal class MultiplexingInvalidLoginCallback : InvalidLoginCallback {
+    private readonly string _entity;
+    private readonly byte[] _privKey;
+    private readonly IComponent _component;
+    private readonly ServiceProperty[] _properties;
+
+    public MultiplexingInvalidLoginCallback(string entity, byte[] privKey,
+                                            IComponent component,
+                                            ServiceProperty[] properties) {
+      _entity = entity;
+      _privKey = privKey;
+      _component = component;
+      _properties = properties;
+    }
+
+    public bool InvalidLogin(Connection conn) {
+      return MultiplexingServer.Login(conn, _entity, _privKey) &&
+             MultiplexingServer.Register(conn, _component, _properties);
+    }
+  }
+}
