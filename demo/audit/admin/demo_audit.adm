@@ -1,0 +1,45 @@
+Category {
+  id = "openbus_demos",
+  name = "Categoria para demos do OpenBus",
+}
+
+Entity {
+  id = "demo_audit_csharp_server",
+  category = "openbus_demos",
+  name = "Demo Audit do SDK CSharp - Server",
+}
+
+Certificate {
+  id = "demo_audit_csharp_server",
+  certificate = "DemoAudit.crt",
+}
+
+Entity {
+  id = "demo_audit_csharp_proxy",
+  category = "openbus_demos",
+  name = "Demo Audit do SDK CSharp - Proxy",
+}
+
+Certificate {
+  id = "demo_audit_csharp_proxy",
+  certificate = "DemoAudit.crt",
+}
+
+Interface {
+  id = "IDL:Hello:1.0",
+}
+
+Grant {
+  id = "demo_audit_csharp_server",
+  interfaces = {
+	"IDL:Hello:1.0",
+  }
+}
+
+Grant {
+  id = "demo_audit_csharp_proxy",
+  interfaces = {
+	"IDL:Hello:1.0",
+  }
+}
+
