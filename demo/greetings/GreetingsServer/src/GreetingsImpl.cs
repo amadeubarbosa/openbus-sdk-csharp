@@ -1,13 +1,12 @@
 using System;
 using tecgraf.openbus;
+using tecgraf.openbus.core.v2_00.services.access_control;
 
-namespace greetings
-{
+namespace greetings {
   /// <summary>
   /// Implementação do servant Greetings.
   /// </summary>  
-  public class GreetingsImpl : MarshalByRefObject, Greetings
-  {
+  public class GreetingsImpl : MarshalByRefObject, Greetings {
     #region Fields
 
     private readonly Connection _conn;
@@ -44,12 +43,16 @@ namespace greetings
       if (_language.Equals(Languages.English)) {
         return EnglishGreetings();
       }
-      return _language.Equals(Languages.Spanish) ? SpanishGreetings() : PortugueseGreetings();
+      return _language.Equals(Languages.Spanish)
+               ? SpanishGreetings()
+               : PortugueseGreetings();
     }
+
     #endregion
 
     private string EnglishGreetings() {
-      string caller = _conn.CallerChain.Callers[0].entity;
+      LoginInfo[] callers = _conn.CallerChain.Callers;
+      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Good morning {0}!", caller);
       }
@@ -60,7 +63,8 @@ namespace greetings
     }
 
     private string SpanishGreetings() {
-      string caller = _conn.CallerChain.Callers[0].entity;
+      LoginInfo[] callers = _conn.CallerChain.Callers;
+      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Buenos días {0}!", caller);
       }
@@ -71,7 +75,8 @@ namespace greetings
     }
 
     private string PortugueseGreetings() {
-      string caller = _conn.CallerChain.Callers[0].entity;
+      LoginInfo[] callers = _conn.CallerChain.Callers;
+      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Bom dia {0}!", caller);
       }
