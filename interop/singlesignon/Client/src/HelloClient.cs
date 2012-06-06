@@ -53,12 +53,11 @@ namespace tecgraf.openbus.interop.singlesignon {
 
       Console.WriteLine("Chamando a faceta IHello por este cliente.");
       // propriedades geradas automaticamente
-      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "TestEntity");
-      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "Hello");
+      ServiceProperty autoProp = new ServiceProperty("openbus.offer.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] { autoProp1, autoProp2, prop};
+      ServiceProperty[] properties = new[] { autoProp, prop };
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
 
       if (offers.Length < 1) {

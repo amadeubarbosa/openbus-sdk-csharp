@@ -28,8 +28,8 @@ namespace tecgraf.openbus.interop.multiplexing {
           conn.LoginByPassword(login, encoding.GetBytes(login));
 
           ServiceProperty[] serviceProperties = new ServiceProperty[2];
-          serviceProperties[0] = new ServiceProperty("openbus.component.facet",
-                                                     "Hello");
+          serviceProperties[0] = new ServiceProperty("openbus.component.interface",
+                                                     "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
           serviceProperties[1] = new ServiceProperty("offer.domain",
                                                      "Interoperability Tests");
           ServiceOfferDesc[] services =
@@ -43,7 +43,7 @@ namespace tecgraf.openbus.interop.multiplexing {
             }
             try {
               MarshalByRefObject obj =
-                offer.service_ref.getFacet("IDL:tecgraf/openbus/interop/hello/Hello:1.0");
+                offer.service_ref.getFacet("IDL:tecgraf/openbus/interop/simple/Hello:1.0");
               if (obj == null) {
                 Console.WriteLine(
                   "Não foi possível encontrar uma faceta com esse nome.");
