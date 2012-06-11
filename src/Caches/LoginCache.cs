@@ -55,6 +55,7 @@ namespace tecgraf.openbus.caches {
       time = DateTime.Now.Ticks;
       string[] idsArray = new string[ids.Count];
       ids.CopyTo(idsArray, 0);
+      conn.Manager.Requester = conn;
       int[] validities =
         conn.LoginRegistry.getValidity(idsArray);
       bool isValid = false;
@@ -129,6 +130,7 @@ namespace tecgraf.openbus.caches {
     private LoginInfo GetLoginInfo(ConnectionImpl conn, string loginId,
                                    out byte[] key) {
       try {
+        conn.Manager.Requester = conn;
         return conn.LoginRegistry.getLoginInfo(loginId, out key);
       }
       catch (InvalidLogins il) {
@@ -181,6 +183,7 @@ namespace tecgraf.openbus.caches {
         _cache.TryGetValue(key, out valid);
         if (!valid) {
           if (conn.Legacy) {
+            conn.Manager.Requester = conn;
             valid = conn.LegacyAccess.isValid(credential);
             _cache.TryAdd(key, valid);
           }
