@@ -6,17 +6,16 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.exceptions;
 
-namespace tecgraf.openbus.lease
-{
+namespace tecgraf.openbus.lease {
   /// <summary>
   /// Tarefa responsável por renovar o <i>lease</i> perante o serviço de 
   /// controle de acesso.
   /// </summary>
-  internal class RenewerTask
-  {
+  internal class RenewerTask {
     #region Fields
 
-    private static readonly ILog Logger = LogManager.GetLogger(typeof(RenewerTask));
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof (RenewerTask));
 
     /// <summary>
     /// A conexão que deve ser mantida ativa.
@@ -46,11 +45,13 @@ namespace tecgraf.openbus.lease
     /// <param name="accessControlFacet">A faceta do barramento que permite a 
     /// renovação de <i>lease</i>.</param>
     /// <param name="lease">O tempo de <i>lease</i>.</param>
-    public RenewerTask(Connection connection, AccessControl accessControlFacet, int lease) {
+    public RenewerTask(Connection connection, AccessControl accessControlFacet,
+                       int lease) {
       Lease = lease;
       _conn = connection as ConnectionImpl;
       if (_conn == null) {
-        throw new OpenBusException("Impossível criar renovador de credencial com conexão nula.");
+        throw new OpenBusException(
+          "Impossível criar renovador de credencial com conexão nula.");
       }
       _ac = accessControlFacet;
       _mustContinue = true;
@@ -66,7 +67,7 @@ namespace tecgraf.openbus.lease
     /// </summary>
     public void Run() {
       try {
-                _conn.Manager.Requester = _conn;
+        _conn.Manager.Requester = _conn;
         while (_mustContinue) {
           if (!_justStarted) {
             try {
@@ -74,16 +75,18 @@ namespace tecgraf.openbus.lease
                 Lease = _ac.renew();
               }
               catch (NO_PERMISSION) {
-                Logger.Debug("Impossível renovar a credencial pois a conexão não está logada no barramento.");
+                Logger.Debug(
+                  "Impossível renovar a credencial pois a conexão não está logada no barramento.");
               }
 
               if (Lease == 0) {
                 _mustContinue = false;
                 Logger.Warn("Falha na renovação da credencial.");
-                if (_conn.OnInvalidLogin != null)
+                if (_conn.OnInvalidLogin != null) {
                   Logger.Debug(_conn.OnInvalidLogin.InvalidLogin(_conn)
                                  ? "Credencial renovada após callback de login inválido."
                                  : "Credencial NÃO renovada após callback de login inválido.");
+                }
               }
               else {
                 StringBuilder msg = new StringBuilder();
@@ -96,7 +99,6 @@ namespace tecgraf.openbus.lease
             catch (AbstractCORBASystemException e) {
               Logger.Error("Erro ao tentar renovar o lease", e);
             }
-
           }
           if (_mustContinue) {
             Thread.Sleep(Lease * 1000);
