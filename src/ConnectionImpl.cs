@@ -831,19 +831,21 @@ namespace tecgraf.openbus {
 
     private void CheckChain(SignedCallChain signed, string callerId) {
       CallChain chain = UnmarshalCallChain(signed);
-      try {
-        if (!chain.target.Equals(Login.Value.id) ||
-            (!chain.callers[chain.callers.Length - 1].id.Equals(callerId)) ||
-            (!Crypto.VerifySignature(_busKey, signed.encoded, signed.signature))) {
-          Logger.Fatal("Cadeia de credencial inválida.");
-          throw new NO_PERMISSION(InvalidChainCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-      }
-      catch (InvalidOperationException) {
+      if (Login == null) {
         Logger.Fatal(
-          "Este servidor foi deslogado do barramento durante a interceptação desta requisição");
+          "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
         throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+      if(!chain.target.Equals(Login.Value.id)) {
+        Logger.Fatal("O login não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
+        throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+      if (!chain.callers[chain.callers.Length - 1].id.Equals(callerId) ||
+          (!Crypto.VerifySignature(_busKey, signed.encoded, signed.signature))) {
+        Logger.Fatal("Cadeia de credencial inválida.");
+        throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
     }
