@@ -74,6 +74,7 @@ namespace tecgraf.openbus.interceptors {
               continue;
             }
             SetCurrentConnection(ri, conn);
+            Manager.Requester = conn;
             try {
               if (Manager.LoginsCache.ValidateLogin(anyCredential, conn)) {
                 valid = true;
@@ -103,6 +104,7 @@ namespace tecgraf.openbus.interceptors {
           }
         }
         SetCurrentConnection(ri, conn);
+        Manager.Requester = conn;
         conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
@@ -112,6 +114,9 @@ namespace tecgraf.openbus.interceptors {
       }
       finally {
         RemoveCurrentConnection(ri);
+        // Talvez a linha abaixo não seja necessaria, pois o PICurrent deveria
+        // acabar junto com a thread de interceptação (Manager.Requester usa PICurrent).
+        Manager.Requester = null;
         if (conn != null) {
           ri.set_slot(ReceivingConnectionSlotId, conn);
         }
