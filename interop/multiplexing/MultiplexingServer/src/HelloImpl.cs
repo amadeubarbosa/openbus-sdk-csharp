@@ -6,7 +6,7 @@ using tecgraf.openbus.interop.simple;
 namespace tecgraf.openbus.interop.multiplexing
 {
   /// <summary>
-  /// Implementação do servant IHello.
+  /// Implementação do servant Hello.
   /// </summary>  
   public class HelloImpl : MarshalByRefObject, Hello
   {
@@ -25,7 +25,7 @@ namespace tecgraf.openbus.interop.multiplexing
 
     #endregion
 
-    #region IHello Members
+    #region Hello Members
 
     public void sayHello()
     {
