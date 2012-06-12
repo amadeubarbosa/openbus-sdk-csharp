@@ -43,15 +43,18 @@ namespace multiplexing {
         new DefaultComponentContext(new ComponentId("english", 1, 0, 0, ".net"));
       english.AddFacet("GoodMorning",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn, GreetingsImpl.Languages.English,
+                       new GreetingsImpl(conn.BusId,
+                                         GreetingsImpl.Languages.English,
                                          GreetingsImpl.Period.Morning));
       english.AddFacet("GoodAfternoon",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn, GreetingsImpl.Languages.English,
+                       new GreetingsImpl(conn.BusId,
+                                         GreetingsImpl.Languages.English,
                                          GreetingsImpl.Period.Afternoon));
       english.AddFacet("GoodNight",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn, GreetingsImpl.Languages.English,
+                       new GreetingsImpl(conn.BusId,
+                                         GreetingsImpl.Languages.English,
                                          GreetingsImpl.Period.Night));
 
       // Cria o componente que responde em espanhol
@@ -59,15 +62,18 @@ namespace multiplexing {
         new DefaultComponentContext(new ComponentId("spanish", 1, 0, 0, ".net"));
       spanish.AddFacet("GoodMorning",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2, GreetingsImpl.Languages.Spanish,
+                       new GreetingsImpl(conn2.BusId,
+                                         GreetingsImpl.Languages.Spanish,
                                          GreetingsImpl.Period.Morning));
       spanish.AddFacet("GoodAfternoon",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2, GreetingsImpl.Languages.Spanish,
+                       new GreetingsImpl(conn2.BusId,
+                                         GreetingsImpl.Languages.Spanish,
                                          GreetingsImpl.Period.Afternoon));
       spanish.AddFacet("GoodNight",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2, GreetingsImpl.Languages.Spanish,
+                       new GreetingsImpl(conn2.BusId,
+                                         GreetingsImpl.Languages.Spanish,
                                          GreetingsImpl.Period.Night));
 
       // Cria o componente que responde em português
@@ -76,17 +82,17 @@ namespace multiplexing {
                                                     ".net"));
       portuguese.AddFacet("GoodMorning",
                           Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn3,
+                          new GreetingsImpl(conn3.BusId,
                                             GreetingsImpl.Languages.Portuguese,
                                             GreetingsImpl.Period.Morning));
       portuguese.AddFacet("GoodAfternoon",
                           Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn3,
+                          new GreetingsImpl(conn3.BusId,
                                             GreetingsImpl.Languages.Portuguese,
                                             GreetingsImpl.Period.Afternoon));
       portuguese.AddFacet("GoodNight",
                           Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn3,
+                          new GreetingsImpl(conn3.BusId,
                                             GreetingsImpl.Languages.Portuguese,
                                             GreetingsImpl.Period.Night));
 
@@ -125,6 +131,9 @@ namespace multiplexing {
                                                                   portugueseIC,
                                                                   properties);
 
+      // Escolhe uma conexão para atender requisições
+      manager.SetDispatcher(conn2);
+
       // Registra as ofertas no barramento das três conexões
       if (!Register(conn, englishIC, properties)) {
         Console.ReadLine();
@@ -138,9 +147,6 @@ namespace multiplexing {
         Console.ReadLine();
         Environment.Exit(1);
       }
-
-      // Escolhe uma conexão para atender requisições
-      manager.SetDispatcher(conn2);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine("Servidor no ar.");

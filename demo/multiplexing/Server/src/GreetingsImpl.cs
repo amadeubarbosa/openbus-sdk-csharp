@@ -9,9 +9,9 @@ namespace multiplexing {
   public class GreetingsImpl : MarshalByRefObject, Greetings {
     #region Fields
 
-    private readonly Connection _conn;
     private readonly Languages _language;
     private readonly Period _period;
+    private string _busId;
 
     public enum Languages {
       English,
@@ -29,8 +29,8 @@ namespace multiplexing {
 
     #region Constructors
 
-    public GreetingsImpl(Connection conn, Languages language, Period period) {
-      _conn = conn;
+    public GreetingsImpl(string busId, Languages language, Period period) {
+      _busId = busId;
       _language = language;
       _period = period;
     }
@@ -51,8 +51,9 @@ namespace multiplexing {
     #endregion
 
     private string EnglishGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
+      Connection conn = ORBInitializer.Manager.GetDispatcher(_busId);
+      LoginInfo[] callers = conn.CallerChain.Callers;
+      string caller = conn.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Good morning {0}!", caller);
       }
@@ -63,8 +64,9 @@ namespace multiplexing {
     }
 
     private string SpanishGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
+      Connection conn = ORBInitializer.Manager.GetDispatcher(_busId);
+      LoginInfo[] callers = conn.CallerChain.Callers;
+      string caller = conn.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Buenos días {0}!", caller);
       }
@@ -75,8 +77,9 @@ namespace multiplexing {
     }
 
     private string PortugueseGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
+      Connection conn = ORBInitializer.Manager.GetDispatcher(_busId);
+      LoginInfo[] callers = conn.CallerChain.Callers;
+      string caller = conn.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Bom dia {0}!", caller);
       }
