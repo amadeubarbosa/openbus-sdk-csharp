@@ -44,10 +44,6 @@ namespace tecgraf.openbus.interop.multiplexing {
         component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
                            new HelloImpl(Conns));
 
-        // set incoming connection
-        manager.SetDispatcher(conn1AtBus1);
-        manager.SetDispatcher(connAtBus2);
-
         // login to the bus
         System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
         manager.Requester = conn1AtBus1;
@@ -57,6 +53,10 @@ namespace tecgraf.openbus.interop.multiplexing {
         manager.Requester = connAtBus2;
         connAtBus2.LoginByPassword("conn3", encoding.GetBytes("conn3"));
         manager.Requester = null;
+
+        // set incoming connection
+        manager.SetDispatcher(conn1AtBus1);
+        manager.SetDispatcher(connAtBus2);
 
         RegisterThreadStart start1 = new RegisterThreadStart(conn1AtBus1,
                                                              manager,

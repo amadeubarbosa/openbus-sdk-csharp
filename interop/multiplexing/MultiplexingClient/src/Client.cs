@@ -22,10 +22,10 @@ namespace tecgraf.openbus.interop.multiplexing {
 
         foreach (short port in ports) {
           Connection conn = manager.CreateConnection(hostName, port);
-          manager.SetDispatcher(conn);
           manager.Requester = conn;
           String login = "interop@" + port;
           conn.LoginByPassword(login, encoding.GetBytes(login));
+          manager.SetDispatcher(conn);
 
           ServiceProperty[] serviceProperties = new ServiceProperty[2];
           serviceProperties[0] = new ServiceProperty("openbus.component.interface",
