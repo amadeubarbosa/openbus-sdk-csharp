@@ -114,6 +114,8 @@ namespace tecgraf.openbus {
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
       _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
+      Login = null;
+      EraseBusIdAndKey();
       GetBusFacets();
     }
 
@@ -152,9 +154,6 @@ namespace tecgraf.openbus {
         return;
       }
 
-      BusId = _acs.busid;
-      _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
-
       if (Legacy) {
         try {
           IComponent legacy = RemotingServices.Connect(
@@ -187,6 +186,16 @@ namespace tecgraf.openbus {
       }
     }
 
+    private void GetBusIdAndKey() {
+      BusId = _acs.busid;
+      _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
+    }
+
+    private void EraseBusIdAndKey() {
+      BusId = null;
+      _busKey = null;
+    }
+
     private AsymmetricCipherKeyPair InternalKey { get; set; }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
@@ -194,6 +203,8 @@ namespace tecgraf.openbus {
         login.cancel();
         throw new AlreadyLoggedInException();
       }
+
+      GetBusIdAndKey();
 
       byte[] encrypted;
       byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -223,8 +234,12 @@ namespace tecgraf.openbus {
     }
 
     private void LocalLogout() {
-      Login = null;
       StopLeaseRenewer();
+      if (ReferenceEquals(Manager.GetDispatcher(BusId), this)) {
+        Manager.ClearDispatcher(BusId);
+      }
+      Login = null;
+      EraseBusIdAndKey();
       _outgoingLogin2Session.Clear();
       _profile2Login.Clear();
       _sessionId2Session.Clear();
@@ -273,6 +288,9 @@ namespace tecgraf.openbus {
 
       try {
         Manager.IgnoreCurrentThread();
+
+        GetBusIdAndKey();
+
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
         try {

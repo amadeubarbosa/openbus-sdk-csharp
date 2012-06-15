@@ -149,7 +149,12 @@ namespace tecgraf.openbus.Test {
     public void BusIdTest() {
       lock (this) {
         Connection conn = CreateConnection();
+        Assert.IsNull(conn.BusId);
+        conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.BusId);
+        _manager.DefaultConnection = conn;
+        Assert.IsTrue(conn.Logout());
+        _manager.DefaultConnection = null;
       }
     }
 
@@ -282,7 +287,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByCertificate(_entity, _privKey);
         Assert.IsNotNull(conn.Login);
-        conn.Logout();
+        Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.Login);
         // login repetido
         failed = false;
@@ -300,7 +305,7 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
-        conn.Logout();
+        Assert.IsTrue(conn.Logout());
       }
     }
 
@@ -376,7 +381,12 @@ namespace tecgraf.openbus.Test {
         Connection conn = CreateConnection();
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
+        string busId = conn.BusId;
+        _manager.SetDispatcher(conn);
+        Assert.AreEqual(_manager.GetDispatcher(busId), conn);
         Assert.IsTrue(conn.Logout());
+        Assert.IsNull(_manager.GetDispatcher(busId));
+        Assert.IsNull(conn.BusId);
         Assert.IsNull(conn.Login);
         bool failed = false;
         try {

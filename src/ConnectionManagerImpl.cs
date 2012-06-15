@@ -116,6 +116,9 @@ namespace tecgraf.openbus {
     }
 
     public void SetDispatcher(Connection conn) {
+      if ((conn == null) || (conn.Login == null) || conn.BusId == null) {
+        throw new NotLoggedInException();
+      }
       lock (_incomingDispatcherConn) {
         Connection removed;
         _incomingDispatcherConn.TryRemove(conn.BusId, out removed);

@@ -101,9 +101,10 @@ namespace tecgraf.openbus {
      *************************************************************************/
 
     /// <summary>
-    /// Efetua logout no barramento. Retorna verdadeiro se o processo de logout
-    /// for concluído com êxito e falso se a conexão já estiver deslogada 
-    /// (login inválido).
+    /// Efetua logout no barramento. Se a sua conexão for uma conexão de 
+    /// despacho, remove essa conexão como despachante do ConnectionManager.
+    /// Retorna verdadeiro se o processo de logout for concluído com êxito e
+    /// falso se a conexão já estiver deslogada (login inválido).
     /// </summary>
     bool Logout();
 
