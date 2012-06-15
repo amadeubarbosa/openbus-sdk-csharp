@@ -11,7 +11,7 @@ namespace multiplexing {
 
     private readonly Languages _language;
     private readonly Period _period;
-    private string _busId;
+    private readonly Connection _dispatcher;
 
     public enum Languages {
       English,
@@ -29,8 +29,8 @@ namespace multiplexing {
 
     #region Constructors
 
-    public GreetingsImpl(string busId, Languages language, Period period) {
-      _busId = busId;
+    public GreetingsImpl(Connection dispatcher, Languages language, Period period) {
+      _dispatcher = dispatcher;
       _language = language;
       _period = period;
     }
@@ -51,9 +51,8 @@ namespace multiplexing {
     #endregion
 
     private string EnglishGreetings() {
-      Connection conn = ORBInitializer.Manager.GetDispatcher(_busId);
-      LoginInfo[] callers = conn.CallerChain.Callers;
-      string caller = conn.CallerChain.Callers[callers.Length - 1].entity;
+      LoginInfo[] callers = _dispatcher.CallerChain.Callers;
+      string caller = _dispatcher.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Good morning {0}!", caller);
       }
@@ -64,9 +63,8 @@ namespace multiplexing {
     }
 
     private string SpanishGreetings() {
-      Connection conn = ORBInitializer.Manager.GetDispatcher(_busId);
-      LoginInfo[] callers = conn.CallerChain.Callers;
-      string caller = conn.CallerChain.Callers[callers.Length - 1].entity;
+      LoginInfo[] callers = _dispatcher.CallerChain.Callers;
+      string caller = _dispatcher.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Buenos días {0}!", caller);
       }
@@ -77,9 +75,8 @@ namespace multiplexing {
     }
 
     private string PortugueseGreetings() {
-      Connection conn = ORBInitializer.Manager.GetDispatcher(_busId);
-      LoginInfo[] callers = conn.CallerChain.Callers;
-      string caller = conn.CallerChain.Callers[callers.Length - 1].entity;
+      LoginInfo[] callers = _dispatcher.CallerChain.Callers;
+      string caller = _dispatcher.CallerChain.Callers[callers.Length - 1].entity;
       if (_period.Equals(Period.Morning)) {
         return String.Format("Bom dia {0}!", caller);
       }

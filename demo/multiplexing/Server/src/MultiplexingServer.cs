@@ -38,22 +38,41 @@ namespace multiplexing {
       // Lê a chave privada de um arquivo
       byte[] privateKey = File.ReadAllBytes(key);
 
+      // Faz o login das três conexões
+      if (!Login(conn, entity, privateKey)) {
+        Console.ReadLine();
+        Environment.Exit(1);
+      }
+      if (!Login(conn2, entity, privateKey)) {
+        Console.ReadLine();
+        Environment.Exit(1);
+      }
+      if (!Login(conn3, entity, privateKey)) {
+        Console.ReadLine();
+        Environment.Exit(1);
+      }
+
+      // Escolhe uma conexão para atender requisições
+      manager.SetDispatcher(conn2);
+      // Se ocorrer um logout, o dispatcher será removido, portanto colocamos a conn2 também como default
+      manager.DefaultConnection = conn2;
+
       // Cria o componente que responde em inglês
       ComponentContext english =
         new DefaultComponentContext(new ComponentId("english", 1, 0, 0, ".net"));
       english.AddFacet("GoodMorning",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn.BusId,
+                       new GreetingsImpl(conn2,
                                          GreetingsImpl.Languages.English,
                                          GreetingsImpl.Period.Morning));
       english.AddFacet("GoodAfternoon",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn.BusId,
+                       new GreetingsImpl(conn2,
                                          GreetingsImpl.Languages.English,
                                          GreetingsImpl.Period.Afternoon));
       english.AddFacet("GoodNight",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn.BusId,
+                       new GreetingsImpl(conn2,
                                          GreetingsImpl.Languages.English,
                                          GreetingsImpl.Period.Night));
 
@@ -62,17 +81,17 @@ namespace multiplexing {
         new DefaultComponentContext(new ComponentId("spanish", 1, 0, 0, ".net"));
       spanish.AddFacet("GoodMorning",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2.BusId,
+                       new GreetingsImpl(conn2,
                                          GreetingsImpl.Languages.Spanish,
                                          GreetingsImpl.Period.Morning));
       spanish.AddFacet("GoodAfternoon",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2.BusId,
+                       new GreetingsImpl(conn2,
                                          GreetingsImpl.Languages.Spanish,
                                          GreetingsImpl.Period.Afternoon));
       spanish.AddFacet("GoodNight",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2.BusId,
+                       new GreetingsImpl(conn2,
                                          GreetingsImpl.Languages.Spanish,
                                          GreetingsImpl.Period.Night));
 
@@ -82,17 +101,17 @@ namespace multiplexing {
                                                     ".net"));
       portuguese.AddFacet("GoodMorning",
                           Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn3.BusId,
+                          new GreetingsImpl(conn2,
                                             GreetingsImpl.Languages.Portuguese,
                                             GreetingsImpl.Period.Morning));
       portuguese.AddFacet("GoodAfternoon",
                           Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn3.BusId,
+                          new GreetingsImpl(conn2,
                                             GreetingsImpl.Languages.Portuguese,
                                             GreetingsImpl.Period.Afternoon));
       portuguese.AddFacet("GoodNight",
                           Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn3.BusId,
+                          new GreetingsImpl(conn2,
                                             GreetingsImpl.Languages.Portuguese,
                                             GreetingsImpl.Period.Night));
 
@@ -105,34 +124,19 @@ namespace multiplexing {
       IComponent spanishIC = spanish.GetIComponent();
       IComponent portugueseIC = portuguese.GetIComponent();
 
-      // Faz o login das três conexões e adiciona as callbacks de recuperação de login
-      if (!Login(conn, entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
+      // adiciona as callbacks de recuperação de login
       conn.OnInvalidLogin = new MultiplexingInvalidLoginCallback(entity,
                                                                  privateKey,
                                                                  englishIC,
                                                                  properties);
-      if (!Login(conn2, entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
       conn2.OnInvalidLogin = new MultiplexingInvalidLoginCallback(entity,
                                                                   privateKey,
                                                                   spanishIC,
                                                                   properties);
-      if (!Login(conn3, entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
       conn3.OnInvalidLogin = new MultiplexingInvalidLoginCallback(entity,
                                                                   privateKey,
                                                                   portugueseIC,
                                                                   properties);
-
-      // Escolhe uma conexão para atender requisições
-      manager.SetDispatcher(conn2);
 
       // Registra as ofertas no barramento das três conexões
       if (!Register(conn, englishIC, properties)) {
