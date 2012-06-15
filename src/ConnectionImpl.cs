@@ -695,26 +695,27 @@ namespace tecgraf.openbus {
     private SignedCallChain CreateCredentialSignedCallChain(string remoteLogin) {
       SignedCallChain signed;
       CallerChainImpl chain = JoinedChain as CallerChainImpl;
-      if ((chain == null) &&
-          ((remoteLogin.Equals(BusId)) || (remoteLogin.Equals(String.Empty)))) {
-        return CreateInvalidCredentialSignedCallChain();
-      }
-      if (chain == null) {
-        // na chamada a signChainFor vai criar uma nova chain e assinar
-        signed = _acs.signChainFor(remoteLogin);
-      }
-      else {
-        lock (chain) {
-          if (!remoteLogin.Equals(BusId)) {
+      if (!remoteLogin.Equals(BusLogin.ConstVal)) {
+        // esta requisição não é para o barramento, então preciso assinar essa cadeia.
+        if (chain == null) {
+          // na chamada a signChainFor vai criar uma nova chain e assinar
+          signed = _acs.signChainFor(remoteLogin);
+        }
+        else {
+          lock (chain) {
             if (!chain.Joined.TryGetValue(remoteLogin, out signed)) {
               signed = _acs.signChainFor(remoteLogin);
               chain.Joined.TryAdd(remoteLogin, signed);
             }
           }
-          else {
-            signed = chain.Signed;
-          }
         }
+      }
+      else {
+        // requisição para o barramento
+        if (chain == null) {
+          return CreateInvalidCredentialSignedCallChain();
+        }
+        signed = chain.Signed;
       }
       return signed;
     }
