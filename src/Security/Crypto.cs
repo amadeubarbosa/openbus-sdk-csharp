@@ -12,7 +12,7 @@ namespace tecgraf.openbus.security {
   /// <summary>
   /// Classe responsável pela segurança do OpenBus.
   /// </summary>
-  public static class Crypto {
+  internal static class Crypto {
     #region Fields
 
     private const string CipherAlgorithm = "RSA/ECB/PKCS1Padding";
