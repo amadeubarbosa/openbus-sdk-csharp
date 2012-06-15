@@ -133,7 +133,8 @@ namespace tecgraf.openbus.Test {
         try {
           conn.Offers.findServices(new[] {new ServiceProperty("a", "b")});
         }
-        catch (NO_PERMISSION) {
+        catch (NO_PERMISSION e) {
+          Assert.AreEqual(e.Minor, NoLoginCode.ConstVal);
         }
         catch (Exception e) {
           Assert.Fail(e.Message);
