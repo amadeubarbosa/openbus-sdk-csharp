@@ -44,15 +44,14 @@ namespace tecgraf.openbus.interop.singlesignon
         OrbServices.GetSingleton().string_to_object(reference) as LoginProcess;
       conn.LoginBySingleSignOn(login, secret);
 
-      Console.WriteLine("Login por single sign on concluído, procurando faceta IHello.");
+      Console.WriteLine("Login por single sign on concluído, procurando faceta Hello.");
 
       // propriedades geradas automaticamente
-      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity", "TestEntity");
-      ServiceProperty autoProp2 = new ServiceProperty("openbus.component.facet", "Hello");
+      ServiceProperty autoProp = new ServiceProperty("openbus.component.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] { autoProp1, autoProp2, prop};
+      ServiceProperty[] properties = new[] { autoProp, prop};
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
 
       if (offers.Length < 1) {
@@ -71,7 +70,7 @@ namespace tecgraf.openbus.interop.singlesignon
           }
           Hello hello = helloObj as Hello;
           if (hello == null) {
-            Console.WriteLine("Faceta encontrada não implementa IHello.");
+            Console.WriteLine("Faceta encontrada não implementa Hello.");
             continue;
           }
           hello.sayHello();

@@ -51,9 +51,9 @@ namespace tecgraf.openbus.interop.singlesignon {
         outfile.Write(OrbServices.GetSingleton().object_to_string(login));
       }
 
-      Console.WriteLine("Chamando a faceta IHello por este cliente.");
+      Console.WriteLine("Chamando a faceta Hello por este cliente.");
       // propriedades geradas automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.offer.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+      ServiceProperty autoProp = new ServiceProperty("openbus.component.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
@@ -76,7 +76,7 @@ namespace tecgraf.openbus.interop.singlesignon {
           }
           Hello hello = helloObj as Hello;
           if (hello == null) {
-            Console.WriteLine("Faceta encontrada não implementa IHello.");
+            Console.WriteLine("Faceta encontrada não implementa Hello.");
             continue;
           }
           hello.sayHello();

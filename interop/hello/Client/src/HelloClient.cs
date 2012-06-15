@@ -38,7 +38,7 @@ namespace tecgraf.openbus.interop.simple
       Console.ReadLine();
 
       // propriedades geradas automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.offer.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+      ServiceProperty autoProp = new ServiceProperty("openbus.component.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
 
