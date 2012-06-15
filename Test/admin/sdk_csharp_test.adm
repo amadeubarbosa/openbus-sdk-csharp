@@ -1,0 +1,21 @@
+Category {
+  id = "openbus_sdk_tests",
+  name = "Categoria para testes do SDK",
+}
+
+Entity {
+  id = "sdk_unit_tests_csharp",
+  category = "openbus_sdk_tests",
+  name = "Testes unitários do SDK CSharp",
+}
+
+Certificate {
+  id = "sdk_unit_tests_csharp",
+  certificate = "SDKUnitTestCertificate_CSharp.crt",
+}
+
+Entity {
+  id = "sdk_unit_tests_no_cert_csharp",
+  category = "openbus_sdk_tests",
+  name = "Entidade sem certificado para testes unitários do SDK CSharp",
+}
