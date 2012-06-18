@@ -107,7 +107,6 @@ namespace tecgraf.openbus.Test {
 
     private static Connection CreateConnection() {
       Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-      _manager.DefaultConnection = conn;
       return conn;
     }
 
@@ -168,8 +167,10 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
+        _manager.Requester = conn;
         conn.Logout();
         Assert.IsNull(conn.Login);
+        _manager.Requester = null;
       }
     }
 
@@ -210,8 +211,10 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
+        _manager.Requester = conn;
         conn.Logout();
         Assert.IsNull(conn.Login);
+        _manager.Requester = null;
         // login repetido
         failed = false;
         try {
@@ -228,7 +231,9 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
+        _manager.Requester = conn;
         conn.Logout();
+        _manager.Requester = null;
       }
     }
 
@@ -287,8 +292,10 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByCertificate(_entity, _privKey);
         Assert.IsNotNull(conn.Login);
+        _manager.Requester = conn;
         Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.Login);
+        _manager.Requester = null;
         // login repetido
         failed = false;
         try {
@@ -305,7 +312,9 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
+        _manager.Requester = conn;
         Assert.IsTrue(conn.Logout());
+        _manager.Requester = null;
       }
     }
 
@@ -317,15 +326,15 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Connection conn2 = CreateConnection();
-        _manager.Requester = conn;
         conn.LoginByPassword(_login, _password);
         // segredo errado
         bool failed = false;
         byte[] secret;
         LoginProcess login;
         try {
+          _manager.Requester = conn;
           login = conn.StartSingleSignOn(out secret);
-          _manager.Requester = conn2;
+          _manager.Requester = null;
           conn2.LoginBySingleSignOn(login, new byte[0]);
         }
         catch (WrongSecretException) {
@@ -340,17 +349,19 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn2.Login);
         _manager.Requester = conn;
         login = conn.StartSingleSignOn(out secret);
-        _manager.Requester = conn2;
+        _manager.Requester = null;
         conn2.LoginBySingleSignOn(login, secret);
         Assert.IsNotNull(conn2.Login);
+        _manager.Requester = conn2;
         conn2.Logout();
         Assert.IsNull(conn2.Login);
+        _manager.Requester = null;
         // login repetido
         failed = false;
         try {
           _manager.Requester = conn;
           login = conn.StartSingleSignOn(out secret);
-          _manager.Requester = conn2;
+          _manager.Requester = null;
           conn2.LoginBySingleSignOn(login, secret);
           Assert.IsNotNull(conn2.Login);
           conn2.LoginBySingleSignOn(login, secret);
@@ -369,6 +380,7 @@ namespace tecgraf.openbus.Test {
         conn2.Logout();
         _manager.Requester = conn;
         conn.Logout();
+        _manager.Requester = null;
       }
     }
 
@@ -379,6 +391,7 @@ namespace tecgraf.openbus.Test {
     public void LogoutTest() {
       lock (this) {
         Connection conn = CreateConnection();
+        _manager.Requester = conn;
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
         string busId = conn.BusId;
@@ -406,6 +419,7 @@ namespace tecgraf.openbus.Test {
             e);
         }
         Assert.IsTrue(failed, "Uma busca sem login foi bem-sucedida.");
+        _manager.Requester = null;
       }
     }
 
