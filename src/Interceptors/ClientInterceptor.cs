@@ -57,12 +57,15 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void receive_exception(ClientRequestInfo ri) {
-      ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
-      if (conn != null) {
-        conn.ReceiveException(ri);
-        return;
+      if (!Manager.IsCurrentThreadIgnored()) {
+        ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
+        if (conn != null) {
+          conn.ReceiveException(ri);
+          return;
+        }
+        Logger.Fatal("Sem conexão ao barramento para receber uma exceção.");
       }
-      Logger.Fatal("Sem conexão ao barramento para receber uma exceção.");
+      Logger.Info("O login está sendo ignorado para receber uma exceção.");
     }
 
     #endregion
