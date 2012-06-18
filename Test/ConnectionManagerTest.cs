@@ -128,10 +128,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    /// Testes do método GetBusDispatcher
+    /// Testes do método GetDispatcher
     ///</summary>
     [TestMethod]
-    public void GetBusDispatcherTest() {
+    public void GetDispatcherTest() {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         conn.LoginByPassword(_login, _password);
@@ -155,10 +155,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    /// Testes do método RemoveBusDispatcher
+    /// Testes do método ClearDispatcher
     ///</summary>
     [TestMethod]
-    public void RemoveBusDispatcherTest() {
+    public void ClearDispatcherTest() {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
@@ -178,10 +178,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    /// Testes do método SetupBusDispatcher
+    /// Testes do método SetDispatcher
     ///</summary>
     [TestMethod]
-    public void SetupBusDispatcherTest() {
+    public void SetDispatcherTest() {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         bool failed = false;
@@ -233,13 +233,12 @@ namespace tecgraf.openbus.Test {
         _manager.DefaultConnection = null;
       }
     }
-//TODO mudar nomes de testes de nomes de métodos que mudaram.
 
     /// <summary>
-    /// Teste da auto-propriedade ThreadRequester
+    /// Teste da auto-propriedade Requester
     ///</summary>
     [TestMethod]
-    public void ThreadRequesterTest() {
+    public void RequesterTest() {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
         conn.LoginByPassword(_login, _password);
