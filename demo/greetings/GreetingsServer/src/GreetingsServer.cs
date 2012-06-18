@@ -43,15 +43,15 @@ namespace greetings {
         new DefaultComponentContext(new ComponentId("english", 1, 0, 0, ".net"));
       english.AddFacet("GoodMorning",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(_conn, GreetingsImpl.Languages.English,
+                       new GreetingsImpl(_conn, GreetingsImpl.Language.English,
                                          GreetingsImpl.Period.Morning));
       english.AddFacet("GoodAfternoon",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(_conn, GreetingsImpl.Languages.English,
+                       new GreetingsImpl(_conn, GreetingsImpl.Language.English,
                                          GreetingsImpl.Period.Afternoon));
       english.AddFacet("GoodNight",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(_conn, GreetingsImpl.Languages.English,
+                       new GreetingsImpl(_conn, GreetingsImpl.Language.English,
                                          GreetingsImpl.Period.Night));
 
       // Cria o componente que responde em espanhol
@@ -59,15 +59,15 @@ namespace greetings {
         new DefaultComponentContext(new ComponentId("spanish", 1, 0, 0, ".net"));
       spanish.AddFacet("GoodMorning",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(_conn, GreetingsImpl.Languages.Spanish,
+                       new GreetingsImpl(_conn, GreetingsImpl.Language.Spanish,
                                          GreetingsImpl.Period.Morning));
       spanish.AddFacet("GoodAfternoon",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(_conn, GreetingsImpl.Languages.Spanish,
+                       new GreetingsImpl(_conn, GreetingsImpl.Language.Spanish,
                                          GreetingsImpl.Period.Afternoon));
       spanish.AddFacet("GoodNight",
                        Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(_conn, GreetingsImpl.Languages.Spanish,
+                       new GreetingsImpl(_conn, GreetingsImpl.Language.Spanish,
                                          GreetingsImpl.Period.Night));
 
       // Cria o componente que responde em português
@@ -77,17 +77,17 @@ namespace greetings {
       portuguese.AddFacet("GoodMorning",
                           Repository.GetRepositoryID(typeof (Greetings)),
                           new GreetingsImpl(_conn,
-                                            GreetingsImpl.Languages.Portuguese,
+                                            GreetingsImpl.Language.Portuguese,
                                             GreetingsImpl.Period.Morning));
       portuguese.AddFacet("GoodAfternoon",
                           Repository.GetRepositoryID(typeof (Greetings)),
                           new GreetingsImpl(_conn,
-                                            GreetingsImpl.Languages.Portuguese,
+                                            GreetingsImpl.Language.Portuguese,
                                             GreetingsImpl.Period.Afternoon));
       portuguese.AddFacet("GoodNight",
                           Repository.GetRepositoryID(typeof (Greetings)),
                           new GreetingsImpl(_conn,
-                                            GreetingsImpl.Languages.Portuguese,
+                                            GreetingsImpl.Language.Portuguese,
                                             GreetingsImpl.Period.Night));
 
       // Define propriedade para as ofertas de serviço a serem registradas no barramento

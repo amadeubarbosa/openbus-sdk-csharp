@@ -10,10 +10,10 @@ namespace greetings {
     #region Fields
 
     private readonly Connection _conn;
-    private readonly Languages _language;
+    private readonly Language _language;
     private readonly Period _period;
 
-    public enum Languages {
+    public enum Language {
       English,
       Spanish,
       Portuguese
@@ -29,7 +29,7 @@ namespace greetings {
 
     #region Constructors
 
-    public GreetingsImpl(Connection conn, Languages language, Period period) {
+    public GreetingsImpl(Connection conn, Language language, Period period) {
       _conn = conn;
       _language = language;
       _period = period;
@@ -40,50 +40,59 @@ namespace greetings {
     #region Greetings Members
 
     public string sayGreetings() {
-      if (_language.Equals(Languages.English)) {
-        return EnglishGreetings();
+      LoginInfo[] callers = _conn.CallerChain.Callers;
+      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
+      switch (_language) {
+        case Language.English:
+          return EnglishGreetings(caller);
+        case Language.Spanish:
+          return SpanishGreetings(caller);
+        case Language.Portuguese:
+          return PortugueseGreetings(caller);
       }
-      return _language.Equals(Languages.Spanish)
-               ? SpanishGreetings()
-               : PortugueseGreetings();
+      return "Erro: língua não especificada.";
     }
 
     #endregion
 
-    private string EnglishGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
-      if (_period.Equals(Period.Morning)) {
-        return String.Format("Good morning {0}!", caller);
+    #region Private Members
+
+    private string EnglishGreetings(string caller) {
+      switch (_period) {
+        case Period.Morning:
+          return String.Format("Good morning {0}!", caller);
+        case Period.Afternoon:
+          return String.Format("Good afternoon {0}!", caller);
+        case Period.Night:
+          return String.Format("Good night {0}!", caller);
       }
-      if (_period.Equals(Period.Afternoon)) {
-        return String.Format("Good afternoon {0}!", caller);
-      }
-      return String.Format("Good night {0}!", caller);
+      return "Error: Period not specified.";
     }
 
-    private string SpanishGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
-      if (_period.Equals(Period.Morning)) {
-        return String.Format("Buenos días {0}!", caller);
+    private string SpanishGreetings(string caller) {
+      switch (_period) {
+        case Period.Morning:
+          return String.Format("Buenos días {0}!", caller);
+        case Period.Afternoon:
+          return String.Format("Buenas tardes {0}!", caller);
+        case Period.Night:
+          return String.Format("Buenas noches {0}!", caller);
       }
-      if (_period.Equals(Period.Afternoon)) {
-        return String.Format("Buenas tardes {0}!", caller);
-      }
-      return String.Format("Buenas noches {0}!", caller);
+      return "Error: Período no especificado.";
     }
 
-    private string PortugueseGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
-      if (_period.Equals(Period.Morning)) {
-        return String.Format("Bom dia {0}!", caller);
+    private string PortugueseGreetings(string caller) {
+      switch (_period) {
+        case Period.Morning:
+          return String.Format("Bom dia {0}!", caller);
+        case Period.Afternoon:
+          return String.Format("Boa tarde {0}!", caller);
+        case Period.Night:
+          return String.Format("Boa noite {0}!", caller);
       }
-      if (_period.Equals(Period.Afternoon)) {
-        return String.Format("Boa tarde {0}!", caller);
-      }
-      return String.Format("Boa noite {0}!", caller);
+      return "Erro: Período não especificado.";
     }
+
+    #endregion
   }
 }
