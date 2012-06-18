@@ -8,20 +8,23 @@ namespace Server {
     private readonly byte[] _privKey;
     private readonly IComponent _ic;
     private readonly ServiceProperty[] _properties;
+    private readonly int _waitTime;
 
     public DedicatedClockInvalidLoginCallback(string entity, byte[] privKey,
                                               IComponent ic,
-                                              ServiceProperty[] properties) {
+                                              ServiceProperty[] properties,
+                                              int waitTime) {
       _entity = entity;
       _privKey = privKey;
       _ic = ic;
       _properties = properties;
+      _waitTime = waitTime;
     }
 
     public bool InvalidLogin(Connection conn) {
-      //TODO O método de login deve tentar conectar e logar até conseguir, eternamente.
-      return DedicatedClockServer.Login(_entity, _privKey) &&
-             DedicatedClockServer.Register(_ic, _properties);
+      return DedicatedClockServer.TryLoginAndRegisterForever(_entity, _privKey,
+                                                             _ic, _properties,
+                                                             _waitTime);
     }
   }
 }

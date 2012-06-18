@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
+using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_00.services;
@@ -27,13 +28,7 @@ namespace Server {
       short port = Convert.ToInt16(args[1]);
       string entity = args[2];
       string key = args[3];
-
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      ConnectionManager manager = ORBInitializer.Manager;
-      //TODO aqui deve tentar conectar e logar até conseguir, eternamente.
-      _conn = manager.CreateConnection(host, port);
-      manager.DefaultConnection = _conn;
+      int waitTime = Convert.ToInt32(args[4]);
 
       // Lê a chave privada de um arquivo
       byte[] privateKey = File.ReadAllBytes(key);
@@ -54,53 +49,83 @@ namespace Server {
                                                                  "OpenBus Demos")
                                            };
 
-      // Faz o login
-      if (!Login(entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
+      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
+      // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      ConnectionManager manager = ORBInitializer.Manager;
+      _conn = manager.CreateConnection(host, port);
+      manager.DefaultConnection = _conn;
 
-      // Registra a oferta no barramento
-      if (!Register(ic, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
+      // Tenta eternamente fazer o login e registrar as ofertas
+      TryLoginAndRegisterForever(entity, privateKey, ic, properties, waitTime);
 
       // Registra uma callback para o caso do login ser perdido
       _conn.OnInvalidLogin = new DedicatedClockInvalidLoginCallback(
-        entity, privateKey, ic, properties);
+        entity, privateKey, ic, properties, waitTime);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine("Servidor no ar.");
       Thread.Sleep(Timeout.Infinite);
     }
 
-    internal static bool Register(IComponent ic, ServiceProperty[] properties) {
-      try {
-        _offer = _conn.Offers.registerService(ic, properties);
-        return true;
+    internal static bool TryLoginAndRegisterForever(string entity,
+                                                    byte[] privateKey,
+                                                    IComponent ic,
+                                                    ServiceProperty[] properties,
+                                                    int waitTime) {
+      // tenta fazer login E registrar ofertas. Se o registro falhar devido ao login ter sido perdido, o procedimento deve ser reiniciado.
+      while (true) {
+        // tenta fazer o login
+        while (true) {
+          if (Login(entity, privateKey)) {
+            break;
+          }
+          Thread.Sleep(waitTime);
+        }
+        // tenta registrar as ofertas
+        if (Register(ic, properties, waitTime)) {
+          return true;
+        }
+        // se chegou aqui não conseguiu porque o login foi perdido, então volta pro começo
+        Thread.Sleep(waitTime);
       }
-      catch (InvalidService) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: o IComponent fornecido não é válido, por não apresentar facetas padrão definidas pelo modelo de componetes SCS.");
-      }
-      catch (InvalidProperties) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: A lista de propriedades fornecida inclui propriedades inválidas, tais como propriedades com nomes reservados (cujos nomes começam com 'openbus.').");
-      }
-      catch (UnauthorizedFacets) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: O componente que implementa o serviço apresenta facetas com interfaces que não estão autorizadas para a entidade realizando o registro da oferta de serviço.");
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar registrar a oferta no barramento:");
-        Console.WriteLine(e);
-      }
-      return false;
     }
 
-    internal static bool Login(string entity, byte[] privateKey) {
+    private static bool Register(IComponent ic, ServiceProperty[] properties,
+                                 int waitTime) {
+      while (true) {
+        try {
+          _offer = _conn.Offers.registerService(ic, properties);
+          return true;
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor.Equals(NoLoginCode.ConstVal)) {
+            // o login foi perdido, precisa tentar fazer o login novamente
+            return false;
+          }
+        }
+        catch (InvalidService) {
+          Console.WriteLine(
+            "Erro ao tentar registrar a oferta no barramento: o IComponent fornecido não é válido, por não apresentar facetas padrão definidas pelo modelo de componentes SCS.");
+        }
+        catch (InvalidProperties) {
+          Console.WriteLine(
+            "Erro ao tentar registrar a oferta no barramento: A lista de propriedades fornecida inclui propriedades inválidas, tais como propriedades com nomes reservados (cujos nomes começam com 'openbus.').");
+        }
+        catch (UnauthorizedFacets) {
+          Console.WriteLine(
+            "Erro ao tentar registrar a oferta no barramento: O componente que implementa o serviço apresenta facetas com interfaces que não estão autorizadas para a entidade realizando o registro da oferta de serviço.");
+        }
+        catch (Exception e) {
+          Console.WriteLine(
+            "Erro inesperado ao tentar registrar a oferta no barramento:");
+          Console.WriteLine(e);
+        }
+        // tenta registrar novamente
+        Thread.Sleep(waitTime);
+      }
+    }
+
+    private static bool Login(string entity, byte[] privateKey) {
       try {
         _conn.LoginByCertificate(entity, privateKey);
         return true;
@@ -109,6 +134,9 @@ namespace Server {
         Console.WriteLine(
           "Falha ao tentar realizar o login por certificado no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
         return true;
+      }
+      catch (TRANSIENT) {
+        Console.WriteLine("Erro: O barramento não está acessível no momento.");
       }
       catch (CorruptedPrivateKeyException) {
         Console.WriteLine(

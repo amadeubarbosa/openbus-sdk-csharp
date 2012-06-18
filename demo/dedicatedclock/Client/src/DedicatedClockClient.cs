@@ -19,6 +19,7 @@ namespace Client {
       string entity = args[2];
       string password = args[3];
       string serverEntity = args[4];
+      int waitTime = Convert.ToInt32(args[5]);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
