@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using omg.org.CORBA;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_00.services;
@@ -20,49 +21,64 @@ namespace Client {
       string password = args[3];
       string serverEntity = args[4];
       int waitTime = Convert.ToInt32(args[5]);
+      int totalWaitTime = Convert.ToInt32(args[6]);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       ConnectionManager manager = ORBInitializer.Manager;
-      //TODO aqui deve tentar conectar e logar no barramento durante um tempo. Se não conseguir, falhar com mensagem de indisponibilidade.
       Connection conn = manager.CreateConnection(host, port);
       manager.DefaultConnection = conn;
 
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-      if (!Login(entity, encoding.GetBytes(password), conn)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+      DateTime max = DateTime.Now.AddMilliseconds(totalWaitTime);
+      bool ok = false;
+      bool firstTime = true;
+      while (true) {
+        if (firstTime) {
+          firstTime = false;
+        }
+        else {
+          Console.WriteLine(String.Format("Aguardando {0} milisegundos.", waitTime));
+          Thread.Sleep(waitTime);
+          if (DateTime.Now > max) {
+            break;
+          }
+        }
+        if ((conn.Login == null) && (!Login(entity, encoding.GetBytes(password), conn))) {
+          continue;
+        }
+        // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
+        // propriedade gerada automaticamente
+        ServiceProperty autoProp = new ServiceProperty("openbus.offer.entity",
+                                                       serverEntity);
+        // propriedade definida pelo serviço clock
+        ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+        ServiceProperty[] properties = new[] { prop, autoProp };
+        ServiceOfferDesc[] offers = Find(properties, conn);
+        if (offers == null) {
+          continue;
+        }
+
+        // analiza as ofertas encontradas
+        Clock clock = GetClock(offers);
+        if (clock == null) {
+          continue;
+        }
+
+        // utiliza o serviço
+        long ticks = clock.getTimeInTicks();
+        DateTime serverTime = new DateTime(ticks);
+        Console.WriteLine(String.Format("Hora do servidor: {0}:{1}:{2}",
+                                        serverTime.Hour,
+                                        serverTime.Minute, serverTime.Second));
+        ok = true;
+        break;
       }
-
-      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-      // propriedade gerada automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.offer.entity",
-                                                     serverEntity);
-      // propriedade definida pelo serviço clock
-      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
-      ServiceProperty[] properties = new[] {prop, autoProp};
-      ServiceOfferDesc[] offers = Find(properties, conn);
-      if (offers == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
-
-      // analiza as ofertas encontradas
-      Clock clock = GetClock(offers);
-      if (clock == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
-
-      // utiliza o serviço
-      long ticks = clock.getTimeInTicks();
-      DateTime serverTime = new DateTime(ticks);
-      Console.WriteLine(String.Format("Hora do servidor: {0}:{1}:{2}",
-                                      serverTime.Hour,
-                                      serverTime.Minute, serverTime.Second));
-
-      Console.WriteLine("Fim.");
+      Console.WriteLine(ok
+                          ? "Fim."
+                          : "Não foi possível realizar o login ou encontrar o servidor.");
+      Console.WriteLine("Pressione qualquer tecla para finalizar.");
       Console.ReadLine();
     }
 
