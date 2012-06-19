@@ -116,7 +116,10 @@ namespace tecgraf.openbus {
     }
 
     public void SetDispatcher(Connection conn) {
-      if ((conn == null) || (conn.Login == null) || conn.BusId == null) {
+      if (conn == null) {
+        throw new ArgumentNullException();
+      }
+      if ((conn.Login == null) || conn.BusId == null) {
         throw new NotLoggedInException();
       }
       lock (_incomingDispatcherConn) {
