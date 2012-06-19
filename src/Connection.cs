@@ -89,6 +89,8 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="login"> Objeto de login a ser utilizado.</param>
     /// <param name="secret"> Segredo decodificado a partir de outro login.</param>
+	  /// <exception cref="InvalidLoginProcessException"> O LoginProcess informado é inválido,
+	  /// por exemplo depois de ser cancelado ou ter expirado.</exception>
     /// <exception cref="WrongSecretException"> O segredo não corresponde ao esperado.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços

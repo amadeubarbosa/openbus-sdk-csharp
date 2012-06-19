@@ -14,6 +14,7 @@ using scs.core;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_00;
 using tecgraf.openbus.core.v2_00.credential;
+using tecgraf.openbus.core.v2_00.services;
 using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.core.v2_00.services.offer_registry;
 using tecgraf.openbus.caches;
@@ -225,6 +226,16 @@ namespace tecgraf.openbus {
       try {
         Login = login.login(pubBytes, encrypted, out lease);
       }
+      catch (OBJECT_NOT_EXIST) {
+        throw new InvalidLoginProcessException();
+      }
+      catch (WrongEncoding) {
+        ServiceFailure e = new ServiceFailure {
+          message =
+            "Erro na codificação da chave pública do barramento."
+        };
+        throw e;
+      }
       catch (Exception e) {
         Logger.Fatal(e.Message);
         Logger.Fatal(e.StackTrace);
@@ -278,7 +289,7 @@ namespace tecgraf.openbus {
 
     public string BusId { get; private set; }
 
-    //TODO: avaliar se tem que tornar thread-safe
+    //TODO: avaliar se tem que tornar thread-safe: SIM
     public LoginInfo? Login { get; private set; }
 
     public void LoginByPassword(string entity, byte[] password) {
@@ -298,6 +309,13 @@ namespace tecgraf.openbus {
             new LoginAuthenticationInfo
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
           encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
+        }
+        catch(WrongEncoding) {
+          ServiceFailure e = new ServiceFailure {
+                                                  message =
+                                                    "Erro na codificação da chave pública do barramento."
+                                                };
+          throw e;
         }
         catch {
           Logger.Fatal("Erro na codificação das informações de login.");
@@ -346,9 +364,6 @@ namespace tecgraf.openbus {
         LoginByObject(login, secret);
       }
       catch(AccessDenied e) {
-        throw new WrongSecretException(e.Message, e);
-      }
-      catch (WrongEncoding e) {
         throw new WrongSecretException(e.Message, e);
       }
       finally {
