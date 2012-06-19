@@ -2,7 +2,7 @@
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma execeção de falha no serviço de controle de acesso. 
+  /// Indica uma exceção de falha no serviço de controle de acesso. 
   /// </summary>
   [Serializable]
   public class AlreadyConnectedException : OpenBusException {
