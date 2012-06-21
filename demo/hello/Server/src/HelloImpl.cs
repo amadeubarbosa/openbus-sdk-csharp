@@ -1,6 +1,5 @@
 using System;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.exceptions;
 
 namespace hello {
@@ -33,9 +32,7 @@ namespace hello {
           Console.WriteLine("Hello World!");
           return;
         }
-        LoginInfo[] callers = chain.Callers;
-        Console.WriteLine(String.Format("Hello {0}!",
-                                        callers[callers.Length - 1].entity));
+        Console.WriteLine(String.Format("Hello {0}!", chain.Caller.entity));
       }
       catch (OpenBusException e) {
         Console.WriteLine(

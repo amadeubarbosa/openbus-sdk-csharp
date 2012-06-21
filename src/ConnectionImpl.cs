@@ -431,19 +431,14 @@ namespace tecgraf.openbus {
             (AnyCredential) current.get_slot(_credentialSlotId);
           if (anyCredential.IsLegacy) {
             Credential credential = anyCredential.LegacyCredential;
-            LoginInfo[] callers;
-            if (credential._delegate.Equals(String.Empty)) {
-              callers = new[]
-                        {new LoginInfo(credential.identifier, credential.owner)};
-            }
-            else {
-              LoginInfo caller = new LoginInfo("unknown", credential._delegate);
-              callers = new[] {caller, caller};
-            }
-            return new CallerChainImpl(BusId, callers);
+            LoginInfo caller = new LoginInfo(credential.identifier, credential.owner);
+            LoginInfo[] originators = credential._delegate.Equals(String.Empty) 
+                                        ? new LoginInfo[0]
+                                        : new[] { new LoginInfo("unknown", credential._delegate) };
+            return new CallerChainImpl(BusId, caller, originators);
           }
           CallChain chain = UnmarshalCallChain(anyCredential.Credential.chain);
-          return new CallerChainImpl(BusId, chain.callers,
+          return new CallerChainImpl(BusId, chain.caller, chain.originators,
                                      anyCredential.Credential.chain);
         }
         catch (InvalidSlot e) {
@@ -529,12 +524,10 @@ namespace tecgraf.openbus {
             bool isLegacyOnly = false;
             CallerChainImpl callerChain = JoinedChain as CallerChainImpl;
             if (callerChain != null) {
-              if (callerChain.Callers.Length > 1) {
-                lastCaller = callerChain.Callers[0].entity;
-                if (callerChain.Signed.signature.Length == 0) {
-                  // é uma credencial somente 1.5
-                  isLegacyOnly = true;
-                }
+              lastCaller = callerChain.Caller.entity;
+              if (callerChain.Signed.signature.Length == 0) {
+                // é uma credencial somente 1.5
+                isLegacyOnly = true;
               }
             }
             Credential legacyData = new Credential(loginId, loginEntity,
@@ -880,7 +873,7 @@ namespace tecgraf.openbus {
         throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
-      if (!chain.callers[chain.callers.Length - 1].id.Equals(callerId) ||
+      if (!chain.caller.id.Equals(callerId) ||
           (!Crypto.VerifySignature(_busKey, signed.encoded, signed.signature))) {
         Logger.Fatal("Cadeia de credencial inválida.");
         throw new NO_PERMISSION(InvalidChainCode.ConstVal,

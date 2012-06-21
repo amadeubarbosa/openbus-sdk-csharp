@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using tecgraf.openbus.core.v2_00.services.access_control;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.multiplexing
@@ -35,8 +34,7 @@ namespace tecgraf.openbus.interop.multiplexing
           CallerChain callerChain = conn.CallerChain;
           if (callerChain != null) {
             Console.WriteLine(String.Format("Calling in {0} @ {1}", conn.Login.Value.entity, conn.BusId));
-            LoginInfo[] callers = callerChain.Callers;
-            String entity = callers[callers.Length - 1].entity;
+            String entity = callerChain.Caller.entity;
             Console.WriteLine(String.Format("Hello from {0} @ {1}!", entity, callerChain.BusId));
           }
         }

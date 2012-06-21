@@ -453,12 +453,12 @@ namespace tecgraf.openbus.Test {
         conn.JoinChain(null);
         Assert.IsNull(conn.JoinedChain);
         //TODO testar caso em que a chain da getCallerChain não é vazia
-        conn.JoinChain(new CallerChainImpl("mock",
-                                           new[] {new LoginInfo("a", "b")}));
+        conn.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+                                           new LoginInfo[0]));
         Assert.IsNotNull(conn.JoinedChain);
         Assert.AreEqual("mock", conn.JoinedChain.BusId);
-        Assert.AreEqual("a", conn.JoinedChain.Callers[0].id);
-        Assert.AreEqual("b", conn.JoinedChain.Callers[0].entity);
+        Assert.AreEqual("a", conn.JoinedChain.Caller.id);
+        Assert.AreEqual("b", conn.JoinedChain.Caller.entity);
         conn.ExitChain();
       }
     }
@@ -473,8 +473,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.JoinedChain);
         conn.ExitChain();
         Assert.IsNull(conn.JoinedChain);
-        conn.JoinChain(new CallerChainImpl("mock",
-                                           new[] {new LoginInfo("a", "b")}));
+        conn.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+                                           new LoginInfo[0]));
         conn.ExitChain();
         Assert.IsNull(conn.JoinedChain);
       }

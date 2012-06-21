@@ -36,7 +36,7 @@ namespace chainvalidation
           Console.WriteLine("A cadeia de chamadas é nula, talvez o serviço não esteja logado no barramento. Impossível descobrir quem fez a chamada.");
           return -1;
         }
-        string caller = chain.Callers[0].entity;
+        string caller = chain.Caller.entity;
         Console.WriteLine(String.Format("Pedido de reunião recebido de {0}.", caller));
         // faz join na própria caller chain
         _conn.JoinChain(null);

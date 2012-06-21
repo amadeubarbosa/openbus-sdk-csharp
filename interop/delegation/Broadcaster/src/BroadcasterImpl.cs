@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.delegation {
   public class BroadcasterImpl : MarshalByRefObject, Broadcaster {
@@ -33,8 +32,8 @@ namespace tecgraf.openbus.interop.delegation {
 
     public void subscribe() {
       CallerChain chain = _conn.CallerChain;
-      string user = chain.Callers[0].entity;
-      Console.WriteLine("subscription by " + ChainToString.ToString(chain));
+      string user = chain.Caller.entity;
+      Console.WriteLine("subscription by " + user);
       lock (_subscribers) {
         _subscribers.Add(user);
       }
@@ -42,8 +41,8 @@ namespace tecgraf.openbus.interop.delegation {
 
     public void unsubscribe() {
       CallerChain chain = _conn.CallerChain;
-      string user = chain.Callers[0].entity;
-      Console.WriteLine("unsubscription by " + ChainToString.ToString(chain));
+      string user = chain.Caller.entity;
+      Console.WriteLine("unsubscription by " + user);
       lock (_subscribers) {
         _subscribers.Remove(user);
       }

@@ -26,8 +26,8 @@ namespace tecgraf.openbus.interop.simple
 
     public void sayHello() {
       try {
-        LoginInfo[] callers = _conn.CallerChain.Callers;
-        Console.WriteLine(String.Format("Hello {0}!", callers[0].entity));
+        LoginInfo caller = _conn.CallerChain.Caller;
+        Console.WriteLine(String.Format("Hello {0}!", caller.entity));
       }
       catch (Exception e) {
         Console.WriteLine(e.StackTrace);

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Timers;
-using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.delegation {
   public class ForwarderImpl : MarshalByRefObject, Forwarder {
@@ -31,18 +30,18 @@ namespace tecgraf.openbus.interop.delegation {
 
     public void setForward(string to) {
       CallerChain chain = _conn.CallerChain;
-      string user = chain.Callers[0].entity;
-      Console.WriteLine("setup forward to " + to + " by " + ChainToString.ToString(chain));
+      string user = chain.Caller.entity;
+      Console.WriteLine("setup forward to " + to + " by " + user);
       _forwardsOf.TryAdd(user, new Forward(chain, to));
     }
 
     public void cancelForward(string to) {
       CallerChain chain = _conn.CallerChain;
-      string user = chain.Callers[0].entity;
+      string user = chain.Caller.entity;
       lock (_forwardsOf) {
         Forward forward;
         if (_forwardsOf.TryGetValue(user, out forward)) {
-          Console.WriteLine("cancel forward to " + forward.To + " by " + ChainToString.ToString(chain));
+          Console.WriteLine("cancel forward to " + forward.To + " by " + user);
           _forwardsOf.TryRemove(user, out forward);
         }
       }
@@ -50,7 +49,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     public string getForward() {
       CallerChain chain = _conn.CallerChain;
-      string user = chain.Callers[0].entity;
+      string user = chain.Caller.entity;
       Forward forward;
       if (_forwardsOf.TryGetValue(user, out forward)) {
         return forward.To;

@@ -29,16 +29,15 @@ namespace chainvalidation {
       try {
         CallerChain chain = _conn.CallerChain;
         if ((chain == null) ||
-            (!chain.Callers[chain.Callers.Length - 1].entity.Equals(
-              _secretaryEntity))) {
+            (!chain.Caller.entity.Equals(_secretaryEntity))) {
           Console.WriteLine(
             String.Format(
               "Uma mensagem foi ignorada pois não veio da secretária {0}.",
               _secretaryEntity));
           throw new Unavailable();
         }
-        string originalCaller = chain.Callers[0].entity;
-        string caller = chain.Callers[chain.Callers.Length - 1].entity;
+        string originalCaller = chain.Originators[0].entity;
+        string caller = chain.Caller.entity;
         Console.WriteLine(
           String.Format("Mensagem recebida de {0} em nome de {1}: {2}", caller,
                         originalCaller, message));

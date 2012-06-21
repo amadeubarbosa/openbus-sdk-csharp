@@ -1,6 +1,5 @@
 using System;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services.access_control;
 
 namespace greetings {
   /// <summary>
@@ -40,8 +39,7 @@ namespace greetings {
     #region Greetings Members
 
     public string sayGreetings() {
-      LoginInfo[] callers = _conn.CallerChain.Callers;
-      string caller = _conn.CallerChain.Callers[callers.Length - 1].entity;
+      string caller = _conn.CallerChain.Caller.entity;
       switch (_language) {
         case Language.English:
           return EnglishGreetings(caller);

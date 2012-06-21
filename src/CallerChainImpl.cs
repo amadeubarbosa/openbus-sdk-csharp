@@ -4,14 +4,15 @@ using tecgraf.openbus.core.v2_00.services.access_control;
 
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {
-    internal CallerChainImpl(string busId, LoginInfo[] callers,
-                             SignedCallChain signed) : this(busId, callers) {
+    internal CallerChainImpl(string busId, LoginInfo caller, LoginInfo[] originators,
+                             SignedCallChain signed) : this(busId, caller, originators) {
       Signed = signed;
     }
 
-    internal CallerChainImpl(string busId, LoginInfo[] callers) {
+    internal CallerChainImpl(string busId, LoginInfo caller, LoginInfo[] originators) {
       BusId = busId;
-      Callers = callers;
+      Caller = caller;
+      Originators = originators;
       Joined = new LRUConcurrentDictionaryCache<string, SignedCallChain>();
     }
 
@@ -21,6 +22,8 @@ namespace tecgraf.openbus {
 
     public string BusId { get; private set; }
 
-    public LoginInfo[] Callers { get; private set; }
+    public LoginInfo[] Originators { get; private set; }
+
+    public LoginInfo Caller { get; private set; }
   }
 }

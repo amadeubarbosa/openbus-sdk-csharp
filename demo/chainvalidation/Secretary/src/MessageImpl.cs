@@ -33,7 +33,7 @@ namespace chainvalidation
           Console.WriteLine(String.Format("Mensagem recebida: {0}", message));
           return;
         }
-        Console.WriteLine(String.Format("Mensagem recebida de {0}: {1}", chain.Callers[0].entity, message));
+        Console.WriteLine(String.Format("Mensagem recebida de {0}: {1}", chain.Caller.entity, message));
       }
       catch (OpenBusException e) {
         Console.WriteLine("Erro no método sendMessage ao obter a cadeia de chamadas:");

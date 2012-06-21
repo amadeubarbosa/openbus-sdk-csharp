@@ -1,7 +1,6 @@
 using System;
 using tecgraf.openbus;
 using tecgraf.openbus.exceptions;
-using tecgraf.openbus.interop.utils;
 
 namespace audit {
   /// <summary>
@@ -33,7 +32,7 @@ namespace audit {
           Console.WriteLine("Hello World!");
         }
         else {
-          string caller = chain.Callers[chain.Callers.Length - 1].entity;
+          string caller = chain.Caller.entity;
           Console.WriteLine(
             String.Format(
               "Hello recebido de {0}. Cadeia completa da chamada: {1}", caller,

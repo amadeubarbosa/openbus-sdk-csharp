@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.delegation {
   public class MessengerImpl : MarshalByRefObject, Messenger {
@@ -23,8 +22,8 @@ namespace tecgraf.openbus.interop.delegation {
 
     public void post(string to, string message) {
       CallerChain chain = _conn.CallerChain;
-      string from = chain.Callers[0].entity;
-      Console.WriteLine("post to " + to + " by " + ChainToString.ToString(chain));
+      string from = chain.Originators[0].entity;
+      Console.WriteLine("post to " + to + " by " + from);
       List<PostDesc> inbox;
       if (!_inboxOf.TryGetValue(to, out inbox)) {
         inbox = new List<PostDesc>();
@@ -37,9 +36,8 @@ namespace tecgraf.openbus.interop.delegation {
 
     public PostDesc[] receivePosts() {
       CallerChain chain = _conn.CallerChain;
-      string owner = chain.Callers[0].entity;
-      Console.WriteLine("download of messsages by " +
-                        ChainToString.ToString(chain));
+      string owner = chain.Caller.entity;
+      Console.WriteLine("download of messsages by " + owner);
       List<PostDesc> inbox;
       if (_inboxOf.TryRemove(owner, out inbox)) {
         PostDesc[] descs;
