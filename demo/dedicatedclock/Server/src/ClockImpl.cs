@@ -9,8 +9,7 @@ namespace Server {
 
     public long getTimeInTicks() {
       DateTime now = DateTime.Now;
-      Console.WriteLine(String.Format("Hora atual: {0}:{1}:{2}", now.Hour,
-                                      now.Minute, now.Second));
+      Console.WriteLine(String.Format("Hora atual: {0:HH:mm:ss}", now));
       return now.Ticks;
     }
 
