@@ -376,7 +376,9 @@ namespace tecgraf.openbus {
         return false;
       }
 
+      Connection prev = Manager.Requester;
       try {
+        Manager.Requester = this;
         _acs.logout();
       }
       catch (NO_PERMISSION e) {
@@ -385,10 +387,12 @@ namespace tecgraf.openbus {
           throw;
         }
         // já fui deslogado do barramento
-        LocalLogout();
         return false;
       }
-      LocalLogout();
+      finally {
+        Manager.Requester = prev;
+        LocalLogout();
+      }
       return true;
     }
 

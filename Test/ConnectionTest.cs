@@ -151,9 +151,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.BusId);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.BusId);
-        _manager.DefaultConnection = conn;
         Assert.IsTrue(conn.Logout());
-        _manager.DefaultConnection = null;
+        Assert.IsNull(conn.Login);
       }
     }
 
@@ -167,10 +166,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
-        _manager.Requester = conn;
         conn.Logout();
         Assert.IsNull(conn.Login);
-        _manager.Requester = null;
       }
     }
 
@@ -211,10 +208,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
-        _manager.Requester = conn;
         conn.Logout();
         Assert.IsNull(conn.Login);
-        _manager.Requester = null;
         // login repetido
         failed = false;
         try {
@@ -231,9 +226,8 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
-        _manager.Requester = conn;
         conn.Logout();
-        _manager.Requester = null;
+        Assert.IsNull(conn.Login);
       }
     }
 
@@ -292,10 +286,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         conn.LoginByCertificate(_entity, _privKey);
         Assert.IsNotNull(conn.Login);
-        _manager.Requester = conn;
         Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.Login);
-        _manager.Requester = null;
         // login repetido
         failed = false;
         try {
@@ -312,9 +304,8 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
-        _manager.Requester = conn;
         Assert.IsTrue(conn.Logout());
-        _manager.Requester = null;
+        Assert.IsNull(conn.Login);
       }
     }
 
@@ -352,7 +343,6 @@ namespace tecgraf.openbus.Test {
         _manager.Requester = null;
         conn2.LoginBySingleSignOn(login, secret);
         Assert.IsNotNull(conn2.Login);
-        _manager.Requester = conn2;
         conn2.Logout();
         Assert.IsNull(conn2.Login);
         _manager.Requester = null;
@@ -376,10 +366,10 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login com entidade já autenticada foi bem-sucedido.");
-        _manager.Requester = conn2;
         conn2.Logout();
-        _manager.Requester = conn;
+        Assert.IsNull(conn2.Login);
         conn.Logout();
+        Assert.IsNull(conn.Login);
         _manager.Requester = null;
       }
     }
@@ -391,7 +381,6 @@ namespace tecgraf.openbus.Test {
     public void LogoutTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        _manager.Requester = conn;
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
         string busId = conn.BusId;
@@ -403,6 +392,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.Login);
         bool failed = false;
         try {
+          _manager.Requester = conn;
           conn.Offers.findServices(new ServiceProperty[0]);
         }
         catch (NO_PERMISSION e) {
@@ -418,8 +408,10 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser NO_PERMISSION. Exceção recebida: " +
             e);
         }
+        finally {
+          _manager.Requester = null;
+        }
         Assert.IsTrue(failed, "Uma busca sem login foi bem-sucedida.");
-        _manager.Requester = null;
       }
     }
 
