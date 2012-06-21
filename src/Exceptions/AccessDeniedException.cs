@@ -9,13 +9,13 @@ namespace tecgraf.openbus.exceptions
   public class AccessDeniedException : OpenBusException
   {
     /// <inheritdoc />
-    public AccessDeniedException() { }
+    internal AccessDeniedException() { }
     
     /// <inheritdoc />
-    public AccessDeniedException(string message) : base(message) { }
+    internal AccessDeniedException(string message) : base(message) { }
     
     /// <inheritdoc />
-    public AccessDeniedException(string message, Exception inner) 
+    internal AccessDeniedException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

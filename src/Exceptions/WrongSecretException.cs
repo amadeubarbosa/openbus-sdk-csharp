@@ -9,13 +9,13 @@ namespace tecgraf.openbus.exceptions
   public class WrongSecretException : OpenBusException
   {
     /// <inheritdoc />
-    public WrongSecretException() { }
+    internal WrongSecretException() { }
     
     /// <inheritdoc />
-    public WrongSecretException(string message) : base(message) { }
+    internal WrongSecretException(string message) : base(message) { }
     
     /// <inheritdoc />
-    public WrongSecretException(string message, Exception inner) 
+    internal WrongSecretException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

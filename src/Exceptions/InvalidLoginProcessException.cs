@@ -7,13 +7,13 @@ namespace tecgraf.openbus.exceptions {
   [Serializable]
   public class InvalidLoginProcessException : OpenBusException {
     /// <inheritdoc />
-    public InvalidLoginProcessException() { }
+    internal InvalidLoginProcessException() { }
 
     /// <inheritdoc />
-    public InvalidLoginProcessException(string message) : base(message) { }
+    internal InvalidLoginProcessException(string message) : base(message) { }
 
     /// <inheritdoc />
-    public InvalidLoginProcessException(string message, Exception inner)
+    internal InvalidLoginProcessException(string message, Exception inner)
       : base(message, inner) { }
   }
 }

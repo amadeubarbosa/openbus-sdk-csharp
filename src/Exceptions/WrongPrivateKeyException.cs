@@ -9,13 +9,13 @@ namespace tecgraf.openbus.exceptions
   public class WrongPrivateKeyException : OpenBusException
   {
     /// <inheritdoc />
-    public WrongPrivateKeyException() { }
+    internal WrongPrivateKeyException() { }
     
     /// <inheritdoc />
-    public WrongPrivateKeyException(string message) : base(message) { }
+    internal WrongPrivateKeyException(string message) : base(message) { }
     
     /// <inheritdoc />
-    public WrongPrivateKeyException(string message, Exception inner) 
+    internal WrongPrivateKeyException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

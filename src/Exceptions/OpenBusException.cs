@@ -9,22 +9,22 @@ namespace tecgraf.openbus.exceptions
   public class OpenBusException : ApplicationException
   {
     /// <summary>
-    /// Cria uma execeção do OpenBus
+    /// Cria uma exceção do OpenBus
     /// </summary>
-    public OpenBusException() { }
+    internal OpenBusException() { }
     
     /// <summary>
     /// Cria uma exceção do OpenBus com uma mensagem associada.
     /// </summary>
     /// <param name="message">A mensagem de erro</param>
-    public OpenBusException(string message) : base(message) { }
+    internal OpenBusException(string message) : base(message) { }
 
     /// <summary>
     /// Cria uma exceção do OpenBus com uma mensagem e uma causa associada.
     /// </summary>
     /// <param name="message">A mensagem de erro</param>
     /// <param name="inner">A exceção associada</param>
-    public OpenBusException(string message, Exception inner) 
+    internal OpenBusException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

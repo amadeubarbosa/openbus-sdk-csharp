@@ -9,13 +9,13 @@ namespace tecgraf.openbus.exceptions
   public class AlreadyLoggedInException : OpenBusException
   {
     /// <inheritdoc />
-    public AlreadyLoggedInException() { }
+    internal AlreadyLoggedInException() { }
     
     /// <inheritdoc />
-    public AlreadyLoggedInException(string message) : base(message) { }
+    internal AlreadyLoggedInException(string message) : base(message) { }
     
     /// <inheritdoc />
-    public AlreadyLoggedInException(string message, Exception inner) 
+    internal AlreadyLoggedInException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

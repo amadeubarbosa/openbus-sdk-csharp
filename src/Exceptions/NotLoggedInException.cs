@@ -9,13 +9,13 @@ namespace tecgraf.openbus.exceptions
   public class NotLoggedInException : OpenBusException
   {
     /// <inheritdoc />
-    public NotLoggedInException() { }
+    internal NotLoggedInException() { }
     
     /// <inheritdoc />
-    public NotLoggedInException(string message) : base(message) { }
+    internal NotLoggedInException(string message) : base(message) { }
     
     /// <inheritdoc />
-    public NotLoggedInException(string message, Exception inner) 
+    internal NotLoggedInException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }

@@ -9,13 +9,13 @@ namespace tecgraf.openbus.exceptions
   public class CorruptedPrivateKeyException : OpenBusException
   {
     /// <inheritdoc />
-    public CorruptedPrivateKeyException() { }
+    internal CorruptedPrivateKeyException() { }
     
     /// <inheritdoc />
-    public CorruptedPrivateKeyException(string message) : base(message) { }
+    internal CorruptedPrivateKeyException(string message) : base(message) { }
     
     /// <inheritdoc />
-    public CorruptedPrivateKeyException(string message, Exception inner) 
+    internal CorruptedPrivateKeyException(string message, Exception inner) 
       : base(message, inner) { }
   }
 }
