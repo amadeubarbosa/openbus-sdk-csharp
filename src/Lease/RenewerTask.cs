@@ -32,8 +32,6 @@ namespace tecgraf.openbus.lease {
     /// </summary>
     private bool _mustContinue;
 
-    private bool _justStarted;
-
     #endregion
 
     #region Constructors
@@ -55,7 +53,6 @@ namespace tecgraf.openbus.lease {
       }
       _ac = accessControlFacet;
       _mustContinue = true;
-      _justStarted = true;
     }
 
     #endregion
@@ -69,42 +66,32 @@ namespace tecgraf.openbus.lease {
       try {
         _conn.Manager.Requester = _conn;
         while (_mustContinue) {
-          if (!_justStarted) {
-            try {
-              try {
-                Lease = _ac.renew();
-              }
-              catch (NO_PERMISSION) {
-                Logger.Debug(
-                  "Impossível renovar a credencial pois a conexão não está logada no barramento.");
-              }
-
-              if (Lease == 0) {
-                _mustContinue = false;
-                Logger.Warn("Falha na renovação da credencial.");
-                if (_conn.OnInvalidLogin != null) {
-                  Logger.Debug(_conn.OnInvalidLogin.InvalidLogin(_conn)
-                                 ? "Credencial renovada após callback de login inválido."
-                                 : "Credencial NÃO renovada após callback de login inválido.");
-                }
-              }
-              else {
-                StringBuilder msg = new StringBuilder();
-                msg.Append(DateTime.Now);
-                msg.Append(" - Lease renovado. Próxima renovação em ");
-                msg.Append(Lease + " segundos.");
-                Logger.Debug(msg.ToString());
-              }
+          try {
+            Lease = _ac.renew();
+            if (Lease == 0) {
+              _mustContinue = false;
+              Logger.Warn("Falha na renovação da credencial.");
             }
-            catch (AbstractCORBASystemException e) {
-              Logger.Error("Erro ao tentar renovar o lease", e);
+            else {
+              StringBuilder msg = new StringBuilder();
+              msg.Append(DateTime.Now);
+              msg.Append(" - Lease renovado. Próxima renovação em ");
+              msg.Append(Lease + " segundos.");
+              Logger.Debug(msg.ToString());
             }
+          }
+          catch (NO_PERMISSION) {
+            Logger.Debug(
+              "Impossível renovar a credencial pois a conexão não está logada no barramento.");
+          }
+          catch (AbstractCORBASystemException e) {
+            Logger.Error("Erro ao tentar renovar o lease", e);
           }
           if (_mustContinue) {
             Thread.Sleep(Lease * 1000);
-            _justStarted = false;
           }
         }
+        Logger.Info("Thread de renovação de login finalizada.");
       }
       catch (ThreadInterruptedException) {
         Logger.Debug("Lease Interrompido");
