@@ -52,7 +52,6 @@ namespace tecgraf.openbus.lease {
     public void Finish() {
       _renewer.Finish();
       _renewer = null;
-      _leaseThread.Interrupt();
     }
 
     public int Lease {

@@ -560,9 +560,11 @@ namespace tecgraf.openbus {
           Logger.Fatal(
             "Este cliente foi deslogado do barramento durante a interceptação desta requisição.",
             e);
+          LoginInfo login = new LoginInfo(Login.Value.id, Login.Value.entity);
+          string busId = BusId;
           LocalLogout();
           if ((OnInvalidLogin != null) &&
-              (OnInvalidLogin.InvalidLogin(this))) {
+              (OnInvalidLogin.InvalidLogin(this, login, busId))) {
             // pede que a chamada original seja relançada
             throw new ForwardRequest(ri.target);
           }
@@ -604,9 +606,11 @@ namespace tecgraf.openbus {
                                   CompletionStatus.Completed_No);
         }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
+          LoginInfo login = new LoginInfo(Login.Value.id, Login.Value.entity);
+          string busId = BusId;
           LocalLogout();
           if ((OnInvalidLogin != null) &&
-              (OnInvalidLogin.InvalidLogin(this))) {
+              (OnInvalidLogin.InvalidLogin(this, login, busId))) {
             Logger.Warn(String.Format(
               "Login reestabelecido, solicitando que a chamada {0} seja refeita.",
               operation));
