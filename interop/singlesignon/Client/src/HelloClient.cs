@@ -37,7 +37,7 @@ namespace tecgraf.openbus.interop.singlesignon {
 
       conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
       byte[] secret;
-      LoginProcess login = conn.StartSingleSignOn(out secret);
+      LoginProcess login = conn.StartSharedAuth(out secret);
 
       using (FileStream fs = new FileStream(secretFile, FileMode.Create)) {
         using (BinaryWriter w = new BinaryWriter(fs)) {

@@ -324,9 +324,9 @@ namespace tecgraf.openbus.Test {
         LoginProcess login;
         try {
           _manager.Requester = conn;
-          login = conn.StartSingleSignOn(out secret);
+          login = conn.StartSharedAuth(out secret);
           _manager.Requester = null;
-          conn2.LoginBySingleSignOn(login, new byte[0]);
+          conn2.LoginBySharedAuth(login, new byte[0]);
         }
         catch (WrongSecretException) {
           failed = true;
@@ -339,9 +339,9 @@ namespace tecgraf.openbus.Test {
         // login válido
         Assert.IsNull(conn2.Login);
         _manager.Requester = conn;
-        login = conn.StartSingleSignOn(out secret);
+        login = conn.StartSharedAuth(out secret);
         _manager.Requester = null;
-        conn2.LoginBySingleSignOn(login, secret);
+        conn2.LoginBySharedAuth(login, secret);
         Assert.IsNotNull(conn2.Login);
         conn2.Logout();
         Assert.IsNull(conn2.Login);
@@ -350,11 +350,11 @@ namespace tecgraf.openbus.Test {
         failed = false;
         try {
           _manager.Requester = conn;
-          login = conn.StartSingleSignOn(out secret);
+          login = conn.StartSharedAuth(out secret);
           _manager.Requester = null;
-          conn2.LoginBySingleSignOn(login, secret);
+          conn2.LoginBySharedAuth(login, secret);
           Assert.IsNotNull(conn2.Login);
-          conn2.LoginBySingleSignOn(login, secret);
+          conn2.LoginBySharedAuth(login, secret);
         }
         catch (AlreadyLoggedInException) {
           failed = true;

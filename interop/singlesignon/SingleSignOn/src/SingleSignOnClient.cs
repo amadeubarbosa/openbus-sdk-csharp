@@ -42,7 +42,7 @@ namespace tecgraf.openbus.interop.singlesignon
 
       LoginProcess login =
         OrbServices.GetSingleton().string_to_object(reference) as LoginProcess;
-      conn.LoginBySingleSignOn(login, secret);
+      conn.LoginBySharedAuth(login, secret);
 
       Console.WriteLine("Login por single sign on concluído, procurando faceta Hello.");
 

@@ -351,14 +351,14 @@ namespace tecgraf.openbus {
       }
     }
 
-    public LoginProcess StartSingleSignOn(out byte[] secret) {
+    public LoginProcess StartSharedAuth(out byte[] secret) {
       byte[] challenge;
-      LoginProcess login = _acs.startLoginBySingleSignOn(out challenge);
+      LoginProcess login = _acs.startLoginBySharedAuth(out challenge);
       secret = Crypto.Decrypt(InternalKey.Private, challenge);
       return login;
     }
 
-    public void LoginBySingleSignOn(LoginProcess login, byte[] secret) {
+    public void LoginBySharedAuth(LoginProcess login, byte[] secret) {
       try {
         Manager.IgnoreCurrentThread();
         LoginByObject(login, secret);

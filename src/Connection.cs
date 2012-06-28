@@ -81,7 +81,7 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a obtenção do objeto de login e desafio.</exception>
-    LoginProcess StartSingleSignOn(out Byte[] secret);
+    LoginProcess StartSharedAuth(out Byte[] secret);
 
     /// <summary>
     /// Efetua login no barramento como uma entidade usando autenticação por
@@ -95,7 +95,7 @@ namespace tecgraf.openbus {
     /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
-    void LoginBySingleSignOn(LoginProcess login, Byte[] secret);
+    void LoginBySharedAuth(LoginProcess login, Byte[] secret);
 
      
     /*************************************************************************
