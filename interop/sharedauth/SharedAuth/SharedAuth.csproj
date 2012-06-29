@@ -63,7 +63,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
-    <Compile Include="src\SingleSignOnClient.cs" />
+    <Compile Include="src\SharedAuthClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
