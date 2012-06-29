@@ -1,6 +1,6 @@
 ﻿using System;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
 

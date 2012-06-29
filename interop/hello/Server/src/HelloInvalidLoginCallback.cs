@@ -1,4 +1,5 @@
 ﻿using System;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
 namespace tecgraf.openbus.interop.simple {
   class HelloInvalidLoginCallback : InvalidLoginCallback {
@@ -12,7 +13,7 @@ namespace tecgraf.openbus.interop.simple {
       _manager = manager;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
       _manager.Requester = conn;
       try {
         Console.WriteLine("Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
@@ -20,7 +21,7 @@ namespace tecgraf.openbus.interop.simple {
         return conn.Login != null;
       }
       catch (Exception e) {
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       return false;
     }

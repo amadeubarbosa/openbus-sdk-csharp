@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.delegation.Properties;
 
 namespace tecgraf.openbus.interop.delegation {
