@@ -1,6 +1,7 @@
 ﻿using scs.core;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 
 namespace hello {
   class HelloInvalidLoginCallback : InvalidLoginCallback {
@@ -16,7 +17,7 @@ namespace hello {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
       return HelloServer.Login(_entity, _privKey) && HelloServer.Register(_ic, _properties);
     }
   }

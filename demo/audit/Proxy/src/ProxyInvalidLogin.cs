@@ -1,4 +1,5 @@
 ﻿using tecgraf.openbus;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
 namespace audit {
   internal class ProxyInvalidLogin : InvalidLoginCallback {
@@ -12,7 +13,8 @@ namespace audit {
       _serverEntity = serverEntity;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
+    {
       return AuditProxy.Login(_entity, _privKey) &&
              AuditProxy.Register(_serverEntity);
     }

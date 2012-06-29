@@ -1,9 +1,9 @@
 using System;
 using omg.org.CORBA;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services;
-using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
 
 namespace audit {

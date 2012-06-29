@@ -1,6 +1,7 @@
 ﻿using scs.core;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 
 namespace Server {
   internal class DedicatedClockInvalidLoginCallback : InvalidLoginCallback {
@@ -26,7 +27,8 @@ namespace Server {
       _waitTime = waitTime;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
+    {
       return DedicatedClockServer.TryLoginAndRegisterForever(_host, _port,
                                                              _entity, _privKey,
                                                              _ic, _properties,

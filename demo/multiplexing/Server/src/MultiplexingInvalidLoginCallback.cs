@@ -1,6 +1,7 @@
 ﻿using scs.core;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 
 namespace multiplexing {
   internal class MultiplexingInvalidLoginCallback : InvalidLoginCallback {
@@ -18,7 +19,8 @@ namespace multiplexing {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
+    {
       return MultiplexingServer.Login(conn, _entity, _privKey) &&
              MultiplexingServer.Register(conn, _component, _properties);
     }

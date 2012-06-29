@@ -1,6 +1,7 @@
 ﻿using scs.core;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 
 namespace audit {
   internal class ServerInvalidLogin : InvalidLoginCallback {
@@ -17,7 +18,8 @@ namespace audit {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
+    {
       return AuditServer.Login(_entity, _privKey) &&
              AuditServer.Register(_ic, _properties);
     }

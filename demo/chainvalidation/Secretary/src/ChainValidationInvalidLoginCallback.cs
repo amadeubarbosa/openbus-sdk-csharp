@@ -1,4 +1,5 @@
 ﻿using tecgraf.openbus;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
 namespace chainvalidation {
   class ChainValidationInvalidLoginCallback : InvalidLoginCallback {
@@ -12,7 +13,8 @@ namespace chainvalidation {
       _executiveEntity = executiveEntity;
     }
 
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
+    {
       return SecretaryServer.Login(_entity, _privKey) && SecretaryServer.Register(_executiveEntity);
     }
   }

@@ -1,9 +1,11 @@
 ﻿using tecgraf.openbus;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
 namespace Client {
   internal class IndependentClockClientInvalidLoginCallback :
     InvalidLoginCallback {
-    public bool InvalidLogin(Connection conn) {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
+    {
       // sempre retorna falso para não prender a chamada atual, pois o cliente
       // deve continuar funcionando mesmo que o barramento esteja fora do ar.
       // Nesta demo, outra parte do código se responsabiliza por relançar a 
