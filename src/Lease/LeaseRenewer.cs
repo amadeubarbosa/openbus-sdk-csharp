@@ -1,5 +1,5 @@
 using System.Threading;
-using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
 namespace tecgraf.openbus.lease {
   /// <summary>

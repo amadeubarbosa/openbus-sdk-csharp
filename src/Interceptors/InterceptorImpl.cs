@@ -1,6 +1,6 @@
 using System;
 using omg.org.IOP;
-using tecgraf.openbus.core.v2_00.credential;
+using tecgraf.openbus.core.v2_0.credential;
 
 namespace tecgraf.openbus.interceptors
 {

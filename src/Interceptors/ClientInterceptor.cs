@@ -2,7 +2,7 @@ using System;
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.interceptors {

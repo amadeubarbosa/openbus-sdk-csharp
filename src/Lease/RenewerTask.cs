@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.lease {

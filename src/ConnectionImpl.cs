@@ -12,11 +12,11 @@ using omg.org.IOP;
 using omg.org.PortableInterceptor;
 using scs.core;
 using tecgraf.openbus.core.v1_05.access_control_service;
-using tecgraf.openbus.core.v2_00;
-using tecgraf.openbus.core.v2_00.credential;
-using tecgraf.openbus.core.v2_00.services;
-using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0;
+using tecgraf.openbus.core.v2_0.credential;
+using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.caches;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
@@ -67,8 +67,8 @@ namespace tecgraf.openbus {
 
     private const int PrevContextId = 1234;
 
-    private const byte MajorVersion = core.v2_00.MajorVersion.ConstVal;
-    private const byte MinorVersion = core.v2_00.MinorVersion.ConstVal;
+    private const byte MajorVersion = core.v2_0.MajorVersion.ConstVal;
+    private const byte MinorVersion = core.v2_0.MinorVersion.ConstVal;
     private const int SecretSize = 16;
 
     private readonly Codec _codec;

@@ -6,8 +6,8 @@ using Org.BouncyCastle.Crypto;
 using log4net;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v1_05.access_control_service;
-using tecgraf.openbus.core.v2_00.services;
-using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.caches {

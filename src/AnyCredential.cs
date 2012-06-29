@@ -1,5 +1,5 @@
 ﻿using tecgraf.openbus.core.v1_05.access_control_service;
-using tecgraf.openbus.core.v2_00.credential;
+using tecgraf.openbus.core.v2_0.credential;
 
 namespace tecgraf.openbus {
   internal class AnyCredential {

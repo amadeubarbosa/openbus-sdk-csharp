@@ -1,6 +1,6 @@
 ﻿using tecgraf.openbus.caches;
-using tecgraf.openbus.core.v2_00.credential;
-using tecgraf.openbus.core.v2_00.services.access_control;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.credential;
 
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {

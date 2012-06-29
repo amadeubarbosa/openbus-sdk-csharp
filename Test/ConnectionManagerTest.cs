@@ -2,8 +2,8 @@
 using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_00.services.access_control;
-using tecgraf.openbus.core.v2_00.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
 
