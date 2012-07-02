@@ -68,8 +68,8 @@ namespace tecgraf.openbus {
     void LoginByCertificate(String entity, Byte[] privKey);
 
     /// <summary>
-	  /// Inicia o processo de login por single sign-on e cria um objeto para
-	  /// conclusão desse processo.
+    /// Inicia o processo de login por autenticação compartilhada e cria um
+    /// objeto para a conclusão desse processo.
     /// 
 	  /// O objeto criado para conclusão do processo de login só pode ser utilizado
 	  /// para concluir um único login. Após a conclusão do login (com sucesso ou

@@ -310,10 +310,10 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    /// Testes de SingleSignOn
+    /// Testes de SharedAuth
     ///</summary>
     [TestMethod]
-    public void SingleSignOnTest() {
+    public void SharedAuthTest() {
       lock (this) {
         Connection conn = CreateConnection();
         Connection conn2 = CreateConnection();
