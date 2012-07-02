@@ -8,8 +8,8 @@
     <ProjectGuid>{860C8DE2-356E-4162-A918-B2E3BCDAB1B3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>tecgraf.openbus.interop.singlesignon</RootNamespace>
-    <AssemblyName>SingleSignOn</AssemblyName>
+    <RootNamespace>tecgraf.openbus.interop.sharedauth</RootNamespace>
+    <AssemblyName>SharedAuth</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

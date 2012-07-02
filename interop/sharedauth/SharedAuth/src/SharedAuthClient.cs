@@ -7,15 +7,15 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.simple;
-using tecgraf.openbus.interop.singlesignon.Properties;
 
-namespace tecgraf.openbus.interop.singlesignon
+namespace tecgraf.openbus.interop.sharedauth
 {
   /// <summary>
-  /// Cliente do teste de interoperabilidade single sign-on.
+  /// Cliente do teste de interoperabilidade shared auth.
   /// </summary>
-  static class SingleSignOnClient {
+  static class SharedAuthClient {
     static void Main() {
       string hostName = DemoConfig.Default.hostName;
       short hostPort = DemoConfig.Default.hostPort;
@@ -44,7 +44,7 @@ namespace tecgraf.openbus.interop.singlesignon
         OrbServices.GetSingleton().string_to_object(reference) as LoginProcess;
       conn.LoginBySharedAuth(login, secret);
 
-      Console.WriteLine("Login por single sign on concluído, procurando faceta Hello.");
+      Console.WriteLine("Login por autenticação compartilhada concluído, procurando faceta Hello.");
 
       // propriedades geradas automaticamente
       ServiceProperty autoProp = new ServiceProperty("openbus.component.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace tecgraf.openbus.interop.singlesignon.Properties {
+namespace tecgraf.openbus.interop.sharedauth.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -61,7 +61,7 @@ namespace tecgraf.openbus.interop.singlesignon.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("11000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("9000")]
         public short hostPort {
             get {
                 return ((short)(this["hostPort"]));

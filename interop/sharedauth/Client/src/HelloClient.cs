@@ -7,12 +7,12 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.simple;
-using tecgraf.openbus.interop.singlesignon.Properties;
 
-namespace tecgraf.openbus.interop.singlesignon {
+namespace tecgraf.openbus.interop.sharedauth {
   /// <summary>
-  /// Cliente do teste de interoperabilidade single sign-on.
+  /// Cliente do teste de interoperabilidade shared auth.
   /// </summary>
   static class HelloClient {
     static void Main() {
@@ -91,7 +91,7 @@ namespace tecgraf.openbus.interop.singlesignon {
 
       Console.WriteLine("Fim.");
 
-      Console.WriteLine("Execute o cliente que fará o login por single sign on e, após seu término, pressione qualquer tecla para finalizar este cliente.");
+      Console.WriteLine("Execute o cliente que fará o login por autenticação compartilhada e, após seu término, pressione qualquer tecla para finalizar este cliente.");
       Console.ReadLine();
     }
   }
