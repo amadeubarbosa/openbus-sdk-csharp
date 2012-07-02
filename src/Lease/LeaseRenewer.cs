@@ -51,6 +51,10 @@ namespace tecgraf.openbus.lease {
     /// </summary>
     public void Finish() {
       _renewer.Finish();
+      // Não devo dar join "em mim mesmo" para evitar deadlock
+      if (!Thread.CurrentThread.ManagedThreadId.Equals(_leaseThread.ManagedThreadId)) {
+        _leaseThread.Join();
+      }
       _renewer = null;
     }
 

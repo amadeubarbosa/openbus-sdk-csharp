@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -17,6 +16,8 @@ namespace tecgraf.openbus.lease {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (RenewerTask));
 
+    private readonly AutoResetEvent _autoEvent = new AutoResetEvent(false);
+
     /// <summary>
     /// A conexão que deve ser mantida ativa.
     /// </summary>
@@ -26,11 +27,6 @@ namespace tecgraf.openbus.lease {
     /// Faceta de controle de acesso do barramento.
     /// </summary>
     private readonly AccessControl _ac;
-
-    /// <summary>
-    /// Indica se a <i>thread</i> deve continuar executando.
-    /// </summary>
-    private bool _mustContinue;
 
     #endregion
 
@@ -52,7 +48,6 @@ namespace tecgraf.openbus.lease {
           "Impossível criar renovador de credencial com conexão nula.");
       }
       _ac = accessControlFacet;
-      _mustContinue = true;
     }
 
     #endregion
@@ -65,36 +60,23 @@ namespace tecgraf.openbus.lease {
     public void Run() {
       try {
         _conn.Manager.Requester = _conn;
-        while (_mustContinue) {
+        while (!_autoEvent.WaitOne(Lease * 1000)) {
           try {
             Lease = _ac.renew();
-            if (Lease == 0) {
-              _mustContinue = false;
-              Logger.Warn("Falha na renovação da credencial.");
-            }
-            else {
-              StringBuilder msg = new StringBuilder();
-              msg.Append(DateTime.Now);
-              msg.Append(" - Lease renovado. Próxima renovação em ");
-              msg.Append(Lease + " segundos.");
-              Logger.Debug(msg.ToString());
-            }
+            Logger.Debug(String.Format("{0} - Lease renovado. Próxima renovação em {1} segundos.", DateTime.Now, Lease));
           }
           catch (NO_PERMISSION) {
-            Logger.Debug(
+            Logger.Warn(
               "Impossível renovar a credencial pois a conexão não está logada no barramento.");
           }
           catch (AbstractCORBASystemException e) {
             Logger.Error("Erro ao tentar renovar o lease", e);
           }
-          if (_mustContinue) {
-            Thread.Sleep(Lease * 1000);
-          }
         }
         Logger.Info("Thread de renovação de login finalizada.");
       }
       catch (ThreadInterruptedException) {
-        Logger.Debug("Lease Interrompido");
+        Logger.Warn("Lease Interrompido");
       }
     }
 
@@ -102,7 +84,7 @@ namespace tecgraf.openbus.lease {
     /// Solicita o fim da renovação do <i>lease</i>.
     /// </summary>
     public void Finish() {
-      _mustContinue = false;
+      _autoEvent.Set();
     }
 
     public int Lease { get; private set; }
