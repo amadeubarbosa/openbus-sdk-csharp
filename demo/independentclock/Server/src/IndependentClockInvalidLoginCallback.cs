@@ -14,8 +14,7 @@ namespace Server {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
-    {
+    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
       return IndependentClockServer.TryLoginAndRegisterForever(_ic, _properties);
     }
   }
