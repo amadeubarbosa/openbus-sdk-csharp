@@ -58,5 +58,29 @@ namespace tecgraf.openbus.interop.multiplexing.Properties {
                 this["hostPort2"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("interop_multiplexing_csharp")]
+        public string entity {
+            get {
+                return ((string)(this["entity"]));
+            }
+            set {
+                this["entity"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("InteropMultiplexing.key")]
+        public string key {
+            get {
+                return ((string)(this["key"]));
+            }
+            set {
+                this["key"] = value;
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -17,6 +18,11 @@ namespace tecgraf.openbus.interop.multiplexing {
         string hostName = DemoConfig.Default.hostName;
         short hostPort = DemoConfig.Default.hostPort;
         short hostPort2 = DemoConfig.Default.hostPort2;
+        string entity = DemoConfig.Default.entity + "_conn";
+        Byte[] key = File.ReadAllBytes(DemoConfig.Default.key);
+        string entity1 = entity + "1";
+        string entity2 = entity + "2";
+        string entity3 = entity + "3";
 
         // setup and start the orb
         ConnectionManager manager = ORBInitializer.Manager;
@@ -32,11 +38,11 @@ namespace tecgraf.openbus.interop.multiplexing {
 
         // setup action on login termination
         conn1AtBus1.OnInvalidLogin =
-          new HelloInvalidLoginCallback("Conn1AtBus1", manager);
+          new HelloInvalidLoginCallback(entity1, key);
         conn2AtBus1.OnInvalidLogin =
-          new HelloInvalidLoginCallback("Conn2AtBus1", manager);
+          new HelloInvalidLoginCallback(entity2, key);
         connAtBus2.OnInvalidLogin =
-          new HelloInvalidLoginCallback("ConnAtBus2", manager);
+          new HelloInvalidLoginCallback(entity3, key);
 
         // create service SCS component
         ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
@@ -45,28 +51,21 @@ namespace tecgraf.openbus.interop.multiplexing {
                            new HelloImpl(Conns));
 
         // login to the bus
-        System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-        manager.Requester = conn1AtBus1;
-        conn1AtBus1.LoginByPassword("conn1", encoding.GetBytes("conn1"));
-        manager.Requester = conn2AtBus1;
-        conn2AtBus1.LoginByPassword("conn2", encoding.GetBytes("conn2"));
-        manager.Requester = connAtBus2;
-        connAtBus2.LoginByPassword("conn3", encoding.GetBytes("conn3"));
-        manager.Requester = null;
+        conn1AtBus1.LoginByCertificate(entity1, key);
+        conn2AtBus1.LoginByCertificate(entity2, key);
+        connAtBus2.LoginByCertificate(entity3, key);
 
-        // set incoming connection
+        // set incoming connections
         manager.SetDispatcher(conn1AtBus1);
         manager.SetDispatcher(connAtBus2);
 
         RegisterThreadStart start1 = new RegisterThreadStart(conn1AtBus1,
-                                                             manager,
                                                              component.
                                                                GetIComponent());
         Thread thread1 = new Thread(start1.Run);
         thread1.Start();
 
         RegisterThreadStart start2 = new RegisterThreadStart(conn2AtBus1,
-                                                             manager,
                                                              component.
                                                                GetIComponent());
         Thread thread2 = new Thread(start2.Run);
@@ -81,8 +80,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         Thread.Sleep(Timeout.Infinite);
       }
       catch (Exception e) {
-        Console.WriteLine(e.Message);
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
     }
 
@@ -94,24 +92,20 @@ namespace tecgraf.openbus.interop.multiplexing {
 
     private class RegisterThreadStart {
       private readonly Connection _conn;
-      private readonly ConnectionManager _manager;
       private readonly IComponent _component;
 
-      public RegisterThreadStart(Connection conn, ConnectionManager manager,
-                                 IComponent component) {
+      public RegisterThreadStart(Connection conn, IComponent component) {
         _conn = conn;
-        _manager = manager;
         _component = component;
       }
 
       public void Run() {
-        _manager.Requester = _conn;
+        ORBInitializer.Manager.Requester = _conn;
         try {
           _conn.Offers.registerService(_component, GetProps());
         }
         catch (Exception e) {
-          Console.WriteLine(e.Message);
-          Console.WriteLine(e.StackTrace);
+          Console.WriteLine(e);
         }
       }
     }
