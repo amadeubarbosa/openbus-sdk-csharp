@@ -73,7 +73,7 @@ namespace tecgraf.openbus.lease {
             Logger.Error("Erro ao tentar renovar o lease", e);
           }
         }
-        Logger.Info("Thread de renovação de login finalizada.");
+        Logger.Debug("Thread de renovação de login finalizada.");
       }
       catch (ThreadInterruptedException) {
         Logger.Warn("Lease Interrompido");

@@ -555,25 +555,6 @@ namespace tecgraf.openbus {
           new ServiceContext(ContextId, _codec.encode_value(data));
         ri.add_request_service_context(serviceContext, false);
       }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == InvalidLoginCode.ConstVal) {
-          Logger.Fatal(
-            "Este cliente foi deslogado do barramento durante a interceptação desta requisição.",
-            e);
-          LoginInfo login = new LoginInfo(Login.Value.id, Login.Value.entity);
-          string busId = BusId;
-          LocalLogout();
-          if ((OnInvalidLogin != null) &&
-              (OnInvalidLogin.InvalidLogin(this, login, busId))) {
-            // pede que a chamada original seja relançada
-            throw new ForwardRequest(ri.target);
-          }
-          // se callback retornar false, tentativas de refazer login falharam, lança exceção
-          throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-        throw;
-      }
       catch (Exception) {
         Logger.Fatal(String.Format("Erro ao tentar enviar a requisição {0}.",
                                    operation));
