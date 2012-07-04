@@ -44,6 +44,8 @@ namespace tecgraf.openbus {
 
     private volatile int _sessionId;
     private readonly object _lock = new object();
+    private LoginInfo? _login;
+    private readonly object _loginLock = new object();
     // client caches
     private readonly LRUConcurrentDictionaryCache<EffectiveProfile, string>
       _profile2Login;
@@ -136,7 +138,7 @@ namespace tecgraf.openbus {
     }
 
     private void GetBusFacets() {
-      if (Login != null) {
+      if (Login.HasValue) {
         return;
       }
       string acsId = Repository.GetRepositoryID(typeof (AccessControl));
@@ -200,7 +202,7 @@ namespace tecgraf.openbus {
     private AsymmetricCipherKeyPair InternalKey { get; set; }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
-      if (Login != null) {
+      if (Login.HasValue) {
         login.cancel();
         throw new AlreadyLoggedInException();
       }
@@ -223,37 +225,42 @@ namespace tecgraf.openbus {
       }
 
       int lease;
+      LoginInfo l;
       try {
-        Login = login.login(pubBytes, encrypted, out lease);
+        l = login.login(pubBytes, encrypted, out lease);
       }
       catch (OBJECT_NOT_EXIST) {
         throw new InvalidLoginProcessException();
       }
       catch (WrongEncoding) {
         ServiceFailure e = new ServiceFailure {
-          message =
-            "Erro na codificação da chave pública do barramento."
-        };
+                                                message =
+                                                  "Erro na codificação da chave pública do barramento."
+                                              };
         throw e;
       }
       catch (Exception e) {
-        Logger.Fatal(e.Message);
-        Logger.Fatal(e.StackTrace);
+        Logger.Fatal(e);
         throw;
       }
-      StartLeaseRenewer(lease);
+      lock (_loginLock) {
+        Login = l;
+        StartLeaseRenewer(lease);
+      }
     }
 
     private void LocalLogout() {
-      StopLeaseRenewer();
-      if (ReferenceEquals(Manager.GetDispatcher(BusId), this)) {
-        Manager.ClearDispatcher(BusId);
+      lock (_loginLock) {
+        StopLeaseRenewer();
+        if (ReferenceEquals(Manager.GetDispatcher(BusId), this)) {
+          Manager.ClearDispatcher(BusId);
+        }
+        Login = null;
+        EraseBusIdAndKey();
+        _outgoingLogin2Session.Clear();
+        _profile2Login.Clear();
+        _sessionId2Session.Clear();
       }
-      Login = null;
-      EraseBusIdAndKey();
-      _outgoingLogin2Session.Clear();
-      _profile2Login.Clear();
-      _sessionId2Session.Clear();
     }
 
     private void StartLeaseRenewer(int lease) {
@@ -289,8 +296,20 @@ namespace tecgraf.openbus {
 
     public string BusId { get; private set; }
 
-    //TODO: avaliar se tem que tornar thread-safe: SIM
-    public LoginInfo? Login { get; private set; }
+    public LoginInfo? Login {
+      get {
+        // Não há problema em deixar o return dentro do lock pois o compilador
+        // é esperto o suficiente para lidar com isso corretamente.
+        lock (_loginLock) {
+          return _login;
+        }
+      }
+      private set {
+        lock (_loginLock) {
+          _login = value;
+        }
+      }
+    }
 
     public void LoginByPassword(string entity, byte[] password) {
       if (Login != null) {
@@ -310,7 +329,7 @@ namespace tecgraf.openbus {
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
           encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
         }
-        catch(WrongEncoding) {
+        catch (WrongEncoding) {
           ServiceFailure e = new ServiceFailure {
                                                   message =
                                                     "Erro na codificação da chave pública do barramento."
@@ -323,8 +342,12 @@ namespace tecgraf.openbus {
         }
 
         int lease;
-        Login = _acs.loginByPassword(entity, pubBytes, encrypted, out lease);
-        StartLeaseRenewer(lease);
+        LoginInfo l = _acs.loginByPassword(entity, pubBytes, encrypted,
+                                           out lease);
+        lock (_loginLock) {
+          Login = l;
+          StartLeaseRenewer(lease);
+        }
       }
       finally {
         Manager.UnignoreCurrentThread();
@@ -363,7 +386,7 @@ namespace tecgraf.openbus {
         Manager.IgnoreCurrentThread();
         LoginByObject(login, secret);
       }
-      catch(AccessDenied e) {
+      catch (AccessDenied e) {
         throw new WrongSecretException(e.Message, e);
       }
       finally {
@@ -431,10 +454,14 @@ namespace tecgraf.openbus {
             (AnyCredential) current.get_slot(_credentialSlotId);
           if (anyCredential.IsLegacy) {
             Credential credential = anyCredential.LegacyCredential;
-            LoginInfo caller = new LoginInfo(credential.identifier, credential.owner);
-            LoginInfo[] originators = credential._delegate.Equals(String.Empty) 
+            LoginInfo caller = new LoginInfo(credential.identifier,
+                                             credential.owner);
+            LoginInfo[] originators = credential._delegate.Equals(String.Empty)
                                         ? new LoginInfo[0]
-                                        : new[] { new LoginInfo("unknown", credential._delegate) };
+                                        : new[] {
+                                                  new LoginInfo("unknown",
+                                                                credential._delegate)
+                                                };
             return new CallerChainImpl(BusId, caller, originators);
           }
           CallChain chain = UnmarshalCallChain(anyCredential.Credential.chain);
@@ -587,7 +614,9 @@ namespace tecgraf.openbus {
                                   CompletionStatus.Completed_No);
         }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
-          LoginInfo login = new LoginInfo(Login.Value.id, Login.Value.entity);
+          LoginInfo login = Login.HasValue
+                              ? new LoginInfo(Login.Value.id, Login.Value.entity)
+                              : new LoginInfo();
           string busId = BusId;
           LocalLogout();
           if ((OnInvalidLogin != null) &&
@@ -652,7 +681,7 @@ namespace tecgraf.openbus {
               // CheckChain pode lançar exceção com InvalidChainCode ou UnverifiedLoginCode
               CheckChain(credential.chain, credential.login);
               // insere o login no slot para a getCallerChain usar
-              if (Login != null) {
+              if (Login.HasValue) {
                 try {
                   ri.set_slot(_connectionSlotId, Login.Value.id);
                 }
@@ -669,7 +698,7 @@ namespace tecgraf.openbus {
         }
       }
       else {
-        if (Login != null) {
+        if (Login.HasValue) {
           try {
             ri.set_slot(_connectionSlotId, Login.Value.id);
           }
@@ -765,7 +794,7 @@ namespace tecgraf.openbus {
     }
 
     private byte[] CreateCredentialReset(string remoteLogin) {
-      if (Login != null) {
+      if (Login.HasValue) {
         CredentialReset reset = new CredentialReset {login = Login.Value.id};
         byte[] challenge = new byte[SecretSize];
         Random rand = new Random();
@@ -847,14 +876,15 @@ namespace tecgraf.openbus {
 
     private void CheckChain(SignedCallChain signed, string callerId) {
       CallChain chain = UnmarshalCallChain(signed);
-      if (Login == null) {
+      if (!Login.HasValue) {
         Logger.Fatal(
           "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
         throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
-      if(!chain.target.Equals(Login.Value.id)) {
-        Logger.Fatal("O login não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
+      if (!chain.target.Equals(Login.Value.id)) {
+        Logger.Fatal(
+          "O login não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
         throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
