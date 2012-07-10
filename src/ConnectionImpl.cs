@@ -249,7 +249,7 @@ namespace tecgraf.openbus {
 
     private void LocalLogin(string busId, AsymmetricKeyParameter key, LoginInfo login, int lease) {
       lock (_loginLock) {
-        if (Login != null) {
+        if (Login.HasValue) {
           throw new AlreadyLoggedInException();
         }
         BusId = busId;
@@ -322,7 +322,7 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByPassword(string entity, byte[] password) {
-      if (Login != null) {
+      if (Login.HasValue) {
         throw new AlreadyLoggedInException();
       }
 
@@ -363,7 +363,7 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByCertificate(string entity, byte[] privKey) {
-      if (Login != null) {
+      if (Login.HasValue) {
         throw new AlreadyLoggedInException();
       }
 
