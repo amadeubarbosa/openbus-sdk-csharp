@@ -189,9 +189,9 @@ namespace tecgraf.openbus {
       }
     }
 
-    private void GetBusIdAndKey() {
-      BusId = _acs.busid;
-      _busKey = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
+    private string GetBusIdAndKey(out AsymmetricKeyParameter key) {
+      key = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
+      return _acs.busid;
     }
 
     private void EraseBusIdAndKey() {
@@ -207,7 +207,8 @@ namespace tecgraf.openbus {
         throw new AlreadyLoggedInException();
       }
 
-      GetBusIdAndKey();
+      AsymmetricKeyParameter key;
+      string busId = GetBusIdAndKey(out key);
 
       byte[] encrypted;
       byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -216,7 +217,7 @@ namespace tecgraf.openbus {
         LoginAuthenticationInfo info =
           new LoginAuthenticationInfo
           {data = secret, hash = SHA256.Create().ComputeHash(pubBytes)};
-        encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
+        encrypted = Crypto.Encrypt(key, _codec.encode_value(info));
       }
       catch {
         login.cancel();
@@ -243,8 +244,17 @@ namespace tecgraf.openbus {
         Logger.Fatal(e);
         throw;
       }
+      LocalLogin(busId, key, l, lease);
+    }
+
+    private void LocalLogin(string busId, AsymmetricKeyParameter key, LoginInfo login, int lease) {
       lock (_loginLock) {
-        Login = l;
+        if (Login != null) {
+          throw new AlreadyLoggedInException();
+        }
+        BusId = busId;
+        _busKey = key;
+        Login = login;
         StartLeaseRenewer(lease);
       }
     }
@@ -319,7 +329,8 @@ namespace tecgraf.openbus {
       try {
         Manager.IgnoreCurrentThread();
 
-        GetBusIdAndKey();
+        AsymmetricKeyParameter key;
+        string busId = GetBusIdAndKey(out key);
 
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -327,7 +338,7 @@ namespace tecgraf.openbus {
           LoginAuthenticationInfo info =
             new LoginAuthenticationInfo
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
-          encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
+          encrypted = Crypto.Encrypt(key, _codec.encode_value(info));
         }
         catch (WrongEncoding) {
           ServiceFailure e = new ServiceFailure {
@@ -344,10 +355,7 @@ namespace tecgraf.openbus {
         int lease;
         LoginInfo l = _acs.loginByPassword(entity, pubBytes, encrypted,
                                            out lease);
-        lock (_loginLock) {
-          Login = l;
-          StartLeaseRenewer(lease);
-        }
+        LocalLogin(busId, key, l, lease);
       }
       finally {
         Manager.UnignoreCurrentThread();
