@@ -119,7 +119,7 @@ namespace tecgraf.openbus {
       if (conn == null) {
         throw new ArgumentNullException();
       }
-      if ((conn.Login == null) || conn.BusId == null) {
+      if ((!conn.Login.HasValue) || conn.BusId == null) {
         throw new NotLoggedInException();
       }
       lock (_incomingDispatcherConn) {

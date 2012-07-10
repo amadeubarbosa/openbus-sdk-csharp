@@ -403,7 +403,7 @@ namespace tecgraf.openbus {
     }
 
     public bool Logout() {
-      if (Login == null) {
+      if (!Login.HasValue) {
         return false;
       }
 
@@ -453,7 +453,7 @@ namespace tecgraf.openbus {
           Logger.Fatal(message, e);
           throw new OpenBusException(message);
         }
-        if ((Login == null) || (loginId == null) ||
+        if ((!Login.HasValue) || (loginId == null) ||
             (!Login.Value.id.Equals(loginId))) {
           return null;
         }
