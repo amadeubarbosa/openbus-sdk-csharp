@@ -4,7 +4,7 @@ using tecgraf.openbus.core.v2_0.services.access_control;
 namespace tecgraf.openbus.interop.simple
 {
   /// <summary>
-  /// Implementação do servant IHello.
+  /// Implementação do servant Hello.
   /// </summary>  
   public class HelloImpl : MarshalByRefObject, Hello
   {
@@ -22,7 +22,7 @@ namespace tecgraf.openbus.interop.simple
 
     #endregion
 
-    #region IHello Members
+    #region Hello Members
 
     public void sayHello() {
       try {
