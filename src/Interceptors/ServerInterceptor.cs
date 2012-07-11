@@ -107,6 +107,12 @@ namespace tecgraf.openbus.interceptors {
         Manager.Requester = conn;
         conn.ReceiveRequest(ri, anyCredential);
       }
+      catch (NO_PERMISSION e) {
+        if (e.Minor == NoLoginCode.ConstVal) {
+          throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                  CompletionStatus.Completed_No);
+        }
+      }
       catch (InvalidSlot e) {
         const string msg = "Falha ao inserir a credencial em seu slot.";
         Logger.Fatal(msg, e);
@@ -139,11 +145,12 @@ namespace tecgraf.openbus.interceptors {
         string reset = ri.get_slot(CredentialSlotId) as string;
         if ((reset != null) && (reset.Equals("reset"))) {
           throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
-                            CompletionStatus.Completed_No);
+                                  CompletionStatus.Completed_No);
         }
       }
       catch (InvalidSlot e) {
-        const string msg = "Falha ao acessar o slot da credencial para avaliar se um reset deve ser enviado.";
+        const string msg =
+          "Falha ao acessar o slot da credencial para avaliar se um reset deve ser enviado.";
         Logger.Fatal(msg, e);
         throw new OpenBusException(msg, e);
       }
@@ -177,14 +184,22 @@ namespace tecgraf.openbus.interceptors {
             interceptedOperation, anyCredential.IsLegacy));
 
           try {
-            ConnectionImpl conn = ri.get_slot(ReceivingConnectionSlotId) as ConnectionImpl;
+            ConnectionImpl conn =
+              ri.get_slot(ReceivingConnectionSlotId) as ConnectionImpl;
             if (conn != null) {
               conn.SendException(ri, anyCredential);
               return;
             }
           }
+          catch (NO_PERMISSION e) {
+            if (e.Minor == NoLoginCode.ConstVal) {
+              throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                      CompletionStatus.Completed_No);
+            }
+          }
           catch (InvalidSlot e) {
-            const string msg = "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.";
+            const string msg =
+              "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.";
             Logger.Fatal(msg, e);
             throw new OpenBusException(msg, e);
           }
