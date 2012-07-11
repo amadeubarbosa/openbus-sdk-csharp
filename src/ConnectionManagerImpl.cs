@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -24,8 +23,6 @@ namespace tecgraf.openbus {
 
     /** Mapa de conexão por thread */
     private readonly ConcurrentDictionary<int, Connection> _connectedThreads;
-    /** Threads com interceptação ignorada */
-    private readonly ConditionalWeakTable<Thread, string> _ignoredThreads;
 
     private readonly ORB _orb;
 
@@ -33,19 +30,22 @@ namespace tecgraf.openbus {
 
     private readonly bool _legacy;
 
-    /// <summary> Identificador do slot de thread corrente.</summary>
+    // Identificador do slot de thread corrente.
     internal int CurrentThreadSlotId { get; private set; }
+
+    // Identificador do slot de interceptação ignorada.
+    private readonly int _ignoreThreadSlotId;
 
     #endregion
 
     #region ConnectionManager methods
 
-    public ConnectionManagerImpl(int currentThreadSlotId, bool legacySupport) {
+    public ConnectionManagerImpl(int currentThreadSlotId, int ignoreThreadSlotId, bool legacySupport) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
-      _ignoredThreads = new ConditionalWeakTable<Thread, string>();
       LoginsCache = new LoginCache();
       CurrentThreadSlotId = currentThreadSlotId;
+      _ignoreThreadSlotId = ignoreThreadSlotId;
       _legacy = legacySupport;
       _orb = OrbServices.GetSingleton();
     }
@@ -70,14 +70,7 @@ namespace tecgraf.openbus {
 
     public Connection Requester {
       get {
-        const string message =
-          "Falha inesperada ao acessar o slot da thread corrente";
-        Current current =
-          _orb.resolve_initial_references("PICurrent") as Current;
-        if (current == null) {
-          Logger.Fatal(message);
-          throw new OpenBusException(message);
-        }
+        Current current = GetPICurrent();
         int id;
         try {
           Object obj = current.get_slot(CurrentThreadSlotId);
@@ -87,6 +80,8 @@ namespace tecgraf.openbus {
           id = Convert.ToInt32(obj);
         }
         catch (InvalidSlot e) {
+          const string message =
+            "Falha inesperada ao acessar o slot da thread corrente";
           Logger.Fatal(message, e);
           throw new OpenBusException(message);
         }
@@ -95,19 +90,14 @@ namespace tecgraf.openbus {
         return _connectedThreads.TryGetValue(id, out connection) ? connection : null;
       }
       set {
-        const string message =
-          "Falha inesperada ao acessar o slot da thread corrente";
         int id = Thread.CurrentThread.ManagedThreadId;
-        Current current =
-          _orb.resolve_initial_references("PICurrent") as Current;
-        if (current == null) {
-          Logger.Fatal(message);
-          throw new OpenBusException(message);
-        }
+        Current current = GetPICurrent();
         try {
           current.set_slot(CurrentThreadSlotId, id);
         }
         catch (InvalidSlot e) {
+          const string message =
+            "Falha inesperada ao acessar o slot da thread corrente";
           Logger.Fatal(message, e);
           throw new OpenBusException(message, e);
         }
@@ -142,6 +132,17 @@ namespace tecgraf.openbus {
 
     #endregion
 
+    internal Current GetPICurrent() {
+      Current current = ORB.resolve_initial_references("PICurrent") as Current;
+      if (current == null) {
+        const string message =
+          "Falha inesperada ao acessar o slot da thread corrente";
+        Logger.Fatal(message);
+        throw new OpenBusException(message);
+      }
+      return current;
+    }
+
     internal IEnumerable<Connection> GetIncomingConnections() {
       IList<Connection> list = new List<Connection>(_incomingDispatcherConn.Values);
       if (DefaultConnection != null) {
@@ -166,19 +167,41 @@ namespace tecgraf.openbus {
     }
 
     internal void IgnoreCurrentThread() {
-      lock (_ignoredThreads) {
-        _ignoredThreads.Remove(Thread.CurrentThread);
-        _ignoredThreads.Add(Thread.CurrentThread, String.Empty);
+      Current current = GetPICurrent();
+      try {
+        current.set_slot(_ignoreThreadSlotId, Boolean.TrueString);
+      }
+      catch (InvalidSlot e) {
+        const string message =
+          "Falha inesperada ao acessar o slot de interceptação ignorada.";
+        Logger.Fatal(message, e);
+        throw new OpenBusException(message, e);
       }
     }
 
     internal void UnignoreCurrentThread() {
-      _ignoredThreads.Remove(Thread.CurrentThread);
+      Current current = GetPICurrent();
+      try {
+        current.set_slot(_ignoreThreadSlotId, Boolean.FalseString);
+      }
+      catch (InvalidSlot e) {
+        const string message =
+          "Falha inesperada ao acessar o slot de interceptação ignorada.";
+        Logger.Fatal(message, e);
+        throw new OpenBusException(message, e);
+      }
     }
 
-    internal bool IsCurrentThreadIgnored() {
-      string s;
-      return _ignoredThreads.TryGetValue(Thread.CurrentThread, out s);
+    internal bool IsCurrentThreadIgnored(RequestInfo ri) {
+      try {
+        return Convert.ToBoolean(ri.get_slot(_ignoreThreadSlotId));
+      }
+      catch (InvalidSlot e) {
+        const string message =
+          "Falha inesperada ao acessar o slot do login corrente";
+        Logger.Fatal(message, e);
+        throw new OpenBusException(message);
+      }
     }
   }
 }

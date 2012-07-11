@@ -27,7 +27,8 @@ namespace tecgraf.openbus.interceptors
       int connectionSlotId = info.allocate_slot_id();
       int receivingSlotId = info.allocate_slot_id();
       int loginSlotId = info.allocate_slot_id();
-      Manager = new ConnectionManagerImpl(currentThreadSlotId, legacy);
+      int ignoreThreadSlotId = info.allocate_slot_id();
+      Manager = new ConnectionManagerImpl(currentThreadSlotId, ignoreThreadSlotId, legacy);
 
       Codec codec = info.codec_factory.create_codec(
                         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));

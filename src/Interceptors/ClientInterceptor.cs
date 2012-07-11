@@ -45,7 +45,7 @@ namespace tecgraf.openbus.interceptors {
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
-      if (!Manager.IsCurrentThreadIgnored()) {
+      if (!Manager.IsCurrentThreadIgnored(ri)) {
         ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
         if (conn != null) {
           conn.SendRequest(ri);
@@ -59,7 +59,7 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void receive_exception(ClientRequestInfo ri) {
-      if (!Manager.IsCurrentThreadIgnored()) {
+      if (!Manager.IsCurrentThreadIgnored(ri)) {
         ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
         if (conn != null) {
           conn.ReceiveException(ri);

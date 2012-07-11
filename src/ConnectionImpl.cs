@@ -129,17 +129,6 @@ namespace tecgraf.openbus {
 
     #region Internal Members
 
-    private Current GetPICurrent() {
-      Current current = ORB.resolve_initial_references("PICurrent") as Current;
-      if (current == null) {
-        const string message =
-          "Falha inesperada ao acessar o slot da thread corrente";
-        Logger.Fatal(message);
-        throw new OpenBusException(message);
-      }
-      return current;
-    }
-
     private void GetBusFacets() {
       string acsId = Repository.GetRepositoryID(typeof (AccessControl));
       string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
@@ -453,7 +442,7 @@ namespace tecgraf.openbus {
 
     public CallerChain CallerChain {
       get {
-        Current current = GetPICurrent();
+        Current current = Manager.GetPICurrent();
         string piCurrentLoginId;
         try {
           piCurrentLoginId = current.get_slot(_connectionSlotId) as string;
@@ -546,13 +535,13 @@ namespace tecgraf.openbus {
       }
 
       // armazena login no PICurrent para obter no caso de uma exceção
-      Current current = GetPICurrent();
+      Current current = Manager.GetPICurrent();
       try {
         current.set_slot(_loginSlotId, new BusLoginInfo(login, busId));
       }
       catch (InvalidSlot e) {
         const string message =
-          "Falha inesperada ao acessar o slot da thread corrente";
+          "Falha inesperada ao acessar o slot do login corrente";
         Logger.Fatal(message, e);
         throw new OpenBusException(message, e);
       }
@@ -797,9 +786,8 @@ namespace tecgraf.openbus {
       if (client) {
         // se for interceptação cliente, o login e busId originais estão no PICurrent
         cri = ri as ClientRequestInfo;
-        Current current = GetPICurrent();
         try {
-          BusLoginInfo info = current.get_slot(_loginSlotId) as BusLoginInfo;
+          BusLoginInfo info = ri.get_slot(_loginSlotId) as BusLoginInfo;
           if (info != null) {
             originalLogin = info.Login;
             originalBusId = info.BusId;
@@ -810,7 +798,7 @@ namespace tecgraf.openbus {
         }
         catch (InvalidSlot e) {
           const string message =
-            "Falha inesperada ao acessar o slot da conexão corrente";
+            "Falha inesperada ao acessar o slot do login corrente";
           Logger.Fatal(message, e);
           throw new OpenBusException(message);
         }
