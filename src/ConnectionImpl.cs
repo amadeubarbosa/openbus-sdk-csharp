@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using System.Runtime.Remoting;
 using System.Security.Cryptography;
-using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Org.BouncyCastle.Crypto;
 using log4net;
@@ -54,8 +52,6 @@ namespace tecgraf.openbus {
     private readonly LRUConcurrentDictionaryCache<string, ClientSideSession>
       _outgoingLogin2Session;
 
-    private readonly ConditionalWeakTable<Thread, CallerChain> _joinedChainOf;
-
     // server caches
     private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
       _sessionId2Session;
@@ -79,6 +75,7 @@ namespace tecgraf.openbus {
     private readonly int _credentialSlotId;
     private readonly int _connectionSlotId;
     private readonly int _loginSlotId;
+    private readonly int _joinedChainSlotId;
 
     #endregion
 
@@ -101,6 +98,7 @@ namespace tecgraf.openbus {
       _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
       _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
+      _joinedChainSlotId = ClientInterceptor.Instance.JoinedChainSlotId;
       _acsComponent = RemotingServices.Connect(
         typeof (IComponent),
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
@@ -118,7 +116,6 @@ namespace tecgraf.openbus {
         new LRUConcurrentDictionaryCache<EffectiveProfile, string>();
       _outgoingLogin2Session =
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
-      _joinedChainOf = new ConditionalWeakTable<Thread, CallerChain>();
 
       _login = new LoginStatus(this);
       EraseBusIdAndKey();
@@ -433,10 +430,15 @@ namespace tecgraf.openbus {
       if (chain == null) {
         chain = CallerChain;
       }
-      lock (_joinedChainOf) {
-        // o remove serve apenas para não lançar exceção na Add.
-        _joinedChainOf.Remove(Thread.CurrentThread);
-        _joinedChainOf.Add(Thread.CurrentThread, chain);
+      Current current = Manager.GetPICurrent();
+      try {
+        current.set_slot(_joinedChainSlotId, chain);
+      }
+      catch (InvalidSlot e) {
+        const string message =
+          "Falha inesperada ao acessar o slot da joined chain.";
+        Logger.Fatal(message, e);
+        throw new OpenBusException(message, e);
       }
     }
 
@@ -449,7 +451,7 @@ namespace tecgraf.openbus {
         }
         catch (InvalidSlot e) {
           const string message =
-            "Falha inesperada ao acessar o slot da conexão corrente";
+            "Falha inesperada ao acessar o slot da conexão corrente.";
           Logger.Fatal(message, e);
           throw new OpenBusException(message);
         }
@@ -485,7 +487,7 @@ namespace tecgraf.openbus {
         }
         catch (InvalidSlot e) {
           const string message =
-            "Falha inesperada ao acessar o slot da credencial corrente";
+            "Falha inesperada ao acessar o slot da credencial corrente.";
           Logger.Fatal(message, e);
           throw new OpenBusException(message);
         }
@@ -493,13 +495,31 @@ namespace tecgraf.openbus {
     }
 
     public void ExitChain() {
-      _joinedChainOf.Remove(Thread.CurrentThread);
+      Current current = Manager.GetPICurrent();
+      try {
+        current.set_slot(_joinedChainSlotId, null);
+      }
+      catch (InvalidSlot e) {
+        const string message =
+          "Falha inesperada ao acessar o slot da joined chain.";
+        Logger.Fatal(message, e);
+        throw new OpenBusException(message, e);
+      }
     }
 
     public CallerChain JoinedChain {
       get {
+        Current current = Manager.GetPICurrent();
         CallerChain chain;
-        _joinedChainOf.TryGetValue(Thread.CurrentThread, out chain);
+        try {
+          chain = current.get_slot(_joinedChainSlotId) as CallerChain;
+        }
+        catch (InvalidSlot e) {
+          const string message =
+            "Falha inesperada ao acessar o slot da joined chain.";
+          Logger.Fatal(message, e);
+          throw new OpenBusException(message);
+        }
         return chain;
       }
     }

@@ -36,6 +36,8 @@ namespace tecgraf.openbus.interceptors {
       get { return _instance ?? (_instance = new ClientInterceptor()); }
     }
 
+    internal int JoinedChainSlotId;
+
     #endregion
 
     #region ClientRequestInterceptor Members
