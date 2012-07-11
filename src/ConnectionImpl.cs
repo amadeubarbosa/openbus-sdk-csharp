@@ -789,6 +789,7 @@ namespace tecgraf.openbus {
       string originalBusId;
       lock (_loginLock) {
         _login.SetInvalid();
+        StopLeaseRenewer();
         // nesse ponto login necessariamente terá valor, logo nunca será o default
         originalLogin = Login.GetValueOrDefault();
         originalBusId = BusId;
