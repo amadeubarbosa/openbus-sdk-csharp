@@ -19,6 +19,8 @@ namespace tecgraf.openbus.interceptors {
 
     private static ClientInterceptor _instance;
 
+    internal int LoginSlotId;
+
     #endregion
 
     #region Contructor

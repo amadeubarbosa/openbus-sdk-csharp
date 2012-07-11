@@ -78,6 +78,7 @@ namespace tecgraf.openbus {
 
     private readonly int _credentialSlotId;
     private readonly int _connectionSlotId;
+    private readonly int _loginSlotId;
 
     #endregion
 
@@ -99,6 +100,7 @@ namespace tecgraf.openbus {
       _codec = ServerInterceptor.Instance.Codec;
       _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
       _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
+      _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
       _acsComponent = RemotingServices.Connect(
         typeof (IComponent),
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
@@ -524,8 +526,10 @@ namespace tecgraf.openbus {
           "Interceptador cliente iniciando tentativa de chamada à operação {0}.",
           operation));
 
+      LoginInfo login;
       string loginId;
       string loginEntity;
+      string busId;
       lock (_loginLock) {
         if (!Login.HasValue) {
           Logger.Debug(
@@ -535,8 +539,22 @@ namespace tecgraf.openbus {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
+        login = Login.Value;
         loginId = Login.Value.id;
         loginEntity = Login.Value.entity;
+        busId = BusId;
+      }
+
+      // armazena login no PICurrent para obter no caso de uma exceção
+      Current current = GetPICurrent();
+      try {
+        current.set_slot(_loginSlotId, new BusLoginInfo(login, busId));
+      }
+      catch (InvalidSlot e) {
+        const string message =
+          "Falha inesperada ao acessar o slot da thread corrente";
+        Logger.Fatal(message, e);
+        throw new OpenBusException(message, e);
       }
 
       int sessionId = 0;
@@ -776,8 +794,25 @@ namespace tecgraf.openbus {
         originalBusId = BusId;
       }
       if (client) {
+        // se for interceptação cliente, o login e busId originais estão no PICurrent
         cri = ri as ClientRequestInfo;
-        //TODO obter dados originais do PICurrent
+        Current current = GetPICurrent();
+        try {
+          BusLoginInfo info = current.get_slot(_loginSlotId) as BusLoginInfo;
+          if (info != null) {
+            originalLogin = info.Login;
+            originalBusId = info.BusId;
+          }
+          else {
+            Logger.Warn("Falha ao obter o login original para chamar a callback. Utilizando login atual.");
+          }
+        }
+        catch (InvalidSlot e) {
+          const string message =
+            "Falha inesperada ao acessar o slot da conexão corrente";
+          Logger.Fatal(message, e);
+          throw new OpenBusException(message);
+        }
       }
       if (OnInvalidLogin != null) {
         OnInvalidLogin.InvalidLogin(this, originalLogin, originalBusId);
@@ -785,7 +820,7 @@ namespace tecgraf.openbus {
       LoginInfo newLogin;
       string newBusId;
       if (VerifyStatusAfterCallback(operation, cri, originalLogin.id, out newLogin, out newBusId)) {
-        // estamos no interceptador servidor e o relogin funcionou
+        // estamos no interceptador servidor e o relogin funcionou, então retorna
         return;
       }
       // estamos no interceptador cliente e o login está inválido mas mudou, tenta callback de novo
@@ -1092,6 +1127,16 @@ namespace tecgraf.openbus {
 
       internal bool IsInvalid() {
         return Status == LStatus.Invalid;
+      }
+    }
+
+    private sealed class BusLoginInfo {
+      internal readonly LoginInfo Login;
+      internal readonly string BusId;
+
+      internal BusLoginInfo(LoginInfo login, string busId) {
+        Login = login;
+        BusId = busId;
       }
     }
 

@@ -26,6 +26,7 @@ namespace tecgraf.openbus.interceptors
       int currentThreadSlotId = info.allocate_slot_id();
       int connectionSlotId = info.allocate_slot_id();
       int receivingSlotId = info.allocate_slot_id();
+      int loginSlotId = info.allocate_slot_id();
       Manager = new ConnectionManagerImpl(currentThreadSlotId, legacy);
 
       Codec codec = info.codec_factory.create_codec(
@@ -39,6 +40,7 @@ namespace tecgraf.openbus.interceptors
       ClientInterceptor.Instance.Codec = codec;
       ClientInterceptor.Instance.CredentialSlotId = credentialSlotId;
       ClientInterceptor.Instance.ConnectionSlotId = connectionSlotId;
+      ClientInterceptor.Instance.LoginSlotId = loginSlotId;
       ClientInterceptor.Instance.Manager = Manager;
       ClientInterceptor.Instance.Legacy = legacy;
 
