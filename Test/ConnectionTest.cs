@@ -323,9 +323,7 @@ namespace tecgraf.openbus.Test {
         byte[] secret;
         LoginProcess login;
         try {
-          _manager.Requester = conn;
           login = conn.StartSharedAuth(out secret);
-          _manager.Requester = null;
           conn2.LoginBySharedAuth(login, new byte[0]);
         }
         catch (WrongSecretException) {
@@ -338,20 +336,15 @@ namespace tecgraf.openbus.Test {
         Assert.IsTrue(failed, "O login com segredo errado foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn2.Login);
-        _manager.Requester = conn;
         login = conn.StartSharedAuth(out secret);
-        _manager.Requester = null;
         conn2.LoginBySharedAuth(login, secret);
         Assert.IsNotNull(conn2.Login);
         conn2.Logout();
         Assert.IsNull(conn2.Login);
-        _manager.Requester = null;
         // login repetido
         failed = false;
         try {
-          _manager.Requester = conn;
           login = conn.StartSharedAuth(out secret);
-          _manager.Requester = null;
           conn2.LoginBySharedAuth(login, secret);
           Assert.IsNotNull(conn2.Login);
           conn2.LoginBySharedAuth(login, secret);
@@ -370,7 +363,6 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn2.Login);
         conn.Logout();
         Assert.IsNull(conn.Login);
-        _manager.Requester = null;
       }
     }
 

@@ -374,9 +374,23 @@ namespace tecgraf.openbus {
     }
 
     public LoginProcess StartSharedAuth(out byte[] secret) {
-      byte[] challenge;
-      LoginProcess login = _acs.startLoginBySharedAuth(out challenge);
-      secret = Crypto.Decrypt(InternalKey.Private, challenge);
+      LoginProcess login = null;
+      Connection prev = Manager.Requester;
+      try {
+        Manager.Requester = this;
+        byte[] challenge;
+        login = _acs.startLoginBySharedAuth(out challenge);
+        secret = Crypto.Decrypt(InternalKey.Private, challenge);
+      }
+      catch(Exception) {
+        if (login != null) {
+          login.cancel();
+        }
+        throw;
+      }
+      finally {
+        Manager.Requester = prev;
+      }
       return login;
     }
 
@@ -1030,12 +1044,15 @@ namespace tecgraf.openbus {
         }
         catch (Exception e) {
           NO_PERMISSION noPermission = e as NO_PERMISSION;
+          //TODO testar aqui se é NoLoginCode. Se for, traduzir para UnknownBusCode (pode ser um catch diferente)
           if ((noPermission != null) &&
               (noPermission.Minor == InvalidLoginCode.ConstVal)) {
             Logger.Fatal(
               "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
             // chama callback e tenta de novo
             CallOnInvalidLoginCallback(false, ri);
+            //TODO testar aqui se a callback lança NoLoginCode. Se lançar, traduzir para UnknownBusCode
+            //TODO verificar se nos outros pontos onde chama CallOnInvalid... precisa fazer isso tb
           }
           Logger.Fatal(
             "Não foi possível validar a credencial. Erro: " + e);
