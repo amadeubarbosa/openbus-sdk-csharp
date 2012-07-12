@@ -222,11 +222,10 @@ namespace tecgraf.openbus {
         throw new InvalidLoginProcessException();
       }
       catch (WrongEncoding) {
-        ServiceFailure e = new ServiceFailure
-                           {
-                             message =
-                               "Erro na codificação da chave pública do barramento."
-                           };
+        ServiceFailure e = new ServiceFailure {
+                                                message =
+                                                  "Erro na codificação da chave pública do barramento."
+                                              };
         throw e;
       }
       catch (Exception e) {
@@ -294,9 +293,9 @@ namespace tecgraf.openbus {
 
     public OfferRegistry Offers { get; private set; }
 
-    public string BusId { 
+    public string BusId {
       get {
-        lock(_loginLock) {
+        lock (_loginLock) {
           return _busId;
         }
       }
@@ -308,7 +307,9 @@ namespace tecgraf.openbus {
     }
 
     public LoginInfo? Login {
-      get { return _login.Login; }
+      // se estiver no estado inválido retorna null para que esse estado não
+      // fique visível ao usuário
+      get { return _login.IsInvalid() ? null : _login.Login; }
     }
 
     public void LoginByPassword(string entity, byte[] password) {
@@ -331,11 +332,10 @@ namespace tecgraf.openbus {
           encrypted = Crypto.Encrypt(key, _codec.encode_value(info));
         }
         catch (WrongEncoding) {
-          ServiceFailure e = new ServiceFailure
-                             {
-                               message =
-                                 "Erro na codificação da chave pública do barramento."
-                             };
+          ServiceFailure e = new ServiceFailure {
+                                                  message =
+                                                    "Erro na codificação da chave pública do barramento."
+                                                };
           throw e;
         }
         catch {
@@ -457,10 +457,10 @@ namespace tecgraf.openbus {
         }
         string loginId;
         lock (_loginLock) {
-          if (!Login.HasValue) {
+          if (!_login.Login.HasValue) {
             return null;
           }
-          loginId = Login.Value.id;
+          loginId = _login.Login.Value.id;
         }
         if ((piCurrentLoginId == null) || (!loginId.Equals(piCurrentLoginId))) {
           return null;
@@ -474,11 +474,11 @@ namespace tecgraf.openbus {
                                              credential.owner);
             LoginInfo[] originators = credential._delegate.Equals(String.Empty)
                                         ? new LoginInfo[0]
-                                        : new[]
-                                          {
-                                            new LoginInfo("unknown",
-                                                          credential._delegate)
-                                          };
+                                        : new[] {
+                                                  new LoginInfo("unknown",
+                                                                credential.
+                                                                  _delegate)
+                                                };
             return new CallerChainImpl(BusId, caller, originators);
           }
           CallChain chain = UnmarshalCallChain(anyCredential.Credential.chain);
@@ -540,7 +540,7 @@ namespace tecgraf.openbus {
       string loginEntity;
       string busId;
       lock (_loginLock) {
-        if (!Login.HasValue) {
+        if (!_login.Login.HasValue) {
           Logger.Debug(
             String.Format(
               "Chamada à operação {0} cancelada devido a não existir login.",
@@ -548,9 +548,9 @@ namespace tecgraf.openbus {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        login = Login.Value;
-        loginId = Login.Value.id;
-        loginEntity = Login.Value.entity;
+        login = _login.Login.Value;
+        loginId = _login.Login.Value.id;
+        loginEntity = _login.Login.Value.entity;
         busId = BusId;
       }
 
@@ -698,12 +698,12 @@ namespace tecgraf.openbus {
       string loginId;
       AsymmetricKeyParameter busKey;
       lock (_loginLock) {
-        if (!Login.HasValue) {
+        if (!_login.Login.HasValue) {
           Logger.Fatal(String.Format("Esta conexão está deslogada."));
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        loginId = Login.Value.id;
+        loginId = _login.Login.Value.id;
         busKey = _busKey;
       }
       if (!anyCredential.IsLegacy) {
@@ -800,7 +800,7 @@ namespace tecgraf.openbus {
         _login.SetInvalid();
         StopLeaseRenewer();
         // nesse ponto login necessariamente terá valor, logo nunca será o default
-        originalLogin = Login.GetValueOrDefault();
+        originalLogin = _login.Login.GetValueOrDefault();
         originalBusId = BusId;
       }
       if (client) {
@@ -813,7 +813,8 @@ namespace tecgraf.openbus {
             originalBusId = info.BusId;
           }
           else {
-            Logger.Warn("Falha ao obter o login original para chamar a callback. Utilizando login atual.");
+            Logger.Warn(
+              "Falha ao obter o login original para chamar a callback. Utilizando login atual.");
           }
         }
         catch (InvalidSlot e) {
@@ -824,25 +825,41 @@ namespace tecgraf.openbus {
         }
       }
       if (OnInvalidLogin != null) {
-        OnInvalidLogin.InvalidLogin(this, originalLogin, originalBusId);
+        try {
+          OnInvalidLogin.InvalidLogin(this, originalLogin, originalBusId);
+        }
+        catch (Exception e) {
+          Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
+        }
       }
       LoginInfo newLogin;
       string newBusId;
-      if (VerifyStatusAfterCallback(operation, cri, originalLogin.id, out newLogin, out newBusId)) {
+      if (VerifyStatusAfterCallback(operation, cri, originalLogin.id,
+                                    out newLogin, out newBusId)) {
         // estamos no interceptador servidor e o relogin funcionou, então retorna
         return;
       }
       // estamos no interceptador cliente e o login está inválido mas mudou, tenta callback de novo
       while (true) {
         if (OnInvalidLogin != null) {
-          OnInvalidLogin.InvalidLogin(this, newLogin, newBusId);
+          try {
+            OnInvalidLogin.InvalidLogin(this, newLogin, newBusId);
+          }
+          catch (Exception e) {
+            Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
+          }
         }
-        VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin, out newBusId);
+        VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin,
+                                  out newBusId);
         // se retornou novamente, tenta de novo indefinidamente (opção discutida por email com subject OPENBUS-1819 em 10/07/12)
       }
     }
 
-    private bool VerifyStatusAfterCallback(string operation, ClientRequestInfo ri, string originalLogin, out LoginInfo newLogin, out string newBusId) {
+    private bool VerifyStatusAfterCallback(string operation,
+                                           ClientRequestInfo ri,
+                                           string originalLogin,
+                                           out LoginInfo newLogin,
+                                           out string newBusId) {
       lock (_loginLock) {
         if (_login.IsLoggedIn()) {
           Logger.Debug("Login reestabelecido.");
@@ -860,12 +877,13 @@ namespace tecgraf.openbus {
           LogoutAfterUnsuccessfulCallback(operation, ri);
         }
         // login está inválido mesmo depois da callback
-        if (Login.HasValue) {
-          if (Login.Value.id.Equals(originalLogin)) {
+        if (_login.Login.HasValue) {
+          if (_login.Login.Value.id.Equals(originalLogin)) {
             LogoutAfterUnsuccessfulCallback(operation, ri);
           }
           // login mudou, copia o novo login para uma variável local
-          newLogin = new LoginInfo(Login.Value.id, Login.Value.entity);
+          newLogin = new LoginInfo(_login.Login.Value.id,
+                                   _login.Login.Value.entity);
           newBusId = BusId;
         }
         else {
@@ -877,7 +895,8 @@ namespace tecgraf.openbus {
       }
     }
 
-    private void LogoutAfterUnsuccessfulCallback(string operation, ClientRequestInfo ri) {
+    private void LogoutAfterUnsuccessfulCallback(string operation,
+                                                 ClientRequestInfo ri) {
       LocalLogout();
       string s = "receber";
       if (ri != null) {
@@ -887,7 +906,8 @@ namespace tecgraf.openbus {
         "Login não foi reestabelecido, impossível {0} a chamada {1}.", s,
         operation));
       // no caso do servidor, o ServerInterceptor.cs transformará essa exceção em UnverifiedLoginCode
-      throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                              CompletionStatus.Completed_No);
     }
 
     private byte[] CreateInvalidCredentialHash() {
@@ -954,14 +974,14 @@ namespace tecgraf.openbus {
     private byte[] CreateCredentialReset(string remoteLogin) {
       string loginId;
       lock (_loginLock) {
-        if (!Login.HasValue) {
+        if (!_login.Login.HasValue) {
           // Este servidor não está logado no barramento
           Logger.Fatal(
             "Este servidor não está logado no barramento e portanto não pode criar um CredentialReset.");
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        loginId = Login.Value.id;
+        loginId = _login.Login.Value.id;
       }
       CredentialReset reset = new CredentialReset {login = loginId};
       byte[] challenge = new byte[SecretSize];
