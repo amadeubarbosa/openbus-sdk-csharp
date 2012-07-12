@@ -382,7 +382,7 @@ namespace tecgraf.openbus {
         login = _acs.startLoginBySharedAuth(out challenge);
         secret = Crypto.Decrypt(InternalKey.Private, challenge);
       }
-      catch(Exception) {
+      catch (Exception) {
         if (login != null) {
           login.cancel();
         }
@@ -853,7 +853,7 @@ namespace tecgraf.openbus {
         // estamos no interceptador servidor e o relogin funcionou, então retorna
         return;
       }
-      // estamos no interceptador cliente e o login está inválido mas mudou, tenta callback de novo
+      // o login está inválido mas mudou, tenta callback de novo
       while (true) {
         if (OnInvalidLogin != null) {
           try {
@@ -863,8 +863,11 @@ namespace tecgraf.openbus {
             Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
           }
         }
-        VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin,
-                                  out newBusId);
+        if (VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin,
+                                      out newBusId)) {
+          // estamos no interceptador servidor e o relogin funcionou, então retorna
+          return;
+        }
         // se retornou novamente, tenta de novo indefinidamente (opção discutida por email com subject OPENBUS-1819 em 10/07/12)
       }
     }
@@ -1044,18 +1047,22 @@ namespace tecgraf.openbus {
         }
         catch (Exception e) {
           NO_PERMISSION noPermission = e as NO_PERMISSION;
-          //TODO testar aqui se é NoLoginCode. Se for, traduzir para UnknownBusCode (pode ser um catch diferente)
-          if ((noPermission != null) &&
-              (noPermission.Minor == InvalidLoginCode.ConstVal)) {
-            Logger.Fatal(
-              "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
-            // chama callback e tenta de novo
-            CallOnInvalidLoginCallback(false, ri);
-            //TODO testar aqui se a callback lança NoLoginCode. Se lançar, traduzir para UnknownBusCode
-            //TODO verificar se nos outros pontos onde chama CallOnInvalid... precisa fazer isso tb
+          if (noPermission != null) {
+            if (noPermission.Minor == NoLoginCode.ConstVal) {
+              Logger.Fatal(
+                "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
+              throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                      CompletionStatus.Completed_No);
+            }
+            if (noPermission.Minor == InvalidLoginCode.ConstVal) {
+              Logger.Fatal(
+                "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
+              // chama callback e tenta de novo
+              CallOnInvalidLoginCallback(false, ri);
+              continue;
+            }
           }
-          Logger.Fatal(
-            "Não foi possível validar a credencial. Erro: " + e);
+          Logger.Fatal("Não foi possível validar a credencial. Erro: " + e);
           throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
