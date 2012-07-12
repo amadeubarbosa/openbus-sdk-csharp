@@ -18,10 +18,10 @@ namespace audit {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
-    {
-      return AuditServer.Login(_entity, _privKey) &&
-             AuditServer.Register(_ic, _properties);
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+      if (AuditServer.Login(_entity, _privKey)) {
+        AuditServer.Register(_ic, _properties);
+      }
     }
   }
 }

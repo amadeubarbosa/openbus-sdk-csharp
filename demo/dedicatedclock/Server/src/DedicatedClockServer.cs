@@ -59,7 +59,7 @@ namespace Server {
       Thread.Sleep(Timeout.Infinite);
     }
 
-    internal static bool TryLoginAndRegisterForever(string host,
+    internal static void TryLoginAndRegisterForever(string host,
                                                     short port,
                                                     string entity,
                                                     byte[] privateKey,
@@ -92,7 +92,7 @@ namespace Server {
 
         // tenta registrar as ofertas
         if (Register(ic, properties)) {
-          return true;
+          return;
         }
         // se chegou aqui não conseguiu porque o login ou a conexão foi perdida, então volta pro começo
       }

@@ -73,7 +73,7 @@ namespace Server {
       Thread.Sleep(Timeout.Infinite);
     }
 
-    internal static bool TryLoginAndRegisterForever(IComponent ic,
+    internal static void TryLoginAndRegisterForever(IComponent ic,
                                                     ServiceProperty[] properties) {
       // tenta conectar, fazer login E registrar ofertas. Se o registro falhar devido à conexão ou login ter sido perdido, o procedimento deve ser reiniciado.
       bool firstTime = true;
@@ -102,7 +102,7 @@ namespace Server {
 
         // tenta registrar as ofertas
         if (Register(ic, properties)) {
-          return true;
+          return;
         }
         // se chegou aqui não conseguiu porque o login ou a conexão foi perdida, então volta pro começo
       }

@@ -17,8 +17,10 @@ namespace greetings {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
-      return GreetingsServer.Login(_entity, _privKey) && GreetingsServer.Register(_components, _properties);
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+      if (GreetingsServer.Login(_entity, _privKey)) {
+        GreetingsServer.Register(_components, _properties);
+      }
     }
   }
 }

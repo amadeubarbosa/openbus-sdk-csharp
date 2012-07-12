@@ -13,9 +13,10 @@ namespace chainvalidation {
       _executiveEntity = executiveEntity;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
-    {
-      return SecretaryServer.Login(_entity, _privKey) && SecretaryServer.Register(_executiveEntity);
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+      if (SecretaryServer.Login(_entity, _privKey)) {
+        SecretaryServer.Register(_executiveEntity);
+      }
     }
   }
 }

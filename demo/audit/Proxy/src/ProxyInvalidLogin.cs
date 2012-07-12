@@ -13,10 +13,10 @@ namespace audit {
       _serverEntity = serverEntity;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
-    {
-      return AuditProxy.Login(_entity, _privKey) &&
-             AuditProxy.Register(_serverEntity);
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+      if (AuditProxy.Login(_entity, _privKey)) {
+        AuditProxy.Register(_serverEntity);
+      }
     }
   }
 }

@@ -27,12 +27,10 @@ namespace Server {
       _waitTime = waitTime;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
-    {
-      return DedicatedClockServer.TryLoginAndRegisterForever(_host, _port,
-                                                             _entity, _privKey,
-                                                             _ic, _properties,
-                                                             _waitTime);
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+      DedicatedClockServer.TryLoginAndRegisterForever(_host, _port, _entity,
+                                                      _privKey, _ic, _properties,
+                                                      _waitTime);
     }
   }
 }

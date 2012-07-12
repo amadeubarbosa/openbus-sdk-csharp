@@ -19,10 +19,10 @@ namespace multiplexing {
       _properties = properties;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId)
-    {
-      return MultiplexingServer.Login(conn, _entity, _privKey) &&
-             MultiplexingServer.Register(conn, _component, _properties);
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+      if (MultiplexingServer.Login(conn, _entity, _privKey)) {
+        MultiplexingServer.Register(conn, _component, _properties);
+      }
     }
   }
 }
