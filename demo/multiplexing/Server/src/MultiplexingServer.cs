@@ -252,6 +252,11 @@ namespace multiplexing {
           Console.WriteLine(exc);
         }
       }
+      // faz o logout de todas as conexões
+      foreach (KeyValuePair<Connection, ServiceOffer> kvp in Offers) {
+        manager.Requester = kvp.Key;
+        kvp.Key.Logout();
+      }
     }
   }
 }

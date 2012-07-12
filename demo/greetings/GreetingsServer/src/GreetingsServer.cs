@@ -213,6 +213,9 @@ namespace greetings {
           Console.WriteLine(exc);
         }
       }
+      if (_conn != null) {
+        _conn.Logout();
+      }
     }
   }
 }

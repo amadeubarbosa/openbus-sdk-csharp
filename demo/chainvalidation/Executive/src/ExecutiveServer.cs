@@ -159,6 +159,9 @@ namespace chainvalidation {
           "Erro inesperado ao tentar remover a oferta do barramento:");
         Console.WriteLine(exc);
       }
+      if (_conn != null) {
+        _conn.Logout();
+      }
     }
   }
 }
