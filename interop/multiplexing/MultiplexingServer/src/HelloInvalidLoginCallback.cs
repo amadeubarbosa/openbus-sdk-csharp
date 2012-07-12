@@ -11,16 +11,14 @@ namespace tecgraf.openbus.interop.multiplexing {
       _key = privateKey;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
       try {
         Console.WriteLine("Callback de InvalidLogin da conexão " + _entity + " foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(_entity, _key);
-        return conn.Login != null;
       }
       catch (Exception e) {
         Console.WriteLine(e);
       }
-      return false;
     }
   }
 }

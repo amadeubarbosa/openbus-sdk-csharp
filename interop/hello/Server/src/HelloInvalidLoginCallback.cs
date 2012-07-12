@@ -13,17 +13,15 @@ namespace tecgraf.openbus.interop.simple {
       _manager = manager;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
       _manager.Requester = conn;
       try {
         Console.WriteLine("Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(_entity, _privKey);
-        return conn.Login != null;
       }
       catch (Exception e) {
         Console.WriteLine(e);
       }
-      return false;
     }
   }
 }

@@ -12,7 +12,7 @@
       <Value Profile="(Default)">interop_hello_csharp</Value>
     </Setting>
     <Setting Name="hostPort" Type="System.Int16" Scope="User">
-      <Value Profile="(Default)">11000</Value>
+      <Value Profile="(Default)">9000</Value>
     </Setting>
     <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">InteropHello.key</Value>

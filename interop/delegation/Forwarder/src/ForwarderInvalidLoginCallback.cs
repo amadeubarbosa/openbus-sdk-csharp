@@ -13,21 +13,18 @@ namespace tecgraf.openbus.interop.delegation {
       _forwarder = forwarder;
     }
 
-    public bool InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
       try {
         Console.WriteLine("Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(_entity, _privKey);
         if (conn.Login == null) {
           _forwarder.Timer.Stop();
-          return false;
         }
-        return true;
       }
       catch (Exception e) {
         _forwarder.Timer.Stop();
         Console.WriteLine(e);
       }
-      return false;
     }
   }
 }
