@@ -69,7 +69,7 @@ namespace tecgraf.openbus.interop.delegation {
           PostDesc[] posts = _messenger.receivePosts();
           _conn.ExitChain();
           for (int i = 0; i < posts.Length; i++) {
-            _messenger.post(to, "forwared from " + posts[i].from + ": " + posts[i].message);
+            _messenger.post(to, "forwarded from " + posts[i].from + ": " + posts[i].message);
           }
         }
       }
