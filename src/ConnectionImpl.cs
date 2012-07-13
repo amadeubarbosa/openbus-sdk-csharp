@@ -798,7 +798,7 @@ namespace tecgraf.openbus {
       if (!anyCredential.IsLegacy) {
         // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode e InvalidPublicKeyCode
         byte[] encodedReset =
-          CreateCredentialReset(anyCredential.Credential.login);
+          CreateCredentialReset(ri, anyCredential.Credential.login);
         ServiceContext replyServiceContext = new ServiceContext(ContextId,
                                                                 encodedReset);
         ri.add_reply_service_context(replyServiceContext, false);
@@ -988,7 +988,7 @@ namespace tecgraf.openbus {
       return requestReset;
     }
 
-    private byte[] CreateCredentialReset(string remoteLogin) {
+    private byte[] CreateCredentialReset(RequestInfo ri, string remoteLogin) {
       string loginId;
       lock (_loginLock) {
         if (!_login.Login.HasValue) {
@@ -1006,16 +1006,43 @@ namespace tecgraf.openbus {
       rand.NextBytes(challenge);
 
       AsymmetricKeyParameter pubKey;
-      string entity;
-      if (!_loginsCache.GetLoginEntity(remoteLogin, this,
-                                       out entity,
-                                       out pubKey)) {
-        Logger.Warn(
-          "Não foi encontrada uma entrada na cache de logins para o login " +
-          remoteLogin);
-        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
+      while (true) {
+        try {
+          string entity;
+          if (!_loginsCache.GetLoginEntity(remoteLogin, this,
+                                           out entity,
+                                           out pubKey)) {
+            Logger.Warn(
+              "Não foi encontrada uma entrada na cache de logins para o login " +
+              remoteLogin);
+            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                    CompletionStatus.Completed_No);
+          }
+          break;
+        }
+        catch (Exception e) {
+          NO_PERMISSION noPermission = e as NO_PERMISSION;
+          if (noPermission != null) {
+            if (noPermission.Minor == NoLoginCode.ConstVal) {
+              Logger.Fatal(
+                "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
+              throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                      CompletionStatus.Completed_No);
+            }
+            if (noPermission.Minor == InvalidLoginCode.ConstVal) {
+              Logger.Fatal(
+                "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
+              // chama callback e tenta de novo
+              CallOnInvalidLoginCallback(false, ri);
+              continue;
+            }
+          }
+          Logger.Fatal(String.Format("Não foi possível validar o login {0}. Erro: {1}", remoteLogin, e));
+          throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                  CompletionStatus.Completed_No);
+        }
       }
+
       try {
         reset.challenge = Crypto.Encrypt(pubKey, challenge);
       }
