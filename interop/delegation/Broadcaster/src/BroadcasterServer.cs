@@ -14,7 +14,7 @@ namespace tecgraf.openbus.interop.delegation {
   /// </summary>
   internal static class BroadcasterServer {
     private static Connection _conn;
-    private static ServiceOffer _offer;
+    internal static ServiceOffer Offer;
 
     private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
@@ -30,8 +30,6 @@ namespace tecgraf.openbus.interop.delegation {
       byte[] key = File.ReadAllBytes(privateKey);
 
       _conn.LoginByCertificate(entity, key);
-      _conn.OnInvalidLogin =
-        new BroadcasterInvalidLoginCallback(entity, key);
 
       Messenger messenger = GetMessenger();
       if (messenger == null) {
@@ -49,12 +47,14 @@ namespace tecgraf.openbus.interop.delegation {
                          Repository.GetRepositoryID(typeof (Broadcaster)),
                          broadcaster);
 
-      IComponent member = component.GetIComponent();
+      IComponent ic = component.GetIComponent();
       ServiceProperty[] properties = new[] {
                                              new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
-      _offer = _conn.Offers.registerService(member, properties);
+      Offer = _conn.Offers.registerService(ic, properties);
+      _conn.OnInvalidLogin = new BroadcasterInvalidLoginCallback(entity, key, ic,
+                                                                 properties);
 
       Console.WriteLine("Broadcaster no ar.");
 
@@ -107,9 +107,16 @@ namespace tecgraf.openbus.interop.delegation {
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
-      if (_offer != null) {
-        _offer.remove();
+      if (Offer != null) {
+        try {
+          Offer.remove();
+        }
+        catch (Exception exc) {
+          Console.WriteLine(
+            "Erro ao remover a oferta antes de finalizar o processo: ", exc);
+        }
       }
+      _conn.Logout();
     }
   }
 }

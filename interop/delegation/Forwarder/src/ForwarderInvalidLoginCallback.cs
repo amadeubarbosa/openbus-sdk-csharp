@@ -1,16 +1,25 @@
 ﻿using System;
+using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.interop.delegation {
   internal class ForwarderInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
     private readonly byte[] _privKey;
+    private readonly IComponent _ic;
+    private readonly ServiceProperty[] _properties;
     private readonly ForwarderImpl _forwarder;
 
     internal ForwarderInvalidLoginCallback(string entity, byte[] privKey,
-                                         ForwarderImpl forwarder) {
+                                           IComponent ic,
+                                           ServiceProperty[] properties,
+                                           ForwarderImpl forwarder) {
       _entity = entity;
       _privKey = privKey;
+      _ic = ic;
+      _properties = properties;
       _forwarder = forwarder;
     }
 
@@ -22,6 +31,10 @@ namespace tecgraf.openbus.interop.delegation {
         if (conn.Login == null) {
           _forwarder.Timer.Stop();
         }
+        ForwarderServer.Offer = conn.Offers.registerService(_ic, _properties);
+      }
+      catch (AlreadyLoggedInException) {
+        // outra thread reconectou
       }
       catch (Exception e) {
         _forwarder.Timer.Stop();

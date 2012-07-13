@@ -14,7 +14,7 @@ namespace tecgraf.openbus.interop.simple {
   /// </summary>
   internal static class HelloServer {
     private static Connection _conn;
-    private static ServiceOffer _offer;
+    internal static ServiceOffer Offer;
 
     private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
@@ -39,23 +39,32 @@ namespace tecgraf.openbus.interop.simple {
                          new HelloImpl(_conn));
 
       _conn.LoginByCertificate(entityName, privateKey);
-      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(entityName,
-                                                           privateKey, manager);
 
-      IComponent member = component.GetIComponent();
+      IComponent ic = component.GetIComponent();
       ServiceProperty[] properties = new[] {
                                              new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
-      _offer = _conn.Offers.registerService(member, properties);
+      Offer = _conn.Offers.registerService(ic, properties);
+      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(entityName,
+                                                           privateKey, ic,
+                                                           properties);
 
       Console.WriteLine("Servidor no ar.");
-
       Thread.Sleep(Timeout.Infinite);
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
-      _offer.remove();
+      if (Offer != null) {
+        try {
+          Offer.remove();
+        }
+        catch (Exception exc) {
+          Console.WriteLine(
+            "Erro ao remover a oferta antes de finalizar o processo: ", exc);
+        }
+      }
+      _conn.Logout();
     }
   }
 }

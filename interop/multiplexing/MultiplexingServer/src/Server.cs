@@ -36,19 +36,12 @@ namespace tecgraf.openbus.interop.multiplexing {
         Conns.Add(conn2AtBus1);
         Conns.Add(connAtBus2);
 
-        // setup action on login termination
-        conn1AtBus1.OnInvalidLogin =
-          new HelloInvalidLoginCallback(entity1, key);
-        conn2AtBus1.OnInvalidLogin =
-          new HelloInvalidLoginCallback(entity2, key);
-        connAtBus2.OnInvalidLogin =
-          new HelloInvalidLoginCallback(entity3, key);
-
         // create service SCS component
         ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
         ComponentContext component = new DefaultComponentContext(id);
         component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
                            new HelloImpl(Conns));
+        IComponent ic = component.GetIComponent();
 
         // login to the bus
         conn1AtBus1.LoginByCertificate(entity1, key);
@@ -64,16 +57,23 @@ namespace tecgraf.openbus.interop.multiplexing {
                                                                GetIComponent());
         Thread thread1 = new Thread(start1.Run);
         thread1.Start();
+        conn1AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity1, key,
+                                                                   ic,
+                                                                   GetProps());
 
         RegisterThreadStart start2 = new RegisterThreadStart(conn2AtBus1,
                                                              component.
                                                                GetIComponent());
         Thread thread2 = new Thread(start2.Run);
         thread2.Start();
+        conn2AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity2, key,
+                                                                   ic,
+                                                                   GetProps());
 
         manager.Requester = connAtBus2;
-        connAtBus2.Offers.registerService(component.GetIComponent(),
-                                          GetProps());
+        connAtBus2.Offers.registerService(ic, GetProps());
+        connAtBus2.OnInvalidLogin = new HelloInvalidLoginCallback(entity3, key,
+                                                                  ic, GetProps());
 
         Console.WriteLine("Servidor no ar.");
 
