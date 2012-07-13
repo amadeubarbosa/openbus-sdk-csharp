@@ -2,7 +2,7 @@ using System;
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma exceção de falha no serviço de controle de acesso. 
+  /// Indica que o segredo fornecido não era o esperado.
   /// </summary>
   [Serializable]
   public class WrongSecretException : OpenBusException {

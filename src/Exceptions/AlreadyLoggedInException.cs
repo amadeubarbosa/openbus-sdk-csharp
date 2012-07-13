@@ -2,7 +2,7 @@ using System;
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma exceção de falha no serviço de controle de acesso. 
+  /// Indica que a conexão já está autenticada, ao se tentar realizar um login.
   /// </summary>
   [Serializable]
   public class AlreadyLoggedInException : OpenBusException {

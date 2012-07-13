@@ -2,7 +2,7 @@ using System;
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma exceção de falha no serviço de controle de acesso. 
+  /// Indica que a chave privada está corrompida ou não está no formato esperado.
   /// </summary>
   [Serializable]
   public class CorruptedPrivateKeyException : OpenBusException {

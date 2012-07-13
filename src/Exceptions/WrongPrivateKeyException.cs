@@ -2,7 +2,7 @@ using System;
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma exceção de falha no serviço de controle de acesso. 
+  /// Indica que a chave privada fornecida não era a esperada.
   /// </summary>
   [Serializable]
   public class WrongPrivateKeyException : OpenBusException {

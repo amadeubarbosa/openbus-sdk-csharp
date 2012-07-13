@@ -2,7 +2,7 @@ using System;
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma exceção de falha devido à aplicação não estar autenticada no barramento. 
+  /// Indica uma falha devido à aplicação não estar autenticada no barramento.
   /// </summary>
   [Serializable]
   public class NotLoggedInException : OpenBusException {
