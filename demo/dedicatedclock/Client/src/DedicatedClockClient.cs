@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using omg.org.CORBA;
 using tecgraf.openbus;
@@ -20,7 +21,7 @@ namespace Client {
       string host = args[0];
       short port = Convert.ToInt16(args[1]);
       string entity = args[2];
-      byte[] password = new System.Text.UTF8Encoding().GetBytes(args[3]);
+      byte[] password = new ASCIIEncoding().GetBytes(args[3]);
       string serverEntity = args[4];
       int waitTime = Convert.ToInt32(args[5]);
       int totalWaitTime = Convert.ToInt32(args[6]);

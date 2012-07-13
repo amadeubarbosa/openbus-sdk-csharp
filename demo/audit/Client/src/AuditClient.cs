@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using omg.org.CORBA;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
@@ -15,7 +16,7 @@ namespace audit {
       string host = args[0];
       short port = Convert.ToInt16(args[1]);
       string entity = args[2];
-      string password = args[3];
+      byte[] password = new ASCIIEncoding().GetBytes(args[3]);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
@@ -24,8 +25,7 @@ namespace audit {
       manager.DefaultConnection = conn;
 
       // Faz o login
-      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
-      if (!Login(entity, encoding.GetBytes(password), conn)) {
+      if (!Login(entity, password, conn)) {
         Exit(1);
       }
 
