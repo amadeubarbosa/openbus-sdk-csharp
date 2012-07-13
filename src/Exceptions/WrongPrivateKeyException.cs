@@ -1,21 +1,22 @@
 using System;
 
-namespace tecgraf.openbus.exceptions
-{
+namespace tecgraf.openbus.exceptions {
   /// <summary>
   /// Indica uma exceção de falha no serviço de controle de acesso. 
   /// </summary>
   [Serializable]
-  public class WrongPrivateKeyException : OpenBusException
-  {
+  public class WrongPrivateKeyException : OpenBusException {
     /// <inheritdoc />
-    internal WrongPrivateKeyException() { }
-    
+    internal WrongPrivateKeyException() {
+    }
+
     /// <inheritdoc />
-    internal WrongPrivateKeyException(string message) : base(message) { }
-    
+    internal WrongPrivateKeyException(string message) : base(message) {
+    }
+
     /// <inheritdoc />
-    internal WrongPrivateKeyException(string message, Exception inner) 
-      : base(message, inner) { }
+    internal WrongPrivateKeyException(string message, Exception inner)
+      : base(message, inner) {
+    }
   }
 }
