@@ -10,10 +10,10 @@ using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.multiplexing {
-  public static class Server {
+  internal static class Server {
     private static readonly IList<Connection> Conns = new List<Connection>();
 
-    public static void Main() {
+    private static void Main() {
       try {
         string hostName = DemoConfig.Default.hostName;
         short hostPort = DemoConfig.Default.hostPort;
@@ -73,7 +73,7 @@ namespace tecgraf.openbus.interop.multiplexing {
 
         manager.Requester = connAtBus2;
         connAtBus2.Offers.registerService(component.GetIComponent(),
-                                                 GetProps());
+                                          GetProps());
 
         Console.WriteLine("Servidor no ar.");
 
@@ -86,7 +86,8 @@ namespace tecgraf.openbus.interop.multiplexing {
 
     private static ServiceProperty[] GetProps() {
       ServiceProperty[] serviceProperties = new ServiceProperty[1];
-      serviceProperties[0] = new ServiceProperty("offer.domain", "Interoperability Tests");
+      serviceProperties[0] = new ServiceProperty("offer.domain",
+                                                 "Interoperability Tests");
       return serviceProperties;
     }
 

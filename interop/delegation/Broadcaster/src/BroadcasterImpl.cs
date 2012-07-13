@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace tecgraf.openbus.interop.delegation {
-  public class BroadcasterImpl : MarshalByRefObject, Broadcaster {
+  internal class BroadcasterImpl : MarshalByRefObject, Broadcaster {
     #region Fields
 
     private readonly Connection _conn;
@@ -13,7 +13,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     #region Constructors
 
-    public BroadcasterImpl(Connection conn, Messenger messenger) {
+    internal BroadcasterImpl(Connection conn, Messenger messenger) {
       _conn = conn;
       _messenger = messenger;
       _subscribers = new List<string>();

@@ -42,13 +42,16 @@ namespace tecgraf.openbus.interop.delegation {
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Forwarder", 1, 0, 0, ".net"));
       ForwarderImpl forwarder = new ForwarderImpl(_conn, messenger);
-      component.AddFacet("forwarder", Repository.GetRepositoryID(typeof (Forwarder)), forwarder);
+      component.AddFacet("forwarder",
+                         Repository.GetRepositoryID(typeof (Forwarder)),
+                         forwarder);
 
       _conn.OnInvalidLogin =
         new ForwarderInvalidLoginCallback(entity, key, forwarder);
 
       IComponent member = component.GetIComponent();
-      ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",
+      ServiceProperty[] properties = new[] {
+                                             new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
       _offer = _conn.Offers.registerService(member, properties);
@@ -65,7 +68,8 @@ namespace tecgraf.openbus.interop.delegation {
       ServiceProperty autoProp2 = new ServiceProperty(
         "openbus.component.facet", "messenger");
       // propriedade definida pelo servidor hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
       ServiceOfferDesc[] offers = _conn.Offers.findServices(properties);

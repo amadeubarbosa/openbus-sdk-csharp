@@ -45,7 +45,9 @@ namespace tecgraf.openbus.interop.delegation {
         new DefaultComponentContext(new ComponentId("Broadcaster", 1, 0, 0,
                                                     ".net"));
       BroadcasterImpl broadcaster = new BroadcasterImpl(_conn, messenger);
-      component.AddFacet("broadcaster", Repository.GetRepositoryID(typeof (Broadcaster)), broadcaster);
+      component.AddFacet("broadcaster",
+                         Repository.GetRepositoryID(typeof (Broadcaster)),
+                         broadcaster);
 
       IComponent member = component.GetIComponent();
       ServiceProperty[] properties = new[] {
@@ -66,7 +68,8 @@ namespace tecgraf.openbus.interop.delegation {
       ServiceProperty autoProp2 = new ServiceProperty(
         "openbus.component.facet", "messenger");
       // propriedade definida pelo servidor hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
       ServiceOfferDesc[] offers = _conn.Offers.findServices(properties);

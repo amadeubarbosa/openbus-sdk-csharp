@@ -5,31 +5,27 @@ using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.multiplexing {
-  public static class Client {
-    public static void Main() {
+  internal static class Client {
+    private static void Main() {
       try {
         string hostName = DemoConfig.Default.hostName;
         short hostPort = DemoConfig.Default.hostPort;
         short hostPort2 = DemoConfig.Default.hostPort2;
         System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+        short[] ports = {hostPort, hostPort2};
 
         ConnectionManager manager = ORBInitializer.Manager;
 
-        Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
-        Console.ReadLine();
-
-        short[] ports = {hostPort, hostPort2};
-
         foreach (short port in ports) {
           Connection conn = manager.CreateConnection(hostName, port);
-          manager.Requester = conn;
+          manager.DefaultConnection = conn;
           String login = "interop@" + port;
           conn.LoginByPassword(login, encoding.GetBytes(login));
-          manager.SetDispatcher(conn);
 
           ServiceProperty[] serviceProperties = new ServiceProperty[2];
-          serviceProperties[0] = new ServiceProperty("openbus.component.interface",
-                                                     "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+          serviceProperties[0] =
+            new ServiceProperty("openbus.component.interface",
+                                "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
           serviceProperties[1] = new ServiceProperty("offer.domain",
                                                      "Interoperability Tests");
           ServiceOfferDesc[] services =
@@ -43,7 +39,8 @@ namespace tecgraf.openbus.interop.multiplexing {
             }
             try {
               MarshalByRefObject obj =
-                offer.service_ref.getFacet("IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+                offer.service_ref.getFacet(
+                  "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
               if (obj == null) {
                 Console.WriteLine(
                   "Não foi possível encontrar uma faceta com esse nome.");
@@ -61,10 +58,11 @@ namespace tecgraf.openbus.interop.multiplexing {
                 "Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
             }
           }
+          conn.Logout();
         }
       }
       catch (Exception e) {
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
       Console.WriteLine("Pressione qualquer tecla para finalizar.");
       Console.ReadKey();

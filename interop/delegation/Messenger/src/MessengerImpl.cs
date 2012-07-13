@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace tecgraf.openbus.interop.delegation {
-  public class MessengerImpl : MarshalByRefObject, Messenger {
+  internal class MessengerImpl : MarshalByRefObject, Messenger {
     #region Fields
 
     private readonly Connection _conn;
@@ -13,7 +13,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     #region Constructors
 
-    public MessengerImpl(Connection conn) {
+    internal MessengerImpl(Connection conn) {
       _conn = conn;
       _inboxOf = new ConcurrentDictionary<string, List<PostDesc>>();
     }

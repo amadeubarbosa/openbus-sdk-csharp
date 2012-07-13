@@ -49,14 +49,14 @@ namespace tecgraf.openbus.interop.delegation {
       Thread.Sleep(10000);
       Console.WriteLine("Pronto!");
 
-      string[] names = new[]{"willian", "bill", "paul", "mary", "steve"};
+      string[] names = new[] {"willian", "bill", "paul", "mary", "steve"};
       foreach (string name in names) {
         conn.LoginByPassword(name, encoding.GetBytes(name));
         ShowPostsOf(name, _messenger.receivePosts());
         _broadcaster.unsubscribe();
         conn.Logout();
       }
-      
+
       conn.LoginByPassword("willian", encoding.GetBytes("willian"));
       _forwarder.cancelForward("bill");
       conn.Logout();
@@ -74,7 +74,8 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void GetServices(Connection conn) {
       // propriedade definida pelos servidores
-      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {prop};
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);

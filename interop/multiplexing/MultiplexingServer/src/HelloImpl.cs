@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using tecgraf.openbus.interop.simple;
 
-namespace tecgraf.openbus.interop.multiplexing
-{
+namespace tecgraf.openbus.interop.multiplexing {
   /// <summary>
   /// Implementação do servant Hello.
   /// </summary>  
-  public class HelloImpl : MarshalByRefObject, Hello
-  {
+  internal class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
     private readonly IList<Connection> _conns;
@@ -17,8 +15,7 @@ namespace tecgraf.openbus.interop.multiplexing
 
     #region Constructors
 
-    public HelloImpl(IList<Connection> conns)
-    {
+    internal HelloImpl(IList<Connection> conns) {
       _conns = conns;
     }
 
@@ -26,21 +23,18 @@ namespace tecgraf.openbus.interop.multiplexing
 
     #region Hello Members
 
-    public void sayHello()
-    {
-      try
-      {
+    public void sayHello() {
+      try {
         foreach (Connection conn in _conns) {
           CallerChain callerChain = conn.CallerChain;
-          if (callerChain != null) {
-            Console.WriteLine(String.Format("Calling in {0} @ {1}", conn.Login.Value.entity, conn.BusId));
-            String entity = callerChain.Caller.entity;
-            Console.WriteLine(String.Format("Hello from {0} @ {1}!", entity, callerChain.BusId));
-          }
+          Console.WriteLine(String.Format("Calling in {0} @ {1}",
+                                          conn.Login.Value.entity, conn.BusId));
+          String entity = callerChain.Caller.entity;
+          Console.WriteLine(String.Format("Hello from {0} @ {1}!", entity,
+                                          callerChain.BusId));
         }
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
         Console.WriteLine(e.StackTrace);
       }
     }

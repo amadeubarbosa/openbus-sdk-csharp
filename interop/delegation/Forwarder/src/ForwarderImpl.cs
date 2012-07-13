@@ -4,19 +4,19 @@ using System.Collections.Generic;
 using System.Timers;
 
 namespace tecgraf.openbus.interop.delegation {
-  public class ForwarderImpl : MarshalByRefObject, Forwarder {
+  internal class ForwarderImpl : MarshalByRefObject, Forwarder {
     #region Fields
 
     private readonly Connection _conn;
     private readonly ConcurrentDictionary<string, Forward> _forwardsOf;
     private readonly Messenger _messenger;
-    public readonly Timer Timer;
+    internal readonly Timer Timer;
 
     #endregion
 
     #region Constructors
 
-    public ForwarderImpl(Connection conn, Messenger messenger) {
+    internal ForwarderImpl(Connection conn, Messenger messenger) {
       _conn = conn;
       _messenger = messenger;
       _forwardsOf = new ConcurrentDictionary<string, Forward>();
@@ -69,17 +69,19 @@ namespace tecgraf.openbus.interop.delegation {
           PostDesc[] posts = _messenger.receivePosts();
           _conn.ExitChain();
           for (int i = 0; i < posts.Length; i++) {
-            _messenger.post(to, "forwarded from " + posts[i].from + ": " + posts[i].message);
+            _messenger.post(to,
+                            "forwarded from " + posts[i].from + ": " +
+                            posts[i].message);
           }
         }
       }
     }
 
     private class Forward {
-      public readonly CallerChain Chain;
-      public readonly string To;
+      internal readonly CallerChain Chain;
+      internal readonly string To;
 
-      public Forward(CallerChain chain, string to) {
+      internal Forward(CallerChain chain, string to) {
         Chain = chain;
         To = to;
       }

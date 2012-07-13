@@ -1,13 +1,11 @@
 using System;
 using tecgraf.openbus.core.v2_0.services.access_control;
 
-namespace tecgraf.openbus.interop.simple
-{
+namespace tecgraf.openbus.interop.simple {
   /// <summary>
   /// Implementação do servant Hello.
   /// </summary>  
-  public class HelloImpl : MarshalByRefObject, Hello
-  {
+  internal class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
     private readonly Connection _conn;

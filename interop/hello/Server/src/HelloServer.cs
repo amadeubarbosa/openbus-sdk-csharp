@@ -12,10 +12,11 @@ namespace tecgraf.openbus.interop.simple {
   /// <summary>
   /// Servidor do teste de interoperabilidade hello.
   /// </summary>
-  static class HelloServer {
+  internal static class HelloServer {
     private static Connection _conn;
     private static ServiceOffer _offer;
-    static void Main() {
+
+    private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.hostName;
       short hostPort = DemoConfig.Default.hostPort;
@@ -34,13 +35,18 @@ namespace tecgraf.openbus.interop.simple {
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));
-      component.AddFacet("Hello", Repository.GetRepositoryID(typeof(Hello)), new HelloImpl(_conn));
+      component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
+                         new HelloImpl(_conn));
 
       _conn.LoginByCertificate(entityName, privateKey);
-      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(entityName, privateKey, manager);
+      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(entityName,
+                                                           privateKey, manager);
 
       IComponent member = component.GetIComponent();
-      ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain", "Interoperability Tests") };
+      ServiceProperty[] properties = new[] {
+                                             new ServiceProperty("offer.domain",
+                                                                 "Interoperability Tests")
+                                           };
       _offer = _conn.Offers.registerService(member, properties);
 
       Console.WriteLine("Servidor no ar.");
@@ -48,7 +54,7 @@ namespace tecgraf.openbus.interop.simple {
       Thread.Sleep(Timeout.Infinite);
     }
 
-    static void CurrentDomainProcessExit(object sender, EventArgs e) {
+    private static void CurrentDomainProcessExit(object sender, EventArgs e) {
       _offer.remove();
     }
   }

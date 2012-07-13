@@ -35,10 +35,13 @@ namespace tecgraf.openbus.interop.delegation {
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Messenger", 1, 0, 0, ".net"));
       MessengerImpl messenger = new MessengerImpl(_conn);
-      component.AddFacet("messenger", Repository.GetRepositoryID(typeof(Messenger)), messenger);
+      component.AddFacet("messenger",
+                         Repository.GetRepositoryID(typeof (Messenger)),
+                         messenger);
 
       IComponent member = component.GetIComponent();
-      ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain",
+      ServiceProperty[] properties = new[] {
+                                             new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
       _offer = _conn.Offers.registerService(member, properties);

@@ -7,21 +7,20 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.simple.Properties;
 
-namespace tecgraf.openbus.interop.simple
-{
+namespace tecgraf.openbus.interop.simple {
   /// <summary>
   /// Cliente do teste de interoperabilidade hello.
   /// </summary>
-  static class HelloClient {
-    static void Main() {
+  internal static class HelloClient {
+    private static void Main() {
       string hostName = DemoConfig.Default.hostName;
       short hostPort = DemoConfig.Default.hostPort;
 
-      ConsoleAppender appender = new ConsoleAppender
-      {
-        Threshold = Level.Info,
-        Layout = new SimpleLayout(),
-      };
+      ConsoleAppender appender = new ConsoleAppender {
+                                                       Threshold = Level.All,
+                                                       Layout =
+                                                         new SimpleLayout(),
+                                                     };
       BasicConfigurator.Configure(appender);
 
       ConnectionManager manager = ORBInitializer.Manager;
@@ -38,9 +37,12 @@ namespace tecgraf.openbus.interop.simple
       Console.ReadLine();
 
       // propriedades geradas automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.component.interface", "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+      ServiceProperty autoProp =
+        new ServiceProperty("openbus.component.interface",
+                            "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
       // propriedade definida pelo servidor hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "Interoperability Tests");
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp, prop};
       ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
@@ -49,14 +51,18 @@ namespace tecgraf.openbus.interop.simple
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
         Environment.Exit(1);
       }
-      if (offers.Length > 1)
+      if (offers.Length > 1) {
         Console.WriteLine("Existe mais de um serviço Hello no barramento.");
+      }
 
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          MarshalByRefObject helloObj = serviceOfferDesc.service_ref.getFacet("IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+          MarshalByRefObject helloObj =
+            serviceOfferDesc.service_ref.getFacet(
+              "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
           if (helloObj == null) {
-            Console.WriteLine("Não foi possível encontrar uma faceta com esse nome.");
+            Console.WriteLine(
+              "Não foi possível encontrar uma faceta com esse nome.");
             continue;
           }
           Hello hello = helloObj as Hello;
@@ -67,11 +73,12 @@ namespace tecgraf.openbus.interop.simple
           hello.sayHello();
         }
         catch (TRANSIENT) {
-          Console.WriteLine("Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
+          Console.WriteLine(
+            "Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
         }
       }
+      conn.Logout();
       Console.WriteLine("Fim.");
-      Console.ReadLine();
     }
   }
 }
