@@ -1,17 +1,17 @@
 using log4net;
 using omg.org.IOP;
 
-namespace tecgraf.openbus.interceptors
-{
+namespace tecgraf.openbus.interceptors {
   /// <summary>
   /// Classe responsável por inicializar os interceptadores.
   /// Implementa PortableInterceptor.ORBInitializer.
   /// </summary>
-  internal class InterceptorsInitializer : omg.org.PortableInterceptor.ORBInitializer
-  {
+  internal class InterceptorsInitializer :
+    omg.org.PortableInterceptor.ORBInitializer {
     #region Field
 
-    private static readonly ILog Logger = LogManager.GetLogger(typeof(InterceptorsInitializer));
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof (InterceptorsInitializer));
 
     public ConnectionManagerImpl Manager;
 
@@ -29,10 +29,11 @@ namespace tecgraf.openbus.interceptors
       int loginSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
-      Manager = new ConnectionManagerImpl(currentThreadSlotId, ignoreThreadSlotId, legacy);
+      Manager = new ConnectionManagerImpl(currentThreadSlotId,
+                                          ignoreThreadSlotId, legacy);
 
       Codec codec = info.codec_factory.create_codec(
-                        new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
+        new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
       ServerInterceptor.Instance.Codec = codec;
       ServerInterceptor.Instance.CredentialSlotId = credentialSlotId;
       ServerInterceptor.Instance.ConnectionSlotId = connectionSlotId;
@@ -62,5 +63,5 @@ namespace tecgraf.openbus.interceptors
     }
 
     #endregion
-  }
+    }
 }

@@ -2,13 +2,11 @@ using System;
 using omg.org.IOP;
 using tecgraf.openbus.core.v2_0.credential;
 
-namespace tecgraf.openbus.interceptors
-{
+namespace tecgraf.openbus.interceptors {
   /// <summary>
   /// Implementa um interceptador.
   /// </summary>
   internal class InterceptorImpl : omg.org.PortableInterceptor.Interceptor {
-
     #region Fields
 
     /// <summary>
