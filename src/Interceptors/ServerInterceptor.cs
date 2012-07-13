@@ -107,12 +107,6 @@ namespace tecgraf.openbus.interceptors {
         Manager.Requester = conn;
         conn.ReceiveRequest(ri, anyCredential);
       }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == NoLoginCode.ConstVal) {
-          throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-      }
       catch (InvalidSlot e) {
         const string msg = "Falha ao inserir a credencial em seu slot.";
         Logger.Fatal(msg, e);
@@ -189,12 +183,6 @@ namespace tecgraf.openbus.interceptors {
             if (conn != null) {
               conn.SendException(ri, anyCredential);
               return;
-            }
-          }
-          catch (NO_PERMISSION e) {
-            if (e.Minor == NoLoginCode.ConstVal) {
-              throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                      CompletionStatus.Completed_No);
             }
           }
           catch (InvalidSlot e) {
