@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
@@ -28,10 +29,9 @@ namespace tecgraf.openbus.interop.simple {
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
-      string userPassword = DemoConfig.Default.userPassword;
-      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+      byte[] userPassword = new ASCIIEncoding().GetBytes(DemoConfig.Default.userPassword);
 
-      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
+      conn.LoginByPassword(userLogin, userPassword);
 
       Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
       Console.ReadLine();

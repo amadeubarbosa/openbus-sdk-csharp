@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
@@ -20,7 +21,7 @@ namespace tecgraf.openbus.interop.delegation {
 
       string userLogin = DemoConfig.Default.userLogin;
       string userPassword = DemoConfig.Default.userPassword;
-      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+      ASCIIEncoding encoding = new ASCIIEncoding();
       conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
       GetServices(conn);

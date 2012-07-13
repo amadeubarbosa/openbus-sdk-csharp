@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
@@ -31,12 +32,11 @@ namespace tecgraf.openbus.interop.sharedauth {
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
-      string userPassword = DemoConfig.Default.userPassword;
+      byte[] userPassword = new ASCIIEncoding().GetBytes(DemoConfig.Default.userPassword);
       string secretFile = DemoConfig.Default.secretFile;
       string loginFile = DemoConfig.Default.loginFile;
-      System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
-      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
+      conn.LoginByPassword(userLogin, userPassword);
       byte[] secret;
       LoginProcess login = conn.StartSharedAuth(out secret);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.multiplexing.Properties;
@@ -11,7 +12,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         string hostName = DemoConfig.Default.hostName;
         short hostPort = DemoConfig.Default.hostPort;
         short hostPort2 = DemoConfig.Default.hostPort2;
-        System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
+        ASCIIEncoding encoding = new ASCIIEncoding();
         short[] ports = {hostPort, hostPort2};
 
         ConnectionManager manager = ORBInitializer.Manager;
