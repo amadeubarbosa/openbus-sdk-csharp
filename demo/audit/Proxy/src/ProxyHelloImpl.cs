@@ -6,7 +6,7 @@ namespace audit {
   /// <summary>
   /// Implementação do servant Hello.
   /// </summary>  
-  public class HelloImpl : MarshalByRefObject, Hello {
+  internal class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
     private readonly Connection _conn;
@@ -16,7 +16,7 @@ namespace audit {
 
     #region Constructors
 
-    public HelloImpl(Connection conn, Hello server) {
+    internal HelloImpl(Connection conn, Hello server) {
       _conn = conn;
       _server = server;
     }

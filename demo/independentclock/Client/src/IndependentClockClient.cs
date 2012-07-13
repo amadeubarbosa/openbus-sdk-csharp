@@ -99,9 +99,6 @@ namespace Client {
                                                    "OpenBus Demos");
         ServiceProperty[] properties = new[] {prop, autoProp};
         ServiceOfferDesc[] offers = Find(properties);
-        if (offers == null) {
-          continue;
-        }
 
         // analiza as ofertas encontradas
         _serverClock = GetClock(offers);

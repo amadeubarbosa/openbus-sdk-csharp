@@ -6,7 +6,7 @@ namespace hello {
   /// <summary>
   /// Implementação do servant Hello.
   /// </summary>  
-  public class HelloImpl : MarshalByRefObject, Hello {
+  internal class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
     private readonly Connection _conn;
@@ -15,7 +15,7 @@ namespace hello {
 
     #region Constructors
 
-    public HelloImpl(Connection conn) {
+    internal HelloImpl(Connection conn) {
       _conn = conn;
     }
 

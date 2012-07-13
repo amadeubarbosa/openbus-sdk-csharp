@@ -40,16 +40,13 @@ namespace multiplexing {
 
       // Faz o login das três conexões
       if (!Login(conn, entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
       if (!Login(conn2, entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
       if (!Login(conn3, entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Escolhe uma conexão para atender requisições
@@ -140,16 +137,13 @@ namespace multiplexing {
 
       // Registra as ofertas no barramento das três conexões
       if (!Register(conn, englishIC, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
       if (!Register(conn2, spanishIC, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
       if (!Register(conn3, portugueseIC, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Mantém a thread ativa para aguardar requisições
@@ -254,9 +248,17 @@ namespace multiplexing {
       }
       // faz o logout de todas as conexões
       foreach (KeyValuePair<Connection, ServiceOffer> kvp in Offers) {
-        manager.Requester = kvp.Key;
         kvp.Key.Logout();
       }
+    }
+
+    private static void Exit(int code) {
+      foreach (KeyValuePair<Connection, ServiceOffer> kvp in Offers) {
+        kvp.Key.Logout();
+      }
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

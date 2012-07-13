@@ -13,11 +13,11 @@ namespace Server {
     private readonly ServiceProperty[] _properties;
     private readonly int _waitTime;
 
-    public DedicatedClockInvalidLoginCallback(string host, short port,
-                                              string entity, byte[] privKey,
-                                              IComponent ic,
-                                              ServiceProperty[] properties,
-                                              int waitTime) {
+    internal DedicatedClockInvalidLoginCallback(string host, short port,
+                                                string entity, byte[] privKey,
+                                                IComponent ic,
+                                                ServiceProperty[] properties,
+                                                int waitTime) {
       _host = host;
       _port = port;
       _entity = entity;

@@ -7,7 +7,8 @@ namespace audit {
     private readonly byte[] _privKey;
     private readonly string _serverEntity;
 
-    public ProxyInvalidLogin(string entity, byte[] privKey, string serverEntity) {
+    internal ProxyInvalidLogin(string entity, byte[] privKey,
+                               string serverEntity) {
       _entity = entity;
       _privKey = privKey;
       _serverEntity = serverEntity;

@@ -39,7 +39,8 @@ namespace audit {
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =
-        new DefaultComponentContext(new ComponentId("audit server", 1, 0, 0, ".net"));
+        new DefaultComponentContext(new ComponentId("audit server", 1, 0, 0,
+                                                    ".net"));
 
       // Cria a faceta Hello para o componente
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
@@ -49,8 +50,7 @@ namespace audit {
 
       // Faz o login
       if (!Login(entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
@@ -61,12 +61,12 @@ namespace audit {
 
       // Registra a oferta no barramento
       if (!Register(ic, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra uma callback para o caso do login ser perdido
-      _conn.OnInvalidLogin = new ServerInvalidLogin(entity, privateKey, ic, properties);
+      _conn.OnInvalidLogin = new ServerInvalidLogin(entity, privateKey, ic,
+                                                    properties);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine("Servidor no ar.");
@@ -161,6 +161,13 @@ namespace audit {
       if (_conn != null) {
         _conn.Logout();
       }
+    }
+
+    private static void Exit(int code) {
+      _conn.Logout();
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

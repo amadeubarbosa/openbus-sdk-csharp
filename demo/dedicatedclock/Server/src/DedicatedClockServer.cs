@@ -44,11 +44,10 @@ namespace Server {
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
-      ServiceProperty[] properties = new[]
-                                     {
-                                       new ServiceProperty("offer.domain",
-                                                           "OpenBus Demos")
-                                     };
+      ServiceProperty[] properties = new[] {
+                                             new ServiceProperty("offer.domain",
+                                                                 "OpenBus Demos")
+                                           };
 
       // Tenta eternamente fazer o login e registrar as ofertas
       TryLoginAndRegisterForever(host, port, entity, privateKey, ic, properties,
@@ -74,7 +73,8 @@ namespace Server {
           firstTime = false;
         }
         else {
-          Console.WriteLine(String.Format("Aguardando {0} milisegundos.", waitTime));
+          Console.WriteLine(String.Format("Aguardando {0} milisegundos.",
+                                          waitTime));
           Thread.Sleep(waitTime);
         }
 

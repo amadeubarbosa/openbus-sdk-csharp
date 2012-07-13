@@ -8,8 +8,8 @@ namespace Server {
     private readonly IComponent _ic;
     private readonly ServiceProperty[] _properties;
 
-    public IndependentClockInvalidLoginCallback(IComponent ic,
-                                                ServiceProperty[] properties) {
+    internal IndependentClockInvalidLoginCallback(IComponent ic,
+                                                  ServiceProperty[] properties) {
       _ic = ic;
       _properties = properties;
     }

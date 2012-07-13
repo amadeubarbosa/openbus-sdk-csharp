@@ -64,9 +64,6 @@ namespace Client {
                                                    "OpenBus Demos");
         ServiceProperty[] properties = new[] {prop, autoProp};
         ServiceOfferDesc[] offers = Find(properties);
-        if (offers == null) {
-          continue;
-        }
 
         // analiza as ofertas encontradas
         Clock clock = GetClock(offers);
@@ -85,7 +82,8 @@ namespace Client {
       Console.WriteLine(ok
                           ? "Fim."
                           : "Não foi possível realizar o login ou encontrar o servidor.");
-      Console.WriteLine("Pressione qualquer tecla para finalizar.");
+      _conn.Logout();
+      Console.WriteLine("Pressione qualquer tecla para sair.");
       Console.ReadLine();
     }
 

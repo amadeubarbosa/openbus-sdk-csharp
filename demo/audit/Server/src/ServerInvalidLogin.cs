@@ -10,8 +10,8 @@ namespace audit {
     private readonly IComponent _ic;
     private readonly ServiceProperty[] _properties;
 
-    public ServerInvalidLogin(string entity, byte[] privKey, IComponent ic,
-                              ServiceProperty[] properties) {
+    internal ServerInvalidLogin(string entity, byte[] privKey, IComponent ic,
+                                ServiceProperty[] properties) {
       _entity = entity;
       _privKey = privKey;
       _ic = ic;

@@ -10,9 +10,9 @@ namespace multiplexing {
     private readonly IComponent _component;
     private readonly ServiceProperty[] _properties;
 
-    public MultiplexingInvalidLoginCallback(string entity, byte[] privKey,
-                                            IComponent component,
-                                            ServiceProperty[] properties) {
+    internal MultiplexingInvalidLoginCallback(string entity, byte[] privKey,
+                                              IComponent component,
+                                              ServiceProperty[] properties) {
       _entity = entity;
       _privKey = privKey;
       _component = component;

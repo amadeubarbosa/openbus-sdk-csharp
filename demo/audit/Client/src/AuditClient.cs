@@ -26,20 +26,21 @@ namespace audit {
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
       if (!Login(entity, encoding.GetBytes(password), conn)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // procura o proxy
       Hello proxyHello = GetService(conn);
       if (proxyHello == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        conn.Logout();
+        Exit(1);
+      }
+      else {
+        // utiliza o serviço
+        proxyHello.sayHello();
       }
 
-      // utiliza o serviço
-      proxyHello.sayHello();
-
+      conn.Logout();
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }
@@ -47,23 +48,21 @@ namespace audit {
     private static Hello GetService(Connection conn) {
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       // propriedades geradas automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.component.name", "audit proxy");
+      ServiceProperty autoProp = new ServiceProperty("openbus.component.name",
+                                                     "audit proxy");
       // propriedade definida pelo serviço
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
-      ServiceProperty[] properties = new[] { prop, autoProp };
+      ServiceProperty[] properties = new[] {prop, autoProp};
       ServiceOfferDesc[] offers = Find(properties, conn);
-      if (offers == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
-
       if (offers.Length < 1) {
-        Console.WriteLine("O componente audit proxy não se encontra no barramento.");
+        Console.WriteLine(
+          "O componente audit proxy não se encontra no barramento.");
         return null;
       }
 
       if (offers.Length > 1) {
-        Console.WriteLine("Existe mais de um componente audit proxy no barramento. Tentaremos encontrar um funcional.");
+        Console.WriteLine(
+          "Existe mais de um componente audit proxy no barramento. Tentaremos encontrar um funcional.");
       }
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         Console.WriteLine("Testando uma das ofertas recebidas...");
@@ -139,6 +138,12 @@ namespace audit {
         Console.WriteLine(e);
       }
       return false;
+    }
+
+    private static void Exit(int code) {
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

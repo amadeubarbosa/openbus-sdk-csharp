@@ -2,13 +2,11 @@ using System;
 using tecgraf.openbus;
 using tecgraf.openbus.exceptions;
 
-namespace chainvalidation
-{
+namespace chainvalidation {
   /// <summary>
   /// Implementação do servant Meeting.
   /// </summary>  
-  public class MeetingImpl : MarshalByRefObject, Meeting
-  {
+  internal class MeetingImpl : MarshalByRefObject, Meeting {
     #region Fields
 
     private readonly Connection _conn;
@@ -19,7 +17,7 @@ namespace chainvalidation
 
     #region Constructors
 
-    public MeetingImpl(Connection conn, Message executive) {
+    internal MeetingImpl(Connection conn, Message executive) {
       _conn = conn;
       _executive = executive;
       _hour = 8;
@@ -33,14 +31,17 @@ namespace chainvalidation
       try {
         CallerChain chain = _conn.CallerChain;
         if (chain == null) {
-          Console.WriteLine("A cadeia de chamadas é nula, talvez o serviço não esteja logado no barramento. Impossível descobrir quem fez a chamada.");
+          Console.WriteLine(
+            "A cadeia de chamadas é nula, talvez o serviço não esteja logado no barramento. Impossível descobrir quem fez a chamada.");
           return -1;
         }
         string caller = chain.Caller.entity;
-        Console.WriteLine(String.Format("Pedido de reunião recebido de {0}.", caller));
+        Console.WriteLine(String.Format("Pedido de reunião recebido de {0}.",
+                                        caller));
         // faz join na própria caller chain
         _conn.JoinChain(null);
-        _executive.sendMessage(String.Format("Você tem uma reunião às {0}h com {1}.", _hour, caller));
+        _executive.sendMessage(
+          String.Format("Você tem uma reunião às {0}h com {1}.", _hour, caller));
         int ret = _hour;
         if (_hour >= 18) {
           _hour = 8;
@@ -51,11 +52,13 @@ namespace chainvalidation
         return ret;
       }
       catch (OpenBusException e) {
-        Console.WriteLine("Erro no método bookMeeting ao obter a cadeia de chamadas:");
+        Console.WriteLine(
+          "Erro no método bookMeeting ao obter a cadeia de chamadas:");
         Console.WriteLine(e);
       }
       return -1;
     }
+
     #endregion
   }
 }

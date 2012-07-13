@@ -17,7 +17,9 @@ namespace greetings {
   /// </summary>
   internal static class GreetingsServer {
     private static Connection _conn;
-    private static readonly IList<ServiceOffer> Offers = new List<ServiceOffer>();
+
+    private static readonly IList<ServiceOffer> Offers =
+      new List<ServiceOffer>();
 
     private static void Main(String[] args) {
       // Registra handler para o caso do processo ser finalizado
@@ -98,8 +100,7 @@ namespace greetings {
 
       // Faz o login
       if (!Login(entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra as ofertas no barramento
@@ -109,12 +110,12 @@ namespace greetings {
                                         portuguese.GetIComponent()
                                       };
       if (!Register(components, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra uma callback para o caso do login ser perdido
-      _conn.OnInvalidLogin = new GreetingsInvalidLoginCallback(entity, privateKey,
+      _conn.OnInvalidLogin = new GreetingsInvalidLoginCallback(entity,
+                                                               privateKey,
                                                                components,
                                                                properties);
 
@@ -192,7 +193,8 @@ namespace greetings {
       if (Offers.Count == 0) {
         return;
       }
-      Console.WriteLine("Removendo ofertas do barramento antes de terminar o processo...");
+      Console.WriteLine(
+        "Removendo ofertas do barramento antes de terminar o processo...");
       foreach (ServiceOffer serviceOffer in Offers) {
         try {
           serviceOffer.remove();
@@ -216,6 +218,13 @@ namespace greetings {
       if (_conn != null) {
         _conn.Logout();
       }
+    }
+
+    private static void Exit(int code) {
+      _conn.Logout();
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

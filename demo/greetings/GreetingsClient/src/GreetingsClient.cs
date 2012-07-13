@@ -38,8 +38,7 @@ namespace greetings {
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
       if (!Login(entity, encoding.GetBytes(password), conn)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelos serviços específicos
@@ -61,23 +60,20 @@ namespace greetings {
       }
 
       ServiceOfferDesc[] offers = Find(properties, conn);
-      if (offers == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
 
       // analiza as ofertas encontradas
       IEnumerable<Greetings> greetings = GetGreetings(offers);
       if (greetings == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
+      }
+      else {
+        // utiliza o serviço
+        foreach (Greetings greeting in greetings) {
+          Console.WriteLine((string)greeting.sayGreetings());
+        }
       }
 
-      // utiliza o serviço
-      foreach (Greetings greeting in greetings) {
-        Console.WriteLine((string) greeting.sayGreetings());
-      }
-
+      conn.Logout();
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }
@@ -176,6 +172,12 @@ namespace greetings {
         Console.WriteLine(e);
       }
       return false;
+    }
+
+    private static void Exit(int code) {
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

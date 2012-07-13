@@ -5,20 +5,20 @@ namespace multiplexing {
   /// <summary>
   /// Implementação do servant Greetings.
   /// </summary>  
-  public class GreetingsImpl : MarshalByRefObject, Greetings {
+  internal class GreetingsImpl : MarshalByRefObject, Greetings {
     #region Fields
 
     private readonly Connection _conn;
     private readonly Language _language;
     private readonly Period _period;
 
-    public enum Language {
+    internal enum Language {
       English,
       Spanish,
       Portuguese
     }
 
-    public enum Period {
+    internal enum Period {
       Morning,
       Afternoon,
       Night
@@ -28,7 +28,7 @@ namespace multiplexing {
 
     #region Constructors
 
-    public GreetingsImpl(Connection conn, Language language, Period period) {
+    internal GreetingsImpl(Connection conn, Language language, Period period) {
       _conn = conn;
       _language = language;
       _period = period;

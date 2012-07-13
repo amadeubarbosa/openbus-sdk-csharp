@@ -42,18 +42,18 @@ namespace chainvalidation {
 
       // Faz o login
       if (!Login(entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra a oferta no barramento
       if (!Register(executiveEntity)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra uma callback para o caso do login ser perdido
-      _conn.OnInvalidLogin = new ChainValidationInvalidLoginCallback(entity, privateKey, executiveEntity);
+      _conn.OnInvalidLogin = new ChainValidationInvalidLoginCallback(entity,
+                                                                     privateKey,
+                                                                     executiveEntity);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine("Servidor no ar.");
@@ -68,7 +68,7 @@ namespace chainvalidation {
       // Cria as facetas para o componente
       component.AddFacet("Message", Repository.GetRepositoryID(typeof (Message)),
                          new MessageImpl(_conn));
-      component.AddFacet("Meeting", Repository.GetRepositoryID(typeof(Meeting)),
+      component.AddFacet("Meeting", Repository.GetRepositoryID(typeof (Meeting)),
                          new MeetingImpl(_conn, executive));
 
       return component.GetIComponent();
@@ -134,23 +134,18 @@ namespace chainvalidation {
     internal static bool Register(string executiveEntity) {
       //busca executivo
       ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity",
-                                                     executiveEntity);
+                                                      executiveEntity);
       ServiceProperty autoProp2 = new ServiceProperty("openbus.component.name",
-                                                     "executive");
+                                                      "executive");
       // propriedade definida pelo serviço
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
       ServiceProperty[] executiveProps = new[] {prop, autoProp1, autoProp2};
       ServiceOfferDesc[] offers = Find(executiveProps);
-      if (offers == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
 
       // analiza as ofertas encontradas
       Message executive = GetExecutive(offers);
       if (executive == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       IComponent ic = CreateComponent(executive);
@@ -247,6 +242,13 @@ namespace chainvalidation {
       if (_conn != null) {
         _conn.Logout();
       }
+    }
+
+    private static void Exit(int code) {
+      _conn.Logout();
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

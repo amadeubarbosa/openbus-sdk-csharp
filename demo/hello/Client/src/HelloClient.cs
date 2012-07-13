@@ -29,33 +29,30 @@ namespace hello {
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
       if (!Login(entity, encoding.GetBytes(password), conn)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       // propriedade gerada automaticamente
       ServiceProperty autoProp = new ServiceProperty("openbus.offer.entity",
-                                                      helloEntity);
+                                                     helloEntity);
       // propriedade definida pelo serviço hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
       ServiceProperty[] properties = new[] {prop, autoProp};
       ServiceOfferDesc[] offers = Find(properties, conn);
-      if (offers == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
 
       // analiza as ofertas encontradas
       Hello hello = GetHello(offers);
       if (hello == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        conn.Logout();
+        Exit(1);
+      }
+      else {
+        // utiliza o serviço
+        hello.sayHello();
       }
 
-      // utiliza o serviço
-      hello.sayHello();
-
+      conn.Logout();
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }
@@ -145,6 +142,12 @@ namespace hello {
         Console.WriteLine(e);
       }
       return false;
+    }
+
+    private static void Exit(int code) {
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

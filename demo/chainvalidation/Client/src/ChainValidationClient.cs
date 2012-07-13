@@ -26,62 +26,69 @@ namespace chainvalidation {
       // Faz o login
       System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
       if (!Login(entity, encoding.GetBytes(password), conn)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // analiza as ofertas encontradas
       Meeting secretaryMeeting;
       Meeting dummyMeeting;
       Message executiveMsg = GetService(conn, "executive", out dummyMeeting);
-      Message secretaryMessage = GetService(conn, "secretary", out secretaryMeeting);
-      if ((executiveMsg == null) || (secretaryMessage == null) || (secretaryMeeting == null)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+      Message secretaryMessage = GetService(conn, "secretary",
+                                            out secretaryMeeting);
+      if ((executiveMsg == null) || (secretaryMessage == null) ||
+          (secretaryMeeting == null)) {
+        conn.Logout();
+        Exit(1);
+      }
+      else {
+        // utiliza o serviço
+        bool failed = false;
+        try {
+          executiveMsg.sendMessage("Olá!");
+        }
+        catch (Unavailable) {
+          failed = true;
+        }
+        if (!failed) {
+          Console.WriteLine(
+            "Executivo aceitou uma mensagem diretamente, o que não deveria ter acontecido.");
+          conn.Logout();
+          Exit(1);
+        }
+        secretaryMessage.sendMessage(
+          "Olá, eu gostaria de agendar uma reunião com seu chefe.");
+        int hour = secretaryMeeting.bookMeeting();
+        Console.WriteLine(String.Format(
+          "Uma reunião foi agendada para as {0}h.", hour));
       }
 
-      // utiliza o serviço
-      bool failed = false;
-      try {
-        executiveMsg.sendMessage("Olá!");
-      }
-      catch (Unavailable) {
-        failed = true;
-      }
-      if (!failed) {
-        Console.WriteLine("Executivo aceitou uma mensagem diretamente, o que não deveria ter acontecido.");
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
-      secretaryMessage.sendMessage("Olá, eu gostaria de agendar uma reunião com seu chefe.");
-      int hour = secretaryMeeting.bookMeeting();
-      Console.WriteLine(String.Format("Uma reunião foi agendada para as {0}h.", hour));
-
+      conn.Logout();
       Console.WriteLine("Fim.");
       Console.ReadLine();
     }
 
-    private static Message GetService(Connection conn, string name, out Meeting meeting) {
+    private static Message GetService(Connection conn, string name,
+                                      out Meeting meeting) {
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       // propriedades geradas automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.component.name", name);
+      ServiceProperty autoProp = new ServiceProperty("openbus.component.name",
+                                                     name);
       // propriedade definida pelo serviço
       ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
-      ServiceProperty[] properties = new[] { prop, autoProp };
+      ServiceProperty[] properties = new[] {prop, autoProp};
       ServiceOfferDesc[] offers = Find(properties, conn);
-      if (offers == null) {
-        Console.ReadLine();
-        Environment.Exit(1);
-      }
-
       if (offers.Length < 1) {
-        Console.WriteLine(String.Format("O componente {0} não se encontra no barramento.", name));
+        Console.WriteLine(
+          String.Format("O componente {0} não se encontra no barramento.", name));
         meeting = null;
         return null;
       }
 
       if (offers.Length > 1) {
-        Console.WriteLine(String.Format("Existe mais de um componente {0} no barramento. Tentaremos encontrar um funcional.", name));
+        Console.WriteLine(
+          String.Format(
+            "Existe mais de um componente {0} no barramento. Tentaremos encontrar um funcional.",
+            name));
       }
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         Console.WriteLine("Testando uma das ofertas recebidas...");
@@ -179,6 +186,12 @@ namespace chainvalidation {
         Console.WriteLine(e);
       }
       return false;
+    }
+
+    private static void Exit(int code) {
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

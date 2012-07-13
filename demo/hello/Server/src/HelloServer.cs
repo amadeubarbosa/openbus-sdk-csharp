@@ -54,14 +54,12 @@ namespace hello {
 
       // Faz o login
       if (!Login(entity, privateKey)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra a oferta no barramento
       if (!Register(ic, properties)) {
-        Console.ReadLine();
-        Environment.Exit(1);
+        Exit(1);
       }
 
       // Registra uma callback para o caso do login ser perdido
@@ -161,6 +159,13 @@ namespace hello {
       if (_conn != null) {
         _conn.Logout();
       }
+    }
+
+    private static void Exit(int code) {
+      _conn.Logout();
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
     }
   }
 }

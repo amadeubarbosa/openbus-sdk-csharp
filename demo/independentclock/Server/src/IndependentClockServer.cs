@@ -59,11 +59,10 @@ namespace Server {
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
-      ServiceProperty[] properties = new[]
-                                     {
-                                       new ServiceProperty("offer.domain",
-                                                           "OpenBus Demos")
-                                     };
+      ServiceProperty[] properties = new[] {
+                                             new ServiceProperty("offer.domain",
+                                                                 "OpenBus Demos")
+                                           };
 
       // Tenta eternamente fazer o login e registrar as ofertas
       TryLoginAndRegisterForever(ic, properties);
