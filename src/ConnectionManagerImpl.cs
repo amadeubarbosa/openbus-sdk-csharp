@@ -83,7 +83,7 @@ namespace tecgraf.openbus {
           const string message =
             "Falha inesperada ao acessar o slot da thread corrente";
           Logger.Fatal(message, e);
-          throw new OpenBusException(message);
+          throw new OpenBusInternalException(message);
         }
 
         Connection connection;
@@ -99,7 +99,7 @@ namespace tecgraf.openbus {
           const string message =
             "Falha inesperada ao acessar o slot da thread corrente";
           Logger.Fatal(message, e);
-          throw new OpenBusException(message, e);
+          throw new OpenBusInternalException(message, e);
         }
         SetConnectionByThreadId(id, value);
       }
@@ -138,7 +138,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
         Logger.Fatal(message);
-        throw new OpenBusException(message);
+        throw new OpenBusInternalException(message);
       }
       return current;
     }
@@ -175,7 +175,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot de interceptação ignorada.";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
     }
 
@@ -188,7 +188,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot de interceptação ignorada.";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
     }
 
@@ -200,7 +200,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot do login corrente";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message);
+        throw new OpenBusInternalException(message);
       }
     }
   }

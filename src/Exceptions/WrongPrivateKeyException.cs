@@ -5,7 +5,7 @@ namespace tecgraf.openbus.exceptions {
   /// Indica que a chave privada fornecida não era a esperada.
   /// </summary>
   [Serializable]
-  public class WrongPrivateKeyException : OpenBusException {
+  public sealed class WrongPrivateKeyException : OpenBusException {
     /// <inheritdoc />
     internal WrongPrivateKeyException() {
     }

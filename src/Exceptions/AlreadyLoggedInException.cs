@@ -5,7 +5,7 @@ namespace tecgraf.openbus.exceptions {
   /// Indica que a conexão já está autenticada, ao se tentar realizar um login.
   /// </summary>
   [Serializable]
-  public class AlreadyLoggedInException : OpenBusException {
+  public sealed class AlreadyLoggedInException : OpenBusException {
     /// <inheritdoc />
     internal AlreadyLoggedInException() {
     }

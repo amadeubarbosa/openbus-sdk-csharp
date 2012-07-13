@@ -44,8 +44,8 @@ namespace tecgraf.openbus.lease {
       Lease = lease;
       _conn = connection as ConnectionImpl;
       if (_conn == null) {
-        throw new OpenBusException(
-          "Impossível criar renovador de credencial com conexão nula.");
+        throw new OpenBusInternalException(
+          "Impossível criar renovador de credencial com conexão nula ou inválida.");
       }
       _ac = accessControlFacet;
     }

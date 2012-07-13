@@ -5,7 +5,7 @@ namespace tecgraf.openbus.exceptions {
   /// O LoginProcess informado é inválido, por exemplo depois de ser cancelado ou ter expirado.
   /// </summary>
   [Serializable]
-  public class InvalidLoginProcessException : OpenBusException {
+  public sealed class InvalidLoginProcessException : OpenBusException {
     /// <inheritdoc />
     internal InvalidLoginProcessException() {
     }

@@ -114,7 +114,7 @@ namespace tecgraf.openbus.interceptors {
       }
       catch (InvalidSlot e) {
         const string message = "Falha inesperada ao obter o slot da conexão corrente";
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
     }
   }

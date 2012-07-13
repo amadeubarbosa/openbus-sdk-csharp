@@ -5,7 +5,7 @@ namespace tecgraf.openbus.exceptions {
   /// Indica que a chave privada está corrompida ou não está no formato esperado.
   /// </summary>
   [Serializable]
-  public class CorruptedPrivateKeyException : OpenBusException {
+  public sealed class CorruptedPrivateKeyException : OpenBusException {
     /// <inheritdoc />
     internal CorruptedPrivateKeyException() {
     }

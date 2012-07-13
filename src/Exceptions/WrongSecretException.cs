@@ -5,7 +5,7 @@ namespace tecgraf.openbus.exceptions {
   /// Indica que o segredo fornecido não era o esperado.
   /// </summary>
   [Serializable]
-  public class WrongSecretException : OpenBusException {
+  public sealed class WrongSecretException : OpenBusException {
     /// <inheritdoc />
     internal WrongSecretException() {
     }

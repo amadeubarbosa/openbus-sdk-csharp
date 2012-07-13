@@ -116,7 +116,7 @@ namespace tecgraf.openbus.interceptors {
       catch (InvalidSlot e) {
         const string msg = "Falha ao inserir a credencial em seu slot.";
         Logger.Fatal(msg, e);
-        throw new OpenBusException(msg, e);
+        throw new OpenBusInternalException(msg, e);
       }
       finally {
         RemoveCurrentConnection(ri);
@@ -152,7 +152,7 @@ namespace tecgraf.openbus.interceptors {
         const string msg =
           "Falha ao acessar o slot da credencial para avaliar se um reset deve ser enviado.";
         Logger.Fatal(msg, e);
-        throw new OpenBusException(msg, e);
+        throw new OpenBusInternalException(msg, e);
       }
     }
 
@@ -201,7 +201,7 @@ namespace tecgraf.openbus.interceptors {
             const string msg =
               "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.";
             Logger.Fatal(msg, e);
-            throw new OpenBusException(msg, e);
+            throw new OpenBusInternalException(msg, e);
           }
           Logger.Fatal(
             "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
@@ -240,7 +240,7 @@ namespace tecgraf.openbus.interceptors {
         const string message =
           "Falha inesperada ao limpar informações nos slots";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
     }
 
@@ -253,7 +253,7 @@ namespace tecgraf.openbus.interceptors {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
       Manager.SetConnectionByThreadId(id, conn);
     }
@@ -266,7 +266,7 @@ namespace tecgraf.openbus.interceptors {
         const string message =
           "Falha inesperada ao acessar o slot da thread corrente";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
       int id = Thread.CurrentThread.ManagedThreadId;
       Manager.SetConnectionByThreadId(id, null);

@@ -87,6 +87,7 @@
     <Compile Include="src\exceptions\InvalidLoginProcessException.cs" />
     <Compile Include="src\exceptions\NotLoggedInException.cs" />
     <Compile Include="src\exceptions\OpenBusException.cs" />
+    <Compile Include="src\exceptions\OpenBusInternalException.cs" />
     <Compile Include="src\exceptions\WrongPrivateKeyException.cs" />
     <Compile Include="src\exceptions\WrongSecretException.cs" />
     <Compile Include="src\interceptors\ClientInterceptor.cs" />

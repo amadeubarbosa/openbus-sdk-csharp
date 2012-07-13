@@ -2,10 +2,10 @@ using System;
 
 namespace tecgraf.openbus.exceptions {
   /// <summary>
-  /// Indica uma exceção interna do SDK do OpenBus.
+  /// Indica uma exceção do SDK do OpenBus.
   /// </summary>
   [Serializable]
-  public class OpenBusException : ApplicationException {
+  public abstract class OpenBusException : ApplicationException {
     /// <summary>
     /// Cria uma exceção do OpenBus
     /// </summary>

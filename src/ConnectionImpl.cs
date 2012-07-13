@@ -104,7 +104,7 @@ namespace tecgraf.openbus {
         "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
                       as IComponent;
       if (_acsComponent == null) {
-        throw new OpenBusException(
+        throw new OpenBusInternalException(
           "Não foi possível conectar ao barramento com o host e porta fornecidos.");
       }
 
@@ -452,7 +452,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot da joined chain.";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
     }
 
@@ -467,7 +467,7 @@ namespace tecgraf.openbus {
           const string message =
             "Falha inesperada ao acessar o slot da conexão corrente.";
           Logger.Fatal(message, e);
-          throw new OpenBusException(message);
+          throw new OpenBusInternalException(message);
         }
         string loginId;
         lock (_loginLock) {
@@ -503,7 +503,7 @@ namespace tecgraf.openbus {
           const string message =
             "Falha inesperada ao acessar o slot da credencial corrente.";
           Logger.Fatal(message, e);
-          throw new OpenBusException(message);
+          throw new OpenBusInternalException(message);
         }
       }
     }
@@ -517,7 +517,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot da joined chain.";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
     }
 
@@ -532,7 +532,7 @@ namespace tecgraf.openbus {
           const string message =
             "Falha inesperada ao acessar o slot da joined chain.";
           Logger.Fatal(message, e);
-          throw new OpenBusException(message);
+          throw new OpenBusInternalException(message);
         }
         return chain;
       }
@@ -577,7 +577,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao acessar o slot do login corrente";
         Logger.Fatal(message, e);
-        throw new OpenBusException(message, e);
+        throw new OpenBusInternalException(message, e);
       }
 
       int sessionId = 0;
@@ -765,7 +765,7 @@ namespace tecgraf.openbus {
                 const string msg =
                   "Falha ao inserir o identificador de login em seu slot.";
                 Logger.Fatal(msg, e);
-                throw new OpenBusException(msg, e);
+                throw new OpenBusInternalException(msg, e);
               }
               return;
             }
@@ -780,7 +780,7 @@ namespace tecgraf.openbus {
           const string msg =
             "Falha ao inserir o identificador de login em seu slot.";
           Logger.Fatal(msg, e);
-          throw new OpenBusException(msg, e);
+          throw new OpenBusInternalException(msg, e);
         }
         return;
       }
@@ -835,7 +835,7 @@ namespace tecgraf.openbus {
           const string message =
             "Falha inesperada ao acessar o slot do login corrente";
           Logger.Fatal(message, e);
-          throw new OpenBusException(message);
+          throw new OpenBusInternalException(message);
         }
       }
       if (OnInvalidLogin != null) {
