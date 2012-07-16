@@ -1,12 +1,19 @@
 ﻿using System.Configuration;
 using System.IO;
+using System.Runtime.Remoting;
+using Ch.Elca.Iiop.Idl;
+using Scs.Core;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using scs.core;
+using tecgraf.openbus.core.v2_0;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
+using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
+using tecgraf.openbus.test;
 
 namespace tecgraf.openbus.Test {
   /// <summary>
@@ -26,6 +33,9 @@ namespace tecgraf.openbus.Test {
     private static byte[] _privKey;
     private static byte[] _wrongKey;
     private static ConnectionManager _manager;
+
+    private const int LeaseTime = 10;
+    internal static volatile bool CallbackCalled;
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -415,9 +425,48 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.OnInvalidLogin);
-        InvalidLoginCallback callback = new InvalidLoginCallbackMock();
+        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login, _password);
         conn.OnInvalidLogin = callback;
         Assert.AreEqual(callback, conn.OnInvalidLogin);
+      }
+    }
+
+    /// <summary>
+    /// Teste de login removido e chamada da callback para refazer
+    /// </summary>
+    [TestMethod]
+    [Timeout(LeaseTime * 1000)]
+    public void LoginRemovedAndCallbackTest() {
+      lock (this) {
+        Connection conn = CreateConnection();
+        conn.LoginByPassword(_login, _password);
+        Assert.IsNotNull(conn.Login);
+        LoginInfo firstLogin = new LoginInfo(conn.Login.Value.id, conn.Login.Value.entity);
+        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login, _password);
+        conn.OnInvalidLogin = callback;
+        _manager.DefaultConnection = conn;
+        IComponent busIC = RemotingServices.Connect(
+          typeof(IComponent),
+          "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" + BusObjectKey.ConstVal)
+                        as IComponent;
+        Assert.IsNotNull(busIC);
+        string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
+        LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;
+        Assert.IsNotNull(lr);
+        lr.invalidateLogin(conn.Login.Value.id);
+        // faz uma chamada qualquer para refazer o login
+        try {
+          conn.Offers.getServices();
+          Assert.IsTrue(CallbackCalled);
+          Assert.IsFalse(firstLogin.id.Equals(conn.Login.Value.id));
+        }
+        catch (Exception) {
+          Assert.Fail("O login não foi refeito.");
+        }
+        finally {
+          CallbackCalled = false;
+          _manager.DefaultConnection = null;
+        }
       }
     }
 
@@ -429,8 +478,29 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.CallerChain);
+        //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário descomentar as duas linhas de Assert.Fail abaixo.
+        try {
+          const string facetName = "HelloMock";
+          conn.LoginByPassword(_login, _password);
+          ComponentContext context = new DefaultComponentContext(new ComponentId());
+          context.AddFacet(facetName, Repository.GetRepositoryID(typeof(Hello)),
+                           new HelloMock(conn));
+          _manager.DefaultConnection = conn;
+          Hello hello = context.GetFacetByName(facetName).Reference as Hello;
+          Assert.IsNotNull(hello);
+          hello.sayHello();
+        }
+        catch (NullReferenceException) {
+//          Assert.Fail("A cadeia obtida é nula.");
+        }
+        catch (OpenBusInternalException) {
+//          Assert.Fail("A cadeia obtida não é a esperada.");
+        }
+        finally {
+          _manager.DefaultConnection = null;
+          conn.Logout();
+        }
       }
-      //TODO: adicionar testes para caso exista uma callerchain ou os testes de interoperabilidade ja cobrem isso de forma suficiente?
     }
 
     /// <summary>
@@ -445,6 +515,7 @@ namespace tecgraf.openbus.Test {
         conn.JoinChain(null);
         Assert.IsNull(conn.JoinedChain);
         //TODO testar caso em que a chain da getCallerChain não é vazia
+        //TODO não há como testar o caso do TODO acima em C# sem usar processos diferentes para o servidor e cliente. Não há muito problema pois os testes de interoperabilidade cobrem esse caso.
         conn.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
                                            new LoginInfo[0]));
         Assert.IsNotNull(conn.JoinedChain);

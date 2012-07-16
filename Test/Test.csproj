@@ -46,6 +46,16 @@
     <Reference Include="OpenBus.Idl">
       <HintPath>..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="Openbus.Interop.Hello.Idl">
+      <HintPath>..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs">
+      <HintPath>..\lib\Scs.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\Scs.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core">
@@ -56,6 +66,7 @@
   <ItemGroup>
     <Compile Include="ConnectionManagerTest.cs" />
     <Compile Include="ConnectionTest.cs" />
+    <Compile Include="HelloMock.cs" />
     <Compile Include="InvalidLoginCallbackMock.cs" />
     <Compile Include="ORBInitializerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
