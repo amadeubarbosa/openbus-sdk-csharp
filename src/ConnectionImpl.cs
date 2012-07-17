@@ -31,7 +31,7 @@ namespace tecgraf.openbus {
       LogManager.GetLogger(typeof (ConnectionImpl));
 
     private readonly string _host;
-    private readonly short _port;
+    private readonly ushort _port;
     private readonly IComponent _acsComponent;
     private AccessControl _acs;
     private string _busId;
@@ -81,7 +81,7 @@ namespace tecgraf.openbus {
 
     #region Constructors
 
-    internal ConnectionImpl(string host, short port,
+    internal ConnectionImpl(string host, ushort port,
                             ConnectionManagerImpl manager, bool legacy) {
       if (string.IsNullOrEmpty(host)) {
         throw new ArgumentException("O campo 'host' não é válido");
@@ -414,6 +414,7 @@ namespace tecgraf.openbus {
         }
         if (_login.IsInvalid()) {
           LocalLogout();
+          //TODO retornar false
           return true;
         }
       }
@@ -461,6 +462,7 @@ namespace tecgraf.openbus {
         Current current = Manager.GetPICurrent();
         string piCurrentLoginId;
         try {
+          //TODO trocar o login id pela conexão toda, pois o login pode mudar
           piCurrentLoginId = current.get_slot(_connectionSlotId) as string;
         }
         catch (InvalidSlot e) {
@@ -806,6 +808,7 @@ namespace tecgraf.openbus {
     }
 
     private void CallOnInvalidLoginCallback(bool client, RequestInfo ri) {
+      //TODO verificar se realmente precisa chamar a callback no caso servidor. Como o servidor só descobre que está deslogado ao chamar getValidity e getLoginInfo, o interceptador cliente já vai reajustar o login.
       string operation = ri.operation;
       ClientRequestInfo cri = null;
       LoginInfo originalLogin;

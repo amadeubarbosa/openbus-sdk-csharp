@@ -17,7 +17,7 @@ namespace tecgraf.openbus.Test {
     #region Fields
 
     private static String _hostName;
-    private static short _hostPort;
+    private static ushort _hostPort;
     private static String _entity;
     private static string _login;
     private static byte[] _password;
@@ -66,7 +66,7 @@ namespace tecgraf.openbus.Test {
       }
 
       string port = ConfigurationManager.AppSettings["hostPort"];
-      _hostPort = short.Parse(port);
+      _hostPort = ushort.Parse(port);
 
       _entity = ConfigurationManager.AppSettings["entityName"];
       if (String.IsNullOrEmpty(_entity)) {
@@ -117,7 +117,7 @@ namespace tecgraf.openbus.Test {
           Assert.IsNull(invalid);
         }
         try {
-          invalid = _manager.CreateConnection(_hostName, -1);
+          invalid = _manager.CreateConnection(_hostName, 0);
         }
         catch (Exception) {
         }

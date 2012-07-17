@@ -26,7 +26,7 @@ namespace tecgraf.openbus {
     /// <param name="host">Endereço de rede IP onde o barramento está executando.</param>
     /// <param name="port">Porta do processo do barramento no endereço indicado.</param>
     /// <returns>Conexão ao barramento referenciado.</returns>
- 	  Connection CreateConnection(string host, short port);
+ 	  Connection CreateConnection(string host, ushort port);
 
     /// <summary>
     /// Define a conexão a ser utilizada nas chamadas realizadas e no despacho de

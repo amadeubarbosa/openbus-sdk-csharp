@@ -56,7 +56,7 @@ namespace tecgraf.openbus {
 
     public Connection DefaultConnection { get; set; }
 
-    public Connection CreateConnection(string host, short port) {
+    public Connection CreateConnection(string host, ushort port) {
       IgnoreCurrentThread();
       try {
         ConnectionImpl conn = new ConnectionImpl(host, port, this, _legacy);
