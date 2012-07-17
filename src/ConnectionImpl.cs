@@ -403,8 +403,7 @@ namespace tecgraf.openbus {
         }
         if (_login.IsInvalid()) {
           LocalLogout();
-          //TODO retornar false
-          return true;
+          return false;
         }
       }
 
