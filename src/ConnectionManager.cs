@@ -1,6 +1,5 @@
 ﻿using System;
 using omg.org.CORBA;
-using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus {
 /**
@@ -49,7 +48,6 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="conn"> Conexão a barramento a ser associada a thread corrente.</param>
     /// <exception cref="ArgumentNullException">A conexão é nula.</exception>
-    /// <exception cref="NotLoggedInException">A conexão não está autenticada.</exception>
     void SetDispatcher(Connection conn);
 
     /// <summary>

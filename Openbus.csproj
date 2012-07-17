@@ -89,7 +89,6 @@
     <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
     <Compile Include="src\exceptions\CorruptedPrivateKeyException.cs" />
     <Compile Include="src\exceptions\InvalidLoginProcessException.cs" />
-    <Compile Include="src\exceptions\NotLoggedInException.cs" />
     <Compile Include="src\exceptions\OpenBusException.cs" />
     <Compile Include="src\exceptions\OpenBusInternalException.cs" />
     <Compile Include="src\exceptions\WrongPrivateKeyException.cs" />

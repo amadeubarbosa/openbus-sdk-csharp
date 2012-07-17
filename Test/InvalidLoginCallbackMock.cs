@@ -10,7 +10,7 @@ namespace tecgraf.openbus.Test {
       _password = password;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       ConnectionTest.CallbackCalled = true;
       conn.LoginByPassword(_login, _password);
     }

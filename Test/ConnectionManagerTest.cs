@@ -147,10 +147,11 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(_manager.GetDispatcher(conn2.BusId));
         _manager.SetDispatcher(conn2);
         Assert.IsTrue(conn2.Logout());
-        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
+        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn2);
         _manager.Requester = null;
         Assert.IsTrue(conn.Logout());
         _manager.DefaultConnection = null;
+        _manager.ClearDispatcher(conn.BusId);
       }
     }
 
@@ -166,14 +167,11 @@ namespace tecgraf.openbus.Test {
         conn2.LoginByPassword(_login, _password);
         Connection removed = _manager.ClearDispatcher(conn.BusId);
         Assert.IsNull(removed);
-        _manager.DefaultConnection = conn;
         _manager.SetDispatcher(conn2);
         removed = _manager.ClearDispatcher(conn.BusId);
         Assert.AreEqual(removed, conn2);
         Assert.IsTrue(conn.Logout());
-        _manager.DefaultConnection = conn2;
         Assert.IsTrue(conn2.Logout());
-        _manager.DefaultConnection = null;
       }
     }
 
@@ -184,14 +182,6 @@ namespace tecgraf.openbus.Test {
     public void SetDispatcherTest() {
       lock (_manager) {
         Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-        bool failed = false;
-        try {
-          _manager.SetDispatcher(conn);
-        }
-        catch (NotLoggedInException) {
-          failed = true;
-        }
-        Assert.IsTrue(failed);
         conn.LoginByPassword(_login, _password);
         Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
         conn2.LoginByPassword(_login, _password);
@@ -203,10 +193,11 @@ namespace tecgraf.openbus.Test {
         Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn2);
         _manager.Requester = conn2;
         Assert.IsTrue(conn2.Logout());
-        Assert.IsNull(_manager.GetDispatcher(conn.BusId));
+        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn2);
         _manager.Requester = null;
         Assert.IsTrue(conn.Logout());
         _manager.DefaultConnection = null;
+        _manager.ClearDispatcher(conn.BusId);
       }
     }
 

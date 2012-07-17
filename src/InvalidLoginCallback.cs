@@ -4,6 +4,6 @@ namespace tecgraf.openbus {
 
   public interface InvalidLoginCallback {
 
-    void InvalidLogin(Connection conn, LoginInfo login, string busid);
+    void InvalidLogin(Connection conn, LoginInfo login);
   }
 }

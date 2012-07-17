@@ -109,9 +109,6 @@ namespace tecgraf.openbus {
       if (conn == null) {
         throw new ArgumentNullException();
       }
-      if ((!conn.Login.HasValue) || conn.BusId == null) {
-        throw new NotLoggedInException();
-      }
       lock (_incomingDispatcherConn) {
         Connection removed;
         _incomingDispatcherConn.TryRemove(conn.BusId, out removed);

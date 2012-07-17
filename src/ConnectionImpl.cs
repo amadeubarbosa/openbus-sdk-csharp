@@ -34,8 +34,8 @@ namespace tecgraf.openbus {
     private readonly ushort _port;
     private readonly IComponent _acsComponent;
     private AccessControl _acs;
-    private string _busId;
-    private AsymmetricKeyParameter _busKey;
+    private readonly string _busId;
+    private readonly AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
     internal bool Legacy;
@@ -118,8 +118,8 @@ namespace tecgraf.openbus {
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
 
       _login = new LoginStatus(this);
-      EraseBusIdAndKey();
       GetBusFacets();
+      _busId = GetBusIdAndKey(out _busKey);
     }
 
     #endregion
@@ -180,10 +180,10 @@ namespace tecgraf.openbus {
       return _acs.busid;
     }
 
-    private void EraseBusIdAndKey() {
-      lock (_loginLock) {
-        BusId = null;
-        _busKey = null;
+    private void ValidateBusId(string actualBusId) {
+      // não faz a chamada remota aqui para se manter thread-safe
+      if (!_busId.Equals(actualBusId)) {
+        //TODO lançar BusChangedException quando a issue for criada.
       }
     }
 
@@ -195,8 +195,7 @@ namespace tecgraf.openbus {
         throw new AlreadyLoggedInException();
       }
 
-      AsymmetricKeyParameter key;
-      string busId = GetBusIdAndKey(out key);
+      ValidateBusId(_acs.busid);
 
       byte[] encrypted;
       byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -205,7 +204,7 @@ namespace tecgraf.openbus {
         LoginAuthenticationInfo info =
           new LoginAuthenticationInfo
           {data = secret, hash = SHA256.Create().ComputeHash(pubBytes)};
-        encrypted = Crypto.Encrypt(key, _codec.encode_value(info));
+        encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
       }
       catch {
         login.cancel();
@@ -232,17 +231,16 @@ namespace tecgraf.openbus {
         Logger.Fatal(e);
         throw;
       }
-      LocalLogin(busId, key, l, lease);
+      LocalLogin(l, lease);
     }
 
-    private void LocalLogin(string busId, AsymmetricKeyParameter key,
-                            LoginInfo login, int lease) {
+    private void LocalLogin(LoginInfo login, int lease) {
+      string actualBusId = _acs.busid;
       lock (_loginLock) {
+        ValidateBusId(actualBusId);
         if (_login.IsLoggedIn()) {
           throw new AlreadyLoggedInException();
         }
-        BusId = busId;
-        _busKey = key;
         _login.SetLoggedIn(login);
         StartLeaseRenewer(lease);
       }
@@ -251,11 +249,7 @@ namespace tecgraf.openbus {
     private void LocalLogout() {
       lock (_loginLock) {
         StopLeaseRenewer();
-        if (ReferenceEquals(Manager.GetDispatcher(BusId), this)) {
-          Manager.ClearDispatcher(BusId);
-        }
         _login.SetLoggedOut();
-        EraseBusIdAndKey();
         _outgoingLogin2Session.Clear();
         _profile2Login.Clear();
         _sessionId2Session.Clear();
@@ -294,16 +288,7 @@ namespace tecgraf.openbus {
     public OfferRegistry Offers { get; private set; }
 
     public string BusId {
-      get {
-        lock (_loginLock) {
-          return _busId;
-        }
-      }
-      private set {
-        lock (_loginLock) {
-          _busId = value;
-        }
-      }
+      get { return _busId; }
     }
 
     public LoginInfo? Login {
@@ -320,8 +305,8 @@ namespace tecgraf.openbus {
       try {
         Manager.IgnoreCurrentThread();
 
-        AsymmetricKeyParameter key;
-        string busId = GetBusIdAndKey(out key);
+        string actualBusId = _acs.busid;
+        ValidateBusId(actualBusId);
 
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -329,7 +314,7 @@ namespace tecgraf.openbus {
           LoginAuthenticationInfo info =
             new LoginAuthenticationInfo
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
-          encrypted = Crypto.Encrypt(key, _codec.encode_value(info));
+          encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
         }
         catch (WrongEncoding) {
           ServiceFailure e = new ServiceFailure {
@@ -346,7 +331,7 @@ namespace tecgraf.openbus {
         int lease;
         LoginInfo l = _acs.loginByPassword(entity, pubBytes, encrypted,
                                            out lease);
-        LocalLogin(busId, key, l, lease);
+        LocalLogin(l, lease);
       }
       finally {
         Manager.UnignoreCurrentThread();
@@ -360,6 +345,10 @@ namespace tecgraf.openbus {
 
       try {
         Manager.IgnoreCurrentThread();
+
+        string actualBusId = _acs.busid;
+        ValidateBusId(actualBusId);
+
         byte[] challenge;
         LoginProcess login = _acs.startLoginByCertificate(entity,
                                                           out
@@ -552,9 +541,6 @@ namespace tecgraf.openbus {
           operation));
 
       LoginInfo login;
-      string loginId;
-      string loginEntity;
-      string busId;
       lock (_loginLock) {
         if (!_login.Login.HasValue) {
           Logger.Debug(
@@ -564,16 +550,15 @@ namespace tecgraf.openbus {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        login = _login.Login.Value;
-        loginId = _login.Login.Value.id;
-        loginEntity = _login.Login.Value.entity;
-        busId = BusId;
+        login = new LoginInfo(_login.Login.Value.id, _login.Login.Value.entity);
       }
+      string loginId = login.id;
+      string loginEntity = login.entity;
 
       // armazena login no PICurrent para obter no caso de uma exceção
       Current current = Manager.GetPICurrent();
       try {
-        current.set_slot(_loginSlotId, new BusLoginInfo(login, busId));
+        current.set_slot(_loginSlotId, login);
       }
       catch (InvalidSlot e) {
         const string message =
@@ -812,27 +797,17 @@ namespace tecgraf.openbus {
       string operation = ri.operation;
       ClientRequestInfo cri = null;
       LoginInfo originalLogin;
-      string originalBusId;
       lock (_loginLock) {
         _login.SetInvalid();
         StopLeaseRenewer();
         // nesse ponto login necessariamente terá valor, logo nunca será o default
         originalLogin = _login.Login.GetValueOrDefault();
-        originalBusId = BusId;
       }
       if (client) {
-        // se for interceptação cliente, o login e busId originais estão no PICurrent
+        // se for interceptação cliente, o login original está no PICurrent
         cri = ri as ClientRequestInfo;
         try {
-          BusLoginInfo info = ri.get_slot(_loginSlotId) as BusLoginInfo;
-          if (info != null) {
-            originalLogin = info.Login;
-            originalBusId = info.BusId;
-          }
-          else {
-            Logger.Warn(
-              "Falha ao obter o login original para chamar a callback. Utilizando login atual.");
-          }
+          originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
         }
         catch (InvalidSlot e) {
           const string message =
@@ -843,16 +818,15 @@ namespace tecgraf.openbus {
       }
       if (OnInvalidLogin != null) {
         try {
-          OnInvalidLogin.InvalidLogin(this, originalLogin, originalBusId);
+          OnInvalidLogin.InvalidLogin(this, originalLogin);
         }
         catch (Exception e) {
           Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
         }
       }
       LoginInfo newLogin;
-      string newBusId;
       if (VerifyStatusAfterCallback(operation, cri, originalLogin.id,
-                                    out newLogin, out newBusId)) {
+                                    out newLogin)) {
         // estamos no interceptador servidor e o relogin funcionou, então retorna
         return;
       }
@@ -860,14 +834,13 @@ namespace tecgraf.openbus {
       while (true) {
         if (OnInvalidLogin != null) {
           try {
-            OnInvalidLogin.InvalidLogin(this, newLogin, newBusId);
+            OnInvalidLogin.InvalidLogin(this, newLogin);
           }
           catch (Exception e) {
             Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
           }
         }
-        if (VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin,
-                                      out newBusId)) {
+        if (VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin)) {
           // estamos no interceptador servidor e o relogin funcionou, então retorna
           return;
         }
@@ -878,8 +851,7 @@ namespace tecgraf.openbus {
     private bool VerifyStatusAfterCallback(string operation,
                                            ClientRequestInfo ri,
                                            string originalLogin,
-                                           out LoginInfo newLogin,
-                                           out string newBusId) {
+                                           out LoginInfo newLogin) {
       lock (_loginLock) {
         if (_login.IsLoggedIn()) {
           Logger.Debug("Login reestabelecido.");
@@ -890,7 +862,6 @@ namespace tecgraf.openbus {
             throw new ForwardRequest(ri.target);
           }
           newLogin = new LoginInfo();
-          newBusId = null;
           return true;
         }
         if (_login.IsLoggedOut()) {
@@ -904,12 +875,10 @@ namespace tecgraf.openbus {
           // login mudou, copia o novo login para uma variável local
           newLogin = new LoginInfo(_login.Login.Value.id,
                                    _login.Login.Value.entity);
-          newBusId = BusId;
         }
         else {
           // esse caso nunca ocorre, está aqui apenas para evitar warning.
           newLogin = new LoginInfo();
-          newBusId = "";
         }
         return false;
       }
@@ -1040,7 +1009,9 @@ namespace tecgraf.openbus {
               continue;
             }
           }
-          Logger.Fatal(String.Format("Não foi possível validar o login {0}. Erro: {1}", remoteLogin, e));
+          Logger.Fatal(
+            String.Format("Não foi possível validar o login {0}. Erro: {1}",
+                          remoteLogin, e));
           throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
@@ -1210,16 +1181,6 @@ namespace tecgraf.openbus {
 
       internal bool IsInvalid() {
         return Status == LStatus.Invalid;
-      }
-    }
-
-    private sealed class BusLoginInfo {
-      internal readonly LoginInfo Login;
-      internal readonly string BusId;
-
-      internal BusLoginInfo(LoginInfo login, string busId) {
-        Login = login;
-        BusId = busId;
       }
     }
 

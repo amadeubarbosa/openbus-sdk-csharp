@@ -158,11 +158,11 @@ namespace tecgraf.openbus.Test {
     public void BusIdTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        Assert.IsNull(conn.BusId);
+        Assert.IsNotNull(conn.BusId);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.BusId);
         Assert.IsTrue(conn.Logout());
-        Assert.IsNull(conn.Login);
+        Assert.IsNotNull(conn.BusId);
       }
     }
 
@@ -389,8 +389,8 @@ namespace tecgraf.openbus.Test {
         _manager.SetDispatcher(conn);
         Assert.AreEqual(_manager.GetDispatcher(busId), conn);
         Assert.IsTrue(conn.Logout());
-        Assert.IsNull(_manager.GetDispatcher(busId));
-        Assert.IsNull(conn.BusId);
+        Assert.AreEqual(_manager.GetDispatcher(busId), conn);
+        Assert.IsNotNull(conn.BusId);
         Assert.IsNull(conn.Login);
         bool failed = false;
         try {
