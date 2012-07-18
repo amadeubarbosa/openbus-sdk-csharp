@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -19,13 +20,14 @@ namespace tecgraf.openbus.interop.simple {
     private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.hostName;
-      short hostPort = DemoConfig.Default.hostPort;
+      ushort hostPort = DemoConfig.Default.hostPort;
 
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, hostPort);
+      _conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = _conn;
 
       string entityName = DemoConfig.Default.entityName;
@@ -61,7 +63,7 @@ namespace tecgraf.openbus.interop.simple {
         }
         catch (Exception exc) {
           Console.WriteLine(
-            "Erro ao remover a oferta antes de finalizar o processo: ", exc);
+            "Erro ao remover a oferta antes de finalizar o processo: " + exc);
         }
       }
       _conn.Logout();

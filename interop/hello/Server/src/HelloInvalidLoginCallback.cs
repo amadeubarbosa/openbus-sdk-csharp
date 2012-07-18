@@ -20,7 +20,7 @@ namespace tecgraf.openbus.interop.simple {
       _properties = properties;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       ORBInitializer.Manager.Requester = conn;
       try {
         Console.WriteLine(

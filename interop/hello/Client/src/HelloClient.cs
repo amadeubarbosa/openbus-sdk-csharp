@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using log4net.Appender;
 using log4net.Config;
@@ -15,7 +16,7 @@ namespace tecgraf.openbus.interop.simple {
   internal static class HelloClient {
     private static void Main() {
       string hostName = DemoConfig.Default.hostName;
-      short hostPort = DemoConfig.Default.hostPort;
+      ushort hostPort = DemoConfig.Default.hostPort;
 
       ConsoleAppender appender = new ConsoleAppender {
                                                        Threshold = Level.All,
@@ -24,8 +25,9 @@ namespace tecgraf.openbus.interop.simple {
                                                      };
       BasicConfigurator.Configure(appender);
 
+      IDictionary<string, string> props = new Dictionary<string, string>(); 
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort);
+      Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
