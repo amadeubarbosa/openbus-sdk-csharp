@@ -425,7 +425,8 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.OnInvalidLogin);
-        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login, _password);
+        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login,
+                                                                     _password);
         conn.OnInvalidLogin = callback;
         Assert.AreEqual(callback, conn.OnInvalidLogin);
       }
@@ -441,14 +442,17 @@ namespace tecgraf.openbus.Test {
         Connection conn = CreateConnection();
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
-        LoginInfo firstLogin = new LoginInfo(conn.Login.Value.id, conn.Login.Value.entity);
-        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login, _password);
+        LoginInfo firstLogin = new LoginInfo(conn.Login.Value.id,
+                                             conn.Login.Value.entity);
+        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login,
+                                                                     _password);
         conn.OnInvalidLogin = callback;
         _manager.DefaultConnection = conn;
         IComponent busIC = RemotingServices.Connect(
-          typeof(IComponent),
-          "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" + BusObjectKey.ConstVal)
-                        as IComponent;
+          typeof (IComponent),
+          "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
+          BusObjectKey.ConstVal)
+                           as IComponent;
         Assert.IsNotNull(busIC);
         string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
         LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;
@@ -478,23 +482,27 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.CallerChain);
-        //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário descomentar as duas linhas de Assert.Fail abaixo.
+        //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário comentar o catch genérico abaixo.
         try {
           const string facetName = "HelloMock";
           conn.LoginByPassword(_login, _password);
-          ComponentContext context = new DefaultComponentContext(new ComponentId());
-          context.AddFacet(facetName, Repository.GetRepositoryID(typeof(Hello)),
+          ComponentContext context =
+            new DefaultComponentContext(new ComponentId());
+          context.AddFacet(facetName, Repository.GetRepositoryID(typeof (Hello)),
                            new HelloMock(conn));
           _manager.DefaultConnection = conn;
           Hello hello = context.GetFacetByName(facetName).Reference as Hello;
           Assert.IsNotNull(hello);
           hello.sayHello();
         }
-        catch (NullReferenceException) {
-//          Assert.Fail("A cadeia obtida é nula.");
+        catch (UNKNOWN) {
+          Assert.Fail("A cadeia obtida é nula ou não é a esperada.");
         }
-        catch (OpenBusInternalException) {
-//          Assert.Fail("A cadeia obtida não é a esperada.");
+        //TODO remover para reativar o teste
+        catch (NullReferenceException){
+        }
+        //TODO remover para reativar o teste
+        catch (InvalidDataException) {
         }
         finally {
           _manager.DefaultConnection = null;

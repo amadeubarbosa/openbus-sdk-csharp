@@ -108,9 +108,8 @@ namespace tecgraf.openbus.interceptors {
         conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
-        const string msg = "Falha ao inserir a credencial em seu slot.";
-        Logger.Fatal(msg, e);
-        throw new OpenBusInternalException(msg, e);
+        Logger.Fatal("Falha ao inserir a credencial em seu slot.", e);
+        throw;
       }
       finally {
         RemoveCurrentConnection(ri);
@@ -143,10 +142,10 @@ namespace tecgraf.openbus.interceptors {
         }
       }
       catch (InvalidSlot e) {
-        const string msg =
-          "Falha ao acessar o slot da credencial para avaliar se um reset deve ser enviado.";
-        Logger.Fatal(msg, e);
-        throw new OpenBusInternalException(msg, e);
+        Logger.Fatal(
+          "Falha ao acessar o slot da credencial para avaliar se um reset deve ser enviado.",
+          e);
+        throw;
       }
     }
 
@@ -186,10 +185,10 @@ namespace tecgraf.openbus.interceptors {
             }
           }
           catch (InvalidSlot e) {
-            const string msg =
-              "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.";
-            Logger.Fatal(msg, e);
-            throw new OpenBusInternalException(msg, e);
+            Logger.Fatal(
+              "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.",
+              e);
+            throw;
           }
           Logger.Fatal(
             "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
@@ -225,10 +224,8 @@ namespace tecgraf.openbus.interceptors {
         ri.set_slot(ConnectionSlotId, null);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao limpar informações nos slots";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao limpar informações nos slots", e);
+        throw;
       }
     }
 
@@ -238,10 +235,8 @@ namespace tecgraf.openbus.interceptors {
         ri.set_slot(Manager.CurrentThreadSlotId, id);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot da thread corrente";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
+        throw;
       }
       Manager.SetConnectionByThreadId(id, conn);
     }
@@ -251,10 +246,8 @@ namespace tecgraf.openbus.interceptors {
         ri.set_slot(Manager.CurrentThreadSlotId, null);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot da thread corrente";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
+        throw;
       }
       int id = Thread.CurrentThread.ManagedThreadId;
       Manager.SetConnectionByThreadId(id, null);

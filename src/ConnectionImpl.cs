@@ -87,7 +87,8 @@ namespace tecgraf.openbus {
         throw new InvalidBusAddressException("O campo 'host' não é válido");
       }
       if (port < 0) {
-        throw new InvalidBusAddressException("O campo 'port' não pode ser negativo.");
+        throw new InvalidBusAddressException(
+          "O campo 'port' não pode ser negativo.");
       }
       _host = host;
       _port = port;
@@ -100,10 +101,11 @@ namespace tecgraf.openbus {
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
       _joinedChainSlotId = ClientInterceptor.Instance.JoinedChainSlotId;
 
-      const string connErrorMessage = "Não foi possível conectar ao barramento com o host e porta fornecidos.";
+      const string connErrorMessage =
+        "Não foi possível conectar ao barramento com o host e porta fornecidos.";
       try {
         _acsComponent = RemotingServices.Connect(
-          typeof(IComponent),
+          typeof (IComponent),
           "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
                         as IComponent;
         if (_acsComponent == null) {
@@ -446,10 +448,8 @@ namespace tecgraf.openbus {
         current.set_slot(_joinedChainSlotId, chain);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot da joined chain.";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot da joined chain.", e);
+        throw;
       }
     }
 
@@ -462,10 +462,9 @@ namespace tecgraf.openbus {
           piCurrentLoginId = current.get_slot(_connectionSlotId) as string;
         }
         catch (InvalidSlot e) {
-          const string message =
-            "Falha inesperada ao acessar o slot da conexão corrente.";
-          Logger.Fatal(message, e);
-          throw new OpenBusInternalException(message);
+          Logger.Fatal(
+            "Falha inesperada ao acessar o slot da conexão corrente.", e);
+          throw;
         }
         string loginId;
         lock (_loginLock) {
@@ -498,10 +497,9 @@ namespace tecgraf.openbus {
                                      anyCredential.Credential.chain);
         }
         catch (InvalidSlot e) {
-          const string message =
-            "Falha inesperada ao acessar o slot da credencial corrente.";
-          Logger.Fatal(message, e);
-          throw new OpenBusInternalException(message);
+          Logger.Fatal(
+            "Falha inesperada ao acessar o slot da credencial corrente.", e);
+          throw;
         }
       }
     }
@@ -512,10 +510,8 @@ namespace tecgraf.openbus {
         current.set_slot(_joinedChainSlotId, null);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot da joined chain.";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot da joined chain.", e);
+        throw;
       }
     }
 
@@ -527,10 +523,8 @@ namespace tecgraf.openbus {
           chain = current.get_slot(_joinedChainSlotId) as CallerChain;
         }
         catch (InvalidSlot e) {
-          const string message =
-            "Falha inesperada ao acessar o slot da joined chain.";
-          Logger.Fatal(message, e);
-          throw new OpenBusInternalException(message);
+          Logger.Fatal("Falha inesperada ao acessar o slot da joined chain.", e);
+          throw;
         }
         return chain;
       }
@@ -568,10 +562,8 @@ namespace tecgraf.openbus {
         current.set_slot(_loginSlotId, login);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot do login corrente";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot do login corrente", e);
+        throw;
       }
 
       int sessionId = 0;
@@ -756,10 +748,9 @@ namespace tecgraf.openbus {
                 ri.set_slot(_connectionSlotId, loginId);
               }
               catch (InvalidSlot e) {
-                const string msg =
-                  "Falha ao inserir o identificador de login em seu slot.";
-                Logger.Fatal(msg, e);
-                throw new OpenBusInternalException(msg, e);
+                Logger.Fatal(
+                  "Falha ao inserir o identificador de login em seu slot.", e);
+                throw;
               }
               return;
             }
@@ -771,10 +762,9 @@ namespace tecgraf.openbus {
           ri.set_slot(_connectionSlotId, loginId);
         }
         catch (InvalidSlot e) {
-          const string msg =
-            "Falha ao inserir o identificador de login em seu slot.";
-          Logger.Fatal(msg, e);
-          throw new OpenBusInternalException(msg, e);
+          Logger.Fatal(
+            "Falha ao inserir o identificador de login em seu slot.", e);
+          throw;
         }
         return;
       }
@@ -817,10 +807,8 @@ namespace tecgraf.openbus {
           originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
         }
         catch (InvalidSlot e) {
-          const string message =
-            "Falha inesperada ao acessar o slot do login corrente";
-          Logger.Fatal(message, e);
-          throw new OpenBusInternalException(message);
+          Logger.Fatal("Falha inesperada ao acessar o slot do login corrente", e);
+          throw;
         }
       }
       if (OnInvalidLogin != null) {

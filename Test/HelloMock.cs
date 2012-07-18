@@ -1,5 +1,4 @@
 ﻿using System;
-using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.test {
@@ -13,12 +12,14 @@ namespace tecgraf.openbus.test {
     public void sayHello() {
       CallerChain chain = _conn.CallerChain;
       if (chain == null) {
+        // cliente deve receber um CORBA::Unknown
         throw new NullReferenceException();
       }
       if ((chain.BusId != _conn.BusId) ||
           (!chain.Caller.id.Equals(_conn.Login.Value.id)) ||
           (chain.Originators.Length != 0)) {
-        throw new OpenBusInternalException();
+        // cliente deve receber um CORBA::Unknown
+        throw new InvalidOperationException();
       }
     }
   }

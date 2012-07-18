@@ -80,10 +80,8 @@ namespace tecgraf.openbus {
           id = Convert.ToInt32(obj);
         }
         catch (InvalidSlot e) {
-          const string message =
-            "Falha inesperada ao acessar o slot da thread corrente";
-          Logger.Fatal(message, e);
-          throw new OpenBusInternalException(message);
+          Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
+          throw;
         }
 
         Connection connection;
@@ -96,10 +94,8 @@ namespace tecgraf.openbus {
           current.set_slot(CurrentThreadSlotId, id);
         }
         catch (InvalidSlot e) {
-          const string message =
-            "Falha inesperada ao acessar o slot da thread corrente";
-          Logger.Fatal(message, e);
-          throw new OpenBusInternalException(message, e);
+          Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
+          throw;
         }
         SetConnectionByThreadId(id, value);
       }
@@ -169,10 +165,8 @@ namespace tecgraf.openbus {
         current.set_slot(_ignoreThreadSlotId, Boolean.TrueString);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot de interceptação ignorada.";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot de interceptação ignorada.", e);
+        throw;
       }
     }
 
@@ -182,10 +176,8 @@ namespace tecgraf.openbus {
         current.set_slot(_ignoreThreadSlotId, Boolean.FalseString);
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot de interceptação ignorada.";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Fatal("Falha inesperada ao acessar o slot de interceptação ignorada.", e);
+        throw;
       }
     }
 
@@ -194,10 +186,8 @@ namespace tecgraf.openbus {
         return Convert.ToBoolean(ri.get_slot(_ignoreThreadSlotId));
       }
       catch (InvalidSlot e) {
-        const string message =
-          "Falha inesperada ao acessar o slot do login corrente";
-        Logger.Fatal(message, e);
-        throw new OpenBusInternalException(message);
+        Logger.Fatal("Falha inesperada ao acessar o slot de interceptação ignorada.", e);
+        throw;
       }
     }
   }

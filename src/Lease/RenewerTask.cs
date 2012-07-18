@@ -3,7 +3,6 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.lease {
   /// <summary>
@@ -44,8 +43,9 @@ namespace tecgraf.openbus.lease {
       Lease = lease;
       _conn = connection as ConnectionImpl;
       if (_conn == null) {
-        throw new OpenBusInternalException(
-          "Impossível criar renovador de credencial com conexão nula ou inválida.");
+        throw new ArgumentException(
+          "Impossível criar renovador de credencial com conexão nula ou inválida.",
+          "connection");
       }
       _ac = accessControlFacet;
     }
@@ -63,7 +63,10 @@ namespace tecgraf.openbus.lease {
         while (!_autoEvent.WaitOne(Lease * 1000)) {
           try {
             Lease = _ac.renew();
-            Logger.Debug(String.Format("{0} - Lease renovado. Próxima renovação em {1} segundos.", DateTime.Now, Lease));
+            Logger.Debug(
+              String.Format(
+                "{0} - Lease renovado. Próxima renovação em {1} segundos.",
+                DateTime.Now, Lease));
           }
           catch (NO_PERMISSION) {
             Logger.Warn(
