@@ -14,7 +14,7 @@ namespace chainvalidation {
       _executiveEntity = executiveEntity;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       if (SecretaryServer.Login(_entity, _privKey)) {
         SecretaryServer.Register(_executiveEntity);
       }

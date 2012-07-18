@@ -19,7 +19,7 @@ namespace chainvalidation {
       _properties = properties;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       if (ExecutiveServer.Login(_entity, _privKey)) {
         ExecutiveServer.Register(_ic, _properties);
       }

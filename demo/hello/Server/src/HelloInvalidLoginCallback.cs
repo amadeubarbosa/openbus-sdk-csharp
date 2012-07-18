@@ -19,7 +19,7 @@ namespace hello {
       _properties = properties;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       if (HelloServer.Login(_entity, _privKey)) {
         HelloServer.Register(_ic, _properties);
       }

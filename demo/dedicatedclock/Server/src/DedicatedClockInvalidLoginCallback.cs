@@ -6,14 +6,14 @@ using tecgraf.openbus.core.v2_0.services.offer_registry;
 namespace Server {
   internal class DedicatedClockInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _host;
-    private readonly short _port;
+    private readonly ushort _port;
     private readonly string _entity;
     private readonly byte[] _privKey;
     private readonly IComponent _ic;
     private readonly ServiceProperty[] _properties;
     private readonly int _waitTime;
 
-    internal DedicatedClockInvalidLoginCallback(string host, short port,
+    internal DedicatedClockInvalidLoginCallback(string host, ushort port,
                                                 string entity, byte[] privKey,
                                                 IComponent ic,
                                                 ServiceProperty[] properties,
@@ -27,7 +27,7 @@ namespace Server {
       _waitTime = waitTime;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       DedicatedClockServer.TryLoginAndRegisterForever(_host, _port, _entity,
                                                       _privKey, _ic, _properties,
                                                       _waitTime);

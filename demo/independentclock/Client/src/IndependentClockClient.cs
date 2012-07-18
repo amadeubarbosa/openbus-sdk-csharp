@@ -18,15 +18,16 @@ namespace Client {
     private static Clock _serverClock;
     private static int _waitTime;
     private static string _host;
-    private static short _port;
+    private static ushort _port;
     private static string _entity;
     private static byte[] _password;
     private static string _serverEntity;
+    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
 
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
       _host = args[0];
-      _port = Convert.ToInt16(args[1]);
+      _port = Convert.ToUInt16(args[1]);
       _entity = args[2];
       _password = new ASCIIEncoding().GetBytes(args[3]);
       _serverEntity = args[4];
@@ -215,7 +216,7 @@ namespace Client {
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       ConnectionManager manager = ORBInitializer.Manager;
       try {
-        _conn = manager.CreateConnection(_host, _port);
+        _conn = manager.CreateConnection(_host, _port, Props);
         manager.DefaultConnection = _conn;
         // Registra uma callback para o caso do login ser perdido
         _conn.OnInvalidLogin = new IndependentClockClientInvalidLoginCallback();

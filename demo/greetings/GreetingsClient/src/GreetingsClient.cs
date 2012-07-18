@@ -16,15 +16,16 @@ namespace greetings {
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
       string host = args[0];
-      short port = Convert.ToInt16(args[1]);
+      ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       byte[] password = new ASCIIEncoding().GetBytes(args[3]);
       string greetingsEntity = args[4];
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(host, port);
+      Connection conn = manager.CreateConnection(host, port, props);
       manager.DefaultConnection = conn;
 
       // Pergunta ao usuário qual língua deseja utilizar

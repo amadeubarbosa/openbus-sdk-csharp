@@ -25,15 +25,16 @@ namespace multiplexing {
 
       // Obtém dados através dos argumentos
       string host = args[0];
-      short port = Convert.ToInt16(args[1]);
+      ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       string key = args[3];
 
       // Cria 3 conexões com o mesmo barramento, uma para cada componente.
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(host, port);
-      Connection conn2 = manager.CreateConnection(host, port);
-      Connection conn3 = manager.CreateConnection(host, port);
+      Connection conn = manager.CreateConnection(host, port, props);
+      Connection conn2 = manager.CreateConnection(host, port, props);
+      Connection conn3 = manager.CreateConnection(host, port, props);
 
       // Lê a chave privada de um arquivo
       byte[] privateKey = File.ReadAllBytes(key);

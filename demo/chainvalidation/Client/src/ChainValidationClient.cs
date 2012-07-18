@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using omg.org.CORBA;
 using tecgraf.openbus;
@@ -14,14 +15,15 @@ namespace chainvalidation {
   internal static class ChainValidationClient {
     private static void Main(String[] args) {
       string host = args[0];
-      short port = Convert.ToInt16(args[1]);
+      ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       byte[] password = new ASCIIEncoding().GetBytes(args[3]);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(host, port);
+      Connection conn = manager.CreateConnection(host, port, props);
       manager.DefaultConnection = conn;
 
       // Faz o login

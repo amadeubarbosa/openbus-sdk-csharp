@@ -18,7 +18,7 @@ namespace audit {
       _properties = properties;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       if (AuditServer.Login(_entity, _privKey)) {
         AuditServer.Register(_ic, _properties);
       }

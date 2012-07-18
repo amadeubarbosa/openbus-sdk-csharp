@@ -26,15 +26,16 @@ namespace chainvalidation {
 
       // Obtém dados através dos argumentos
       string host = args[0];
-      short port = Convert.ToInt16(args[1]);
+      ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       string key = args[3];
       string executiveEntity = args[4];
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(host, port);
+      _conn = manager.CreateConnection(host, port, props);
       manager.DefaultConnection = _conn;
 
       // Lê a chave privada de um arquivo

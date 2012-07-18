@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -18,6 +19,7 @@ namespace Server {
   internal static class DedicatedClockServer {
     private static Connection _conn;
     private static ServiceOffer _offer;
+    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
 
     private static void Main(String[] args) {
       // Registra handler para o caso do processo ser finalizado
@@ -25,7 +27,7 @@ namespace Server {
 
       // Obtém dados através dos argumentos
       string host = args[0];
-      short port = Convert.ToInt16(args[1]);
+      ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       string key = args[3];
       int waitTime = Convert.ToInt32(args[4]);
@@ -59,7 +61,7 @@ namespace Server {
     }
 
     internal static void TryLoginAndRegisterForever(string host,
-                                                    short port,
+                                                    ushort port,
                                                     string entity,
                                                     byte[] privateKey,
                                                     IComponent ic,
@@ -175,14 +177,14 @@ namespace Server {
       return false;
     }
 
-    private static bool Connect(string host, short port, string entity,
+    private static bool Connect(string host, ushort port, string entity,
                                 byte[] privateKey, IComponent ic,
                                 ServiceProperty[] properties, int waitTime) {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       ConnectionManager manager = ORBInitializer.Manager;
       try {
-        _conn = manager.CreateConnection(host, port);
+        _conn = manager.CreateConnection(host, port, Props);
         manager.DefaultConnection = _conn;
         // Registra uma callback para o caso do login ser perdido
         _conn.OnInvalidLogin = new DedicatedClockInvalidLoginCallback(host,

@@ -14,7 +14,7 @@ namespace audit {
       _serverEntity = serverEntity;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       if (AuditProxy.Login(_entity, _privKey)) {
         AuditProxy.Register(_serverEntity);
       }
