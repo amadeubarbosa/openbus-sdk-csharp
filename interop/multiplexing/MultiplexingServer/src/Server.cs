@@ -16,8 +16,8 @@ namespace tecgraf.openbus.interop.multiplexing {
     private static void Main() {
       try {
         string hostName = DemoConfig.Default.hostName;
-        short hostPort = DemoConfig.Default.hostPort;
-        short hostPort2 = DemoConfig.Default.hostPort2;
+        ushort hostPort = DemoConfig.Default.hostPort;
+        ushort hostPort2 = DemoConfig.Default.hostPort2;
         string entity = DemoConfig.Default.entity + "_conn";
         Byte[] key = File.ReadAllBytes(DemoConfig.Default.key);
         string entity1 = entity + "1";
@@ -28,9 +28,10 @@ namespace tecgraf.openbus.interop.multiplexing {
         ConnectionManager manager = ORBInitializer.Manager;
 
         // connect to the bus
-        Connection conn1AtBus1 = manager.CreateConnection(hostName, hostPort);
-        Connection conn2AtBus1 = manager.CreateConnection(hostName, hostPort);
-        Connection connAtBus2 = manager.CreateConnection(hostName, hostPort2);
+        IDictionary<string, string> props = new Dictionary<string, string>();
+        Connection conn1AtBus1 = manager.CreateConnection(hostName, hostPort, props);
+        Connection conn2AtBus1 = manager.CreateConnection(hostName, hostPort, props);
+        Connection connAtBus2 = manager.CreateConnection(hostName, hostPort2, props);
 
         Conns.Add(conn1AtBus1);
         Conns.Add(conn2AtBus1);

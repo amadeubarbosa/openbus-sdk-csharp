@@ -38,9 +38,9 @@ namespace tecgraf.openbus.interop.multiplexing.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("9000")]
-        public short hostPort {
+        public ushort hostPort {
             get {
-                return ((short)(this["hostPort"]));
+                return ((ushort)(this["hostPort"]));
             }
             set {
                 this["hostPort"] = value;
@@ -50,9 +50,9 @@ namespace tecgraf.openbus.interop.multiplexing.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("11000")]
-        public short hostPort2 {
+        public ushort hostPort2 {
             get {
-                return ((short)(this["hostPort2"]));
+                return ((ushort)(this["hostPort2"]));
             }
             set {
                 this["hostPort2"] = value;

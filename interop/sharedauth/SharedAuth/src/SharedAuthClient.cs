@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using log4net.Appender;
 using log4net.Config;
@@ -17,7 +18,7 @@ namespace tecgraf.openbus.interop.sharedauth {
   internal static class SharedAuthClient {
     private static void Main() {
       string hostName = DemoConfig.Default.hostName;
-      short hostPort = DemoConfig.Default.hostPort;
+      ushort hostPort = DemoConfig.Default.hostPort;
       string secretFile = DemoConfig.Default.secretFile;
       string loginFile = DemoConfig.Default.loginFile;
 
@@ -28,8 +29,9 @@ namespace tecgraf.openbus.interop.sharedauth {
                                                      };
       BasicConfigurator.Configure(appender);
 
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort);
+      Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
       byte[] secret = File.ReadAllBytes(secretFile);
