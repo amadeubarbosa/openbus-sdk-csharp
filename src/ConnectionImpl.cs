@@ -84,10 +84,10 @@ namespace tecgraf.openbus {
     internal ConnectionImpl(string host, ushort port,
                             ConnectionManagerImpl manager, bool legacy) {
       if (string.IsNullOrEmpty(host)) {
-        throw new ArgumentException("O campo 'host' não é válido");
+        throw new InvalidBusAddressException("O campo 'host' não é válido");
       }
       if (port < 0) {
-        throw new ArgumentException("O campo 'port' não pode ser negativo.");
+        throw new InvalidBusAddressException("O campo 'port' não pode ser negativo.");
       }
       _host = host;
       _port = port;
@@ -99,13 +99,21 @@ namespace tecgraf.openbus {
       _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
       _joinedChainSlotId = ClientInterceptor.Instance.JoinedChainSlotId;
-      _acsComponent = RemotingServices.Connect(
-        typeof (IComponent),
-        "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
-                      as IComponent;
-      if (_acsComponent == null) {
-        throw new OpenBusInternalException(
-          "Não foi possível conectar ao barramento com o host e porta fornecidos.");
+
+      const string connErrorMessage = "Não foi possível conectar ao barramento com o host e porta fornecidos.";
+      try {
+        _acsComponent = RemotingServices.Connect(
+          typeof(IComponent),
+          "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
+                        as IComponent;
+        if (_acsComponent == null) {
+          Logger.Error(connErrorMessage);
+          throw new InvalidBusAddressException(connErrorMessage);
+        }
+      }
+      catch (Exception e) {
+        Logger.Error(connErrorMessage, e);
+        throw new InvalidBusAddressException(connErrorMessage, e);
       }
 
       InternalKey = Crypto.GenerateKeyPair();

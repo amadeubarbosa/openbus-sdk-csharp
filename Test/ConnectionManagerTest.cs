@@ -111,7 +111,7 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _manager.CreateConnection("", _hostPort);
         }
-        catch (Exception) {
+        catch (InvalidBusAddressException) {
         }
         finally {
           Assert.IsNull(invalid);
@@ -119,7 +119,7 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _manager.CreateConnection(_hostName, 0);
         }
-        catch (Exception) {
+        catch (InvalidBusAddressException) {
         }
         finally {
           Assert.IsNull(invalid);
