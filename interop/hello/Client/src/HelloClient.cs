@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Ch.Elca.Iiop.Idl;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
@@ -25,13 +26,14 @@ namespace tecgraf.openbus.interop.simple {
                                                      };
       BasicConfigurator.Configure(appender);
 
-      IDictionary<string, string> props = new Dictionary<string, string>(); 
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
       Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;
-      byte[] userPassword = new ASCIIEncoding().GetBytes(DemoConfig.Default.userPassword);
+      byte[] userPassword =
+        new ASCIIEncoding().GetBytes(DemoConfig.Default.userPassword);
 
       conn.LoginByPassword(userLogin, userPassword);
 
@@ -41,7 +43,7 @@ namespace tecgraf.openbus.interop.simple {
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
         new ServiceProperty("openbus.component.interface",
-                            "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+                            Repository.GetRepositoryID(typeof (Hello)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
