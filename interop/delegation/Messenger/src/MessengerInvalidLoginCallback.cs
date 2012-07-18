@@ -20,7 +20,7 @@ namespace tecgraf.openbus.interop.delegation {
       _properties = properties;
     }
 
-    public void InvalidLogin(Connection conn, LoginInfo login, string busId) {
+    public void InvalidLogin(Connection conn, LoginInfo login) {
       try {
         Console.WriteLine(
           "Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");

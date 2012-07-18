@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -13,10 +14,11 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void Main() {
       string hostName = DemoConfig.Default.hostName;
-      short hostPort = DemoConfig.Default.hostPort;
+      ushort hostPort = DemoConfig.Default.hostPort;
 
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort);
+      Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
       string userLogin = DemoConfig.Default.userLogin;

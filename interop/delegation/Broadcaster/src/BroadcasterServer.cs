@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -19,10 +20,11 @@ namespace tecgraf.openbus.interop.delegation {
     private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.hostName;
-      short hostPort = DemoConfig.Default.hostPort;
+      ushort hostPort = DemoConfig.Default.hostPort;
 
+      IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, hostPort);
+      _conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = _conn;
 
       string entity = DemoConfig.Default.entity;
@@ -63,15 +65,13 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static Messenger GetMessenger() {
       // propriedades geradas automaticamente
-      ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity",
-                                                      "interop_delegation_csharp_messenger");
-      ServiceProperty autoProp2 = new ServiceProperty(
-        "openbus.component.facet", "messenger");
+      ServiceProperty autoProp = new ServiceProperty(
+        "openbus.component.interface", Repository.GetRepositoryID(typeof (Messenger)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {autoProp1, autoProp2, prop};
+      ServiceProperty[] properties = new[] {autoProp, prop};
       ServiceOfferDesc[] offers = _conn.Offers.findServices(properties);
 
       if (offers.Length < 1) {
@@ -113,7 +113,7 @@ namespace tecgraf.openbus.interop.delegation {
         }
         catch (Exception exc) {
           Console.WriteLine(
-            "Erro ao remover a oferta antes de finalizar o processo: ", exc);
+            "Erro ao remover a oferta antes de finalizar o processo: " + exc);
         }
       }
       _conn.Logout();
