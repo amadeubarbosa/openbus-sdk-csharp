@@ -77,12 +77,15 @@ namespace tecgraf.openbus {
     private readonly int _loginSlotId;
     private readonly int _joinedChainSlotId;
 
+    private readonly bool _delegateOriginator;
+
     #endregion
 
     #region Constructors
 
     internal ConnectionImpl(string host, ushort port,
-                            ConnectionManagerImpl manager, bool legacy) {
+                            ConnectionManagerImpl manager, bool legacy,
+                            bool delegateOriginator) {
       if (string.IsNullOrEmpty(host)) {
         throw new InvalidBusAddressException("O campo 'host' não é válido");
       }
@@ -95,6 +98,7 @@ namespace tecgraf.openbus {
       ORB = OrbServices.GetSingleton();
       Manager = manager;
       Legacy = legacy;
+      _delegateOriginator = delegateOriginator;
       _codec = ServerInterceptor.Instance.Codec;
       _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
       _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
@@ -486,7 +490,7 @@ namespace tecgraf.openbus {
             LoginInfo[] originators = credential._delegate.Equals(String.Empty)
                                         ? new LoginInfo[0]
                                         : new[] {
-                                                  new LoginInfo("unknown",
+                                                  new LoginInfo("<unknown>",
                                                                 credential.
                                                                   _delegate)
                                                 };
@@ -606,7 +610,12 @@ namespace tecgraf.openbus {
             bool isLegacyOnly = false;
             CallerChainImpl callerChain = JoinedChain as CallerChainImpl;
             if (callerChain != null) {
-              lastCaller = callerChain.Caller.entity;
+              if (_delegateOriginator && (callerChain.Originators.Length > 0)) {
+                lastCaller = callerChain.Originators[0].entity;
+              }
+              else {
+                lastCaller = callerChain.Caller.entity;
+              }
               if (callerChain.Signed.signature.Length == 0) {
                 // é uma credencial somente 1.5
                 isLegacyOnly = true;

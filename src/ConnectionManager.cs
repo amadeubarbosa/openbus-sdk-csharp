@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using omg.org.CORBA;
 
 namespace tecgraf.openbus {
@@ -10,7 +11,6 @@ namespace tecgraf.openbus {
  */
 
   public interface ConnectionManager {
-
     /// <summary>
     /// ORB utilizado pela conexão. Como o IIOP.Net atualmente o ORB é um 
     /// singleton, a instância será sempre a mesma e pode ser obtida de outras
@@ -24,15 +24,17 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="host">Endereço de rede IP onde o barramento está executando.</param>
     /// <param name="port">Porta do processo do barramento no endereço indicado.</param>
+    /// <param name="props">Conjunto de propriedades que descrevem aspectos de uma conexão.</param>
     /// <returns>Conexão ao barramento referenciado.</returns>
- 	  Connection CreateConnection(string host, ushort port);
+    Connection CreateConnection(string host, ushort port,
+                                IDictionary<string, string> props);
 
     /// <summary>
     /// Define a conexão a ser utilizada nas chamadas realizadas e no despacho de
-	  /// chamadas recebidas sempre que não houver uma conexão específica definida.
-	  /// Sempre que não houver uma conexão associada tanto as chamadas realizadas
-	  /// como as chamadas recebidas são negadas com a exceção CORBA::NO_PERMISSION.
-	  /// </summary>
+    /// chamadas recebidas sempre que não houver uma conexão específica definida.
+    /// Sempre que não houver uma conexão associada tanto as chamadas realizadas
+    /// como as chamadas recebidas são negadas com a exceção CORBA::NO_PERMISSION.
+    /// </summary>
     Connection DefaultConnection { get; set; }
 
     /// <summary>
@@ -66,6 +68,6 @@ namespace tecgraf.openbus {
     ///  associada.</param>
     /// <returns> Conexão a barramento associada ao barramento ou 'null' se não
     ///  houver nenhuma conexão associada.</returns>
-	  Connection ClearDispatcher(string busId);
+    Connection ClearDispatcher(string busId);
   }
 }

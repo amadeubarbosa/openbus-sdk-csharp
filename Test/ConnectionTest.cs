@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
@@ -33,6 +34,7 @@ namespace tecgraf.openbus.Test {
     private static byte[] _privKey;
     private static byte[] _wrongKey;
     private static ConnectionManager _manager;
+    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
 
     private const int LeaseTime = 10;
     internal static volatile bool CallbackCalled;
@@ -116,7 +118,7 @@ namespace tecgraf.openbus.Test {
     }
 
     private static Connection CreateConnection() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+      Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
       return conn;
     }
 

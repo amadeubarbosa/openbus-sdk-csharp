@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
@@ -22,6 +23,7 @@ namespace tecgraf.openbus.Test {
     private static string _login;
     private static byte[] _password;
     private static ConnectionManager _manager;
+    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -104,12 +106,12 @@ namespace tecgraf.openbus.Test {
     public void CreateConnectionTest() {
       lock (_manager) {
         // cria conexão válida
-        Connection valid = _manager.CreateConnection(_hostName, _hostPort);
+        Connection valid = _manager.CreateConnection(_hostName, _hostPort, Props);
         Assert.IsNotNull(valid);
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
         try {
-          invalid = _manager.CreateConnection("", _hostPort);
+          invalid = _manager.CreateConnection("", _hostPort, Props);
         }
         catch (InvalidBusAddressException) {
         }
@@ -117,7 +119,7 @@ namespace tecgraf.openbus.Test {
           Assert.IsNull(invalid);
         }
         try {
-          invalid = _manager.CreateConnection(_hostName, 0);
+          invalid = _manager.CreateConnection(_hostName, 0, Props);
         }
         catch (InvalidBusAddressException) {
         }
@@ -133,9 +135,9 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void GetDispatcherTest() {
       lock (_manager) {
-        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
-        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn2.LoginByPassword(_login, _password);
         _manager.DefaultConnection = conn;
         Assert.IsNull(_manager.GetDispatcher(conn.BusId));
@@ -161,8 +163,8 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ClearDispatcherTest() {
       lock (_manager) {
-        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
-        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         conn2.LoginByPassword(_login, _password);
         Connection removed = _manager.ClearDispatcher(conn.BusId);
@@ -181,9 +183,9 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void SetDispatcherTest() {
       lock (_manager) {
-        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
-        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn2 = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn2.LoginByPassword(_login, _password);
         _manager.DefaultConnection = conn;
         Assert.IsNull(_manager.GetDispatcher(conn.BusId));
@@ -208,7 +210,7 @@ namespace tecgraf.openbus.Test {
     public void DefaultConnectionTest() {
       lock (_manager) {
         _manager.DefaultConnection = null;
-        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_manager.DefaultConnection);
         _manager.Requester = conn;
@@ -231,7 +233,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void RequesterTest() {
       lock (_manager) {
-        Connection conn = _manager.CreateConnection(_hostName, _hostPort);
+        Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_manager.Requester);
         _manager.DefaultConnection = conn;

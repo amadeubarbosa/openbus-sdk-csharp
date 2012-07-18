@@ -30,6 +30,10 @@ namespace tecgraf.openbus {
 
     private readonly bool _legacy;
 
+    private const string LegacyDelegateProperty = "legacydelegate";
+    private const string LegacyDelegateDefault = "caller";
+    private const string LegacyDelegateOriginatorOption = "originator";
+
     // Identificador do slot de thread corrente.
     internal int CurrentThreadSlotId { get; private set; }
 
@@ -40,7 +44,8 @@ namespace tecgraf.openbus {
 
     #region ConnectionManager methods
 
-    public ConnectionManagerImpl(int currentThreadSlotId, int ignoreThreadSlotId, bool legacySupport) {
+    public ConnectionManagerImpl(int currentThreadSlotId, int ignoreThreadSlotId,
+                                 bool legacySupport) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
       LoginsCache = new LoginCache();
@@ -56,10 +61,31 @@ namespace tecgraf.openbus {
 
     public Connection DefaultConnection { get; set; }
 
-    public Connection CreateConnection(string host, ushort port) {
+    public Connection CreateConnection(string host, ushort port,
+                                       IDictionary<string, string> props) {
       IgnoreCurrentThread();
       try {
-        ConnectionImpl conn = new ConnectionImpl(host, port, this, _legacy);
+        bool originator = false;
+        if (_legacy) {
+          if (props.ContainsKey(LegacyDelegateProperty)) {
+            string temp = props[LegacyDelegateProperty].ToLower();
+            switch (temp) {
+              case LegacyDelegateOriginatorOption:
+                originator = true;
+                break;
+              case LegacyDelegateDefault:
+                break;
+              default:
+                Logger.Warn(
+                  String.Format(
+                    "Valor inválido para a propriedade {0}. Utilizando o valor padrão: {1}.",
+                    LegacyDelegateProperty, LegacyDelegateDefault));
+                break;
+            }
+          }
+        }
+        ConnectionImpl conn = new ConnectionImpl(host, port, this, _legacy,
+                                                 originator);
         conn.SetLoginsCache(LoginsCache);
         return conn;
       }
@@ -80,12 +106,15 @@ namespace tecgraf.openbus {
           id = Convert.ToInt32(obj);
         }
         catch (InvalidSlot e) {
-          Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
+          Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente",
+                       e);
           throw;
         }
 
         Connection connection;
-        return _connectedThreads.TryGetValue(id, out connection) ? connection : null;
+        return _connectedThreads.TryGetValue(id, out connection)
+                 ? connection
+                 : null;
       }
       set {
         int id = Thread.CurrentThread.ManagedThreadId;
@@ -94,7 +123,8 @@ namespace tecgraf.openbus {
           current.set_slot(CurrentThreadSlotId, id);
         }
         catch (InvalidSlot e) {
-          Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
+          Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente",
+                       e);
           throw;
         }
         SetConnectionByThreadId(id, value);
@@ -114,7 +144,9 @@ namespace tecgraf.openbus {
 
     public Connection GetDispatcher(string busId) {
       Connection incoming;
-      return _incomingDispatcherConn.TryGetValue(busId, out incoming) ? incoming : null;
+      return _incomingDispatcherConn.TryGetValue(busId, out incoming)
+               ? incoming
+               : null;
     }
 
     public Connection ClearDispatcher(string busId) {
@@ -137,7 +169,8 @@ namespace tecgraf.openbus {
     }
 
     internal IEnumerable<Connection> GetIncomingConnections() {
-      IList<Connection> list = new List<Connection>(_incomingDispatcherConn.Values);
+      IList<Connection> list =
+        new List<Connection>(_incomingDispatcherConn.Values);
       if (DefaultConnection != null) {
         list.Add(DefaultConnection);
       }
@@ -165,7 +198,8 @@ namespace tecgraf.openbus {
         current.set_slot(_ignoreThreadSlotId, Boolean.TrueString);
       }
       catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot de interceptação ignorada.", e);
+        Logger.Fatal(
+          "Falha inesperada ao acessar o slot de interceptação ignorada.", e);
         throw;
       }
     }
@@ -176,7 +210,8 @@ namespace tecgraf.openbus {
         current.set_slot(_ignoreThreadSlotId, Boolean.FalseString);
       }
       catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot de interceptação ignorada.", e);
+        Logger.Fatal(
+          "Falha inesperada ao acessar o slot de interceptação ignorada.", e);
         throw;
       }
     }
@@ -186,7 +221,8 @@ namespace tecgraf.openbus {
         return Convert.ToBoolean(ri.get_slot(_ignoreThreadSlotId));
       }
       catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot de interceptação ignorada.", e);
+        Logger.Fatal(
+          "Falha inesperada ao acessar o slot de interceptação ignorada.", e);
         throw;
       }
     }
