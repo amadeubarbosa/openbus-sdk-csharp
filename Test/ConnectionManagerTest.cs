@@ -279,6 +279,7 @@ namespace tecgraf.openbus.Test {
             "A chamada com ThreadRequester setado deveria ser bem-sucedida. Exceção recebida: " +
             e);
         }
+        _manager.Requester = null;
       }
     }
   }

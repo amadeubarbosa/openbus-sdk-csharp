@@ -387,13 +387,13 @@ namespace tecgraf.openbus.Test {
         Connection conn = CreateConnection();
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
-        string busId = conn.BusId;
         _manager.SetDispatcher(conn);
-        Assert.AreEqual(_manager.GetDispatcher(busId), conn);
+        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn);
         Assert.IsTrue(conn.Logout());
-        Assert.AreEqual(_manager.GetDispatcher(busId), conn);
+        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn);
         Assert.IsNotNull(conn.BusId);
         Assert.IsNull(conn.Login);
+        _manager.ClearDispatcher(conn.BusId);
         bool failed = false;
         try {
           _manager.Requester = conn;
@@ -533,6 +533,7 @@ namespace tecgraf.openbus.Test {
         Assert.AreEqual("a", conn.JoinedChain.Caller.id);
         Assert.AreEqual("b", conn.JoinedChain.Caller.entity);
         conn.ExitChain();
+        Assert.IsNull(conn.JoinedChain);
       }
     }
 
