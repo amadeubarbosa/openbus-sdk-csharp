@@ -33,7 +33,7 @@ namespace tecgraf.openbus {
     private readonly string _host;
     private readonly ushort _port;
     private readonly IComponent _acsComponent;
-    private AccessControl _acs;
+    internal AccessControl Acs;
     private readonly string _busId;
     private readonly AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
@@ -149,10 +149,10 @@ namespace tecgraf.openbus {
       MarshalByRefObject lrObjRef = _acsComponent.getFacet(lrId);
       MarshalByRefObject orObjRef = _acsComponent.getFacet(orId);
 
-      _acs = acsObjRef as AccessControl;
+      Acs = acsObjRef as AccessControl;
       LoginRegistry = lrObjRef as LoginRegistry;
       Offers = orObjRef as OfferRegistry;
-      if ((_acs == null) || (LoginRegistry == null) || (Offers == null)) {
+      if ((Acs == null) || (LoginRegistry == null) || (Offers == null)) {
         Logger.Error("O serviço de controle de acesso não foi encontrado.");
         return;
       }
@@ -190,8 +190,8 @@ namespace tecgraf.openbus {
     }
 
     private string GetBusIdAndKey(out AsymmetricKeyParameter key) {
-      key = Crypto.CreatePublicKeyFromBytes(_acs.buskey);
-      return _acs.busid;
+      key = Crypto.CreatePublicKeyFromBytes(Acs.buskey);
+      return Acs.busid;
     }
 
     private void ValidateBusId(string actualBusId) {
@@ -209,7 +209,7 @@ namespace tecgraf.openbus {
         throw new AlreadyLoggedInException();
       }
 
-      ValidateBusId(_acs.busid);
+      ValidateBusId(Acs.busid);
 
       byte[] encrypted;
       byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -249,7 +249,7 @@ namespace tecgraf.openbus {
     }
 
     private void LocalLogin(LoginInfo login, int lease) {
-      string actualBusId = _acs.busid;
+      string actualBusId = Acs.busid;
       lock (_loginLock) {
         ValidateBusId(actualBusId);
         if (_login.IsLoggedIn()) {
@@ -271,7 +271,7 @@ namespace tecgraf.openbus {
     }
 
     private void StartLeaseRenewer(int lease) {
-      _leaseRenewer = new LeaseRenewer(this, _acs, lease);
+      _leaseRenewer = new LeaseRenewer(this, lease);
       _leaseRenewer.Start();
       Logger.Debug("Thread de renovação de lease está ativa. Lease = "
                    + _leaseRenewer.Lease + " segundos.");
@@ -319,7 +319,7 @@ namespace tecgraf.openbus {
       try {
         Manager.IgnoreCurrentThread();
 
-        string actualBusId = _acs.busid;
+        string actualBusId = Acs.busid;
         ValidateBusId(actualBusId);
 
         byte[] encrypted;
@@ -343,7 +343,7 @@ namespace tecgraf.openbus {
         }
 
         int lease;
-        LoginInfo l = _acs.loginByPassword(entity, pubBytes, encrypted,
+        LoginInfo l = Acs.loginByPassword(entity, pubBytes, encrypted,
                                            out lease);
         LocalLogin(l, lease);
       }
@@ -360,11 +360,11 @@ namespace tecgraf.openbus {
       try {
         Manager.IgnoreCurrentThread();
 
-        string actualBusId = _acs.busid;
+        string actualBusId = Acs.busid;
         ValidateBusId(actualBusId);
 
         byte[] challenge;
-        LoginProcess login = _acs.startLoginByCertificate(entity,
+        LoginProcess login = Acs.startLoginByCertificate(entity,
                                                           out
                                                             challenge);
         AsymmetricKeyParameter key = Crypto.CreatePrivateKeyFromBytes(privKey);
@@ -382,7 +382,7 @@ namespace tecgraf.openbus {
       try {
         Manager.Requester = this;
         byte[] challenge;
-        login = _acs.startLoginBySharedAuth(out challenge);
+        login = Acs.startLoginBySharedAuth(out challenge);
         secret = Crypto.Decrypt(InternalKey.Private, challenge);
       }
       catch (Exception) {
@@ -424,7 +424,7 @@ namespace tecgraf.openbus {
       Connection prev = Manager.Requester;
       try {
         Manager.Requester = this;
-        _acs.logout();
+        Acs.logout();
       }
       catch (NO_PERMISSION e) {
         if ((e.Minor != InvalidLoginCode.ConstVal) ||
@@ -914,12 +914,12 @@ namespace tecgraf.openbus {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
           // na chamada a signChainFor vai criar uma nova chain e assinar
-          signed = _acs.signChainFor(remoteLogin);
+          signed = Acs.signChainFor(remoteLogin);
         }
         else {
           lock (chain) {
             if (!chain.Joined.TryGetValue(remoteLogin, out signed)) {
-              signed = _acs.signChainFor(remoteLogin);
+              signed = Acs.signChainFor(remoteLogin);
               chain.Joined.TryAdd(remoteLogin, signed);
             }
           }

@@ -20,12 +20,7 @@ namespace tecgraf.openbus.lease {
     /// <summary>
     /// A conexão que deve ser mantida ativa.
     /// </summary>
-    private readonly ConnectionImpl _conn;
-
-    /// <summary>
-    /// Faceta de controle de acesso do barramento.
-    /// </summary>
-    private readonly AccessControl _ac;
+    private readonly WeakReference _conn;
 
     #endregion
 
@@ -34,20 +29,12 @@ namespace tecgraf.openbus.lease {
     /// <summary>
     /// Inicializa uma instância de renovação de <i>lease</i>.
     /// </summary>
-    /// <param name="connection">A credencial.</param>
-    /// <param name="accessControlFacet">A faceta do barramento que permite a 
-    /// renovação de <i>lease</i>.</param>
+    /// <param name="connection">A conexão que deve ser renovada.</param>
     /// <param name="lease">O tempo de <i>lease</i>.</param>
-    public RenewerTask(Connection connection, AccessControl accessControlFacet,
-                       int lease) {
+    public RenewerTask(Connection connection, int lease) {
       Lease = lease;
-      _conn = connection as ConnectionImpl;
-      if (_conn == null) {
-        throw new ArgumentException(
-          "Impossível criar renovador de credencial com conexão nula ou inválida.",
-          "connection");
-      }
-      _ac = accessControlFacet;
+      ConnectionImpl conn = connection as ConnectionImpl;
+      _conn = new WeakReference(conn);
     }
 
     #endregion
@@ -59,10 +46,15 @@ namespace tecgraf.openbus.lease {
     /// </summary>
     public void Run() {
       try {
-        _conn.Manager.Requester = _conn;
         while (!_autoEvent.WaitOne(Lease * 1000)) {
           try {
-            Lease = _ac.renew();
+            ConnectionImpl conn = _conn.Target as ConnectionImpl;
+            if (conn == null) {
+              break;
+            }
+            conn.Manager.Requester = conn;
+            AccessControl ac = conn.Acs;
+            Lease = ac.renew();
             Logger.Debug(
               String.Format(
                 "{0} - Lease renovado. Próxima renovação em {1} segundos.",

@@ -25,12 +25,10 @@ namespace tecgraf.openbus.lease {
     /// <summary>
     /// Inicializa um renovador de <i>lease</i>.
     /// </summary>
-    /// <param name="connection">A credencial.</param>
-    /// <param name="accessControlFacet">A faceta do barramento que permite a 
-    /// renovação de <i>lease</i>.</param>
+    /// <param name="connection">A conexão que deve ser renovada.</param>
     /// <param name="lease">O tempo de <i>lease</i>.</param>
-    public LeaseRenewer(Connection connection, AccessControl accessControlFacet, int lease) {
-      _renewer = new RenewerTask(connection, accessControlFacet, lease);
+    public LeaseRenewer(Connection connection, int lease) {
+      _renewer = new RenewerTask(connection, lease);
       _leaseThread = new Thread(_renewer.Run)
                      {Name = "LeaseRenewer", IsBackground = true};
     }
