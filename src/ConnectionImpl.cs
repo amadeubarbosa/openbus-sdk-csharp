@@ -682,7 +682,7 @@ namespace tecgraf.openbus {
                                   CompletionStatus.Completed_No);
         }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
-          CallOnInvalidLoginCallback(true, ri);
+          CallOnInvalidLoginCallback(ri);
         }
         return;
       }
@@ -734,7 +734,7 @@ namespace tecgraf.openbus {
                        ? anyCredential.LegacyCredential.identifier
                        : anyCredential.Credential.login;
       // CheckValidity lança exceções
-      if (!CheckValidity(anyCredential, ri)) {
+      if (!CheckValidity(anyCredential)) {
         Logger.Error(String.Format("A credencial {0} está fora da validade.",
                                   login));
         throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
@@ -796,34 +796,27 @@ namespace tecgraf.openbus {
       if (!anyCredential.IsLegacy) {
         // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode e InvalidPublicKeyCode
         byte[] encodedReset =
-          CreateCredentialReset(ri, anyCredential.Credential.login);
+          CreateCredentialReset(anyCredential.Credential.login);
         ServiceContext replyServiceContext = new ServiceContext(ContextId,
                                                                 encodedReset);
         ri.add_reply_service_context(replyServiceContext, false);
       }
     }
 
-    private void CallOnInvalidLoginCallback(bool client, RequestInfo ri) {
-      //TODO verificar se realmente precisa chamar a callback no caso servidor. Como o servidor só descobre que está deslogado ao chamar getValidity e getLoginInfo, o interceptador cliente já vai reajustar o login.
+    private void CallOnInvalidLoginCallback(ClientRequestInfo ri) {
       string operation = ri.operation;
-      ClientRequestInfo cri = null;
-      LoginInfo originalLogin;
       lock (_loginLock) {
         _login.SetInvalid();
         StopLeaseRenewer();
-        // nesse ponto login necessariamente terá valor, logo nunca será o default
-        originalLogin = _login.Login.GetValueOrDefault();
       }
-      if (client) {
-        // se for interceptação cliente, o login original está no PICurrent
-        cri = ri as ClientRequestInfo;
-        try {
-          originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
-        }
-        catch (InvalidSlot e) {
-          Logger.Fatal("Falha inesperada ao acessar o slot do login corrente", e);
-          throw;
-        }
+      // o login original está no PICurrent
+      LoginInfo originalLogin;
+      try {
+        originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
+      }
+      catch (InvalidSlot e) {
+        Logger.Fatal("Falha inesperada ao acessar o slot do login corrente", e);
+        throw;
       }
       if (OnInvalidLogin != null) {
         try {
@@ -834,11 +827,7 @@ namespace tecgraf.openbus {
         }
       }
       LoginInfo newLogin;
-      if (VerifyStatusAfterCallback(operation, cri, originalLogin.id,
-                                    out newLogin)) {
-        // estamos no interceptador servidor e o relogin funcionou, então retorna
-        return;
-      }
+      VerifyStatusAfterCallback(operation, ri, originalLogin.id, out newLogin);
       // o login está inválido mas mudou, tenta callback de novo
       while (true) {
         if (OnInvalidLogin != null) {
@@ -849,37 +838,30 @@ namespace tecgraf.openbus {
             Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
           }
         }
-        if (VerifyStatusAfterCallback(operation, cri, newLogin.id, out newLogin)) {
-          // estamos no interceptador servidor e o relogin funcionou, então retorna
-          return;
-        }
+        VerifyStatusAfterCallback(operation, ri, newLogin.id, out newLogin);
         // se retornou novamente, tenta de novo indefinidamente (opção discutida por email com subject OPENBUS-1819 em 10/07/12)
       }
     }
 
-    private bool VerifyStatusAfterCallback(string operation,
+    private void VerifyStatusAfterCallback(string operation,
                                            ClientRequestInfo ri,
                                            string originalLogin,
                                            out LoginInfo newLogin) {
       lock (_loginLock) {
         if (_login.IsLoggedIn()) {
           Logger.Debug("Login reestabelecido.");
-          if (ri != null) {
-            Logger.Debug(String.Format(
-              "Solicitando que a chamada {0} seja refeita.",
-              operation));
-            throw new ForwardRequest(ri.target);
-          }
-          newLogin = new LoginInfo();
-          return true;
+          Logger.Debug(String.Format(
+            "Solicitando que a chamada {0} seja refeita.",
+            operation));
+          throw new ForwardRequest(ri.target);
         }
         if (_login.IsLoggedOut()) {
-          LogoutAfterUnsuccessfulCallback(operation, ri);
+          LogoutAfterUnsuccessfulCallback(operation);
         }
         // login está inválido mesmo depois da callback
         if (_login.Login.HasValue) {
           if (_login.Login.Value.id.Equals(originalLogin)) {
-            LogoutAfterUnsuccessfulCallback(operation, ri);
+            LogoutAfterUnsuccessfulCallback(operation);
           }
           // login mudou, copia o novo login para uma variável local
           newLogin = new LoginInfo(_login.Login.Value.id,
@@ -889,21 +871,13 @@ namespace tecgraf.openbus {
           // esse caso nunca ocorre, está aqui apenas para evitar warning.
           newLogin = new LoginInfo();
         }
-        return false;
       }
     }
 
-    private void LogoutAfterUnsuccessfulCallback(string operation,
-                                                 ClientRequestInfo ri) {
+    private void LogoutAfterUnsuccessfulCallback(string operation) {
       LocalLogout();
-      string s = "receber";
-      if (ri != null) {
-        s = "realizar";
-      }
       Logger.Error(String.Format(
-        "Login não foi reestabelecido, impossível {0} a chamada {1}.", s,
-        operation));
-      // no caso do servidor, o ServerInterceptor.cs transformará essa exceção em UnverifiedLoginCode
+        "Login não foi reestabelecido, impossível realizar a chamada {0}.", operation));
       throw new NO_PERMISSION(NoLoginCode.ConstVal,
                               CompletionStatus.Completed_No);
     }
@@ -969,7 +943,7 @@ namespace tecgraf.openbus {
       return requestReset;
     }
 
-    private byte[] CreateCredentialReset(RequestInfo ri, string remoteLogin) {
+    private byte[] CreateCredentialReset(string remoteLogin) {
       string loginId;
       lock (_loginLock) {
         if (!_login.Login.HasValue) {
@@ -987,43 +961,33 @@ namespace tecgraf.openbus {
       rand.NextBytes(challenge);
 
       AsymmetricKeyParameter pubKey;
-      while (true) {
-        try {
-          string entity;
-          if (!_loginsCache.GetLoginEntity(remoteLogin, this,
-                                           out entity,
-                                           out pubKey)) {
-            Logger.Error(
-              "Não foi encontrada uma entrada na cache de logins para o login " +
-              remoteLogin);
-            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                    CompletionStatus.Completed_No);
-          }
-          break;
-        }
-        catch (Exception e) {
-          NO_PERMISSION noPermission = e as NO_PERMISSION;
-          if (noPermission != null) {
-            if (noPermission.Minor == NoLoginCode.ConstVal) {
-              Logger.Error(
-                "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
-              throw new NO_PERMISSION(UnknownBusCode.ConstVal,
-                                      CompletionStatus.Completed_No);
-            }
-            if (noPermission.Minor == InvalidLoginCode.ConstVal) {
-              Logger.Warn(
-                "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
-              // chama callback e tenta de novo
-              CallOnInvalidLoginCallback(false, ri);
-              continue;
-            }
-          }
+      try {
+        string entity;
+        if (!_loginsCache.GetLoginEntity(remoteLogin, this,
+                                          out entity,
+                                          out pubKey)) {
           Logger.Error(
-            String.Format("Não foi possível validar o login {0}. Erro: {1}",
-                          remoteLogin, e));
+            "Não foi encontrada uma entrada na cache de logins para o login " +
+            remoteLogin);
           throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
+      }
+      catch (Exception e) {
+        NO_PERMISSION noPermission = e as NO_PERMISSION;
+        if (noPermission != null) {
+          if (noPermission.Minor == NoLoginCode.ConstVal) {
+            Logger.Error(
+              "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
+            throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                    CompletionStatus.Completed_No);
+          }
+        }
+        Logger.Error(
+          String.Format("Não foi possível validar o login {0}. Erro: {1}",
+                        remoteLogin, e));
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
 
       try {
@@ -1050,32 +1014,23 @@ namespace tecgraf.openbus {
       return _codec.encode_value(reset);
     }
 
-    private bool CheckValidity(AnyCredential anyCredential, RequestInfo ri) {
-      while (true) {
-        try {
-          return _loginsCache.ValidateLogin(anyCredential, this);
-        }
-        catch (Exception e) {
-          NO_PERMISSION noPermission = e as NO_PERMISSION;
-          if (noPermission != null) {
-            if (noPermission.Minor == NoLoginCode.ConstVal) {
-              Logger.Error(
-                "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
-              throw new NO_PERMISSION(UnknownBusCode.ConstVal,
-                                      CompletionStatus.Completed_No);
-            }
-            if (noPermission.Minor == InvalidLoginCode.ConstVal) {
-              Logger.Warn(
-                "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
-              // chama callback e tenta de novo
-              CallOnInvalidLoginCallback(false, ri);
-              continue;
-            }
+    private bool CheckValidity(AnyCredential anyCredential) {
+      try {
+        return _loginsCache.ValidateLogin(anyCredential, this);
+      }
+      catch (Exception e) {
+        NO_PERMISSION noPermission = e as NO_PERMISSION;
+        if (noPermission != null) {
+          if (noPermission.Minor == NoLoginCode.ConstVal) {
+            Logger.Error(
+              "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
+            throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                    CompletionStatus.Completed_No);
           }
-          Logger.Error("Não foi possível validar a credencial. Erro: " + e);
-          throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
         }
+        Logger.Error("Não foi possível validar a credencial. Erro: " + e);
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
     }
 
