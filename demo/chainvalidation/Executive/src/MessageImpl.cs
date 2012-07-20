@@ -28,8 +28,7 @@ namespace chainvalidation {
     public void sendMessage(string message) {
       try {
         CallerChain chain = _conn.CallerChain;
-        if ((chain == null) ||
-            (!chain.Caller.entity.Equals(_secretaryEntity))) {
+        if (!chain.Caller.entity.Equals(_secretaryEntity)) {
           Console.WriteLine(
             String.Format(
               "Uma mensagem foi ignorada pois não veio da secretária {0}.",

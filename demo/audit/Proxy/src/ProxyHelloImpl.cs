@@ -28,16 +28,11 @@ namespace audit {
     public void sayHello() {
       try {
         CallerChain chain = _conn.CallerChain;
-        if (chain == null) {
-          Console.WriteLine("Hello World!");
-        }
-        else {
-          string caller = chain.Caller.entity;
-          Console.WriteLine(
-            String.Format(
-              "Hello recebido de {0}. Cadeia completa da chamada: {1}", caller,
-              ChainToString.ToString(chain)));
-        }
+        string caller = chain.Caller.entity;
+        Console.WriteLine(
+          String.Format(
+            "Hello recebido de {0}. Cadeia completa da chamada: {1}", caller,
+            ChainToString.ToString(chain)));
         // faz join na própria caller chain
         _conn.JoinChain(null);
         _server.sayHello();

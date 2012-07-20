@@ -26,10 +26,6 @@ namespace audit {
     public void sayHello() {
       try {
         CallerChain chain = _conn.CallerChain;
-        if (chain == null) {
-          Console.WriteLine("Hello World!");
-          return;
-        }
         string caller = chain.Caller.entity;
         Console.WriteLine(
           String.Format(
