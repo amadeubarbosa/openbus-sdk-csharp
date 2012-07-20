@@ -504,7 +504,7 @@ namespace tecgraf.openbus.Test {
         catch (NullReferenceException){
         }
         //TODO remover para reativar o teste
-        catch (InvalidDataException) {
+        catch (InvalidOperationException) {
         }
         finally {
           _manager.DefaultConnection = null;
