@@ -35,8 +35,10 @@ namespace chainvalidation {
               _secretaryEntity));
           throw new Unavailable();
         }
-        string originalCaller = chain.Originators[0].entity;
         string caller = chain.Caller.entity;
+        string originalCaller = chain.Originators.Length > 0
+                                  ? chain.Originators[0].entity
+                                  : caller;
         Console.WriteLine(
           String.Format("Mensagem recebida de {0} em nome de {1}: {2}", caller,
                         originalCaller, message));
