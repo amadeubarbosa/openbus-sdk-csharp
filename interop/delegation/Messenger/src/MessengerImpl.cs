@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace tecgraf.openbus.interop.delegation {
-  internal class MessengerImpl : MarshalByRefObject, Messenger {
+  public class MessengerImpl : MarshalByRefObject, Messenger {
     #region Fields
 
     private readonly Connection _conn;

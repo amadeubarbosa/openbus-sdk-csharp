@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace tecgraf.openbus.interop.delegation {
-  internal class BroadcasterImpl : MarshalByRefObject, Broadcaster {
+  public class BroadcasterImpl : MarshalByRefObject, Broadcaster {
     #region Fields
 
     private readonly Connection _conn;

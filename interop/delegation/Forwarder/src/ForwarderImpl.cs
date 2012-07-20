@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Timers;
 
 namespace tecgraf.openbus.interop.delegation {
-  internal class ForwarderImpl : MarshalByRefObject, Forwarder {
+  public class ForwarderImpl : MarshalByRefObject, Forwarder {
     #region Fields
 
     private readonly Connection _conn;
