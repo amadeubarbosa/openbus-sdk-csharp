@@ -52,12 +52,12 @@ namespace tecgraf.openbus.interceptors {
           conn.SendRequest(ri);
           return;
         }
-        Logger.Fatal(
+        Logger.Error(
           "Sem conexão ao barramento, impossível realizar a chamada remota.");
         throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
-      Logger.Info("O login está sendo ignorado para esta chamada.");
+      Logger.Debug("O login está sendo ignorado para esta chamada.");
     }
 
     /// <inheritdoc />
@@ -68,9 +68,9 @@ namespace tecgraf.openbus.interceptors {
           conn.ReceiveException(ri);
           return;
         }
-        Logger.Fatal("Sem conexão ao barramento para receber uma exceção.");
+        Logger.Warn("Sem conexão ao barramento para receber uma exceção.");
       }
-      Logger.Info("O login está sendo ignorado para receber uma exceção.");
+      Logger.Debug("O login está sendo ignorado para receber uma exceção.");
     }
 
     #endregion
@@ -106,7 +106,7 @@ namespace tecgraf.openbus.interceptors {
         if (connection == null) {
           connection = Manager.DefaultConnection;
           if (connection == null) {
-            Logger.Fatal(
+            Logger.Error(
               "Impossível retornar conexão corrente, pois não foi definida.");
             throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                     CompletionStatus.Completed_No);

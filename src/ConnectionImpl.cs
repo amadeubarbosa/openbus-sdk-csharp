@@ -167,7 +167,7 @@ namespace tecgraf.openbus {
             Repository.GetRepositoryID(typeof (IAccessControlService));
           if (legacy == null) {
             Legacy = false;
-            Logger.Error(
+            Logger.Warn(
               "O serviço de controle de acesso 1.5 não foi encontrado. O suporte a conexões legadas foi desabilitado.");
           }
           else {
@@ -175,14 +175,14 @@ namespace tecgraf.openbus {
             LegacyAccess = legacyObjRef as IAccessControlService;
             if (LegacyAccess == null) {
               Legacy = false;
-              Logger.Error(
+              Logger.Warn(
                 "A faceta IAccessControlService do serviço de controle de acesso 1.5 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
             }
           }
         }
         catch (Exception e) {
           Legacy = false;
-          Logger.Error(
+          Logger.Warn(
             "Erro ao tentar obter a faceta IAccessControlService da versão 1.5. O suporte a conexões legadas foi desabilitado.",
             e);
         }
@@ -540,7 +540,7 @@ namespace tecgraf.openbus {
 
     internal void SendRequest(ClientRequestInfo ri) {
       string operation = ri.operation;
-      Logger.Debug(
+      Logger.Info(
         String.Format(
           "Interceptador cliente iniciando tentativa de chamada à operação {0}.",
           operation));
@@ -548,7 +548,7 @@ namespace tecgraf.openbus {
       LoginInfo login;
       lock (_loginLock) {
         if (!_login.Login.HasValue) {
-          Logger.Debug(
+          Logger.Error(
             String.Format(
               "Chamada à operação {0} cancelada devido a não existir login.",
               operation));
@@ -587,7 +587,7 @@ namespace tecgraf.openbus {
           ticket = session.Ticket;
           secret = new byte[session.Secret.Length];
           session.Secret.CopyTo(secret, 0);
-          Logger.Info(String.Format("Reutilizando sessão {0} com ticket {1}.",
+          Logger.Debug(String.Format("Reutilizando sessão {0} com ticket {1}.",
                                     sessionId, ticket));
           session.Ticket++;
         }
@@ -599,9 +599,6 @@ namespace tecgraf.openbus {
         if (sessionId != 0) {
           hash = CreateCredentialHash(operation, ticket, secret);
           chain = CreateCredentialSignedCallChain(remoteLogin);
-          Logger.Info(
-            String.Format("Chamada à operação {0} no servidor de login {1}.",
-                          operation, remoteLogin));
         }
         else {
           if (Legacy) {
@@ -628,13 +625,16 @@ namespace tecgraf.openbus {
             ri.add_request_service_context(legacyContext, false);
             if (isLegacyOnly) {
               // não adiciona credencial 2.0
+              Logger.Info(
+                String.Format("Chamada à operação {0} no servidor de login {1} que utiliza SDK legado.",
+                              operation, remoteLogin));
               return;
             }
           }
           // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
           hash = CreateInvalidCredentialHash();
           chain = CreateInvalidCredentialSignedCallChain();
-          Logger.Info(
+          Logger.Debug(
             String.Format(
               "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
               operation, remoteLogin));
@@ -645,6 +645,9 @@ namespace tecgraf.openbus {
         ServiceContext serviceContext =
           new ServiceContext(ContextId, _codec.encode_value(data));
         ri.add_request_service_context(serviceContext, false);
+        Logger.Info(
+          String.Format("Chamada à operação {0} no servidor de login {1}.",
+                        operation, remoteLogin));
       }
       catch (Exception) {
         Logger.Error(String.Format("Erro ao tentar enviar a requisição {0}.",
@@ -670,7 +673,7 @@ namespace tecgraf.openbus {
 
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
         if (exception.Minor == NoCredentialCode.ConstVal) {
-          Logger.Warn(String.Format(
+          Logger.Error(String.Format(
             "Servidor remoto alega falta de credencial para a chamada {0}, portanto deve ser um servidor incompatível ou com erro.",
             operation));
           throw new NO_PERMISSION(InvalidRemoteCode.ConstVal,
@@ -693,7 +696,7 @@ namespace tecgraf.openbus {
       _outgoingLogin2Session.TryAdd(remoteLogin,
                                     new ClientSideSession(sessionId, secret,
                                                           remoteLogin));
-      Logger.Info(
+      Logger.Debug(
         String.Format(
           "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
           sessionId, operation, remoteLogin));
@@ -730,12 +733,12 @@ namespace tecgraf.openbus {
                        : anyCredential.Credential.login;
       // CheckValidity lança exceções
       if (!CheckValidity(anyCredential, ri)) {
-        Logger.Warn(String.Format("A credencial {0} está fora da validade.",
+        Logger.Error(String.Format("A credencial {0} está fora da validade.",
                                   login));
         throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
-      Logger.Info(String.Format("A credencial {0} está na validade.", login));
+      Logger.Debug(String.Format("A credencial {0} está na validade.", login));
 
       if (!anyCredential.IsLegacy) {
         CredentialData credential = anyCredential.Credential;
@@ -779,7 +782,7 @@ namespace tecgraf.openbus {
       }
 
       // credencial invalida por nao ter sessao conhecida, ticket inválido ou hash errado
-      Logger.Warn("Credencial inválida, enviando CredentialReset.");
+      Logger.Debug("Credencial inválida, enviando CredentialReset.");
       // TODO FIXME
       // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
       // no código do interceptador servidor, no método receive_request.
@@ -988,7 +991,7 @@ namespace tecgraf.openbus {
           if (!_loginsCache.GetLoginEntity(remoteLogin, this,
                                            out entity,
                                            out pubKey)) {
-            Logger.Warn(
+            Logger.Error(
               "Não foi encontrada uma entrada na cache de logins para o login " +
               remoteLogin);
             throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
@@ -1006,7 +1009,7 @@ namespace tecgraf.openbus {
                                       CompletionStatus.Completed_No);
             }
             if (noPermission.Minor == InvalidLoginCode.ConstVal) {
-              Logger.Error(
+              Logger.Warn(
                 "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
               // chama callback e tenta de novo
               CallOnInvalidLoginCallback(false, ri);
@@ -1060,7 +1063,7 @@ namespace tecgraf.openbus {
                                       CompletionStatus.Completed_No);
             }
             if (noPermission.Minor == InvalidLoginCode.ConstVal) {
-              Logger.Error(
+              Logger.Warn(
                 "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
               // chama callback e tenta de novo
               CallOnInvalidLoginCallback(false, ri);

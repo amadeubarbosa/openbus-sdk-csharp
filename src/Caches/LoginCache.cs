@@ -134,7 +134,7 @@ namespace tecgraf.openbus.caches {
         return conn.LoginRegistry.getLoginInfo(loginId, out key);
       }
       catch (InvalidLogins il) {
-        Logger.Fatal(
+        Logger.Error(
           String.Format(
             "Erro InvalidLogins ao obter informações do login {0}.", loginId),
           il);
@@ -142,7 +142,7 @@ namespace tecgraf.openbus.caches {
                                 CompletionStatus.Completed_No);
       }
       catch (ServiceFailure sf) {
-        Logger.Fatal(
+        Logger.Error(
           String.Format(
             "Erro ServiceFailure ao obter informações do login {0}.", loginId),
           sf);

@@ -61,7 +61,7 @@ namespace tecgraf.openbus.lease {
                 DateTime.Now, Lease));
           }
           catch (NO_PERMISSION) {
-            Logger.Warn(
+            Logger.Error(
               "Impossível renovar a credencial pois a conexão não está logada no barramento.");
           }
           catch (AbstractCORBASystemException e) {

@@ -8,7 +8,6 @@ using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.exceptions;
 using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus.interceptors {
@@ -54,7 +53,7 @@ namespace tecgraf.openbus.interceptors {
                                                                   legacyContext);
       AnyCredential anyCredential = UnmarshalCredential(serviceContext,
                                                         legacyContext);
-      Logger.Info(
+      Logger.Debug(
         String.Format("A operação '{0}' possui credencial. É legada? {1}.",
                       interceptedOperation, anyCredential.IsLegacy));
 
@@ -88,7 +87,7 @@ namespace tecgraf.openbus.interceptors {
             }
           }
           if (!valid) {
-            Logger.Fatal(
+            Logger.Error(
               "Não foi possível encontrar um barramento que aceite a credencial recebida.");
             throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
           }
@@ -97,7 +96,7 @@ namespace tecgraf.openbus.interceptors {
         if (conn == null) {
           conn = Manager.DefaultConnection as ConnectionImpl;
           if (conn == null) {
-            Logger.Fatal(
+            Logger.Error(
               "Sem conexão ao barramento, impossível receber a chamada remota.");
             throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                     CompletionStatus.Completed_No);
@@ -147,6 +146,8 @@ namespace tecgraf.openbus.interceptors {
           e);
         throw;
       }
+      Logger.Info(String.Format(
+        "A operação '{0}' será executada.", ri.operation));
     }
 
     /// <inheritdoc />
@@ -172,7 +173,7 @@ namespace tecgraf.openbus.interceptors {
           // credencial é inválida
           AnyCredential anyCredential = UnmarshalCredential(serviceContext,
                                                             legacyContext);
-          Logger.Info(String.Format(
+          Logger.Debug(String.Format(
             "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
             interceptedOperation, anyCredential.IsLegacy));
 
@@ -190,7 +191,7 @@ namespace tecgraf.openbus.interceptors {
               e);
             throw;
           }
-          Logger.Fatal(
+          Logger.Error(
             "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
           throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -265,7 +266,7 @@ namespace tecgraf.openbus.interceptors {
         if (Legacy) {
           return GetLegacyContextFromRequestInfo(ri, out legacyContext);
         }
-        Logger.Warn(String.Format(
+        Logger.Error(String.Format(
           "A chamada à operação '{0}' não possui credencial.",
           interceptedOperation));
         throw new NO_PERMISSION(NoCredentialCode.ConstVal,
@@ -283,7 +284,7 @@ namespace tecgraf.openbus.interceptors {
         serviceContext = ri.get_request_service_context(PrevContextId);
       }
       catch (BAD_PARAM) {
-        Logger.Warn(String.Format(
+        Logger.Error(String.Format(
           "A chamada à operação '{0}' não possui credencial.",
           interceptedOperation));
         throw new NO_PERMISSION(NoCredentialCode.ConstVal,
