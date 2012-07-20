@@ -6,7 +6,7 @@ namespace chainvalidation {
   /// <summary>
   /// Implementação do servant Meeting.
   /// </summary>  
-  internal class MeetingImpl : MarshalByRefObject, Meeting {
+  public class MeetingImpl : MarshalByRefObject, Meeting {
     #region Fields
 
     private readonly Connection _conn;

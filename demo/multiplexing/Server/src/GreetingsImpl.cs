@@ -5,7 +5,7 @@ namespace multiplexing {
   /// <summary>
   /// Implementação do servant Greetings.
   /// </summary>  
-  internal class GreetingsImpl : MarshalByRefObject, Greetings {
+  public class GreetingsImpl : MarshalByRefObject, Greetings {
     #region Fields
 
     private readonly Connection _conn;

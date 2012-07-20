@@ -4,7 +4,7 @@ namespace Server {
   /// <summary>
   /// Implementação do servant Clock.
   /// </summary>  
-  internal class ClockImpl : MarshalByRefObject, Clock {
+  public class ClockImpl : MarshalByRefObject, Clock {
     #region Clock Members
 
     public long getTimeInTicks() {

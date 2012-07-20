@@ -6,7 +6,7 @@ namespace chainvalidation {
   /// <summary>
   /// Implementação do servant Message.
   /// </summary>  
-  internal class MessageImpl : MarshalByRefObject, Message {
+  public class MessageImpl : MarshalByRefObject, Message {
     #region Fields
 
     private readonly Connection _conn;
