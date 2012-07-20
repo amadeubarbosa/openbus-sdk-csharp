@@ -87,6 +87,7 @@
     <Compile Include="src\ConnectionManager.cs" />
     <Compile Include="src\ConnectionManagerImpl.cs" />
     <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
+    <Compile Include="src\exceptions\BusChangedException.cs" />
     <Compile Include="src\exceptions\CorruptedPrivateKeyException.cs" />
     <Compile Include="src\exceptions\InvalidBusAddressException.cs" />
     <Compile Include="src\exceptions\InvalidLoginProcessException.cs" />

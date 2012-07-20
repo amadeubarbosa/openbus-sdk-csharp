@@ -194,10 +194,12 @@ namespace tecgraf.openbus {
       return Acs.busid;
     }
 
+// ReSharper disable UnusedParameter.Local
     private void ValidateBusId(string actualBusId) {
-      // não faz a chamada remota aqui para se manter thread-safe
+// ReSharper restore UnusedParameter.Local
+      // não faz a chamada remota para obter o actualBusId aqui para se manter thread-safe: os pontos que chamam esse método potencialmente estarão dentro de uma área crítica.
       if (!_busId.Equals(actualBusId)) {
-        //TODO lançar BusChangedException quando a issue for criada.
+        throw new BusChangedException();
       }
     }
 
