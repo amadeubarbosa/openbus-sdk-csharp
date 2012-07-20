@@ -222,7 +222,7 @@ namespace tecgraf.openbus {
       }
       catch {
         login.cancel();
-        Logger.Fatal("Erro na codificação das informações de login.");
+        Logger.Error("Erro na codificação das informações de login.");
         throw;
       }
 
@@ -242,7 +242,7 @@ namespace tecgraf.openbus {
         throw e;
       }
       catch (Exception e) {
-        Logger.Fatal(e);
+        Logger.Error(e);
         throw;
       }
       LocalLogin(l, lease);
@@ -338,7 +338,7 @@ namespace tecgraf.openbus {
           throw e;
         }
         catch {
-          Logger.Fatal("Erro na codificação das informações de login.");
+          Logger.Error("Erro na codificação das informações de login.");
           throw;
         }
 
@@ -647,7 +647,7 @@ namespace tecgraf.openbus {
         ri.add_request_service_context(serviceContext, false);
       }
       catch (Exception) {
-        Logger.Fatal(String.Format("Erro ao tentar enviar a requisição {0}.",
+        Logger.Error(String.Format("Erro ao tentar enviar a requisição {0}.",
                                    operation));
         throw;
       }
@@ -708,7 +708,7 @@ namespace tecgraf.openbus {
       AsymmetricKeyParameter busKey;
       lock (_loginLock) {
         if (!_login.Login.HasValue) {
-          Logger.Fatal(String.Format("Esta conexão está deslogada."));
+          Logger.Error(String.Format("Esta conexão está deslogada."));
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
@@ -717,7 +717,7 @@ namespace tecgraf.openbus {
       }
       if (!anyCredential.IsLegacy) {
         if (!anyCredential.Credential.bus.Equals(BusId)) {
-          Logger.Fatal(String.Format(
+          Logger.Error(String.Format(
             "A identificação do barramento está errada. O valor recebido foi '{0}' e o esperado era '{1}'.",
             BusId, anyCredential.Credential.bus));
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
@@ -779,7 +779,7 @@ namespace tecgraf.openbus {
       }
 
       // credencial invalida por nao ter sessao conhecida, ticket inválido ou hash errado
-      Logger.Fatal("Credencial inválida, enviando CredentialReset.");
+      Logger.Warn("Credencial inválida, enviando CredentialReset.");
       // TODO FIXME
       // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
       // no código do interceptador servidor, no método receive_request.
@@ -895,7 +895,7 @@ namespace tecgraf.openbus {
       if (ri != null) {
         s = "realizar";
       }
-      Logger.Fatal(String.Format(
+      Logger.Error(String.Format(
         "Login não foi reestabelecido, impossível {0} a chamada {1}.", s,
         operation));
       // no caso do servidor, o ServerInterceptor.cs transformará essa exceção em UnverifiedLoginCode
@@ -957,7 +957,7 @@ namespace tecgraf.openbus {
           (CredentialReset) _codec.decode_value(data, resetTypeCode);
       }
       catch (Exception e) {
-        Logger.Fatal(
+        Logger.Error(
           "Erro na tentativa de extrair a informação de reset.", e);
         throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, exception.Status);
       }
@@ -969,7 +969,7 @@ namespace tecgraf.openbus {
       lock (_loginLock) {
         if (!_login.Login.HasValue) {
           // Este servidor não está logado no barramento
-          Logger.Fatal(
+          Logger.Error(
             "Este servidor não está logado no barramento e portanto não pode criar um CredentialReset.");
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -1000,20 +1000,20 @@ namespace tecgraf.openbus {
           NO_PERMISSION noPermission = e as NO_PERMISSION;
           if (noPermission != null) {
             if (noPermission.Minor == NoLoginCode.ConstVal) {
-              Logger.Fatal(
+              Logger.Error(
                 "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
               throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                       CompletionStatus.Completed_No);
             }
             if (noPermission.Minor == InvalidLoginCode.ConstVal) {
-              Logger.Fatal(
+              Logger.Error(
                 "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
               // chama callback e tenta de novo
               CallOnInvalidLoginCallback(false, ri);
               continue;
             }
           }
-          Logger.Fatal(
+          Logger.Error(
             String.Format("Não foi possível validar o login {0}. Erro: {1}",
                           remoteLogin, e));
           throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
@@ -1054,20 +1054,20 @@ namespace tecgraf.openbus {
           NO_PERMISSION noPermission = e as NO_PERMISSION;
           if (noPermission != null) {
             if (noPermission.Minor == NoLoginCode.ConstVal) {
-              Logger.Fatal(
+              Logger.Error(
                 "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
               throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                       CompletionStatus.Completed_No);
             }
             if (noPermission.Minor == InvalidLoginCode.ConstVal) {
-              Logger.Fatal(
+              Logger.Error(
                 "Este servidor foi deslogado do barramento durante a interceptação desta requisição. Chamando callback de login inválido.");
               // chama callback e tenta de novo
               CallOnInvalidLoginCallback(false, ri);
               continue;
             }
           }
-          Logger.Fatal("Não foi possível validar a credencial. Erro: " + e);
+          Logger.Error("Não foi possível validar a credencial. Erro: " + e);
           throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
@@ -1086,14 +1086,14 @@ namespace tecgraf.openbus {
                             string loginId, AsymmetricKeyParameter busKey) {
       CallChain chain = UnmarshalCallChain(signed);
       if (!chain.target.Equals(loginId)) {
-        Logger.Fatal(
+        Logger.Error(
           "O login não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
         throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
       if (!chain.caller.id.Equals(callerId) ||
           (!Crypto.VerifySignature(busKey, signed.encoded, signed.signature))) {
-        Logger.Fatal("Cadeia de credencial inválida.");
+        Logger.Error("Cadeia de credencial inválida.");
         throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
