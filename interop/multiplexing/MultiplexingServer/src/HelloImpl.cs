@@ -27,15 +27,17 @@ namespace tecgraf.openbus.interop.multiplexing {
       try {
         foreach (Connection conn in _conns) {
           CallerChain callerChain = conn.CallerChain;
-          Console.WriteLine(String.Format("Calling in {0} @ {1}",
-                                          conn.Login.Value.entity, conn.BusId));
-          String entity = callerChain.Caller.entity;
-          Console.WriteLine(String.Format("Hello from {0} @ {1}!", entity,
-                                          callerChain.BusId));
+          if (callerChain != null) {
+            Console.WriteLine(String.Format("Calling in {0} @ {1}",
+                                            conn.Login.Value.entity, conn.BusId));
+            String entity = callerChain.Caller.entity;
+            Console.WriteLine(String.Format("Hello from {0} @ {1}!", entity,
+                                            callerChain.BusId));
+          }
         }
       }
       catch (Exception e) {
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e);
       }
     }
 
