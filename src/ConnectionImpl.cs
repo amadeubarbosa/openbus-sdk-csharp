@@ -43,7 +43,8 @@ namespace tecgraf.openbus {
 
     private volatile int _sessionId;
     private readonly object _sessionIdLock = new object();
-    private readonly LoginStatus _login;
+    private LoginInfo? _login;
+    private LoginInfo? _invalidLogin;
     private readonly object _loginLock = new object();
     // client caches
     private readonly LRUConcurrentDictionaryCache<EffectiveProfile, string>
@@ -131,7 +132,8 @@ namespace tecgraf.openbus {
       _outgoingLogin2Session =
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
 
-      _login = new LoginStatus(this);
+      _login = null;
+      _invalidLogin = null;
       GetBusFacets();
       _busId = GetBusIdAndKey(out _busKey);
     }
@@ -206,7 +208,7 @@ namespace tecgraf.openbus {
     private AsymmetricCipherKeyPair InternalKey { get; set; }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
-      if (_login.IsLoggedIn()) {
+      if (_login.HasValue) {
         login.cancel();
         throw new AlreadyLoggedInException();
       }
@@ -254,10 +256,11 @@ namespace tecgraf.openbus {
       string actualBusId = Acs.busid;
       lock (_loginLock) {
         ValidateBusId(actualBusId);
-        if (_login.IsLoggedIn()) {
+        if (_login.HasValue) {
           throw new AlreadyLoggedInException();
         }
-        _login.SetLoggedIn(login);
+        _login = login;
+        _invalidLogin = null;
         StartLeaseRenewer(lease);
       }
     }
@@ -265,7 +268,7 @@ namespace tecgraf.openbus {
     private void LocalLogout() {
       lock (_loginLock) {
         StopLeaseRenewer();
-        _login.SetLoggedOut();
+        _login = null;
         _outgoingLogin2Session.Clear();
         _profile2Login.Clear();
         _sessionId2Session.Clear();
@@ -308,14 +311,18 @@ namespace tecgraf.openbus {
     }
 
     public LoginInfo? Login {
-      // se estiver no estado inválido retorna null para que esse estado não
-      // fique visível ao usuário
-      get { return _login.IsInvalid() ? null : _login.Login; }
+      get {
+        lock (_loginLock) {
+          return _login;
+        }
+      }
     }
 
     public void LoginByPassword(string entity, byte[] password) {
-      if (_login.IsLoggedIn()) {
-        throw new AlreadyLoggedInException();
+      lock (_loginLock) {
+        if (_login.HasValue) {
+          throw new AlreadyLoggedInException();
+        }
       }
 
       try {
@@ -346,7 +353,7 @@ namespace tecgraf.openbus {
 
         int lease;
         LoginInfo l = Acs.loginByPassword(entity, pubBytes, encrypted,
-                                           out lease);
+                                          out lease);
         LocalLogin(l, lease);
       }
       finally {
@@ -355,8 +362,10 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByCertificate(string entity, byte[] privKey) {
-      if (_login.IsLoggedIn()) {
-        throw new AlreadyLoggedInException();
+      lock (_loginLock) {
+        if (_login.HasValue) {
+          throw new AlreadyLoggedInException();
+        }
       }
 
       try {
@@ -367,8 +376,8 @@ namespace tecgraf.openbus {
 
         byte[] challenge;
         LoginProcess login = Acs.startLoginByCertificate(entity,
-                                                          out
-                                                            challenge);
+                                                         out
+                                                           challenge);
         AsymmetricKeyParameter key = Crypto.CreatePrivateKeyFromBytes(privKey);
         byte[] answer = Crypto.Decrypt(key, challenge);
         LoginByObject(login, answer);
@@ -414,11 +423,8 @@ namespace tecgraf.openbus {
 
     public bool Logout() {
       lock (_loginLock) {
-        if (_login.IsLoggedOut()) {
-          return false;
-        }
-        if (_login.IsInvalid()) {
-          LocalLogout();
+        if (!_login.HasValue) {
+          _invalidLogin = null;
           return false;
         }
       }
@@ -474,11 +480,12 @@ namespace tecgraf.openbus {
         }
         string loginId;
         lock (_loginLock) {
-          if (!_login.Login.HasValue) {
+          if (!_login.HasValue) {
             return null;
           }
-          loginId = _login.Login.Value.id;
+          loginId = _login.Value.id;
         }
+        // TODO testar se a conexão é a mesma ao invés do login
         if ((piCurrentLoginId == null) || (!loginId.Equals(piCurrentLoginId))) {
           return null;
         }
@@ -547,20 +554,11 @@ namespace tecgraf.openbus {
           "Interceptador cliente iniciando tentativa de chamada à operação {0}.",
           operation));
 
-      LoginInfo login;
-      lock (_loginLock) {
-        if (!_login.Login.HasValue) {
-          Logger.Error(
-            String.Format(
-              "Chamada à operação {0} cancelada devido a não existir login.",
-              operation));
-          throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
-        }
-        login = new LoginInfo(_login.Login.Value.id, _login.Login.Value.entity);
-      }
-      string loginId = login.id;
-      string loginEntity = login.entity;
+      string errMsg =
+        String.Format(
+          "Chamada à operação {0} cancelada devido a não existir login.",
+          operation);
+      LoginInfo login = GetLoginOrThrowNoLogin(errMsg, null);
 
       // armazena login no PICurrent para obter no caso de uma exceção
       Current current = Manager.GetPICurrent();
@@ -590,7 +588,7 @@ namespace tecgraf.openbus {
           secret = new byte[session.Secret.Length];
           session.Secret.CopyTo(secret, 0);
           Logger.Debug(String.Format("Reutilizando sessão {0} com ticket {1}.",
-                                    sessionId, ticket));
+                                     sessionId, ticket));
           session.Ticket++;
         }
       }
@@ -600,7 +598,9 @@ namespace tecgraf.openbus {
         SignedCallChain chain;
         if (sessionId != 0) {
           hash = CreateCredentialHash(operation, ticket, secret);
+          // CreateCredentialSignedCallChain pode mudar o login
           chain = CreateCredentialSignedCallChain(remoteLogin);
+          login = GetLoginOrThrowNoLogin(errMsg, null);
         }
         else {
           if (Legacy) {
@@ -620,7 +620,7 @@ namespace tecgraf.openbus {
                 isLegacyOnly = true;
               }
             }
-            Credential legacyData = new Credential(loginId, loginEntity,
+            Credential legacyData = new Credential(login.id, login.entity,
                                                    lastCaller);
             ServiceContext legacyContext =
               new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
@@ -628,8 +628,9 @@ namespace tecgraf.openbus {
             if (isLegacyOnly) {
               // não adiciona credencial 2.0
               Logger.Info(
-                String.Format("Chamada à operação {0} no servidor de login {1} que utiliza SDK legado.",
-                              operation, remoteLogin));
+                String.Format(
+                  "Chamada à operação {0} no servidor de login {1} que utiliza SDK legado.",
+                  operation, remoteLogin));
               return;
             }
           }
@@ -642,7 +643,7 @@ namespace tecgraf.openbus {
               operation, remoteLogin));
         }
 
-        CredentialData data = new CredentialData(BusId, loginId, sessionId,
+        CredentialData data = new CredentialData(BusId, login.id, sessionId,
                                                  ticket, hash, chain);
         ServiceContext serviceContext =
           new ServiceContext(ContextId, _codec.encode_value(data));
@@ -682,7 +683,35 @@ namespace tecgraf.openbus {
                                   CompletionStatus.Completed_No);
         }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
-          CallOnInvalidLoginCallback(ri);
+          LoginInfo originalLogin;
+          try {
+            originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
+          }
+          catch (InvalidSlot e) {
+            Logger.Fatal(
+              "Falha inesperada ao acessar o slot do login corrente", e);
+            throw;
+          }
+          if (_login.HasValue && originalLogin.id.Equals(_login.Value.id)) {
+            LocalLogout();
+            _invalidLogin = originalLogin;
+          }
+          Logger.Error(
+            String.Format(
+              "Exceção de login inválido recebida ao tentar realizar a operação {0} com o login {1} da entidade {2}.",
+              operation, originalLogin.id, originalLogin.entity));
+          LoginInfo? login =
+            GetLoginOrThrowNoLogin(
+              String.Format(
+                "Login não foi reestabelecido, impossível realizar a operação {0}.",
+                operation), originalLogin);
+          // tenta refazer o request
+          Logger.Debug("Login reestabelecido.");
+          Logger.Info(
+            String.Format(
+              "Tentativa de refazer a operação {0} com o login {1} da entidade {2}.",
+              operation, login.Value.id, login.Value.entity));
+          throw new ForwardRequest(ri.target);
         }
         return;
       }
@@ -712,12 +741,12 @@ namespace tecgraf.openbus {
       string loginId;
       AsymmetricKeyParameter busKey;
       lock (_loginLock) {
-        if (!_login.Login.HasValue) {
+        if (!_login.HasValue) {
           Logger.Error(String.Format("Esta conexão está deslogada."));
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        loginId = _login.Login.Value.id;
+        loginId = _login.Value.id;
         busKey = _busKey;
       }
       if (!anyCredential.IsLegacy) {
@@ -736,7 +765,7 @@ namespace tecgraf.openbus {
       // CheckValidity lança exceções
       if (!CheckValidity(anyCredential)) {
         Logger.Error(String.Format("A credencial {0} está fora da validade.",
-                                  login));
+                                   login));
         throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
@@ -803,83 +832,76 @@ namespace tecgraf.openbus {
       }
     }
 
-    private void CallOnInvalidLoginCallback(ClientRequestInfo ri) {
-      string operation = ri.operation;
+    private LoginInfo? GetLogin(LoginInfo? originalLogin) {
+      LoginInfo? login = null;
+      LoginInfo? invalidLogin = null;
+      InvalidLoginCallback onInvalidLogin;
+      LoginInfo originalCopy = originalLogin.HasValue
+                                 ? new LoginInfo(originalLogin.Value.id,
+                                                 originalLogin.Value.entity)
+                                 : new LoginInfo();
       lock (_loginLock) {
-        _login.SetInvalid();
-        StopLeaseRenewer();
-      }
-      // o login original está no PICurrent
-      LoginInfo originalLogin;
-      try {
-        originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot do login corrente", e);
-        throw;
-      }
-      if (OnInvalidLogin != null) {
-        try {
-          OnInvalidLogin.InvalidLogin(this, originalLogin);
-        }
-        catch (Exception e) {
-          Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
-        }
-      }
-      LoginInfo newLogin;
-      VerifyStatusAfterCallback(operation, ri, originalLogin.id, out newLogin);
-      // o login está inválido mas mudou, tenta callback de novo
-      while (true) {
-        if (OnInvalidLogin != null) {
-          try {
-            OnInvalidLogin.InvalidLogin(this, newLogin);
-          }
-          catch (Exception e) {
-            Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
+        if (_login != null) {
+          login = new LoginInfo(_login.Value.id, _login.Value.entity);
+          if (!originalLogin.HasValue) {
+            originalCopy.id = _login.Value.id;
+            originalCopy.entity = _login.Value.entity;
           }
         }
-        VerifyStatusAfterCallback(operation, ri, newLogin.id, out newLogin);
-        // se retornou novamente, tenta de novo indefinidamente (opção discutida por email com subject OPENBUS-1819 em 10/07/12)
+        if (_invalidLogin != null) {
+          invalidLogin = new LoginInfo(_invalidLogin.Value.id,
+                                       _invalidLogin.Value.entity);
+        }
+        onInvalidLogin = OnInvalidLogin;
+      }
+      if (!login.HasValue) {
+        if (!invalidLogin.HasValue) {
+          return null;
+        }
+        // tenta se recuperar de um login inválido
+        LoginInfo? originalInvalid = new LoginInfo(invalidLogin.Value.id,
+                                                   invalidLogin.Value.entity);
+        while (originalInvalid.HasValue) {
+          if (onInvalidLogin != null) {
+            try {
+              onInvalidLogin.InvalidLogin(this, originalCopy);
+            }
+            catch (Exception e) {
+              Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
+            }
+            lock (_loginLock) {
+              // ReSharper disable ConditionIsAlwaysTrueOrFalse
+              if (!_invalidLogin.HasValue ||
+                  _invalidLogin.Value.id.Equals(originalInvalid.Value.id)) {
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                _invalidLogin = null;
+                originalInvalid = null;
+              }
+              else {
+                originalInvalid = new LoginInfo(_invalidLogin.Value.id,
+                                                _invalidLogin.Value.entity);
+              }
+            }
+          }
+        }
+      }
+      lock (_loginLock) {
+        if (_login.HasValue) {
+          return new LoginInfo(_login.Value.id, _login.Value.entity);
+        }
+        return null;
       }
     }
 
-    private void VerifyStatusAfterCallback(string operation,
-                                           ClientRequestInfo ri,
-                                           string originalLogin,
-                                           out LoginInfo newLogin) {
-      lock (_loginLock) {
-        if (_login.IsLoggedIn()) {
-          Logger.Debug("Login reestabelecido.");
-          Logger.Debug(String.Format(
-            "Solicitando que a chamada {0} seja refeita.",
-            operation));
-          throw new ForwardRequest(ri.target);
-        }
-        if (_login.IsLoggedOut()) {
-          LogoutAfterUnsuccessfulCallback(operation);
-        }
-        // login está inválido mesmo depois da callback
-        if (_login.Login.HasValue) {
-          if (_login.Login.Value.id.Equals(originalLogin)) {
-            LogoutAfterUnsuccessfulCallback(operation);
-          }
-          // login mudou, copia o novo login para uma variável local
-          newLogin = new LoginInfo(_login.Login.Value.id,
-                                   _login.Login.Value.entity);
-        }
-        else {
-          // esse caso nunca ocorre, está aqui apenas para evitar warning.
-          newLogin = new LoginInfo();
-        }
+    private LoginInfo GetLoginOrThrowNoLogin(string errorMsg,
+                                             LoginInfo? originalLogin) {
+      LoginInfo? login = GetLogin(originalLogin);
+      if (!login.HasValue) {
+        Logger.Error(errorMsg);
+        throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
-    }
-
-    private void LogoutAfterUnsuccessfulCallback(string operation) {
-      LocalLogout();
-      Logger.Error(String.Format(
-        "Login não foi reestabelecido, impossível realizar a chamada {0}.", operation));
-      throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                              CompletionStatus.Completed_No);
+      return login.Value;
     }
 
     private byte[] CreateInvalidCredentialHash() {
@@ -893,12 +915,16 @@ namespace tecgraf.openbus {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
           // na chamada a signChainFor vai criar uma nova chain e assinar
-          signed = Acs.signChainFor(remoteLogin);
+          SignCallChain(remoteLogin, out signed);
         }
         else {
+          bool cacheHit;
           lock (chain) {
-            if (!chain.Joined.TryGetValue(remoteLogin, out signed)) {
-              signed = Acs.signChainFor(remoteLogin);
+            cacheHit = chain.Joined.TryGetValue(remoteLogin, out signed);
+          }
+          if (!cacheHit) {
+            SignCallChain(remoteLogin, out signed);
+            lock (chain) {
               chain.Joined.TryAdd(remoteLogin, signed);
             }
           }
@@ -912,6 +938,21 @@ namespace tecgraf.openbus {
         signed = chain.Signed;
       }
       return signed;
+    }
+
+    private void SignCallChain(string remoteLogin, out SignedCallChain signed) {
+      // se o login mudar, tem que assinar de novo
+      while (true) {
+        signed = Acs.signChainFor(remoteLogin);
+        LoginInfo actualLogin =
+          GetLoginOrThrowNoLogin(
+            "Impossível gerar cadeia para a chamada, pois o login foi perdido.",
+            null);
+        CallChain newChain = UnmarshalCallChain(signed);
+        if (actualLogin.id.Equals(newChain.caller.id)) {
+          break;
+        }
+      }
     }
 
     private SignedCallChain CreateInvalidCredentialSignedCallChain() {
@@ -946,14 +987,14 @@ namespace tecgraf.openbus {
     private byte[] CreateCredentialReset(string remoteLogin) {
       string loginId;
       lock (_loginLock) {
-        if (!_login.Login.HasValue) {
+        if (!_login.HasValue) {
           // Este servidor não está logado no barramento
           Logger.Error(
             "Este servidor não está logado no barramento e portanto não pode criar um CredentialReset.");
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        loginId = _login.Login.Value.id;
+        loginId = _login.Value.id;
       }
       CredentialReset reset = new CredentialReset {login = loginId};
       byte[] challenge = new byte[SecretSize];
@@ -964,8 +1005,8 @@ namespace tecgraf.openbus {
       try {
         string entity;
         if (!_loginsCache.GetLoginEntity(remoteLogin, this,
-                                          out entity,
-                                          out pubKey)) {
+                                         out entity,
+                                         out pubKey)) {
           Logger.Error(
             "Não foi encontrada uma entrada na cache de logins para o login " +
             remoteLogin);
@@ -1079,73 +1120,6 @@ namespace tecgraf.openbus {
       byte[] bOperation = enc.GetBytes(operation);
       bOperation.CopyTo(hash, index);
       return SHA256.Create().ComputeHash(hash);
-    }
-
-    private sealed class LoginStatus {
-      private enum LStatus {
-        LoggedIn,
-        Invalid,
-        LoggedOut
-      }
-
-      private LStatus _status;
-      private LoginInfo? _login;
-      private readonly ConnectionImpl _conn;
-
-      internal LoginStatus(ConnectionImpl conn) {
-        _conn = conn;
-        SetLoggedOut();
-      }
-
-      private LStatus Status {
-        get {
-          // Não há problema em deixar o return dentro do lock pois o compilador
-          // é esperto o suficiente para lidar com isso corretamente.
-          lock (_conn._loginLock) {
-            return _status;
-          }
-        }
-      }
-
-      internal LoginInfo? Login {
-        get {
-          lock (_conn._loginLock) {
-            return _login;
-          }
-        }
-      }
-
-      internal void SetLoggedIn(LoginInfo login) {
-        lock (_conn._loginLock) {
-          _login = login;
-          _status = LStatus.LoggedIn;
-        }
-      }
-
-      internal void SetLoggedOut() {
-        lock (_conn._loginLock) {
-          _login = null;
-          _status = LStatus.LoggedOut;
-        }
-      }
-
-      internal void SetInvalid() {
-        lock (_conn._loginLock) {
-          _status = LStatus.Invalid;
-        }
-      }
-
-      internal bool IsLoggedIn() {
-        return Status == LStatus.LoggedIn;
-      }
-
-      internal bool IsLoggedOut() {
-        return Status == LStatus.LoggedOut;
-      }
-
-      internal bool IsInvalid() {
-        return Status == LStatus.Invalid;
-      }
     }
 
     #endregion
