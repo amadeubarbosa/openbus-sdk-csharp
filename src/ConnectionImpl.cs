@@ -468,25 +468,21 @@ namespace tecgraf.openbus {
     public CallerChain CallerChain {
       get {
         Current current = Manager.GetPICurrent();
-        string piCurrentLoginId;
+        ConnectionImpl piCurrentConn;
         try {
-          //TODO trocar o login id pela conexão toda, pois o login pode mudar
-          piCurrentLoginId = current.get_slot(_connectionSlotId) as string;
+          piCurrentConn = current.get_slot(_connectionSlotId) as ConnectionImpl;
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
             "Falha inesperada ao acessar o slot da conexão corrente.", e);
           throw;
         }
-        string loginId;
         lock (_loginLock) {
           if (!_login.HasValue) {
             return null;
           }
-          loginId = _login.Value.id;
         }
-        // TODO testar se a conexão é a mesma ao invés do login
-        if ((piCurrentLoginId == null) || (!loginId.Equals(piCurrentLoginId))) {
+        if (!ReferenceEquals(piCurrentConn, this)) {
           return null;
         }
         try {
@@ -788,7 +784,7 @@ namespace tecgraf.openbus {
               CheckChain(credential.chain, credential.login, loginId, busKey);
               // insere o login no slot para a getCallerChain usar
               try {
-                ri.set_slot(_connectionSlotId, loginId);
+                ri.set_slot(_connectionSlotId, this);
               }
               catch (InvalidSlot e) {
                 Logger.Fatal(
@@ -802,7 +798,7 @@ namespace tecgraf.openbus {
       }
       else {
         try {
-          ri.set_slot(_connectionSlotId, loginId);
+          ri.set_slot(_connectionSlotId, this);
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
