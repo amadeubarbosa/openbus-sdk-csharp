@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Runtime.Remoting;
 using System.Security.Cryptography;
+using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Org.BouncyCastle.Crypto;
 using log4net;
@@ -42,10 +43,17 @@ namespace tecgraf.openbus {
     internal readonly ConnectionManagerImpl Manager;
 
     private volatile int _sessionId;
-    private readonly object _sessionIdLock = new object();
+
+    private readonly ReaderWriterLockSlim _sessionIdLock =
+      new ReaderWriterLockSlim();
+
     private LoginInfo? _login;
     private LoginInfo? _invalidLogin;
-    private readonly object _loginLock = new object();
+    private InvalidLoginCallback _onInvalidLoginCallback;
+
+    private readonly ReaderWriterLockSlim _loginLock =
+      new ReaderWriterLockSlim();
+
     // client caches
     private readonly LRUConcurrentDictionaryCache<EffectiveProfile, string>
       _profile2Login;
@@ -196,11 +204,8 @@ namespace tecgraf.openbus {
       return Acs.busid;
     }
 
-// ReSharper disable UnusedParameter.Local
-    private void ValidateBusId(string actualBusId) {
-// ReSharper restore UnusedParameter.Local
-      // não faz a chamada remota para obter o actualBusId aqui para se manter thread-safe: os pontos que chamam esse método potencialmente estarão dentro de uma área crítica.
-      if (!_busId.Equals(actualBusId)) {
+    private void ValidateBusId() {
+      if (!_busId.Equals(Acs.busid)) {
         throw new BusChangedException();
       }
     }
@@ -208,12 +213,20 @@ namespace tecgraf.openbus {
     private AsymmetricCipherKeyPair InternalKey { get; set; }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
-      if (_login.HasValue) {
+      bool loggedIn;
+      _loginLock.EnterReadLock();
+      try {
+        loggedIn = _login.HasValue;
+      }
+      finally {
+        _loginLock.ExitReadLock();
+      }
+      if (loggedIn) {
         login.cancel();
         throw new AlreadyLoggedInException();
       }
 
-      ValidateBusId(Acs.busid);
+      ValidateBusId();
 
       byte[] encrypted;
       byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -253,9 +266,9 @@ namespace tecgraf.openbus {
     }
 
     private void LocalLogin(LoginInfo login, int lease) {
-      string actualBusId = Acs.busid;
-      lock (_loginLock) {
-        ValidateBusId(actualBusId);
+      ValidateBusId();
+      _loginLock.EnterWriteLock();
+      try {
         if (_login.HasValue) {
           throw new AlreadyLoggedInException();
         }
@@ -263,15 +276,22 @@ namespace tecgraf.openbus {
         _invalidLogin = null;
         StartLeaseRenewer(lease);
       }
+      finally {
+        _loginLock.ExitWriteLock();
+      }
     }
 
     private void LocalLogout() {
-      lock (_loginLock) {
+      _loginLock.EnterWriteLock();
+      try {
         StopLeaseRenewer();
         _login = null;
         _outgoingLogin2Session.Clear();
         _profile2Login.Clear();
         _sessionId2Session.Clear();
+      }
+      finally {
+        _loginLock.ExitWriteLock();
       }
     }
 
@@ -312,24 +332,31 @@ namespace tecgraf.openbus {
 
     public LoginInfo? Login {
       get {
-        lock (_loginLock) {
+        _loginLock.EnterReadLock();
+        try {
           return _login;
+        }
+        finally {
+          _loginLock.ExitReadLock();
         }
       }
     }
 
     public void LoginByPassword(string entity, byte[] password) {
-      lock (_loginLock) {
+      _loginLock.EnterReadLock();
+      try {
         if (_login.HasValue) {
           throw new AlreadyLoggedInException();
         }
+      }
+      finally {
+        _loginLock.ExitReadLock();
       }
 
       try {
         Manager.IgnoreCurrentThread();
 
-        string actualBusId = Acs.busid;
-        ValidateBusId(actualBusId);
+        ValidateBusId();
 
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -362,17 +389,20 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByCertificate(string entity, byte[] privKey) {
-      lock (_loginLock) {
+      _loginLock.EnterReadLock();
+      try {
         if (_login.HasValue) {
           throw new AlreadyLoggedInException();
         }
+      }
+      finally {
+        _loginLock.ExitReadLock();
       }
 
       try {
         Manager.IgnoreCurrentThread();
 
-        string actualBusId = Acs.busid;
-        ValidateBusId(actualBusId);
+        ValidateBusId();
 
         byte[] challenge;
         LoginProcess login = Acs.startLoginByCertificate(entity,
@@ -422,11 +452,15 @@ namespace tecgraf.openbus {
     }
 
     public bool Logout() {
-      lock (_loginLock) {
+      _loginLock.EnterWriteLock();
+      try {
         if (!_login.HasValue) {
           _invalidLogin = null;
           return false;
         }
+      }
+      finally {
+        _loginLock.ExitWriteLock();
       }
 
       Connection prev = Manager.Requester;
@@ -449,7 +483,26 @@ namespace tecgraf.openbus {
       return true;
     }
 
-    public InvalidLoginCallback OnInvalidLogin { get; set; }
+    public InvalidLoginCallback OnInvalidLogin { 
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _onInvalidLoginCallback;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+      set {
+        _loginLock.EnterWriteLock();
+        try {
+          _onInvalidLoginCallback = value;
+        }
+        finally {
+          _loginLock.ExitWriteLock();
+        }
+      }
+    }
 
     public void JoinChain(CallerChain chain) {
       if (chain == null) {
@@ -477,10 +530,14 @@ namespace tecgraf.openbus {
             "Falha inesperada ao acessar o slot da conexão corrente.", e);
           throw;
         }
-        lock (_loginLock) {
+        _loginLock.EnterReadLock();
+        try {
           if (!_login.HasValue) {
             return null;
           }
+        }
+        finally {
+          _loginLock.ExitReadLock();
         }
         if (!ReferenceEquals(piCurrentConn, this)) {
           return null;
@@ -736,7 +793,8 @@ namespace tecgraf.openbus {
       string interceptedOperation = ri.operation;
       string loginId;
       AsymmetricKeyParameter busKey;
-      lock (_loginLock) {
+      _loginLock.EnterReadLock();
+      try {
         if (!_login.HasValue) {
           Logger.Error(String.Format("Esta conexão está deslogada."));
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
@@ -744,6 +802,9 @@ namespace tecgraf.openbus {
         }
         loginId = _login.Value.id;
         busKey = _busKey;
+      }
+      finally {
+        _loginLock.ExitReadLock();
       }
       if (!anyCredential.IsLegacy) {
         if (!anyCredential.Credential.bus.Equals(BusId)) {
@@ -836,7 +897,8 @@ namespace tecgraf.openbus {
                                  ? new LoginInfo(originalLogin.Value.id,
                                                  originalLogin.Value.entity)
                                  : new LoginInfo();
-      lock (_loginLock) {
+      _loginLock.EnterReadLock();
+      try {
         if (_login != null) {
           login = new LoginInfo(_login.Value.id, _login.Value.entity);
           if (!originalLogin.HasValue) {
@@ -848,7 +910,10 @@ namespace tecgraf.openbus {
           invalidLogin = new LoginInfo(_invalidLogin.Value.id,
                                        _invalidLogin.Value.entity);
         }
-        onInvalidLogin = OnInvalidLogin;
+        onInvalidLogin = _onInvalidLoginCallback;
+      }
+      finally {
+        _loginLock.ExitReadLock();
       }
       if (!login.HasValue) {
         if (!invalidLogin.HasValue) {
@@ -865,7 +930,8 @@ namespace tecgraf.openbus {
             catch (Exception e) {
               Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);
             }
-            lock (_loginLock) {
+            _loginLock.EnterWriteLock();
+            try {
               // ReSharper disable ConditionIsAlwaysTrueOrFalse
               if (!_invalidLogin.HasValue ||
                   _invalidLogin.Value.id.Equals(originalInvalid.Value.id)) {
@@ -878,14 +944,21 @@ namespace tecgraf.openbus {
                                                 _invalidLogin.Value.entity);
               }
             }
+            finally {
+              _loginLock.ExitWriteLock();
+            }
           }
         }
       }
-      lock (_loginLock) {
+      _loginLock.EnterReadLock();
+      try {
         if (_login.HasValue) {
           return new LoginInfo(_login.Value.id, _login.Value.entity);
         }
         return null;
+      }
+      finally {
+        _loginLock.ExitReadLock();
       }
     }
 
@@ -982,7 +1055,8 @@ namespace tecgraf.openbus {
 
     private byte[] CreateCredentialReset(string remoteLogin) {
       string loginId;
-      lock (_loginLock) {
+      _loginLock.EnterReadLock();
+      try {
         if (!_login.HasValue) {
           // Este servidor não está logado no barramento
           Logger.Error(
@@ -991,6 +1065,9 @@ namespace tecgraf.openbus {
                                   CompletionStatus.Completed_No);
         }
         loginId = _login.Value.id;
+      }
+      finally {
+        _loginLock.ExitReadLock();
       }
       CredentialReset reset = new CredentialReset {login = loginId};
       byte[] challenge = new byte[SecretSize];
@@ -1037,9 +1114,13 @@ namespace tecgraf.openbus {
 
       // lock para tornar esse trecho atomico
       int sessionId;
-      lock (_sessionIdLock) {
+      _sessionIdLock.EnterWriteLock();
+      try {
         sessionId = _sessionId;
         _sessionId++;
+      }
+      finally {
+        _sessionIdLock.ExitWriteLock();
       }
       ServerSideSession session = new ServerSideSession(sessionId,
                                                         challenge,
