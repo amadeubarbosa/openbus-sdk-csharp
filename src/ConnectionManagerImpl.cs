@@ -68,7 +68,8 @@ namespace tecgraf.openbus {
         bool originator = false;
         if (_legacy) {
           if (props.ContainsKey(LegacyDelegateProperty)) {
-            string temp = props[LegacyDelegateProperty].ToLower();
+            string value = props[LegacyDelegateProperty];
+            string temp = value.ToLower();
             switch (temp) {
               case LegacyDelegateOriginatorOption:
                 originator = true;
@@ -76,11 +77,11 @@ namespace tecgraf.openbus {
               case LegacyDelegateDefault:
                 break;
               default:
-                Logger.Warn(
+                Logger.Error(
                   String.Format(
-                    "Valor inválido para a propriedade {0}. Utilizando o valor padrão: {1}.",
-                    LegacyDelegateProperty, LegacyDelegateDefault));
-                break;
+                    "Valor {0} é inválido para a propriedade {1}.",
+                    value, LegacyDelegateProperty));
+                throw new InvalidPropertyValueException(LegacyDelegateProperty, value);
             }
           }
         }
