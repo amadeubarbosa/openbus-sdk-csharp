@@ -62,15 +62,15 @@ namespace tecgraf.openbus.interop.delegation {
     private void OnTimedEvent(object source, ElapsedEventArgs e) {
       lock (_forwardsOf) {
         foreach (KeyValuePair<string, Forward> keyValuePair in _forwardsOf) {
-          string to = keyValuePair.Key;
+          string user = keyValuePair.Key;
           Forward f = keyValuePair.Value;
-          Console.WriteLine("Checking messages of " + to);
+          Console.WriteLine("Checking messages of " + user);
           _conn.JoinChain(f.Chain);
           PostDesc[] posts = _messenger.receivePosts();
           _conn.ExitChain();
           for (int i = 0; i < posts.Length; i++) {
-            _messenger.post(to,
-                            "forwarded from " + posts[i].from + ": " +
+            _messenger.post(f.To,
+                            "forwarded message by " + posts[i].from + ": " +
                             posts[i].message);
           }
         }

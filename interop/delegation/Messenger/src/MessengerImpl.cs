@@ -36,8 +36,11 @@ namespace tecgraf.openbus.interop.delegation {
 
     public PostDesc[] receivePosts() {
       CallerChain chain = _conn.CallerChain;
-      string owner = chain.Caller.entity;
-      Console.WriteLine("download of messsages by " + owner);
+      string owner = chain.Originators.Length > 0
+                       ? chain.Originators[0].entity
+                       : chain.Caller.entity;
+      Console.WriteLine("download of messsages of " + owner + " by " +
+                        ChainToString(chain));
       List<PostDesc> inbox;
       if (_inboxOf.TryRemove(owner, out inbox)) {
         PostDesc[] descs;
@@ -47,6 +50,14 @@ namespace tecgraf.openbus.interop.delegation {
         return descs;
       }
       return new PostDesc[0];
+    }
+
+    private static string ChainToString(CallerChain chain) {
+      string ret = String.Empty;
+      for (int i = 0; i < chain.Originators.Length; i++) {
+        ret += chain.Originators[i].entity + "->";
+      }
+      return ret + chain.Caller.entity;
     }
   }
 }

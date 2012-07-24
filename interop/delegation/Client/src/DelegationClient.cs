@@ -30,8 +30,8 @@ namespace tecgraf.openbus.interop.delegation {
 
       conn.Logout();
 
-      conn.LoginByPassword("willian", encoding.GetBytes("willian"));
-      _forwarder.setForward("bill");
+      conn.LoginByPassword("bill", encoding.GetBytes("bill"));
+      _forwarder.setForward("willian");
       _broadcaster.subscribe();
       conn.Logout();
 
@@ -60,8 +60,8 @@ namespace tecgraf.openbus.interop.delegation {
         conn.Logout();
       }
 
-      conn.LoginByPassword("willian", encoding.GetBytes("willian"));
-      _forwarder.cancelForward("bill");
+      conn.LoginByPassword("bill", encoding.GetBytes("bill"));
+      _forwarder.cancelForward("willian");
       conn.Logout();
       Console.WriteLine("Pressione qualquer tecla para terminar.");
       Console.Read();
