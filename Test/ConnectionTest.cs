@@ -269,7 +269,7 @@ namespace tecgraf.openbus.Test {
         try {
           conn.LoginByCertificate(_entity, new byte[0]);
         }
-        catch (CorruptedPrivateKeyException) {
+        catch (InvalidPrivateKeyException) {
           failed = true;
         }
         catch (Exception e) {

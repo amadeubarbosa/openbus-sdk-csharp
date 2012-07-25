@@ -83,10 +83,10 @@ namespace tecgraf.openbus.security {
         k = PublicKeyFactory.CreateKey(key);
       }
       catch (NullReferenceException e) {
-        throw new CorruptedPrivateKeyException(e.Message, e);
+        throw new InvalidPrivateKeyException(e.Message, e);
       }
       catch (ArgumentException e) {
-        throw new CorruptedPrivateKeyException(e.Message, e);
+        throw new InvalidPrivateKeyException(e.Message, e);
       }
       return k;
     }
@@ -97,10 +97,10 @@ namespace tecgraf.openbus.security {
         k = PrivateKeyFactory.CreateKey(key);
       }
       catch (NullReferenceException e) {
-        throw new CorruptedPrivateKeyException(e.Message, e);
+        throw new InvalidPrivateKeyException(e.Message, e);
       }
       catch (ArgumentException e) {
-        throw new CorruptedPrivateKeyException(e.Message, e);
+        throw new InvalidPrivateKeyException(e.Message, e);
       }
       return k;
     }
