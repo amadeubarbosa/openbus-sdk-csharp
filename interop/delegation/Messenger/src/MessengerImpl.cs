@@ -22,7 +22,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     public void post(string to, string message) {
       CallerChain chain = _conn.CallerChain;
-      string from = chain.Originators[0].entity;
+      string from = ChainToString(chain);
       Console.WriteLine("post to " + to + " by " + from);
       List<PostDesc> inbox;
       if (!_inboxOf.TryGetValue(to, out inbox)) {
@@ -39,7 +39,7 @@ namespace tecgraf.openbus.interop.delegation {
       string owner = chain.Originators.Length > 0
                        ? chain.Originators[0].entity
                        : chain.Caller.entity;
-      Console.WriteLine("download of messsages of " + owner + " by " +
+      Console.WriteLine("download of messages of " + owner + " by " +
                         ChainToString(chain));
       List<PostDesc> inbox;
       if (_inboxOf.TryRemove(owner, out inbox)) {
@@ -55,7 +55,7 @@ namespace tecgraf.openbus.interop.delegation {
     private static string ChainToString(CallerChain chain) {
       string ret = String.Empty;
       for (int i = 0; i < chain.Originators.Length; i++) {
-        ret += chain.Originators[i].entity + "->";
+        ret += chain.Originators[i].entity + ":";
       }
       return ret + chain.Caller.entity;
     }

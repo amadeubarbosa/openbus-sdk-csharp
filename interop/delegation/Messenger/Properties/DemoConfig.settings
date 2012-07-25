@@ -6,7 +6,7 @@
       <Value Profile="(Default)">ubu</Value>
     </Setting>
     <Setting Name="hostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">11000</Value>
+      <Value Profile="(Default)">9000</Value>
     </Setting>
     <Setting Name="entity" Type="System.String" Scope="User">
       <Value Profile="(Default)">interop_delegation_csharp_messenger</Value>

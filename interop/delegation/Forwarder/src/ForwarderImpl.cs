@@ -22,6 +22,7 @@ namespace tecgraf.openbus.interop.delegation {
       _forwardsOf = new ConcurrentDictionary<string, Forward>();
       Timer = new Timer(5000);
       Timer.Elapsed += OnTimedEvent;
+      Timer.Enabled = true;
     }
 
     #endregion
