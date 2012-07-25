@@ -9,7 +9,7 @@ namespace chainvalidation {
   public class MeetingImpl : MarshalByRefObject, Meeting {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
     private readonly Message _executive;
     private int _hour;
 
@@ -17,8 +17,8 @@ namespace chainvalidation {
 
     #region Constructors
 
-    internal MeetingImpl(Connection conn, Message executive) {
-      _conn = conn;
+    internal MeetingImpl(Connection dispatcherConn, Message executive) {
+      _dispatcherConn = dispatcherConn;
       _executive = executive;
       _hour = 8;
     }
@@ -29,11 +29,11 @@ namespace chainvalidation {
 
     public int bookMeeting() {
       try {
-        string caller = _conn.CallerChain.Caller.entity;
+        string caller = _dispatcherConn.CallerChain.Caller.entity;
         Console.WriteLine(String.Format("Pedido de reunião recebido de {0}.",
                                         caller));
         // faz join na própria caller chain
-        _conn.JoinChain(null);
+        _dispatcherConn.JoinChain(null);
         _executive.sendMessage(
           String.Format("Você tem uma reunião às {0}h com {1}.", _hour, caller));
         int ret = _hour;

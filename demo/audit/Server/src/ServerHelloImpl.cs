@@ -9,14 +9,14 @@ namespace audit {
   public class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
 
     #endregion
 
     #region Constructors
 
-    internal HelloImpl(Connection conn) {
-      _conn = conn;
+    internal HelloImpl(Connection dispatcherConn) {
+      _dispatcherConn = dispatcherConn;
     }
 
     #endregion
@@ -25,7 +25,7 @@ namespace audit {
 
     public void sayHello() {
       try {
-        CallerChain chain = _conn.CallerChain;
+        CallerChain chain = _dispatcherConn.CallerChain;
         string caller = chain.Caller.entity;
         Console.WriteLine(
           String.Format(

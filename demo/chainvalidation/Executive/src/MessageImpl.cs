@@ -9,15 +9,15 @@ namespace chainvalidation {
   public class MessageImpl : MarshalByRefObject, Message {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
     private readonly string _secretaryEntity;
 
     #endregion
 
     #region Constructors
 
-    internal MessageImpl(Connection conn, string secretaryEntity) {
-      _conn = conn;
+    internal MessageImpl(Connection dispatcherConn, string secretaryEntity) {
+      _dispatcherConn = dispatcherConn;
       _secretaryEntity = secretaryEntity;
     }
 
@@ -27,7 +27,7 @@ namespace chainvalidation {
 
     public void sendMessage(string message) {
       try {
-        CallerChain chain = _conn.CallerChain;
+        CallerChain chain = _dispatcherConn.CallerChain;
         if (!chain.Caller.entity.Equals(_secretaryEntity)) {
           Console.WriteLine(
             String.Format(

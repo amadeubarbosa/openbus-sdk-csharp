@@ -9,14 +9,14 @@ namespace hello {
   public class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
 
     #endregion
 
     #region Constructors
 
-    internal HelloImpl(Connection conn) {
-      _conn = conn;
+    internal HelloImpl(Connection dispatcherConn) {
+      _dispatcherConn = dispatcherConn;
     }
 
     #endregion
@@ -26,7 +26,8 @@ namespace hello {
     public void sayHello() {
       try {
         Console.WriteLine(String.Format("Hello {0}!",
-                                        _conn.CallerChain.Caller.entity));
+                                        _dispatcherConn.CallerChain.Caller.
+                                          entity));
       }
       catch (OpenBusException e) {
         Console.WriteLine(

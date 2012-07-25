@@ -9,14 +9,14 @@ namespace chainvalidation {
   public class MessageImpl : MarshalByRefObject, Message {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
 
     #endregion
 
     #region Constructors
 
-    internal MessageImpl(Connection conn) {
-      _conn = conn;
+    internal MessageImpl(Connection dispatcherConn) {
+      _dispatcherConn = dispatcherConn;
     }
 
     #endregion
@@ -26,7 +26,8 @@ namespace chainvalidation {
     public void sendMessage(string message) {
       try {
         Console.WriteLine(String.Format("Mensagem recebida de {0}: {1}",
-                                        _conn.CallerChain.Caller.entity, message));
+                                        _dispatcherConn.CallerChain.Caller.
+                                          entity, message));
       }
       catch (OpenBusException e) {
         Console.WriteLine(

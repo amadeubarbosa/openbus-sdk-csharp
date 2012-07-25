@@ -8,7 +8,7 @@ namespace multiplexing {
   public class GreetingsImpl : MarshalByRefObject, Greetings {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
     private readonly Language _language;
     private readonly Period _period;
 
@@ -28,8 +28,9 @@ namespace multiplexing {
 
     #region Constructors
 
-    internal GreetingsImpl(Connection conn, Language language, Period period) {
-      _conn = conn;
+    internal GreetingsImpl(Connection dispatcherConn, Language language,
+                           Period period) {
+      _dispatcherConn = dispatcherConn;
       _language = language;
       _period = period;
     }
@@ -39,7 +40,7 @@ namespace multiplexing {
     #region Greetings Members
 
     public string sayGreetings() {
-      string caller = _conn.CallerChain.Caller.entity;
+      string caller = _dispatcherConn.CallerChain.Caller.entity;
       switch (_language) {
         case Language.English:
           return EnglishGreetings(caller);

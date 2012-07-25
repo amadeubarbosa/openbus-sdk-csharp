@@ -9,15 +9,15 @@ namespace audit {
   public class HelloImpl : MarshalByRefObject, Hello {
     #region Fields
 
-    private readonly Connection _conn;
+    private readonly Connection _dispatcherConn;
     private readonly Hello _server;
 
     #endregion
 
     #region Constructors
 
-    internal HelloImpl(Connection conn, Hello server) {
-      _conn = conn;
+    internal HelloImpl(Connection dispatcherConn, Hello server) {
+      _dispatcherConn = dispatcherConn;
       _server = server;
     }
 
@@ -27,14 +27,14 @@ namespace audit {
 
     public void sayHello() {
       try {
-        CallerChain chain = _conn.CallerChain;
+        CallerChain chain = _dispatcherConn.CallerChain;
         string caller = chain.Caller.entity;
         Console.WriteLine(
           String.Format(
             "Hello recebido de {0}. Cadeia completa da chamada: {1}", caller,
             ChainToString.ToString(chain)));
         // faz join na própria caller chain
-        _conn.JoinChain(null);
+        _dispatcherConn.JoinChain(null);
         _server.sayHello();
       }
       catch (OpenBusException e) {
