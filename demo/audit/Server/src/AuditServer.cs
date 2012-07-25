@@ -110,7 +110,7 @@ namespace audit {
           "Falha ao tentar realizar o login por certificado no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
         return true;
       }
-      catch (CorruptedPrivateKeyException) {
+      catch (InvalidPrivateKeyException) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: a chave privada está corrompida ou em um formato errado.");
       }
