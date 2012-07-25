@@ -163,8 +163,9 @@ namespace tecgraf.openbus {
       LoginRegistry = lrObjRef as LoginRegistry;
       Offers = orObjRef as OfferRegistry;
       if ((Acs == null) || (LoginRegistry == null) || (Offers == null)) {
-        Logger.Error("O serviço de controle de acesso não foi encontrado.");
-        return;
+        const string msg = "As facetas de controle de acesso e/ou registro de ofertas não foram encontradas.";
+        Logger.Error(msg);
+        throw new InvalidBusAddressException(msg);
       }
 
       if (Legacy) {
