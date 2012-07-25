@@ -14,11 +14,11 @@ namespace tecgraf.openbus.interop.delegation {
     private static Broadcaster _broadcaster;
     private static Forwarder _forwarder;
 
-    private static readonly IDictionary<string, ExpectedResult> Expected =
-      new Dictionary<string, ExpectedResult>();
+    private static readonly IDictionary<string, PostDesc[]> Expected =
+      new Dictionary<string, PostDesc[]>();
 
-    private static readonly IDictionary<string, ExpectedResult> Actual =
-      new Dictionary<string, ExpectedResult>();
+    private static readonly IDictionary<string, PostDesc[]> Actual =
+      new Dictionary<string, PostDesc[]>();
 
     private const string William = "willian";
     private const string Bill = "bill";
@@ -79,10 +79,7 @@ namespace tecgraf.openbus.interop.delegation {
       foreach (string name in names) {
         conn.LoginByPassword(name, encoding.GetBytes(name));
         PostDesc[] descs = _messenger.receivePosts();
-        Actual.Add(name,
-                   descs.Length > 0
-                     ? new ExpectedResult(name, descs[0].@from, descs[0].message)
-                     : null);
+        Actual.Add(name, descs.Length > 0 ? descs : null);
         _broadcaster.unsubscribe();
         conn.Logout();
       }
@@ -97,34 +94,34 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void CheckOutput() {
       Assert.AreEqual(Expected.Count, Actual.Count);
-      foreach (KeyValuePair<string, ExpectedResult> pair in Expected) {
+      foreach (KeyValuePair<string, PostDesc[]> pair in Expected) {
         Assert.IsTrue(Actual.ContainsKey(pair.Key));
         if (pair.Value == null) {
           Assert.IsNull(Actual[pair.Key]);
         }
         else {
-          Assert.AreEqual(pair.Value.User, Actual[pair.Key].User);
-          Assert.AreEqual(pair.Value.From, Actual[pair.Key].From);
-          Assert.AreEqual(pair.Value.Message, Actual[pair.Key].Message);
+          Assert.AreEqual(pair.Value.Length, Actual[pair.Key].Length);
+          // for abaixo depende de ordem estar correta, mas para o exemplo atual funciona.
+          for (int i = 0; i < pair.Value.Length; i++) {
+            Assert.AreEqual(pair.Value[i].from, Actual[pair.Key][i].from);
+            Assert.AreEqual(pair.Value[i].message, Actual[pair.Key][i].message);
+          }
         }
       }
     }
 
     private static void FillExpected() {
-      Expected.Add(William,
-                   new ExpectedResult(William, ForwarderName,
-                                      "forwarded message by " + Steve + ":" +
-                                      BroadcasterName + ": " + TestMessage));
+      PostDesc[] descs = new PostDesc[1];
+      descs[0].from = ForwarderName;
+      descs[0].message = "forwarded message by " + Steve + ":" + BroadcasterName + ": " + TestMessage;
+      Expected.Add(William, descs);
       Expected.Add(Bill, null);
-      Expected.Add(Paul,
-                   new ExpectedResult(Paul, Steve + ":" + BroadcasterName,
-                                      TestMessage));
-      Expected.Add(Mary,
-                   new ExpectedResult(Mary, Steve + ":" + BroadcasterName,
-                                      TestMessage));
-      Expected.Add(Steve,
-                   new ExpectedResult(Steve, Steve + ":" + BroadcasterName,
-                                      TestMessage));
+      descs = new PostDesc[1];
+      descs[0].from = Steve + ":" + BroadcasterName;
+      descs[0].message = TestMessage;
+      Expected.Add(Paul, descs);
+      Expected.Add(Mary, descs);
+      Expected.Add(Steve, descs);
     }
 
     private static void ShowPostsOf(string user, PostDesc[] posts) {
@@ -175,18 +172,6 @@ namespace tecgraf.openbus.interop.delegation {
         if (type == typeof (Forwarder)) {
           _forwarder = obj as Forwarder;
         }
-      }
-    }
-
-    private sealed class ExpectedResult {
-      public string User { get; private set; }
-      public string From { get; private set; }
-      public string Message { get; private set; }
-
-      public ExpectedResult(string user, string from, string message) {
-        User = user;
-        From = from;
-        Message = message;
       }
     }
   }
