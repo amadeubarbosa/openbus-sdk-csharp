@@ -88,6 +88,12 @@ namespace tecgraf.openbus {
 
     private readonly bool _delegateOriginator;
 
+    private const string BusPubKeyError =
+      "Erro ao encriptar as informações de login com a chave pública do barramento.";
+
+    private const string InternalPrivKeyError =
+      "Erro ao decriptar as informações de login com a chave privada interna.";
+
     #endregion
 
     #region Constructors
@@ -163,7 +169,8 @@ namespace tecgraf.openbus {
       LoginRegistry = lrObjRef as LoginRegistry;
       Offers = orObjRef as OfferRegistry;
       if ((Acs == null) || (LoginRegistry == null) || (Offers == null)) {
-        const string msg = "As facetas de controle de acesso e/ou registro de ofertas não foram encontradas.";
+        const string msg =
+          "As facetas de controle de acesso e/ou registro de ofertas não foram encontradas.";
         Logger.Error(msg);
         throw new InvalidBusAddressException(msg);
       }
@@ -238,7 +245,12 @@ namespace tecgraf.openbus {
           {data = secret, hash = SHA256.Create().ComputeHash(pubBytes)};
         encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
       }
-      catch {
+      catch (InvalidCipherTextException) {
+        login.cancel();
+        Logger.Error(BusPubKeyError);
+        throw new ServiceFailure {message = BusPubKeyError};
+      }
+      catch (Exception) {
         login.cancel();
         Logger.Error("Erro na codificação das informações de login.");
         throw;
@@ -354,9 +366,8 @@ namespace tecgraf.openbus {
         _loginLock.ExitReadLock();
       }
 
+      Manager.IgnoreCurrentThread();
       try {
-        Manager.IgnoreCurrentThread();
-
         ValidateBusId();
 
         byte[] encrypted;
@@ -367,12 +378,9 @@ namespace tecgraf.openbus {
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
           encrypted = Crypto.Encrypt(_busKey, _codec.encode_value(info));
         }
-        catch (WrongEncoding) {
-          ServiceFailure e = new ServiceFailure {
-                                                  message =
-                                                    "Erro na codificação da chave pública do barramento."
-                                                };
-          throw e;
+        catch (InvalidCipherTextException) {
+          Logger.Error(BusPubKeyError);
+          throw new ServiceFailure {message = BusPubKeyError};
         }
         catch {
           Logger.Error("Erro na codificação das informações de login.");
@@ -400,9 +408,8 @@ namespace tecgraf.openbus {
         _loginLock.ExitReadLock();
       }
 
+      Manager.IgnoreCurrentThread();
       try {
-        Manager.IgnoreCurrentThread();
-
         ValidateBusId();
 
         byte[] challenge;
@@ -410,7 +417,15 @@ namespace tecgraf.openbus {
                                                          out
                                                            challenge);
         AsymmetricKeyParameter key = Crypto.CreatePrivateKeyFromBytes(privKey);
-        byte[] answer = Crypto.Decrypt(key, challenge);
+        byte[] answer;
+        try {
+          answer = Crypto.Decrypt(key, challenge);
+        }
+        catch (InvalidCipherTextException) {
+          Logger.Error(
+            "Erro ao decodificar o desafio com a chave privada fornecida.");
+          throw new AccessDenied();
+        }
         LoginByObject(login, answer);
       }
       finally {
@@ -427,6 +442,13 @@ namespace tecgraf.openbus {
         login = Acs.startLoginBySharedAuth(out challenge);
         secret = Crypto.Decrypt(InternalKey.Private, challenge);
       }
+      catch (InvalidCipherTextException) {
+        if (login != null) {
+          login.cancel();
+        }
+        Logger.Error(InternalPrivKeyError);
+        throw new ServiceFailure {message = InternalPrivKeyError};
+      }
       catch (Exception) {
         if (login != null) {
           login.cancel();
@@ -440,12 +462,9 @@ namespace tecgraf.openbus {
     }
 
     public void LoginBySharedAuth(LoginProcess login, byte[] secret) {
+      Manager.IgnoreCurrentThread();
       try {
-        Manager.IgnoreCurrentThread();
         LoginByObject(login, secret);
-      }
-      catch (AccessDenied e) {
-        throw new WrongSecretException(e.Message, e);
       }
       finally {
         Manager.UnignoreCurrentThread();
@@ -484,7 +503,7 @@ namespace tecgraf.openbus {
       return true;
     }
 
-    public InvalidLoginCallback OnInvalidLogin { 
+    public InvalidLoginCallback OnInvalidLogin {
       get {
         _loginLock.EnterReadLock();
         try {
@@ -776,8 +795,13 @@ namespace tecgraf.openbus {
       _profile2Login.TryAdd(profile, remoteLogin);
 
       int sessionId = requestReset.session;
-      byte[] secret = Crypto.Decrypt(InternalKey.Private,
-                                     requestReset.challenge);
+      byte[] secret;
+      try {
+        secret = Crypto.Decrypt(InternalKey.Private, requestReset.challenge);
+      }
+      catch (Exception) {
+        throw new ServiceFailure {message = InternalPrivKeyError};
+      }
       _outgoingLogin2Session.TryAdd(remoteLogin,
                                     new ClientSideSession(sessionId, secret,
                                                           remoteLogin));

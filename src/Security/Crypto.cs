@@ -33,15 +33,8 @@ namespace tecgraf.openbus.security {
     public static byte[] Encrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       lock (cipher) {
-        byte[] value;
-        try {
-          cipher.Init(true, key);
-          value = cipher.DoFinal(data);
-        }
-        catch (InvalidCipherTextException e) {
-          throw new WrongPrivateKeyException(e.Message, e);
-        }
-        return value;
+        cipher.Init(true, key);
+        return cipher.DoFinal(data);
       }
     }
 
@@ -54,15 +47,8 @@ namespace tecgraf.openbus.security {
     public static byte[] Decrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       lock (cipher) {
-        byte[] value;
-        try {
-          cipher.Init(false, key);
-          value = cipher.DoFinal(data);
-        }
-        catch (InvalidCipherTextException e) {
-          throw new WrongPrivateKeyException(e.Message, e);
-        }
-        return value;
+        cipher.Init(false, key);
+        return cipher.DoFinal(data);
       }
     }
 

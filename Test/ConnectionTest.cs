@@ -284,7 +284,7 @@ namespace tecgraf.openbus.Test {
         try {
           conn.LoginByCertificate(_entity, _wrongKey);
         }
-        catch (WrongPrivateKeyException) {
+        catch (AccessDenied) {
           failed = true;
         }
         catch (Exception e) {
@@ -338,7 +338,7 @@ namespace tecgraf.openbus.Test {
           login = conn.StartSharedAuth(out secret);
           conn2.LoginBySharedAuth(login, new byte[0]);
         }
-        catch (WrongSecretException) {
+        catch (AccessDenied) {
           failed = true;
         }
         catch (Exception e) {

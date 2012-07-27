@@ -94,8 +94,6 @@
     <Compile Include="src\exceptions\InvalidPropertyValueException.cs" />
     <Compile Include="src\exceptions\OpenBusException.cs" />
     <Compile Include="src\exceptions\OpenBusInternalException.cs" />
-    <Compile Include="src\exceptions\WrongPrivateKeyException.cs" />
-    <Compile Include="src\exceptions\WrongSecretException.cs" />
     <Compile Include="src\interceptors\ClientInterceptor.cs" />
     <Compile Include="src\interceptors\EffectiveProfile.cs" />
     <Compile Include="src\interceptors\InterceptorImpl.cs" />

@@ -58,10 +58,8 @@ namespace tecgraf.openbus {
     /// <param name="privKey"> Chave privada da entidade utilizada na autenticação.</param>
     /// <exception cref="MissingCertificate"> Não há certificado para essa entidade
     /// registrado no barramento indicado.</exception>
-    /// <exception cref="CorruptedPrivateKeyException"> A chave privada fornecida está 
-    /// corrompida.</exception>
-    /// <exception cref="WrongPrivateKeyException"> A chave privada fornecida não 
-    /// corresponde ao certificado da entidade registrado no barramento indicado.</exception>
+    /// <exception cref="AccessDenied"> A chave privada fornecida está 
+    /// incorreta ou corrompida.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
@@ -91,7 +89,7 @@ namespace tecgraf.openbus {
     /// <param name="secret"> Segredo decodificado a partir de outro login.</param>
 	  /// <exception cref="InvalidLoginProcessException"> O LoginProcess informado é inválido,
 	  /// por exemplo depois de ser cancelado ou ter expirado.</exception>
-    /// <exception cref="WrongSecretException"> O segredo não corresponde ao esperado.</exception>
+    /// <exception cref="AccessDenied"> O segredo não corresponde ao esperado.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu o estabelecimento da conexão.</exception>
