@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
+using omg.org.IOP;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.sharedauth.Properties;
@@ -16,41 +18,47 @@ namespace tecgraf.openbus.interop.sharedauth {
   /// <summary>
   /// Cliente do teste de interoperabilidade shared auth.
   /// </summary>
+  [TestClass]
   internal static class HelloClient {
     private static void Main() {
-      string hostName = DemoConfig.Default.hostName;
-      ushort hostPort = DemoConfig.Default.hostPort;
+      string hostName = DemoConfig.Default.busHostName;
+      ushort hostPort = DemoConfig.Default.busHostPort;
 
       ConsoleAppender appender = new ConsoleAppender {
-                                                       Threshold = Level.Info,
+                                                       Threshold = Level.Fatal,
                                                        Layout =
                                                          new SimpleLayout(),
                                                      };
       BasicConfigurator.Configure(appender);
+
+      CodecFactory factory =
+        OrbServices.GetSingleton().resolve_initial_references("CodecFactory") as
+        CodecFactory;
+      if (factory == null) {
+        Assert.Fail("Impossível criar o codificador CDR.");
+      }
+      Codec codec =
+        factory.create_codec(
+          new omg.org.IOP.Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
 
       IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
       Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
-      string userLogin = DemoConfig.Default.userLogin;
-      byte[] userPassword = new ASCIIEncoding().GetBytes(DemoConfig.Default.userPassword);
-      string secretFile = DemoConfig.Default.secretFile;
+      const string userLogin = "interop_sharedauth_csharp_client";
+      byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
       string loginFile = DemoConfig.Default.loginFile;
 
       conn.LoginByPassword(userLogin, userPassword);
       byte[] secret;
       LoginProcess login = conn.StartSharedAuth(out secret);
-
-      using (FileStream fs = new FileStream(secretFile, FileMode.Create)) {
-        using (BinaryWriter w = new BinaryWriter(fs)) {
-          foreach (byte t in secret) {
-            w.Write(t);
-          }
-        }
-      }
+      EncodedSharedAuth sharedAuth = new EncodedSharedAuth {
+                                                             secret = secret,
+                                                             attempt = login as MarshalByRefObject
+                                                           };
       using (StreamWriter outfile = new StreamWriter(loginFile)) {
-        outfile.Write(OrbServices.GetSingleton().object_to_string(login));
+        outfile.Write(codec.encode_value(sharedAuth));
       }
 
       Console.WriteLine("Chamando a faceta Hello por este cliente.");
@@ -73,6 +81,7 @@ namespace tecgraf.openbus.interop.sharedauth {
         Console.WriteLine("Existe mais de um serviço Hello no barramento.");
       }
 
+      bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
           MarshalByRefObject helloObj =
@@ -87,7 +96,8 @@ namespace tecgraf.openbus.interop.sharedauth {
             Console.WriteLine("Faceta encontrada não implementa Hello.");
             continue;
           }
-          hello.sayHello();
+          foundOne = true;
+          Assert.AreEqual(hello.sayHello(), "Hello " + userLogin + "!");
         }
         catch (TRANSIENT) {
           Console.WriteLine(
@@ -100,6 +110,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       }
 
       conn.Logout();
+      Assert.IsTrue(foundOne);
       Console.WriteLine("Fim.");
       Console.WriteLine(
         "Execute o cliente que fará o login por autenticação compartilhada.");

@@ -41,6 +41,7 @@
     <Reference Include="log4net">
       <HintPath>..\..\..\lib\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Openbus, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
@@ -50,6 +51,9 @@
     </Reference>
     <Reference Include="Openbus.Interop.Hello.Idl">
       <HintPath>..\..\..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Openbus.Interop.SharedAuth.Idl">
+      <HintPath>..\..\..\lib\Openbus.Interop.SharedAuth.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
       <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>

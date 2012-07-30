@@ -2,20 +2,11 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.sharedauth.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
-    <Setting Name="userLogin" Type="System.String" Scope="User">
-      <Value Profile="(Default)">tester</Value>
-    </Setting>
-    <Setting Name="userPassword" Type="System.String" Scope="User">
-      <Value Profile="(Default)">tester</Value>
-    </Setting>
-    <Setting Name="hostName" Type="System.String" Scope="User">
+    <Setting Name="busHostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">ubu</Value>
     </Setting>
-    <Setting Name="hostPort" Type="System.UInt16" Scope="User">
+    <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">9000</Value>
-    </Setting>
-    <Setting Name="secretFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">../../../secret.bin</Value>
     </Setting>
     <Setting Name="loginFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">../../../login.bin</Value>
