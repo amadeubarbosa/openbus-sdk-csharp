@@ -25,49 +25,25 @@ namespace tecgraf.openbus.interop.simple.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("tester")]
-        public string userLogin {
-            get {
-                return ((string)(this["userLogin"]));
-            }
-            set {
-                this["userLogin"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("tester")]
-        public string userPassword {
-            get {
-                return ((string)(this["userPassword"]));
-            }
-            set {
-                this["userPassword"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("ubu")]
-        public string hostName {
+        public string busHostName {
             get {
-                return ((string)(this["hostName"]));
+                return ((string)(this["busHostName"]));
             }
             set {
-                this["hostName"] = value;
+                this["busHostName"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("9000")]
-        public ushort hostPort {
+        [global::System.Configuration.DefaultSettingValueAttribute("11000")]
+        public ushort busHostPort {
             get {
-                return ((ushort)(this["hostPort"]));
+                return ((ushort)(this["busHostPort"]));
             }
             set {
-                this["hostPort"] = value;
+                this["busHostPort"] = value;
             }
         }
     }

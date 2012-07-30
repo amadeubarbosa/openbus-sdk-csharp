@@ -22,14 +22,17 @@ namespace tecgraf.openbus.interop.simple {
 
     #region Hello Members
 
-    public void sayHello() {
+    public string sayHello() {
       try {
         LoginInfo caller = _conn.CallerChain.Caller;
-        Console.WriteLine(String.Format("Hello {0}!", caller.entity));
+        string hello = String.Format("Hello {0}!", caller.entity);
+        Console.WriteLine(hello);
+        return hello;
       }
       catch (Exception e) {
         Console.WriteLine(e.StackTrace);
       }
+      return "Hello World!";
     }
 
     #endregion

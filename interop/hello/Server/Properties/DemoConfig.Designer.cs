@@ -26,60 +26,48 @@ namespace tecgraf.openbus.interop.simple.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("ubu")]
-        public string hostName {
+        public string busHostName {
             get {
-                return ((string)(this["hostName"]));
+                return ((string)(this["busHostName"]));
             }
             set {
-                this["hostName"] = value;
+                this["busHostName"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\..\\..\\..\\Resources\\Openbus.config")]
-        public string logFile {
+        public string openbusLogFile {
             get {
-                return ((string)(this["logFile"]));
+                return ((string)(this["openbusLogFile"]));
             }
             set {
-                this["logFile"] = value;
+                this["openbusLogFile"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("interop_hello_csharp")]
-        public string entityName {
+        [global::System.Configuration.DefaultSettingValueAttribute("11000")]
+        public ushort busHostPort {
             get {
-                return ((string)(this["entityName"]));
+                return ((ushort)(this["busHostPort"]));
             }
             set {
-                this["entityName"] = value;
+                this["busHostPort"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("9000")]
-        public ushort hostPort {
+        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\..\\admin\\InteropHello.key")]
+        public string privateKey {
             get {
-                return ((ushort)(this["hostPort"]));
+                return ((string)(this["privateKey"]));
             }
             set {
-                this["hostPort"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("InteropHello.key")]
-        public string xmlPrivateKey {
-            get {
-                return ((string)(this["xmlPrivateKey"]));
-            }
-            set {
-                this["xmlPrivateKey"] = value;
+                this["privateKey"] = value;
             }
         }
     }

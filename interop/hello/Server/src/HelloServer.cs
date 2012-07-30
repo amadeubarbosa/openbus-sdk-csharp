@@ -19,10 +19,10 @@ namespace tecgraf.openbus.interop.simple {
 
     private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
-      string hostName = DemoConfig.Default.hostName;
-      ushort hostPort = DemoConfig.Default.hostPort;
+      string hostName = DemoConfig.Default.busHostName;
+      ushort hostPort = DemoConfig.Default.busHostPort;
 
-      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.logFile);
+      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       IDictionary<string, string> props = new Dictionary<string, string>();
@@ -30,10 +30,8 @@ namespace tecgraf.openbus.interop.simple {
       _conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = _conn;
 
-      string entityName = DemoConfig.Default.entityName;
-      string privaKeyFile = DemoConfig.Default.xmlPrivateKey;
-
-      byte[] privateKey = File.ReadAllBytes(privaKeyFile);
+      const string entityName = "interop_hello_csharp_server";
+      byte[] privateKey = File.ReadAllBytes(DemoConfig.Default.privateKey);
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));

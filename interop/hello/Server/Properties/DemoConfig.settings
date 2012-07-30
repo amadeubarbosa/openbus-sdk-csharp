@@ -2,20 +2,17 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.simple.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
-    <Setting Name="hostName" Type="System.String" Scope="User">
+    <Setting Name="busHostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">ubu</Value>
     </Setting>
-    <Setting Name="logFile" Type="System.String" Scope="User">
+    <Setting Name="openbusLogFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
-    <Setting Name="entityName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">interop_hello_csharp</Value>
+    <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
+      <Value Profile="(Default)">11000</Value>
     </Setting>
-    <Setting Name="hostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">9000</Value>
-    </Setting>
-    <Setting Name="xmlPrivateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">InteropHello.key</Value>
+    <Setting Name="privateKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">..\..\..\admin\InteropHello.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>

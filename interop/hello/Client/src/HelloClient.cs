@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
@@ -14,13 +15,14 @@ namespace tecgraf.openbus.interop.simple {
   /// <summary>
   /// Cliente do teste de interoperabilidade hello.
   /// </summary>
+  [TestClass]
   internal static class HelloClient {
     private static void Main() {
-      string hostName = DemoConfig.Default.hostName;
-      ushort hostPort = DemoConfig.Default.hostPort;
+      string hostName = DemoConfig.Default.busHostName;
+      ushort hostPort = DemoConfig.Default.busHostPort;
 
       ConsoleAppender appender = new ConsoleAppender {
-                                                       Threshold = Level.All,
+                                                       Threshold = Level.Fatal,
                                                        Layout =
                                                          new SimpleLayout(),
                                                      };
@@ -31,14 +33,10 @@ namespace tecgraf.openbus.interop.simple {
       Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
-      string userLogin = DemoConfig.Default.userLogin;
-      byte[] userPassword =
-        new ASCIIEncoding().GetBytes(DemoConfig.Default.userPassword);
+      const string userLogin = "interop_hello_csharp_client";
+      byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
 
       conn.LoginByPassword(userLogin, userPassword);
-
-      Console.WriteLine("Pressione 'Enter' quando o servidor estiver no ar.");
-      Console.ReadLine();
 
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
@@ -59,6 +57,7 @@ namespace tecgraf.openbus.interop.simple {
         Console.WriteLine("Existe mais de um serviço Hello no barramento.");
       }
 
+      bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
           MarshalByRefObject helloObj =
@@ -74,7 +73,8 @@ namespace tecgraf.openbus.interop.simple {
             Console.WriteLine("Faceta encontrada não implementa Hello.");
             continue;
           }
-          hello.sayHello();
+          foundOne = true;
+          Assert.AreEqual(hello.sayHello(), "Hello " + userLogin + "!");
         }
         catch (TRANSIENT) {
           Console.WriteLine(
@@ -82,7 +82,8 @@ namespace tecgraf.openbus.interop.simple {
         }
       }
       conn.Logout();
+      Assert.IsTrue(foundOne);
       Console.WriteLine("Fim.");
-    }
+  }
   }
 }
