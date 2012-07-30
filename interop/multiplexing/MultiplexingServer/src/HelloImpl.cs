@@ -23,22 +23,24 @@ namespace tecgraf.openbus.interop.multiplexing {
 
     #region Hello Members
 
-    public void sayHello() {
+    public string sayHello() {
+      string ret = String.Empty;
       try {
         foreach (Connection conn in _conns) {
           CallerChain callerChain = conn.CallerChain;
           if (callerChain != null) {
-            Console.WriteLine(String.Format("Calling in {0} @ {1}",
-                                            conn.Login.Value.entity, conn.BusId));
             String entity = callerChain.Caller.entity;
-            Console.WriteLine(String.Format("Hello from {0} @ {1}!", entity,
-                                            callerChain.BusId));
+            ret = String.Format("Hello {0}@{1}!", entity,
+                                callerChain.BusId);
+            Console.WriteLine(ret);
+            return ret;
           }
         }
       }
       catch (Exception e) {
         Console.WriteLine(e);
       }
+      return ret;
     }
 
     #endregion

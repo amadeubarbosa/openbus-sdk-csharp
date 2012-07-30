@@ -15,14 +15,11 @@ namespace tecgraf.openbus.interop.multiplexing {
 
     private static void Main() {
       try {
-        string hostName = DemoConfig.Default.hostName;
-        ushort hostPort = DemoConfig.Default.hostPort;
-        ushort hostPort2 = DemoConfig.Default.hostPort2;
-        string entity = DemoConfig.Default.entity + "_conn";
-        Byte[] key = File.ReadAllBytes(DemoConfig.Default.key);
-        string entity1 = entity + "1";
-        string entity2 = entity + "2";
-        string entity3 = entity + "3";
+        string hostName = DemoConfig.Default.busHostName;
+        ushort hostPort = DemoConfig.Default.busHostPort;
+        ushort hostPort2 = DemoConfig.Default.bus2HostPort;
+        const string entity = "interop_multiplexing_csharp_server";
+        Byte[] key = File.ReadAllBytes(DemoConfig.Default.privateKey);
 
         // setup and start the orb
         ConnectionManager manager = ORBInitializer.Manager;
@@ -31,10 +28,12 @@ namespace tecgraf.openbus.interop.multiplexing {
         IDictionary<string, string> props = new Dictionary<string, string>();
         Connection conn1AtBus1 = manager.CreateConnection(hostName, hostPort, props);
         Connection conn2AtBus1 = manager.CreateConnection(hostName, hostPort, props);
+        Connection conn3AtBus1 = manager.CreateConnection(hostName, hostPort, props);
         Connection connAtBus2 = manager.CreateConnection(hostName, hostPort2, props);
 
         Conns.Add(conn1AtBus1);
         Conns.Add(conn2AtBus1);
+        Conns.Add(conn3AtBus1);
         Conns.Add(connAtBus2);
 
         // create service SCS component
@@ -45,9 +44,10 @@ namespace tecgraf.openbus.interop.multiplexing {
         IComponent ic = component.GetIComponent();
 
         // login to the bus
-        conn1AtBus1.LoginByCertificate(entity1, key);
-        conn2AtBus1.LoginByCertificate(entity2, key);
-        connAtBus2.LoginByCertificate(entity3, key);
+        conn1AtBus1.LoginByCertificate(entity, key);
+        conn2AtBus1.LoginByCertificate(entity, key);
+        conn3AtBus1.LoginByCertificate(entity, key);
+        connAtBus2.LoginByCertificate(entity, key);
 
         // set incoming connections
         manager.SetDispatcher(conn1AtBus1);
@@ -58,7 +58,7 @@ namespace tecgraf.openbus.interop.multiplexing {
                                                                GetIComponent());
         Thread thread1 = new Thread(start1.Run);
         thread1.Start();
-        conn1AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity1, key,
+        conn1AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity, key,
                                                                    ic,
                                                                    GetProps());
 
@@ -67,13 +67,22 @@ namespace tecgraf.openbus.interop.multiplexing {
                                                                GetIComponent());
         Thread thread2 = new Thread(start2.Run);
         thread2.Start();
-        conn2AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity2, key,
+        conn2AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity, key,
+                                                                   ic,
+                                                                   GetProps());
+
+        RegisterThreadStart start3 = new RegisterThreadStart(conn3AtBus1,
+                                                             component.
+                                                               GetIComponent());
+        Thread thread3 = new Thread(start3.Run);
+        thread3.Start();
+        conn3AtBus1.OnInvalidLogin = new HelloInvalidLoginCallback(entity, key,
                                                                    ic,
                                                                    GetProps());
 
         manager.Requester = connAtBus2;
         connAtBus2.Offers.registerService(ic, GetProps());
-        connAtBus2.OnInvalidLogin = new HelloInvalidLoginCallback(entity3, key,
+        connAtBus2.OnInvalidLogin = new HelloInvalidLoginCallback(entity, key,
                                                                   ic, GetProps());
 
         Console.WriteLine("Servidor no ar.");

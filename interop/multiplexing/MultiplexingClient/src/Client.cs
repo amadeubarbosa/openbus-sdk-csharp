@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.multiplexing {
+  [TestClass]
   internal static class Client {
     private static void Main() {
       try {
-        string hostName = DemoConfig.Default.hostName;
-        ushort hostPort = DemoConfig.Default.hostPort;
-        ushort hostPort2 = DemoConfig.Default.hostPort2;
+        string hostName = DemoConfig.Default.busHostName;
+        ushort hostPort = DemoConfig.Default.busHostPort;
+        ushort hostPort2 = DemoConfig.Default.bus2HostPort;
         ASCIIEncoding encoding = new ASCIIEncoding();
         ushort[] ports = {hostPort, hostPort2};
 
@@ -22,7 +24,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         foreach (ushort port in ports) {
           Connection conn = manager.CreateConnection(hostName, port, props);
           manager.DefaultConnection = conn;
-          String login = "interop@" + port;
+          const string login = "interop_multiplexing_csharp_client";
           conn.LoginByPassword(login, encoding.GetBytes(login));
 
           ServiceProperty[] serviceProperties = new ServiceProperty[2];
@@ -54,7 +56,9 @@ namespace tecgraf.openbus.interop.multiplexing {
                 Console.WriteLine("Faceta encontrada não implementa Hello.");
                 continue;
               }
-              hello.sayHello();
+              string expected = String.Format("Hello {0}@{1}!", login, conn.BusId);
+              string ret = hello.sayHello();
+              Assert.AreEqual(expected, ret);
             }
             catch (TRANSIENT) {
               Console.WriteLine(
@@ -67,8 +71,6 @@ namespace tecgraf.openbus.interop.multiplexing {
       catch (Exception e) {
         Console.WriteLine(e);
       }
-      Console.WriteLine("Pressione qualquer tecla para finalizar.");
-      Console.ReadKey();
     }
   }
 }
