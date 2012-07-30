@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net.Appender;
 using log4net.Config;
@@ -65,7 +66,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
         new ServiceProperty("openbus.component.interface",
-                            "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+                            Repository.GetRepositoryID(typeof(Hello)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");

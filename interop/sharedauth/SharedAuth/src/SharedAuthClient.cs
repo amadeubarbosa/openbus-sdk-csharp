@@ -65,7 +65,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
         new ServiceProperty("openbus.component.interface",
-                            "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+                            Repository.GetRepositoryID(typeof(Hello)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");

@@ -62,7 +62,7 @@ namespace tecgraf.openbus.interop.simple {
         try {
           MarshalByRefObject helloObj =
             serviceOfferDesc.service_ref.getFacet(
-              "IDL:tecgraf/openbus/interop/simple/Hello:1.0");
+              Repository.GetRepositoryID(typeof (Hello)));
           if (helloObj == null) {
             Console.WriteLine(
               "Não foi possível encontrar uma faceta com esse nome.");
@@ -84,6 +84,6 @@ namespace tecgraf.openbus.interop.simple {
       conn.Logout();
       Assert.IsTrue(foundOne);
       Console.WriteLine("Fim.");
-  }
+    }
   }
 }
