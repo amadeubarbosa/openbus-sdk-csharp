@@ -55,7 +55,7 @@ namespace tecgraf.openbus.interop.delegation {
     private static string ChainToString(CallerChain chain) {
       string ret = String.Empty;
       for (int i = 0; i < chain.Originators.Length; i++) {
-        ret += chain.Originators[i].entity + ":";
+        ret += chain.Originators[i].entity + "->";
       }
       return ret + chain.Caller.entity;
     }

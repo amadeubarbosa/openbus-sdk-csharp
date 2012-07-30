@@ -19,15 +19,15 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void Main() {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
-      string hostName = DemoConfig.Default.hostName;
-      ushort hostPort = DemoConfig.Default.hostPort;
+      string hostName = DemoConfig.Default.busHostName;
+      ushort hostPort = DemoConfig.Default.busHostPort;
 
       IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
       _conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = _conn;
 
-      string entity = DemoConfig.Default.entity;
+      const string entity = "interop_delegation_csharp_broadcaster";
       string privateKey = DemoConfig.Default.privateKey;
       byte[] key = File.ReadAllBytes(privateKey);
 

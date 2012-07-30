@@ -27,23 +27,23 @@ namespace tecgraf.openbus.interop.delegation {
     private const string Steve = "steve";
     private const string TestMessage = "Testing the list!";
 
-    private const string BroadcasterName =
+    private static string _broadcasterName =
       "interop_delegation_csharp_broadcaster";
 
-    private const string ForwarderName =
+    private static string _forwarderName =
       "interop_delegation_csharp_forwarder";
 
     private static void Main() {
-      string hostName = DemoConfig.Default.hostName;
-      ushort hostPort = DemoConfig.Default.hostPort;
+      string hostName = DemoConfig.Default.busHostName;
+      ushort hostPort = DemoConfig.Default.busHostPort;
 
       IDictionary<string, string> props = new Dictionary<string, string>();
       ConnectionManager manager = ORBInitializer.Manager;
       Connection conn = manager.CreateConnection(hostName, hostPort, props);
       manager.DefaultConnection = conn;
 
-      string userLogin = DemoConfig.Default.userLogin;
-      string userPassword = DemoConfig.Default.userPassword;
+      const string userLogin = "interop_delegation_csharp_client";
+      const string userPassword = userLogin;
       ASCIIEncoding encoding = new ASCIIEncoding();
       conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
@@ -112,12 +112,12 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void FillExpected() {
       PostDesc[] descs = new PostDesc[1];
-      descs[0].from = ForwarderName;
-      descs[0].message = "forwarded message by " + Steve + ":" + BroadcasterName + ": " + TestMessage;
+      descs[0].from = _forwarderName;
+      descs[0].message = "forwarded message by " + Steve + "->" + _broadcasterName + ": " + TestMessage;
       Expected.Add(William, descs);
       Expected.Add(Bill, null);
       descs = new PostDesc[1];
-      descs[0].from = Steve + ":" + BroadcasterName;
+      descs[0].from = Steve + "->" + _broadcasterName;
       descs[0].message = TestMessage;
       Expected.Add(Paul, descs);
       Expected.Add(Mary, descs);
@@ -167,10 +167,20 @@ namespace tecgraf.openbus.interop.delegation {
         }
         if (type == typeof (Broadcaster)) {
           _broadcaster = obj as Broadcaster;
+          foreach (ServiceProperty serviceProperty in props) {
+            if (serviceProperty.name.Equals("openbus.offer.entity")) {
+              _broadcasterName = serviceProperty.value;
+            }
+          }
           continue;
         }
         if (type == typeof (Forwarder)) {
           _forwarder = obj as Forwarder;
+          foreach (ServiceProperty serviceProperty in props) {
+            if (serviceProperty.name.Equals("openbus.offer.entity")) {
+              _forwarderName = serviceProperty.value;
+            }
+          }
         }
       }
     }

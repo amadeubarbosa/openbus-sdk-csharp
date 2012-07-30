@@ -2,17 +2,14 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.delegation.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
-    <Setting Name="hostName" Type="System.String" Scope="User">
+    <Setting Name="busHostName" Type="System.String" Scope="User">
       <Value Profile="(Default)">ubu</Value>
     </Setting>
-    <Setting Name="hostPort" Type="System.UInt16" Scope="User">
+    <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">9000</Value>
     </Setting>
-    <Setting Name="entity" Type="System.String" Scope="User">
-      <Value Profile="(Default)">interop_delegation_csharp_broadcaster</Value>
-    </Setting>
     <Setting Name="privateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">InteropDelegation.key</Value>
+      <Value Profile="(Default)">..\..\..\admin\InteropDelegation.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>

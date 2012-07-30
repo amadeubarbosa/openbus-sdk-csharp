@@ -26,42 +26,30 @@ namespace tecgraf.openbus.interop.delegation.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("ubu")]
-        public string hostName {
+        public string busHostName {
             get {
-                return ((string)(this["hostName"]));
+                return ((string)(this["busHostName"]));
             }
             set {
-                this["hostName"] = value;
+                this["busHostName"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("9000")]
-        public ushort hostPort {
+        public ushort busHostPort {
             get {
-                return ((ushort)(this["hostPort"]));
+                return ((ushort)(this["busHostPort"]));
             }
             set {
-                this["hostPort"] = value;
+                this["busHostPort"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("interop_delegation_csharp_broadcaster")]
-        public string entity {
-            get {
-                return ((string)(this["entity"]));
-            }
-            set {
-                this["entity"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("InteropDelegation.key")]
+        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\..\\admin\\InteropDelegation.key")]
         public string privateKey {
             get {
                 return ((string)(this["privateKey"]));
