@@ -4,13 +4,13 @@ Category {
 }
 
 Entity {
-  id = "interop_hello_csharp",
+  id = "interop_hello_csharp_server",
   category = "openbus_interops",
   name = "Teste de Interoperabilidade Hello do SDK CSharp",
 }
 
 Certificate {
-  id = "interop_hello_csharp",
+  id = "interop_hello_csharp_server",
   certificate = "InteropHello.crt",
 }
 
@@ -19,7 +19,7 @@ Interface {
 }
 
 Grant {
-  id = "interop_hello_csharp",
+  id = "interop_hello_csharp_server",
   interfaces = {
 	"IDL:tecgraf/openbus/interop/simple/Hello:1.0",
   }
