@@ -5,24 +5,38 @@ using tecgraf.openbus.interceptors;
 
 namespace tecgraf.openbus {
   /// <summary>
-  /// API de acesso a um barramento OpenBus.
+  /// Inicializador de ORBs para acesso a barramentos OpenBus.
+  ///
+  /// Esse objeto é utilizado para otenção de ORBs CORBA a ser utilizados
+  /// exclusimamente para chamadas através de barramentos OpenBus.
+  /// 
+  /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
+  /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
+  /// também apenas uma instância de ConnectionManager.
+  /// 
+  /// O objetivo original dessa classe seria fornecer um método "InitORB". Como
+  /// o ORB é um singleton, ele é automaticamente inicializado durante a
+  /// primeira obtenção do ConnectionManager e assim o método "InitORB" não é
+  /// público.
   /// </summary>
   public static class ORBInitializer {
     #region Fields
 
-    /// <summary>
-    /// O Orb do IIOP.NET.
-    /// <!-- Atenção: O orb é singleton, com isso só podemos registrar 
-    /// interceptadores uma única vez. -->
-    /// </summary>
     private static readonly OrbServices ORB = OrbServices.GetSingleton();
-    private static bool _initialized;
+    private static volatile bool _initialized;
     private static ConnectionManagerImpl _manager;
 
     #endregion
 
     #region Public Members
 
+    /// <summary>
+    /// Devolve o gerenciador de conexões.
+    /// 
+    /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
+    /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
+    /// também apenas uma instância de ConnectionManager.
+    /// </summary>
     public static ConnectionManager Manager { 
       get {
         if (!_initialized) {
