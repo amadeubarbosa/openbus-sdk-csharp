@@ -1,5 +1,7 @@
 A demo Audit tenta demonstrar como a cadeia de chamadas pode ser usada como meio de auditoria, mantendo um registro de quais foram as entidades que participaram de uma dada chamada. É importante notar que uma entidade não pode criar cadeias novas nem alterar cadeias existentes, mas pode reaproveitar uma cadeia anterior válida que tenha guardado.
 
+Para demonstrar o que foi mencionado acima, o cliente faz uma chamada sayHello no proxy. O proxy, ao atender essa chamada, imprime na saída quem o chamou (cliente) e qual foi a cadeia completa da chamada, que deve conter apenas o cliente. Em seguida, ele se junta a essa cadeia e faz uma chamada sayHello no servidor. O servidor, ao atender essa chamada, imprime na saída quem o chamou (proxy) e qual foi a cadeia completa da chamada, que deve conter o cliente e o proxy.
+
 ------------------------------
 -------- DEPENDÊNCIAS---------
 ------------------------------
