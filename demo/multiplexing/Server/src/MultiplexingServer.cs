@@ -195,7 +195,7 @@ namespace multiplexing {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: a chave privada está corrompida ou em um formato errado.");
       }
-      catch (WrongPrivateKeyException) {
+      catch (AccessDenied) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: a chave privada fornecida não é a esperada.");
       }
