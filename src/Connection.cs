@@ -15,7 +15,7 @@ namespace tecgraf.openbus {
   /// barramentos criando múltiplas conexões para esses barramentos.
   /// 
   /// Para que as conexões possam ser efetivamente utilizadas elas precisam estar
-  /// logadas ao barramento, que pode ser visto como um identificador de acesso.
+  /// autenticadas no barramento, que pode ser visto como um identificador de acesso.
   /// Cada login possui um identificador único e é autenticado em nome de uma
   /// entidade, que pode representar um sistema computacional ou mesmo uma pessoa.
   /// A função da entidade é atribuir responsabilidade às chamadas feitas com
@@ -51,8 +51,8 @@ namespace tecgraf.openbus {
     string BusId { get; }
 
     /// <summary>
-	  /// Informações do login dessa conexão ou 'null' se a conexão não está logada,
-	  /// ou seja, não tem um login válido no barramento.
+	  /// Informações do login dessa conexão ou 'null' se a conexão não está
+	  /// autenticada, ou seja, não tem um login válido no barramento.
     /// </summary>
     LoginInfo? Login { get; }
 
@@ -64,7 +64,7 @@ namespace tecgraf.openbus {
     /// <param name="password">Senha de autenticação da entidade no barramento.</param>
     /// <exception cref="AccessDenied"> A senha fornecida para autenticação da 
     /// entidade não foi validada pelo barramento.</exception>
-    /// <exception cref="AlreadyLoggedInException">A conexão já está logada.</exception>
+    /// <exception cref="AlreadyLoggedInException">A conexão já está autenticada.</exception>
     /// <exception cref="BusChangedException"> O identificador do barramento mudou. Uma nova conexão
     /// deve ser criada.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do
@@ -82,7 +82,7 @@ namespace tecgraf.openbus {
 	  /// a ser utilizada na autenticação.</param>
     /// <exception cref="AccessDenied"> A chave privada fornecida não corresponde ao
     /// certificado da entidade registrado no barramento indicado.</exception>
-    /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
+    /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>
     /// <exception cref="BusChangedException"> O identificador do barramento mudou. Uma nova conexão
     /// deve ser criada.</exception>
     /// <exception cref="InvalidPrivateKeyException"> A chave privada fornecida não é válida.</exception>
@@ -97,7 +97,7 @@ namespace tecgraf.openbus {
     /// 
     /// A autenticação compartilhada permite criar um novo login compartilhando a
     /// mesma autenticação do login atual da conexão. Portanto essa operação só
-    /// pode ser chamada enquanto a conexão estiver logada, caso contrário a
+    /// pode ser chamada enquanto a conexão estiver autenticada, caso contrário a
     /// exceção de sistema CORBA::NO_PERMISSION{NoLogin} é lançada. As informações
     /// fornecidas por essa operação devem ser passadas para a operação
     /// 'loginBySharedAuth' para conclusão do processo de login por autenticação
@@ -115,13 +115,13 @@ namespace tecgraf.openbus {
 	  /// Efetua login de uma entidade usando autenticação compartilhada.
 	  /// 
 	  /// A autenticação compartilhada é feita a partir de informações obtidas a
-	  /// através da operação 'StartSharedAuth' de uma conexão logada.
+    /// através da operação 'StartSharedAuth' de uma conexão autenticada.
     /// </summary>
     /// <param name="login"> Objeto que represeta o processo de login iniciado.</param>
     /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
     /// <exception cref="AccessDenied"> O segredo fornecido não corresponde ao esperado
     /// pelo barramento.</exception>
-    /// <exception cref="AlreadyLoggedInException"> A conexão já está logada.</exception>
+    /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>
     /// <exception cref="BusChangedException"> O identificador do barramento mudou. Uma nova conexão
     /// deve ser criada.</exception>
     /// <exception cref="InvalidLoginProcessException"> O LoginProcess informado é inválido, por
@@ -133,15 +133,15 @@ namespace tecgraf.openbus {
     /// <summary>
 	  /// Efetua logout da conexão, tornando o login atual inválido.
 	  /// 
-	  /// Após a chamada a essa operação a conexão fica deslogada, implicando que
+    /// Após a chamada a essa operação a conexão fica desautenticada, implicando que
 	  /// qualquer chamada realizada pelo ORB usando essa conexão resultará numa
 	  /// exceção de sistema 'CORBA::NO_PERMISSION{NoLogin}' e chamadas recebidas
 	  /// por esse ORB serão respondidas com a exceção
 	  /// 'CORBA::NO_PERMISSION{UnknownBus}' indicando que não foi possível
-	  /// validar a chamada pois a conexão está temporariamente deslogada.
+    /// validar a chamada pois a conexão está temporariamente desautenticada.
     /// </summary>
     /// <returns>Verdadeiro se o processo de logout for concluído com êxito e 
-    /// falso se a conexão já estiver deslogada (login inválido).</returns>
+    /// falso se a conexão já estiver desautenticada (login inválido).</returns>
     bool Logout();
 
     /// <summary>
