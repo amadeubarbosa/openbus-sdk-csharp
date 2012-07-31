@@ -58,9 +58,7 @@ namespace tecgraf.openbus.interop.sharedauth {
                                                              secret = secret,
                                                              attempt = login as MarshalByRefObject
                                                            };
-      using (StreamWriter outfile = new StreamWriter(loginFile)) {
-        outfile.Write(codec.encode_value(sharedAuth));
-      }
+      File.WriteAllBytes(loginFile, codec.encode_value(sharedAuth));
 
       Console.WriteLine("Chamando a faceta Hello por este cliente.");
       // propriedades geradas automaticamente

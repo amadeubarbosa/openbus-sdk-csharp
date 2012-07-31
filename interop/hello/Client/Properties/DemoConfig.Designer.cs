@@ -37,7 +37,7 @@ namespace tecgraf.openbus.interop.simple.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("11000")]
+        [global::System.Configuration.DefaultSettingValueAttribute("9000")]
         public ushort busHostPort {
             get {
                 return ((ushort)(this["busHostPort"]));
