@@ -6,9 +6,10 @@ Para demonstrar o que foi mencionado acima, o cliente faz uma chamada sayHello n
 -------- DEPENDÊNCIAS---------
 ------------------------------
 
-As dependências de software já são fornecidas compiladas em conjunto com a demo.
+As dependências de software são fornecidas já compiladas, em conjunto com a demo.
 
 Servidor:
+.NET 4.0
 IIOPChannel.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
@@ -18,6 +19,7 @@ Scs.Core.dll
 AuditUtils.dll
 
 Proxy:
+.NET 4.0
 IIOPChannel.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
@@ -27,6 +29,7 @@ Scs.Core.dll
 AuditUtils.dll
 
 Cliente:
+.NET 4.0
 IIOPChannel.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
