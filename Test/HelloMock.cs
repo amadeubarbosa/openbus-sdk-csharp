@@ -9,7 +9,7 @@ namespace tecgraf.openbus.test {
       _conn = conn;
     }
 
-    public void sayHello() {
+    public string sayHello() {
       CallerChain chain = _conn.CallerChain;
       if (chain == null) {
         // cliente deve receber um CORBA::Unknown
@@ -21,6 +21,7 @@ namespace tecgraf.openbus.test {
         // cliente deve receber um CORBA::Unknown
         throw new InvalidOperationException();
       }
+      return "";
     }
   }
 }
