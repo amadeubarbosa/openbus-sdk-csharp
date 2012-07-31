@@ -16,13 +16,17 @@ namespace Client {
   internal static class IndependentClockClient {
     private static Connection _conn;
     private static Clock _serverClock;
+    private static volatile bool _canChangeClock = true;
+    private static readonly Object Lock = new object();
     private static int _waitTime;
     private static string _host;
     private static ushort _port;
     private static string _entity;
     private static byte[] _password;
     private static string _serverEntity;
-    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
+
+    private static readonly IDictionary<string, string> Props =
+      new Dictionary<string, string>();
 
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
@@ -40,7 +44,18 @@ namespace Client {
 
       // Realiza trabalho independente do OpenBus
       while (true) {
-        if (_serverClock == null) {
+        bool hasServer = false;
+        // verifica se tem servidor de forma atômica e proíbe a outra thread de alterar a variável _serverClock até que esta thread termine de usar
+        // não podemos simplesmente colocar tudo dentro do lock, pois não devemos realizar chamadas remotas dentro de locks
+        lock (Lock) {
+          _canChangeClock = false;
+          if (_serverClock != null) {
+            hasServer = true;
+          }
+        }
+        if (!hasServer) {
+          // não vai usar _serverClock, então libera a outra thread para modificá-la
+          _canChangeClock = true;
           Console.WriteLine(String.Format("Hora local: {0:HH:mm:ss}",
                                           DateTime.Now));
         }
@@ -48,6 +63,8 @@ namespace Client {
           try {
             // utiliza o serviço
             long ticks = _serverClock.getTimeInTicks();
+            // não vai mais usar _serverClock, então libera a outra thread para modificá-la
+            _canChangeClock = true;
             DateTime serverTime = new DateTime(ticks);
             Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
                                             serverTime));
@@ -56,7 +73,13 @@ namespace Client {
             // Se ocorrer algum erro não esperado e um processo de conexão não
             // estiver em andamento, tenta refazer o processo de conexão
             if (t.ThreadState == ThreadState.Stopped) {
-              _serverClock = null;
+              lock (_serverClock) {
+                // não preciso checar _canChangeClock aqui pois a outra thread está parada
+                _serverClock = null;
+                // não vai mais usar _serverClock, então libera a outra thread para modificá-la
+                _canChangeClock = true;
+              }
+              t = new Thread(ts) {IsBackground = true};
               t.Start();
             }
             continue;
@@ -103,10 +126,24 @@ namespace Client {
         ServiceOfferDesc[] offers = Find(properties);
 
         // analiza as ofertas encontradas
-        _serverClock = GetClock(offers);
-        if (_serverClock != null) {
-          // obteve o servidor clock, termina a thread
-          break;
+        Clock server = GetClock(offers);
+        lock (Lock) {
+          bool ok = false;
+          do {
+            if (_canChangeClock) {
+              _serverClock = server;
+              if (_serverClock != null) {
+                // obteve o servidor clock, termina a thread
+                ok = true;
+                break;
+              }
+            }
+            // força a troca de contexto
+            Thread.Sleep(10);
+          } while (!_canChangeClock);
+          if (ok) {
+            break;
+          }
         }
         // se chegou aqui aconteceu algum erro, então volta pro começo
       }
