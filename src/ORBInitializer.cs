@@ -7,8 +7,8 @@ namespace tecgraf.openbus {
   /// <summary>
   /// Inicializador de ORBs para acesso a barramentos OpenBus.
   ///
-  /// Esse objeto é utilizado para otenção de ORBs CORBA a ser utilizados
-  /// exclusimamente para chamadas através de barramentos OpenBus.
+  /// Esse objeto é utilizado para a obtenção de ORBs CORBA a serem utilizados
+  /// exclusivamente para chamadas através de barramentos OpenBus.
   /// 
   /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
