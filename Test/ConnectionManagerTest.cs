@@ -23,7 +23,9 @@ namespace tecgraf.openbus.Test {
     private static string _login;
     private static byte[] _password;
     private static ConnectionManager _manager;
-    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
+
+    private static readonly IDictionary<string, string> Props =
+      new Dictionary<string, string>();
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -126,6 +128,49 @@ namespace tecgraf.openbus.Test {
         finally {
           Assert.IsNull(invalid);
         }
+        // cria conexão com propriedade legacy.delegate com valor inválido
+        // essa propriedade só funciona se legacy.disable for false, o que é o padrão
+        IDictionary<string, string> props = new Dictionary<string, string>();
+        const string delegateProp = "legacy.delegate";
+        props.Add(delegateProp, String.Empty);
+        bool failed = false;
+        try {
+          _manager.CreateConnection(_hostName, _hostPort,
+                                           props);
+        }
+        catch (InvalidPropertyValueException e) {
+          Assert.AreEqual(e.Property, delegateProp);
+          Assert.AreEqual(e.Value, String.Empty);
+          failed = true;
+        }
+        finally {
+          Assert.IsTrue(failed);
+        }
+        // cria conexão com propriedade legacy.delegate com valores válidos
+        props[delegateProp] = "caller";
+        Assert.IsNotNull(_manager.CreateConnection(_hostName, _hostPort, props));
+        props[delegateProp] = "originator";
+        Assert.IsNotNull(_manager.CreateConnection(_hostName, _hostPort, props));
+        // cria conexão com propriedade legacy.disable com valor inválido
+        const string legacyDisableProp = "legacy.disable";
+        props.Add(legacyDisableProp, String.Empty);
+        failed = false;
+        try {
+          _manager.CreateConnection(_hostName, _hostPort, props);
+        }
+        catch (InvalidPropertyValueException e) {
+          Assert.AreEqual(e.Property, legacyDisableProp);
+          Assert.AreEqual(e.Value, String.Empty);
+          failed = true;
+        }
+        finally {
+          Assert.IsTrue(failed);
+        }
+        // cria conexão com propriedade legacy.disable true e legacy.delegate inválido
+        // tem que funcionar pois legacy.delegate deve ser ignorado
+        props[legacyDisableProp] = "true";
+        props[delegateProp] = String.Empty;
+        Assert.IsNotNull(_manager.CreateConnection(_hostName, _hostPort, props));
       }
     }
 

@@ -21,7 +21,6 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      const bool legacy = true;
       int credentialSlotId = info.allocate_slot_id();
       int currentThreadSlotId = info.allocate_slot_id();
       int connectionSlotId = info.allocate_slot_id();
@@ -30,7 +29,7 @@ namespace tecgraf.openbus.interceptors {
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
       Manager = new ConnectionManagerImpl(currentThreadSlotId,
-                                          ignoreThreadSlotId, legacy);
+                                          ignoreThreadSlotId);
 
       Codec codec = info.codec_factory.create_codec(
         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
@@ -39,14 +38,12 @@ namespace tecgraf.openbus.interceptors {
       ServerInterceptor.Instance.ConnectionSlotId = connectionSlotId;
       ServerInterceptor.Instance.ReceivingConnectionSlotId = receivingSlotId;
       ServerInterceptor.Instance.Manager = Manager;
-      ServerInterceptor.Instance.Legacy = legacy;
       ClientInterceptor.Instance.Codec = codec;
       ClientInterceptor.Instance.CredentialSlotId = credentialSlotId;
       ClientInterceptor.Instance.ConnectionSlotId = connectionSlotId;
       ClientInterceptor.Instance.JoinedChainSlotId = joinedChainSlotId;
       ClientInterceptor.Instance.LoginSlotId = loginSlotId;
       ClientInterceptor.Instance.Manager = Manager;
-      ClientInterceptor.Instance.Legacy = legacy;
 
       info.add_server_request_interceptor(ServerInterceptor.Instance);
       Logger.Info("Interceptador servidor registrado.");

@@ -29,8 +29,6 @@ namespace tecgraf.openbus.interceptors {
 
     internal ConnectionManagerImpl Manager;
 
-    internal bool Legacy;
-
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
     /// para transporte de credenciais em requisições de serviço.

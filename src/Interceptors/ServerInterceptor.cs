@@ -48,7 +48,7 @@ namespace tecgraf.openbus.interceptors {
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
       bool legacyContext;
-      ServiceContext serviceContext = GetContextFromRequestInfo(ri,
+      ServiceContext serviceContext = GetContextFromRequestInfo(ri, true,
                                                                 out
                                                                   legacyContext);
       AnyCredential anyCredential = UnmarshalCredential(serviceContext,
@@ -167,9 +167,17 @@ namespace tecgraf.openbus.interceptors {
           // pela implementação do IIOP.Net, o ServerRequestInfo da send_exception é
           // diferente do existente na receive_request. Assim, não podemos passar a 
           // credencial por um slot e então precisamos fazer o unmarshal novamente.
+          ConnectionImpl conn =
+            ri.get_slot(ReceivingConnectionSlotId) as ConnectionImpl;
+          if (conn == null) {
+            Logger.Error(
+              "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
+            throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                    CompletionStatus.Completed_No);
+          }
           bool legacyContext;
           ServiceContext serviceContext =
-            GetContextFromRequestInfo(ri, out legacyContext);
+            GetContextFromRequestInfo(ri, conn.Legacy, out legacyContext);
           // credencial é inválida
           AnyCredential anyCredential = UnmarshalCredential(serviceContext,
                                                             legacyContext);
@@ -177,24 +185,13 @@ namespace tecgraf.openbus.interceptors {
             "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
             interceptedOperation, anyCredential.IsLegacy));
 
-          try {
-            ConnectionImpl conn =
-              ri.get_slot(ReceivingConnectionSlotId) as ConnectionImpl;
-            if (conn != null) {
-              conn.SendException(ri, anyCredential);
-              return;
-            }
-          }
-          catch (InvalidSlot e) {
-            Logger.Fatal(
-              "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.",
-              e);
-            throw;
-          }
-          Logger.Error(
-            "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
-          throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
+          conn.SendException(ri, anyCredential);
+        }
+        catch (InvalidSlot e) {
+          Logger.Fatal(
+            "Falha ao acessar o slot da conexão de recebimento para enviar uma exceção.",
+            e);
+          throw;
         }
         finally {
           ClearRequest(ri);
@@ -254,7 +251,7 @@ namespace tecgraf.openbus.interceptors {
       Manager.SetConnectionByThreadId(id, null);
     }
 
-    private ServiceContext GetContextFromRequestInfo(RequestInfo ri,
+    private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,
                                                      out bool legacyContext) {
       legacyContext = false;
       String interceptedOperation = ri.operation;
@@ -263,7 +260,7 @@ namespace tecgraf.openbus.interceptors {
         serviceContext = ri.get_request_service_context(ContextId);
       }
       catch (BAD_PARAM) {
-        if (Legacy) {
+        if (legacy) {
           return GetLegacyContextFromRequestInfo(ri, out legacyContext);
         }
         Logger.Error(String.Format(

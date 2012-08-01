@@ -28,9 +28,9 @@ namespace tecgraf.openbus {
 
     internal readonly LoginCache LoginsCache;
 
-    private readonly bool _legacy;
-
-    private const string LegacyDelegateProperty = "legacydelegate";
+    private const string LegacyDisableProperty = "legacy.disable";
+    private const bool LegacyDisableDefault = false;
+    private const string LegacyDelegateProperty = "legacy.delegate";
     private const string LegacyDelegateDefault = "caller";
     private const string LegacyDelegateOriginatorOption = "originator";
 
@@ -44,14 +44,12 @@ namespace tecgraf.openbus {
 
     #region ConnectionManager methods
 
-    public ConnectionManagerImpl(int currentThreadSlotId, int ignoreThreadSlotId,
-                                 bool legacySupport) {
+    public ConnectionManagerImpl(int currentThreadSlotId, int ignoreThreadSlotId) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
       LoginsCache = new LoginCache();
       CurrentThreadSlotId = currentThreadSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
-      _legacy = legacySupport;
       _orb = OrbServices.GetSingleton();
     }
 
@@ -65,8 +63,19 @@ namespace tecgraf.openbus {
                                        IDictionary<string, string> props) {
       IgnoreCurrentThread();
       try {
+        bool legacyDisable = LegacyDisableDefault;
+        if (props.ContainsKey(LegacyDisableProperty)) {
+          string value = props[LegacyDisableProperty];
+          if (!Boolean.TryParse(value, out legacyDisable)) {
+            Logger.Error(
+              String.Format("Valor {0} é inválido para a propriedade {1}.",
+                            value, LegacyDisableProperty));
+            throw new InvalidPropertyValueException(LegacyDisableProperty, value);
+          }
+          LogPropertyChanged(LegacyDisableProperty, legacyDisable.ToString());
+        }
         bool originator = false;
-        if (_legacy) {
+        if (!legacyDisable) {
           if (props.ContainsKey(LegacyDelegateProperty)) {
             string value = props[LegacyDelegateProperty];
             string temp = value.ToLower();
@@ -81,12 +90,14 @@ namespace tecgraf.openbus {
                   String.Format(
                     "Valor {0} é inválido para a propriedade {1}.",
                     value, LegacyDelegateProperty));
-                throw new InvalidPropertyValueException(LegacyDelegateProperty, value);
+                throw new InvalidPropertyValueException(LegacyDelegateProperty,
+                                                        value);
             }
+            LogPropertyChanged(LegacyDelegateProperty, temp);
           }
         }
-        ConnectionImpl conn = new ConnectionImpl(host, port, this, _legacy,
-                                                 originator);
+        ConnectionImpl conn = new ConnectionImpl(host, port, this,
+                                                 !legacyDisable, originator);
         conn.SetLoginsCache(LoginsCache);
         return conn;
       }
@@ -226,6 +237,10 @@ namespace tecgraf.openbus {
           "Falha inesperada ao acessar o slot de interceptação ignorada.", e);
         throw;
       }
+    }
+
+    private void LogPropertyChanged(string prop, string value) {
+      Logger.Info(String.Format("{0} property set to value {1}.", prop, value));
     }
   }
 }

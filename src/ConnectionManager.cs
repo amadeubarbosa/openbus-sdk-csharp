@@ -44,6 +44,8 @@ namespace tecgraf.openbus {
 	  /// configurações sobre a forma que as chamadas realizadas ou validadas
 	  /// com essa conexão são feitas. A seguir são listadas as propriedades
 	  /// válidas:
+	  /// - legacy.disable: desabilita o suporte a chamadas usando protocolo
+	  ///   OpenBus 1.5. Por padrão o suporte está habilitado.
 	  /// - legacy.delegate: indica como é preenchido o campo 'delegate' das
 	  ///   credenciais enviadas em chamadas usando protocolo OpenBus 1.5. Há
 	  ///   duas formas possíveis (o padrão é 'caller'):
