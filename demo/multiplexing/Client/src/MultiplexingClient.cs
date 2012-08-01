@@ -163,6 +163,10 @@ namespace multiplexing {
           "Erro ao tentar realizar o login por senha no barramento: a senha fornecida não foi validada para a entidade " +
           login + ".");
       }
+      catch (BusChangedException) {
+        Console.WriteLine(
+          "Erro ao tentar realizar o login por senha no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
+      }
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");

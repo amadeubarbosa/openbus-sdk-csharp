@@ -229,6 +229,11 @@ namespace Client {
           "Erro ao tentar realizar o login por senha no barramento: a senha fornecida não foi validada para a entidade " +
           _entity + ".");
       }
+      catch (BusChangedException) {
+        Console.WriteLine(
+          "Erro ao tentar realizar o login por senha no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
+        _conn = null;
+      }
       catch (ServiceFailure e) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");

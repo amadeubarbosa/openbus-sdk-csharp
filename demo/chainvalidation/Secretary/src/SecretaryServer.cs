@@ -190,6 +190,10 @@ namespace chainvalidation {
           "Falha ao tentar realizar o login por certificado no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
         return true;
       }
+      catch (BusChangedException) {
+        Console.WriteLine(
+          "Erro ao tentar realizar o login por certificado no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
+      }
       catch (InvalidPrivateKeyException) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: a chave privada está corrompida ou em um formato errado.");

@@ -116,6 +116,10 @@ namespace sharedauth {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: a chave privada fornecida não é a esperada.");
       }
+      catch (BusChangedException) {
+        Console.WriteLine(
+          "Erro ao tentar realizar o login por certificado no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
+      }
       catch (MissingCertificate) {
         Console.WriteLine(
           "Erro ao tentar realizar o login por certificado no barramento: o barramento não tem certificado registrado para a entidade " +
