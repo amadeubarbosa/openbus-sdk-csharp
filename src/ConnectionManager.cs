@@ -23,7 +23,7 @@ namespace tecgraf.openbus {
   /// </summary>
   public interface ConnectionManager {
     /// <summary>
-    /// ORB utilizado pelo ConnectionManager. Como no IIOP.Net atualmente o ORB
+    /// ORB associado ao ConnectionManager. Como no IIOP.Net atualmente o ORB
     /// é um singleton, a instância será sempre a mesma e pode ser obtida de
     /// outras formas.
     /// </summary>
@@ -46,7 +46,7 @@ namespace tecgraf.openbus {
 	  /// válidas:
 	  /// - legacy.delegate: indica como é preenchido o campo 'delegate' das
 	  ///   credenciais enviadas em chamadas usando protocolo OpenBus 1.5. Há
-	  ///   duas formas possíveis (o default é 'caller'):
+	  ///   duas formas possíveis (o padrão é 'caller'):
 	  ///   - caller: o campo 'delegate' é preenchido sempre com a entidade
 	  ///     do campo 'caller' da cadeia de chamadas.
 	  ///   - originator: o campo 'delegate' é preenchido sempre com a
