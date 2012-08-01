@@ -1,0 +1,178 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using omg.org.CORBA;
+using omg.org.IOP;
+using tecgraf.openbus;
+using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
+
+namespace sharedauth {
+  /// <summary>
+  /// Cliente da demo hello.
+  /// </summary>
+  internal static class HelloClient {
+    private static void Main(String[] args) {
+      // Obtém dados através dos argumentos
+      string host = args[0];
+      ushort port = Convert.ToUInt16(args[1]);
+      string entity = args[2];
+      byte[] password = new ASCIIEncoding().GetBytes(args[3]);
+      string helloEntity = args[4];
+      string loginFile = args[5];
+
+      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
+      // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionManager manager = ORBInitializer.Manager;
+      Connection conn = manager.CreateConnection(host, port, props);
+      manager.DefaultConnection = conn;
+
+      // Faz o login
+      if (!Login(entity, password, conn)) {
+        Exit(1);
+      }
+
+      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
+      // propriedade gerada automaticamente
+      ServiceProperty autoProp = new ServiceProperty("openbus.offer.entity",
+                                                     helloEntity);
+      // propriedade definida pelo serviço hello
+      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
+      ServiceProperty[] properties = new[] {prop, autoProp};
+      ServiceOfferDesc[] offers = Find(properties, conn);
+
+      // analiza as ofertas encontradas
+      Hello hello = GetHello(offers);
+      if (hello == null) {
+        conn.Logout();
+        Exit(1);
+      }
+      else {
+        // utiliza o serviço
+        hello.sayHello();
+      }
+
+      // Obtém os dados para uma autenticação compartilhada
+      CodecFactory factory =
+        OrbServices.GetSingleton().resolve_initial_references("CodecFactory") as
+        CodecFactory;
+      if (factory != null) {
+        Codec codec =
+          factory.create_codec(
+            new omg.org.IOP.Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
+        byte[] secret;
+        LoginProcess login = conn.StartSharedAuth(out secret);
+        // Escreve os dados da autenticação compartilhada em um arquivo
+        EncodedSharedAuth sharedAuth = new EncodedSharedAuth {
+          secret = secret,
+          attempt = login as MarshalByRefObject
+        };
+        File.WriteAllBytes(loginFile, codec.encode_value(sharedAuth));
+      }
+      else {
+        Exit(1);
+      }
+
+      conn.Logout();
+      Console.WriteLine("Fim.");
+      Console.ReadLine();
+    }
+
+    private static Hello GetHello(ICollection<ServiceOfferDesc> offers) {
+      if (offers.Count < 1) {
+        Console.WriteLine("O serviço Hello não se encontra no barramento.");
+        return null;
+      }
+
+      if (offers.Count > 1) {
+        Console.WriteLine(
+          "Existe mais de um serviço Hello no barramento. Tentaremos encontrar uma funcional.");
+      }
+      foreach (ServiceOfferDesc serviceOfferDesc in offers) {
+        Console.WriteLine("Testando uma das ofertas recebidas...");
+        try {
+          MarshalByRefObject helloObj =
+            serviceOfferDesc.service_ref.getFacet(
+              "IDL:Hello:1.0");
+          if (helloObj == null) {
+            Console.WriteLine(
+              "Não foi possível encontrar uma faceta Hello na oferta.");
+            continue;
+          }
+          Hello hello = helloObj as Hello;
+          if (hello == null) {
+            Console.WriteLine(
+              "Faceta encontrada na oferta não implementa Hello.");
+            continue;
+          }
+          Console.WriteLine(
+            "Foi encontrada uma oferta com um serviço funcional.");
+          return hello;
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(
+            "A oferta é de um cliente inativo. Tentando a próxima.");
+        }
+      }
+      Console.WriteLine(
+        "Não foi encontrada uma oferta com um serviço funcional.");
+      return null;
+    }
+
+    private static ServiceOfferDesc[] Find(ServiceProperty[] properties,
+                                           Connection conn) {
+      try {
+        return conn.Offers.findServices(properties);
+      }
+      catch (ServiceFailure e) {
+        Console.WriteLine(
+          "Erro ao tentar realizar a busca por um serviço no barramento: Falha no serviço remoto. Causa:");
+        Console.WriteLine(e);
+      }
+      catch (Exception e) {
+        Console.WriteLine(
+          "Erro inesperado ao tentar realizar a busca por um serviço no barramento:");
+        Console.WriteLine(e);
+      }
+      return null;
+    }
+
+    private static bool Login(string login, byte[] password, Connection conn) {
+      try {
+        conn.LoginByPassword(login, password);
+        return true;
+      }
+      catch (AlreadyLoggedInException) {
+        Console.WriteLine(
+          "Falha ao tentar realizar o login por senha no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
+        return true;
+      }
+      catch (AccessDenied) {
+        Console.WriteLine(
+          "Erro ao tentar realizar o login por senha no barramento: a senha fornecida não foi validada para a entidade " +
+          login + ".");
+      }
+      catch (ServiceFailure e) {
+        Console.WriteLine(
+          "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");
+        Console.WriteLine(e);
+      }
+      catch (Exception e) {
+        Console.WriteLine(
+          "Erro inesperado ao tentar realizar o login por senha no barramento:");
+        Console.WriteLine(e);
+      }
+      return false;
+    }
+
+    private static void Exit(int code) {
+      Console.WriteLine("Pressione qualquer tecla para sair.");
+      Console.ReadLine();
+      Environment.Exit(code);
+    }
+  }
+}
