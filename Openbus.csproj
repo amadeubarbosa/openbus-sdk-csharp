@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tecgraf.openbus</RootNamespace>
-    <AssemblyName>Openbus</AssemblyName>
+    <AssemblyName>OpenBus</AssemblyName>
     <StartupObject>
     </StartupObject>
     <FileUpgradeFlags>
