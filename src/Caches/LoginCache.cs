@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Threading;
 using Org.BouncyCastle.Crypto;
 using log4net;
 using omg.org.CORBA;
@@ -19,75 +19,90 @@ namespace tecgraf.openbus.caches {
     private readonly ConcurrentDictionary<string, LoginEntry> _logins;
     private readonly IsValidCache _legacyCache;
 
+    private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+
     public LoginCache() {
       _logins = new ConcurrentDictionary<string, LoginEntry>();
       _legacyCache = new IsValidCache();
     }
 
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public bool ValidateLogin(AnyCredential anyCredential, ConnectionImpl conn) {
       if (anyCredential.IsLegacy) {
         return _legacyCache.IsValid(anyCredential.LegacyCredential, conn);
       }
       string loginId = anyCredential.Credential.login;
-      long time = DateTime.Now.Ticks;
-      LoginEntry entry;
-      bool contains = false;
-      if (_logins.TryGetValue(loginId, out entry)) {
-        contains = true;
-        long elapsed = (time - entry.LastTime) / TimeSpan.TicksPerSecond;
-        if (elapsed <= (entry.Validity)) {
-          // login é valido
-          return true;
+      string[] idsArray;
+      long time;
+      string busid;
+      _lock.EnterReadLock();
+      try {
+        time = DateTime.Now.Ticks;
+        LoginEntry entry;
+        bool contains = false;
+        if (_logins.TryGetValue(loginId, out entry)) {
+          contains = true;
+          long elapsed = (time - entry.LastTime) / TimeSpan.TicksPerSecond;
+          if (elapsed <= (entry.Validity)) {
+            // login é valido
+            return true;
+          }
         }
-      }
-      string busid = conn.BusId;
-      IList<string> ids = new List<String>();
-      IList<LoginEntry> logins = new List<LoginEntry>(_logins.Values);
-      foreach (LoginEntry lEntry in logins) {
-        if (lEntry.BusId.Equals(busid)) {
-          ids.Add(lEntry.LoginId);
+        busid = conn.BusId;
+        IList<string> ids = new List<String>();
+        IList<LoginEntry> logins = new List<LoginEntry>(_logins.Values);
+        foreach (LoginEntry lEntry in logins) {
+          if (lEntry.BusId.Equals(busid)) {
+            ids.Add(lEntry.LoginId);
+          }
         }
+        if (!contains) {
+          ids.Add(loginId);
+        }
+        time = DateTime.Now.Ticks;
+        idsArray = new string[ids.Count];
+        ids.CopyTo(idsArray, 0);
       }
-      if (!contains) {
-        ids.Add(loginId);
+      finally {
+        _lock.ExitReadLock();
       }
-      time = DateTime.Now.Ticks;
-      string[] idsArray = new string[ids.Count];
-      ids.CopyTo(idsArray, 0);
       conn.Manager.Requester = conn;
       int[] validities =
         conn.LoginRegistry.getValidity(idsArray);
-      bool isValid = false;
-      for (int i = 0; i < idsArray.Length; i++) {
-        string id = idsArray[i];
-        int validity = validities[i];
-        if (validity > 0) {
-          LoginEntry loginEntry;
-          if (!_logins.TryGetValue(id, out loginEntry)) {
-            loginEntry = new LoginEntry {
-                                          LoginId = id,
-                                          BusId = busid,
-                                          LastTime = time,
-                                          Validity = validity
-                                        };
-            _logins.TryAdd(id, loginEntry);
+      _lock.EnterWriteLock();
+      try {
+        bool isValid = false;
+        for (int i = 0; i < idsArray.Length; i++) {
+          string id = idsArray[i];
+          int validity = validities[i];
+          if (validity > 0) {
+            LoginEntry loginEntry;
+            if (!_logins.TryGetValue(id, out loginEntry)) {
+              loginEntry = new LoginEntry {
+                LoginId = id,
+                BusId = busid,
+                LastTime = time,
+                Validity = validity
+              };
+              _logins.TryAdd(id, loginEntry);
+            }
+            loginEntry.LastTime = time;
+            loginEntry.Validity = validity;
+            if (id == loginId) {
+              isValid = true;
+            }
           }
-          loginEntry.LastTime = time;
-          loginEntry.Validity = validity;
-          if (id == loginId) {
-            isValid = true;
+          else {
+            LoginEntry removed;
+            _logins.TryRemove(id, out removed);
           }
         }
-        else {
-          LoginEntry removed;
-          _logins.TryRemove(id, out removed);
-        }
+        return isValid;
       }
-      return isValid;
+      finally {
+        _lock.ExitWriteLock();
+      }
     }
 
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public bool GetLoginEntity(String loginId, ConnectionImpl conn,
                                out string entity,
                                out AsymmetricKeyParameter pubkey) {
@@ -95,16 +110,34 @@ namespace tecgraf.openbus.caches {
       LoginInfo info;
       LoginEntry entry;
       if (_logins.TryGetValue(loginId, out entry)) {
-        if (entry.Entity != null) {
+        // existe entrada na cache
+        _lock.EnterReadLock();
+        try {
+          if (entry.Entity != null) {
+            // entrada já estava preenchida
+            entity = entry.Entity;
+            pubkey = entry.Publickey;
+            return true;
+          }
+        }
+        finally {
+          _lock.ExitReadLock();
+        }
+        // existe entrada na cache mas não preenchida, então preenche
+        info = GetLoginInfo(conn, loginId, out key);
+        _lock.EnterWriteLock();
+        try {
+          // checa novamente se outra thread não preencheu enquanto buscava os dados.
+          if (entry.Entity == null) {
+            entry.Entity = info.entity;
+            entry.Publickey = Crypto.CreatePublicKeyFromBytes(key);
+          }
           entity = entry.Entity;
           pubkey = entry.Publickey;
-          return true;
         }
-        info = GetLoginInfo(conn, loginId, out key);
-        entry.Entity = info.entity;
-        entry.Publickey = Crypto.CreatePublicKeyFromBytes(key);
-        entity = entry.Entity;
-        pubkey = entry.Publickey;
+        finally {
+          _lock.ExitWriteLock();
+        }
         return true;
       }
       // A entrada pode ter sido validada e removida antes de entrar nesse
@@ -117,10 +150,16 @@ namespace tecgraf.openbus.caches {
       entry.BusId = conn.BusId;
       entry.LastTime = DateTime.Now.Ticks;
       entry.Validity = 0;
-      if (_logins.TryAdd(loginId, entry)) {
-        entity = entry.Entity;
-        pubkey = entry.Publickey;
-        return true;
+      _lock.EnterWriteLock();
+      try {
+        if (_logins.TryAdd(loginId, entry)) {
+          entity = entry.Entity;
+          pubkey = entry.Publickey;
+          return true;
+        }
+      }
+      finally {
+        _lock.ExitWriteLock();
       }
       entity = null;
       pubkey = null;
@@ -190,7 +229,6 @@ namespace tecgraf.openbus.caches {
         }
         return valid;
       }
-
     }
 
     private class IsValidKey {
