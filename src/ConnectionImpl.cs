@@ -65,7 +65,7 @@ namespace tecgraf.openbus {
     private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
       _sessionId2Session;
 
-    private LoginCache _loginsCache;
+    internal readonly LoginCache LoginsCache;
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
@@ -149,6 +149,7 @@ namespace tecgraf.openbus {
       _login = null;
       _invalidLogin = null;
       GetBusFacets();
+      LoginsCache = new LoginCache(LoginRegistry);
       _busId = GetBusIdAndKey(out _busKey);
     }
 
@@ -321,10 +322,6 @@ namespace tecgraf.openbus {
         _leaseRenewer = null;
         Logger.Debug("Thread de renovação de lease desativada.");
       }
-    }
-
-    internal void SetLoginsCache(LoginCache cache) {
-      _loginsCache = cache;
     }
 
     internal LoginRegistry LoginRegistry { get; private set; }
@@ -841,17 +838,38 @@ namespace tecgraf.openbus {
         }
       }
 
-      string login = anyCredential.IsLegacy
-                       ? anyCredential.LegacyCredential.identifier
-                       : anyCredential.Credential.login;
-      // CheckValidity lança exceções
-      if (!CheckValidity(anyCredential)) {
+      string credentialLogin = anyCredential.IsLegacy
+                                 ? anyCredential.LegacyCredential.identifier
+                                 : anyCredential.Credential.login;
+
+      LoginCache.LoginEntry login;
+      try {
+        Manager.Requester = this;
+        login = LoginsCache.GetLoginEntry(credentialLogin);
+      }
+      catch (Exception e) {
+        NO_PERMISSION noPermission = e as NO_PERMISSION;
+        if (noPermission != null) {
+          if (noPermission.Minor == NoLoginCode.ConstVal) {
+            Logger.Error(
+              "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
+            throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                    CompletionStatus.Completed_No);
+          }
+        }
+        Logger.Error("Não foi possível validar a credencial. Erro: " + e);
+        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+
+      if (login == null) {
         Logger.Error(String.Format("A credencial {0} está fora da validade.",
-                                   login));
+                                   credentialLogin));
         throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
-      Logger.Debug(String.Format("A credencial {0} está na validade.", login));
+      Logger.Debug(String.Format("A credencial {0} está na validade.",
+                                 credentialLogin));
 
       if (!anyCredential.IsLegacy) {
         CredentialData credential = anyCredential.Credential;
@@ -883,7 +901,29 @@ namespace tecgraf.openbus {
         }
       }
       else {
+        Credential lCredential = anyCredential.LegacyCredential;
         try {
+          bool valid = false;
+          if (!lCredential._delegate.Equals(string.Empty)) {
+            // tem delegate, então precisa validar a credencial
+            if (!login.AllowLegacyDelegate.HasValue) {
+              valid = LegacyAccess.isValid(lCredential);
+              login.AllowLegacyDelegate = valid;
+              // atualiza entrada na cache
+              LoginsCache.UpdateEntryAllowLegacyDelegate(login);
+            }
+          }
+          else {
+            // não tem delegate
+            valid = true;
+          }
+          if (!valid) {
+            Logger.Error(String.Format(
+              "A credencial legada {0} da entidade {1} com campo delegate {2} não foi validada.",
+              lCredential.identifier, lCredential.owner,
+              lCredential._delegate));
+            throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
+          }
           ri.set_slot(_connectionSlotId, this);
         }
         catch (InvalidSlot e) {
@@ -1099,12 +1139,11 @@ namespace tecgraf.openbus {
       Random rand = new Random();
       rand.NextBytes(challenge);
 
-      AsymmetricKeyParameter pubKey;
+      LoginCache.LoginEntry login;
       try {
-        string entity;
-        if (!_loginsCache.GetLoginEntity(remoteLogin, this,
-                                         out entity,
-                                         out pubKey)) {
+        Manager.Requester = this;
+        login = LoginsCache.GetLoginEntry(remoteLogin);
+        if (login == null) {
           Logger.Error(
             "Não foi encontrada uma entrada na cache de logins para o login " +
             remoteLogin);
@@ -1130,7 +1169,7 @@ namespace tecgraf.openbus {
       }
 
       try {
-        reset.challenge = Crypto.Encrypt(pubKey, challenge);
+        reset.challenge = Crypto.Encrypt(login.Publickey, challenge);
       }
       catch (Exception) {
         throw new NO_PERMISSION(InvalidPublicKeyCode.ConstVal,
@@ -1155,26 +1194,6 @@ namespace tecgraf.openbus {
         reset.session = session.Id;
       }
       return _codec.encode_value(reset);
-    }
-
-    private bool CheckValidity(AnyCredential anyCredential) {
-      try {
-        return _loginsCache.ValidateLogin(anyCredential, this);
-      }
-      catch (Exception e) {
-        NO_PERMISSION noPermission = e as NO_PERMISSION;
-        if (noPermission != null) {
-          if (noPermission.Minor == NoLoginCode.ConstVal) {
-            Logger.Error(
-              "Este servidor foi deslogado do barramento durante a interceptação desta requisição.");
-            throw new NO_PERMISSION(UnknownBusCode.ConstVal,
-                                    CompletionStatus.Completed_No);
-          }
-        }
-        Logger.Error("Não foi possível validar a credencial. Erro: " + e);
-        throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
-      }
     }
 
     private CallChain UnmarshalCallChain(SignedCallChain signed) {

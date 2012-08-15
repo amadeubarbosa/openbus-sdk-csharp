@@ -5,7 +5,6 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.caches;
 using tecgraf.openbus.exceptions;
 using Current = omg.org.PortableInterceptor.Current;
 
@@ -26,8 +25,6 @@ namespace tecgraf.openbus {
 
     private readonly ORB _orb;
 
-    internal readonly LoginCache LoginsCache;
-
     private const string LegacyDisableProperty = "legacy.disable";
     private const bool LegacyDisableDefault = false;
     private const string LegacyDelegateProperty = "legacy.delegate";
@@ -47,7 +44,6 @@ namespace tecgraf.openbus {
     public ConnectionManagerImpl(int currentThreadSlotId, int ignoreThreadSlotId) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       _incomingDispatcherConn = new ConcurrentDictionary<string, Connection>();
-      LoginsCache = new LoginCache();
       CurrentThreadSlotId = currentThreadSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
       _orb = OrbServices.GetSingleton();
@@ -96,10 +92,7 @@ namespace tecgraf.openbus {
             LogPropertyChanged(LegacyDelegateProperty, temp);
           }
         }
-        ConnectionImpl conn = new ConnectionImpl(host, port, this,
-                                                 !legacyDisable, originator);
-        conn.SetLoginsCache(LoginsCache);
-        return conn;
+        return new ConnectionImpl(host, port, this, !legacyDisable, originator);
       }
       finally {
         UnignoreCurrentThread();

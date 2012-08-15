@@ -5,6 +5,7 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
+using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -75,7 +76,11 @@ namespace tecgraf.openbus.interceptors {
             SetCurrentConnection(ri, conn);
             Manager.Requester = conn;
             try {
-              if (Manager.LoginsCache.ValidateLogin(anyCredential, conn)) {
+              LoginCache.LoginEntry login =
+                conn.LoginsCache.GetLoginEntry(
+                  anyCredential.LegacyCredential.identifier);
+              if (login != null) {
+                // validou o login, esse bus serve. Precisa ainda validar a credencial se tiver delegate.
                 valid = true;
                 busId = conn.BusId;
                 break;
@@ -88,8 +93,11 @@ namespace tecgraf.openbus.interceptors {
           }
           if (!valid) {
             Logger.Error(
-              "Não foi possível encontrar um barramento que aceite a credencial recebida.");
-            throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
+              String.Format(
+                "Não foi possível encontrar um barramento que valide o login da credencial legada {0}.",
+                anyCredential.LegacyCredential.identifier));
+            throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
+                                    CompletionStatus.Completed_No);
           }
         }
         conn = Manager.GetDispatcher(busId) as ConnectionImpl;
