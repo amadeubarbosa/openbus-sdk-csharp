@@ -877,17 +877,17 @@ namespace tecgraf.openbus {
         if (_sessionId2Session.TryGetValue(credential.session, out session)) {
           // login tem que ser o mesmo que originou essa sessão
           if (credential.login.Equals(session.RemoteLogin)) {
-            // CheckTicket já faz o lock no ticket history da sessão
-            if (session.CheckTicket(credential.ticket)) {
-              byte[] hash = CreateCredentialHash(interceptedOperation,
-                                                 credential.ticket,
-                                                 session.Secret);
-              IStructuralEquatable eqHash = hash;
-              if (eqHash.Equals(credential.hash,
-                                StructuralComparisons.StructuralEqualityComparer)) {
-                // credencial valida
-                // CheckChain pode lançar exceção com InvalidChainCode
-                CheckChain(credential.chain, credential.login, loginId, busKey);
+            byte[] hash = CreateCredentialHash(interceptedOperation,
+                                               credential.ticket,
+                                               session.Secret);
+            IStructuralEquatable eqHash = hash;
+            if (eqHash.Equals(credential.hash,
+                              StructuralComparisons.StructuralEqualityComparer)) {
+              // credencial valida
+              // CheckChain pode lançar exceção com InvalidChainCode
+              CheckChain(credential.chain, credential.login, loginId, busKey);
+              // CheckTicket já faz o lock no ticket history da sessão
+              if (session.CheckTicket(credential.ticket)) {
                 // insere o login no slot para a getCallerChain usar
                 try {
                   ri.set_slot(_connectionSlotId, this);
