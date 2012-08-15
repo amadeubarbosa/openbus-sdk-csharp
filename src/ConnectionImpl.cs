@@ -875,27 +875,30 @@ namespace tecgraf.openbus {
         CredentialData credential = anyCredential.Credential;
         ServerSideSession session;
         if (_sessionId2Session.TryGetValue(credential.session, out session)) {
-          // CheckTicket já faz o lock no ticket history da sessão
-          if (session.CheckTicket(credential.ticket)) {
-            byte[] hash = CreateCredentialHash(interceptedOperation,
-                                               credential.ticket,
-                                               session.Secret);
-            IStructuralEquatable eqHash = hash;
-            if (eqHash.Equals(credential.hash,
-                              StructuralComparisons.StructuralEqualityComparer)) {
-              // credencial valida
-              // CheckChain pode lançar exceção com InvalidChainCode
-              CheckChain(credential.chain, credential.login, loginId, busKey);
-              // insere o login no slot para a getCallerChain usar
-              try {
-                ri.set_slot(_connectionSlotId, this);
+          // login tem que ser o mesmo que originou essa sessão
+          if (credential.login.Equals(session.RemoteLogin)) {
+            // CheckTicket já faz o lock no ticket history da sessão
+            if (session.CheckTicket(credential.ticket)) {
+              byte[] hash = CreateCredentialHash(interceptedOperation,
+                                                 credential.ticket,
+                                                 session.Secret);
+              IStructuralEquatable eqHash = hash;
+              if (eqHash.Equals(credential.hash,
+                                StructuralComparisons.StructuralEqualityComparer)) {
+                // credencial valida
+                // CheckChain pode lançar exceção com InvalidChainCode
+                CheckChain(credential.chain, credential.login, loginId, busKey);
+                // insere o login no slot para a getCallerChain usar
+                try {
+                  ri.set_slot(_connectionSlotId, this);
+                }
+                catch (InvalidSlot e) {
+                  Logger.Fatal(
+                    "Falha ao inserir o identificador de login em seu slot.", e);
+                  throw;
+                }
+                return;
               }
-              catch (InvalidSlot e) {
-                Logger.Fatal(
-                  "Falha ao inserir o identificador de login em seu slot.", e);
-                throw;
-              }
-              return;
             }
           }
         }
@@ -934,7 +937,7 @@ namespace tecgraf.openbus {
         return;
       }
 
-      // credencial invalida por nao ter sessao conhecida, ticket inválido ou hash errado
+      // credencial invalida por nao ter sessao conhecida, ticket inválido, hash errado ou login errado
       Logger.Debug("Credencial inválida, enviando CredentialReset.");
       // TODO FIXME
       // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
