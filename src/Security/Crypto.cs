@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Asn1.X509;
@@ -12,17 +13,43 @@ namespace tecgraf.openbus.security {
   /// <summary>
   /// Classe responsável pela segurança do OpenBus.
   /// </summary>
-  internal static class Crypto {
+  public static class Crypto {
     #region Fields
 
     private const string CipherAlgorithm = "RSA/ECB/PKCS1Padding";
     private const string SignerAlgorithm = "NONEwithRSA";
 
-    public static readonly Encoding TextEncoding = new ASCIIEncoding();
+    internal static readonly Encoding TextEncoding = new ASCIIEncoding();
 
     #endregion
 
     #region Members
+
+    /// <summary>
+    /// Gera uma nova chave privada do OpenBus.
+    /// </summary>
+    /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
+    public static OpenBusPrivateKey NewKey() {
+      return new OpenBusPrivateKey(GenerateKeyPair());
+    }
+
+    /// <summary>
+    /// Codifica uma chave privada em bytes no formato esperado pelo OpenBus.
+    /// </summary>
+    /// <param name="encoded">Chave privada em bytes.</param>
+    /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
+    public static OpenBusPrivateKey ReadKey(byte[] encoded) {
+      return new OpenBusPrivateKey(CreatePrivateKeyFromBytes(encoded));
+    }
+
+    /// <summary>
+    /// Codifica uma chave privada lida a partir de um arquivo no formato esperado pelo OpenBus.
+    /// </summary>
+    /// <param name="filepath">Caminho para o arquivo com a chave privada.</param>
+    /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
+    public static OpenBusPrivateKey ReadKeyFile(string filepath) {
+      return ReadKey(File.ReadAllBytes(filepath));
+    }
 
     /// <summary>
     /// Encripta uma informação utilizando uma chave digital.
@@ -30,7 +57,7 @@ namespace tecgraf.openbus.security {
     /// <param name="key">A chave a ser usada para criptografar os dados.</param>
     /// <param name="data">A informação descriptografada.</param>
     /// <returns>A informação encriptografada.</returns>
-    public static byte[] Encrypt(AsymmetricKeyParameter key, byte[] data) {
+    internal static byte[] Encrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       lock (cipher) {
         cipher.Init(true, key);
@@ -44,7 +71,7 @@ namespace tecgraf.openbus.security {
     /// <param name="key">A chave a ser usada para descriptografar os dados.</param>
     /// <param name="data">A informação criptografada.</param>
     /// <returns>A informação descriptografada.</returns>
-    public static byte[] Decrypt(AsymmetricKeyParameter key, byte[] data) {
+    internal static byte[] Decrypt(AsymmetricKeyParameter key, byte[] data) {
       IBufferedCipher cipher = CipherUtilities.GetCipher(CipherAlgorithm);
       lock (cipher) {
         cipher.Init(false, key);
@@ -52,7 +79,7 @@ namespace tecgraf.openbus.security {
       }
     }
 
-    public static AsymmetricCipherKeyPair GenerateKeyPair() {
+    internal static AsymmetricCipherKeyPair GenerateKeyPair() {
       IAsymmetricCipherKeyPairGenerator kpGen =
         GeneratorUtilities.GetKeyPairGenerator("RSA");
       lock (kpGen) {
@@ -63,7 +90,7 @@ namespace tecgraf.openbus.security {
       }
     }
 
-    public static AsymmetricKeyParameter CreatePublicKeyFromBytes(byte[] key) {
+    internal static AsymmetricKeyParameter CreatePublicKeyFromBytes(byte[] key) {
       AsymmetricKeyParameter k;
       try {
         k = PublicKeyFactory.CreateKey(key);
@@ -77,7 +104,7 @@ namespace tecgraf.openbus.security {
       return k;
     }
 
-    public static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
+    internal static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
       AsymmetricKeyParameter k;
       try {
         k = PrivateKeyFactory.CreateKey(key);
@@ -91,14 +118,14 @@ namespace tecgraf.openbus.security {
       return k;
     }
 
-    public static byte[] GetPublicKeyInBytes(AsymmetricKeyParameter publicKey) {
+    internal static byte[] GetPublicKeyInBytes(AsymmetricKeyParameter publicKey) {
       SubjectPublicKeyInfo publicKeyInfo =
         SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKey);
       return publicKeyInfo.ToAsn1Object().GetDerEncoded();
     }
 
-    public static bool VerifySignature(AsymmetricKeyParameter key,
-                                       byte[] message, byte[] signature) {
+    internal static bool VerifySignature(AsymmetricKeyParameter key,
+                                         byte[] message, byte[] signature) {
       ISigner signer = SignerUtilities.GetSigner(SignerAlgorithm);
       lock (signer) {
         signer.Init(false, key);

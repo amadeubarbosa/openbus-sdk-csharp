@@ -46,12 +46,12 @@ namespace tecgraf.openbus.Test {
     #endregion
 
     /// <summary>
-    /// Teste da auto-propriedade Manager
+    /// Teste da auto-propriedade Context
     ///</summary>
     [TestMethod]
     [DeploymentItem("Openbus.dll")]
-    public void ManagerTest() {
-      Assert.IsNotNull(ORBInitializer.Manager);
+    public void ContextTest() {
+      Assert.IsNotNull(ORBInitializer.Context);
     }
   }
 }

@@ -52,7 +52,7 @@ namespace tecgraf.openbus.lease {
             if (conn == null) {
               break;
             }
-            conn.Manager.Requester = conn;
+            conn.Context.SetCurrentConnection(conn);
             AccessControl ac = conn.Acs;
             Lease = ac.renew();
             Logger.Debug(

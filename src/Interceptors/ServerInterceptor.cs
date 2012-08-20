@@ -5,7 +5,6 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -62,47 +61,9 @@ namespace tecgraf.openbus.interceptors {
       ConnectionImpl conn = null;
       try {
         ri.set_slot(CredentialSlotId, anyCredential);
-        string busId = string.Empty;
-        if (!anyCredential.IsLegacy) {
-          busId = anyCredential.Credential.bus;
-        }
-        else {
-          bool valid = false;
-          foreach (Connection incoming in Manager.GetIncomingConnections()) {
-            conn = incoming as ConnectionImpl;
-            if ((conn == null) || (!conn.Legacy)) {
-              continue;
-            }
-            SetCurrentConnection(ri, conn);
-            Manager.Requester = conn;
-            try {
-              LoginCache.LoginEntry login =
-                conn.LoginsCache.GetLoginEntry(
-                  anyCredential.LegacyCredential.identifier);
-              if (login != null) {
-                // validou o login, esse bus serve. Precisa ainda validar a credencial se tiver delegate.
-                valid = true;
-                busId = conn.BusId;
-                break;
-              }
-            }
-            catch (Exception e) {
-              const string message = "Erro ao validar o login 1.5.";
-              Logger.Error(message, e);
-            }
-          }
-          if (!valid) {
-            Logger.Error(
-              String.Format(
-                "Não foi possível encontrar um barramento que valide o login da credencial legada {0}.",
-                anyCredential.LegacyCredential.identifier));
-            throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
-                                    CompletionStatus.Completed_No);
-          }
-        }
-        conn = Manager.GetDispatcher(busId) as ConnectionImpl;
+        conn = GetDispatcherForRequest(ri, anyCredential) as ConnectionImpl;
         if (conn == null) {
-          conn = Manager.DefaultConnection as ConnectionImpl;
+          conn = Context.GetDefaultConnection() as ConnectionImpl;
           if (conn == null) {
             Logger.Error(
               "Sem conexão ao barramento, impossível receber a chamada remota.");
@@ -111,7 +72,7 @@ namespace tecgraf.openbus.interceptors {
           }
         }
         SetCurrentConnection(ri, conn);
-        Manager.Requester = conn;
+        Context.SetCurrentConnection(conn);
         conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
@@ -121,8 +82,8 @@ namespace tecgraf.openbus.interceptors {
       finally {
         RemoveCurrentConnection(ri);
         // Talvez a linha abaixo não seja necessaria, pois o PICurrent deveria
-        // acabar junto com a thread de interceptação (Manager.Requester usa PICurrent).
-        Manager.Requester = null;
+        // acabar junto com a thread de interceptação (Context.SetCurrentConnection usa PICurrent).
+        Context.SetCurrentConnection(null);
         if (conn != null) {
           ri.set_slot(ReceivingConnectionSlotId, conn);
         }
@@ -223,6 +184,25 @@ namespace tecgraf.openbus.interceptors {
 
     #endregion
 
+    private Connection GetDispatcherForRequest(ServerRequestInfo request, AnyCredential credential) {
+      if (Context.OnCallDispatch != null) {
+        string busId;
+        string loginId;
+        if (credential.IsLegacy) {
+          //TODO como informar o busId se for uma conexão legacy?
+          busId = null;
+          loginId = credential.LegacyCredential.identifier;
+        }
+        else {
+          busId = credential.Credential.bus;
+          loginId = credential.Credential.login;
+        }
+        return Context.OnCallDispatch.Dispatch(Context, busId, loginId, request.object_id,
+                                               request.operation);
+      }
+      return Context.GetDefaultConnection();
+    }
+    
     private void ClearRequest(ServerRequestInfo ri) {
       try {
         ri.set_slot(ReceivingConnectionSlotId, null);
@@ -238,25 +218,25 @@ namespace tecgraf.openbus.interceptors {
     private void SetCurrentConnection(ServerRequestInfo ri, ConnectionImpl conn) {
       int id = Thread.CurrentThread.ManagedThreadId;
       try {
-        ri.set_slot(Manager.CurrentThreadSlotId, id);
+        ri.set_slot(Context.CurrentThreadSlotId, id);
       }
       catch (InvalidSlot e) {
         Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
         throw;
       }
-      Manager.SetConnectionByThreadId(id, conn);
+      Context.SetConnectionByThreadId(id, conn);
     }
 
     private void RemoveCurrentConnection(ServerRequestInfo ri) {
       try {
-        ri.set_slot(Manager.CurrentThreadSlotId, null);
+        ri.set_slot(Context.CurrentThreadSlotId, null);
       }
       catch (InvalidSlot e) {
         Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
         throw;
       }
       int id = Thread.CurrentThread.ManagedThreadId;
-      Manager.SetConnectionByThreadId(id, null);
+      Context.SetConnectionByThreadId(id, null);
     }
 
     private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,

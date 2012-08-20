@@ -13,7 +13,7 @@ namespace tecgraf.openbus.interceptors {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (InterceptorsInitializer));
 
-    public ConnectionManagerImpl Manager;
+    public CallContextImpl Context;
 
     #endregion
 
@@ -28,8 +28,8 @@ namespace tecgraf.openbus.interceptors {
       int loginSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
-      Manager = new ConnectionManagerImpl(currentThreadSlotId,
-                                          ignoreThreadSlotId);
+      Context = new CallContextImpl(currentThreadSlotId, ignoreThreadSlotId,
+                                    joinedChainSlotId);
 
       Codec codec = info.codec_factory.create_codec(
         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
@@ -37,13 +37,12 @@ namespace tecgraf.openbus.interceptors {
       ServerInterceptor.Instance.CredentialSlotId = credentialSlotId;
       ServerInterceptor.Instance.ConnectionSlotId = connectionSlotId;
       ServerInterceptor.Instance.ReceivingConnectionSlotId = receivingSlotId;
-      ServerInterceptor.Instance.Manager = Manager;
+      ServerInterceptor.Instance.Context = Context;
       ClientInterceptor.Instance.Codec = codec;
       ClientInterceptor.Instance.CredentialSlotId = credentialSlotId;
       ClientInterceptor.Instance.ConnectionSlotId = connectionSlotId;
-      ClientInterceptor.Instance.JoinedChainSlotId = joinedChainSlotId;
       ClientInterceptor.Instance.LoginSlotId = loginSlotId;
-      ClientInterceptor.Instance.Manager = Manager;
+      ClientInterceptor.Instance.Context = Context;
 
       info.add_server_request_interceptor(ServerInterceptor.Instance);
       Logger.Info("Interceptador servidor registrado.");

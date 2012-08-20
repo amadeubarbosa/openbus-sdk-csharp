@@ -35,8 +35,6 @@ namespace tecgraf.openbus.interceptors {
       get { return _instance ?? (_instance = new ClientInterceptor()); }
     }
 
-    internal int JoinedChainSlotId;
-
     #endregion
 
     #region ClientRequestInterceptor Members
@@ -46,7 +44,7 @@ namespace tecgraf.openbus.interceptors {
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
-      if (!Manager.IsCurrentThreadIgnored(ri)) {
+      if (!Context.IsCurrentThreadIgnored(ri)) {
         ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
         if (conn != null) {
           conn.SendRequest(ri);
@@ -62,7 +60,7 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void receive_exception(ClientRequestInfo ri) {
-      if (!Manager.IsCurrentThreadIgnored(ri)) {
+      if (!Context.IsCurrentThreadIgnored(ri)) {
         ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
         if (conn != null) {
           conn.ReceiveException(ri);
@@ -97,14 +95,14 @@ namespace tecgraf.openbus.interceptors {
     private Connection GetCurrentConnection(RequestInfo ri) {
       try {
         string id = "-1";
-        object obj = ri.get_slot(Manager.CurrentThreadSlotId);
+        object obj = ri.get_slot(Context.CurrentThreadSlotId);
         if (obj != null) {
           id = obj.ToString();
         }
         Connection connection =
-          Manager.GetConnectionByThreadId(Convert.ToInt32(id));
+          Context.GetConnectionByThreadId(Convert.ToInt32(id));
         if (connection == null) {
-          connection = Manager.DefaultConnection;
+          connection = Context.GetDefaultConnection();
           if (connection == null) {
             Logger.Error(
               "Impossível retornar conexão corrente, pois não foi definida.");

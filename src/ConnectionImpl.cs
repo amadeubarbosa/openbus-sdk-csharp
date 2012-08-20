@@ -40,7 +40,7 @@ namespace tecgraf.openbus {
     private LeaseRenewer _leaseRenewer;
 
     internal bool Legacy;
-    internal readonly ConnectionManagerImpl Manager;
+    internal readonly CallContextImpl Context;
 
     private volatile int _sessionId;
 
@@ -84,7 +84,6 @@ namespace tecgraf.openbus {
     private readonly int _credentialSlotId;
     private readonly int _connectionSlotId;
     private readonly int _loginSlotId;
-    private readonly int _joinedChainSlotId;
 
     private readonly bool _delegateOriginator;
 
@@ -98,9 +97,8 @@ namespace tecgraf.openbus {
 
     #region Constructors
 
-    internal ConnectionImpl(string host, ushort port,
-                            ConnectionManagerImpl manager, bool legacy,
-                            bool delegateOriginator) {
+    internal ConnectionImpl(string host, ushort port, CallContextImpl context,
+                            bool legacy, bool delegateOriginator) {
       if (string.IsNullOrEmpty(host)) {
         throw new InvalidBusAddressException("O campo 'host' não é válido");
       }
@@ -111,14 +109,13 @@ namespace tecgraf.openbus {
       _host = host;
       _port = port;
       ORB = OrbServices.GetSingleton();
-      Manager = manager;
+      Context = context;
       Legacy = legacy;
       _delegateOriginator = delegateOriginator;
       _codec = ServerInterceptor.Instance.Codec;
       _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
       _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
-      _joinedChainSlotId = ClientInterceptor.Instance.JoinedChainSlotId;
 
       const string connErrorMessage =
         "Não foi possível conectar ao barramento com o host e porta fornecidos.";
@@ -213,12 +210,6 @@ namespace tecgraf.openbus {
       return Acs.busid;
     }
 
-    private void ValidateBusId() {
-      if (!_busId.Equals(Acs.busid)) {
-        throw new BusChangedException();
-      }
-    }
-
     private AsymmetricCipherKeyPair InternalKey { get; set; }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
@@ -234,8 +225,6 @@ namespace tecgraf.openbus {
         login.cancel();
         throw new AlreadyLoggedInException();
       }
-
-      ValidateBusId();
 
       byte[] encrypted;
       byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
@@ -280,7 +269,6 @@ namespace tecgraf.openbus {
     }
 
     private void LocalLogin(LoginInfo login, int lease) {
-      ValidateBusId();
       _loginLock.EnterWriteLock();
       try {
         if (_login.HasValue) {
@@ -324,17 +312,17 @@ namespace tecgraf.openbus {
       }
     }
 
+    internal OfferRegistry Offers { get; private set; }
+
     internal LoginRegistry LoginRegistry { get; private set; }
 
-    internal IAccessControlService LegacyAccess { get; private set; }
+    private IAccessControlService LegacyAccess { get; set; }
 
     #endregion
 
     #region Connection Members
 
     public ORB ORB { get; private set; }
-
-    public OfferRegistry Offers { get; private set; }
 
     public string BusId {
       get { return _busId; }
@@ -363,10 +351,8 @@ namespace tecgraf.openbus {
         _loginLock.ExitReadLock();
       }
 
-      Manager.IgnoreCurrentThread();
+      Context.IgnoreCurrentThread();
       try {
-        ValidateBusId();
-
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
         try {
@@ -390,11 +376,11 @@ namespace tecgraf.openbus {
         LocalLogin(l, lease);
       }
       finally {
-        Manager.UnignoreCurrentThread();
+        Context.UnignoreCurrentThread();
       }
     }
 
-    public void LoginByCertificate(string entity, byte[] privKey) {
+    public void LoginByCertificate(string entity, OpenBusPrivateKey privateKey) {
       _loginLock.EnterReadLock();
       try {
         if (_login.HasValue) {
@@ -405,15 +391,13 @@ namespace tecgraf.openbus {
         _loginLock.ExitReadLock();
       }
 
-      Manager.IgnoreCurrentThread();
+      Context.IgnoreCurrentThread();
       try {
-        ValidateBusId();
-
         byte[] challenge;
         LoginProcess login = Acs.startLoginByCertificate(entity,
                                                          out
                                                            challenge);
-        AsymmetricKeyParameter key = Crypto.CreatePrivateKeyFromBytes(privKey);
+        AsymmetricKeyParameter key = privateKey._privateKey;
         byte[] answer;
         try {
           answer = Crypto.Decrypt(key, challenge);
@@ -423,7 +407,7 @@ namespace tecgraf.openbus {
             "Erro ao decodificar o desafio com a chave privada fornecida.");
           throw new AccessDenied();
         }
-        catch(DataLengthException) {
+        catch (DataLengthException) {
           Logger.Error(
             "Erro ao decodificar o desafio com a chave privada fornecida. O tamanho do dado é maior que a chave.");
           throw new AccessDenied();
@@ -431,15 +415,14 @@ namespace tecgraf.openbus {
         LoginByObject(login, answer);
       }
       finally {
-        Manager.UnignoreCurrentThread();
+        Context.UnignoreCurrentThread();
       }
     }
 
     public LoginProcess StartSharedAuth(out byte[] secret) {
       LoginProcess login = null;
-      Connection prev = Manager.Requester;
+      Connection prev = Context.SetCurrentConnection(this);
       try {
-        Manager.Requester = this;
         byte[] challenge;
         login = Acs.startLoginBySharedAuth(out challenge);
         secret = Crypto.Decrypt(InternalKey.Private, challenge);
@@ -458,18 +441,18 @@ namespace tecgraf.openbus {
         throw;
       }
       finally {
-        Manager.Requester = prev;
+        Context.SetCurrentConnection(prev);
       }
       return login;
     }
 
     public void LoginBySharedAuth(LoginProcess login, byte[] secret) {
-      Manager.IgnoreCurrentThread();
+      Context.IgnoreCurrentThread();
       try {
         LoginByObject(login, secret);
       }
       finally {
-        Manager.UnignoreCurrentThread();
+        Context.UnignoreCurrentThread();
       }
     }
 
@@ -485,9 +468,8 @@ namespace tecgraf.openbus {
         _loginLock.ExitWriteLock();
       }
 
-      Connection prev = Manager.Requester;
+      Connection prev = Context.SetCurrentConnection(this);
       try {
-        Manager.Requester = this;
         Acs.logout();
       }
       catch (NO_PERMISSION e) {
@@ -499,7 +481,7 @@ namespace tecgraf.openbus {
         return false;
       }
       finally {
-        Manager.Requester = prev;
+        Context.SetCurrentConnection(prev);
         LocalLogout();
       }
       return true;
@@ -526,98 +508,6 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void JoinChain(CallerChain chain) {
-      if (chain == null) {
-        chain = CallerChain;
-      }
-      Current current = Manager.GetPICurrent();
-      try {
-        current.set_slot(_joinedChainSlotId, chain);
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot da joined chain.", e);
-        throw;
-      }
-    }
-
-    public CallerChain CallerChain {
-      get {
-        Current current = Manager.GetPICurrent();
-        ConnectionImpl piCurrentConn;
-        try {
-          piCurrentConn = current.get_slot(_connectionSlotId) as ConnectionImpl;
-        }
-        catch (InvalidSlot e) {
-          Logger.Fatal(
-            "Falha inesperada ao acessar o slot da conexão corrente.", e);
-          throw;
-        }
-        _loginLock.EnterReadLock();
-        try {
-          if (!_login.HasValue) {
-            return null;
-          }
-        }
-        finally {
-          _loginLock.ExitReadLock();
-        }
-        if (!ReferenceEquals(piCurrentConn, this)) {
-          return null;
-        }
-        try {
-          AnyCredential anyCredential =
-            (AnyCredential) current.get_slot(_credentialSlotId);
-          if (anyCredential.IsLegacy) {
-            Credential credential = anyCredential.LegacyCredential;
-            LoginInfo caller = new LoginInfo(credential.identifier,
-                                             credential.owner);
-            LoginInfo[] originators = credential._delegate.Equals(String.Empty)
-                                        ? new LoginInfo[0]
-                                        : new[] {
-                                                  new LoginInfo("<unknown>",
-                                                                credential.
-                                                                  _delegate)
-                                                };
-            return new CallerChainImpl(BusId, caller, originators);
-          }
-          CallChain chain = UnmarshalCallChain(anyCredential.Credential.chain);
-          return new CallerChainImpl(BusId, chain.caller, chain.originators,
-                                     anyCredential.Credential.chain);
-        }
-        catch (InvalidSlot e) {
-          Logger.Fatal(
-            "Falha inesperada ao acessar o slot da credencial corrente.", e);
-          throw;
-        }
-      }
-    }
-
-    public void ExitChain() {
-      Current current = Manager.GetPICurrent();
-      try {
-        current.set_slot(_joinedChainSlotId, null);
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot da joined chain.", e);
-        throw;
-      }
-    }
-
-    public CallerChain JoinedChain {
-      get {
-        Current current = Manager.GetPICurrent();
-        CallerChain chain;
-        try {
-          chain = current.get_slot(_joinedChainSlotId) as CallerChain;
-        }
-        catch (InvalidSlot e) {
-          Logger.Fatal("Falha inesperada ao acessar o slot da joined chain.", e);
-          throw;
-        }
-        return chain;
-      }
-    }
-
     #endregion
 
     #region Interceptor Methods
@@ -636,7 +526,7 @@ namespace tecgraf.openbus {
       LoginInfo login = GetLoginOrThrowNoLogin(errMsg, null);
 
       // armazena login no PICurrent para obter no caso de uma exceção
-      Current current = Manager.GetPICurrent();
+      Current current = Context.GetPICurrent();
       try {
         current.set_slot(_loginSlotId, login);
       }
@@ -682,7 +572,7 @@ namespace tecgraf.openbus {
             // Testa se tem cadeia para enviar
             string lastCaller = String.Empty;
             bool isLegacyOnly = false;
-            CallerChainImpl callerChain = JoinedChain as CallerChainImpl;
+            CallerChainImpl callerChain = Context.JoinedChain as CallerChainImpl;
             if (callerChain != null) {
               if (_delegateOriginator && (callerChain.Originators.Length > 0)) {
                 lastCaller = callerChain.Originators[0].entity;
@@ -849,7 +739,7 @@ namespace tecgraf.openbus {
 
       LoginCache.LoginEntry login;
       try {
-        Manager.Requester = this;
+        Context.SetCurrentConnection(this);
         login = LoginsCache.GetLoginEntry(credentialLogin);
       }
       catch (Exception e) {
@@ -1052,7 +942,7 @@ namespace tecgraf.openbus {
 
     private SignedCallChain CreateCredentialSignedCallChain(string remoteLogin) {
       SignedCallChain signed;
-      CallerChainImpl chain = JoinedChain as CallerChainImpl;
+      CallerChainImpl chain = Context.JoinedChain as CallerChainImpl;
       if (!remoteLogin.Equals(BusLogin.ConstVal)) {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
@@ -1149,7 +1039,7 @@ namespace tecgraf.openbus {
 
       LoginCache.LoginEntry login;
       try {
-        Manager.Requester = this;
+        Context.SetCurrentConnection(this);
         login = LoginsCache.GetLoginEntry(remoteLogin);
         if (login == null) {
           Logger.Error(

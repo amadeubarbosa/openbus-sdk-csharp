@@ -27,7 +27,7 @@ namespace tecgraf.openbus.interceptors {
     internal int CredentialSlotId;
     internal int ConnectionSlotId;
 
-    internal ConnectionManagerImpl Manager;
+    internal CallContextImpl Context;
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -31,9 +30,9 @@ namespace tecgraf.openbus.Test {
     private static String _entityNoCert;
     private static string _login;
     private static byte[] _password;
-    private static byte[] _privKey;
-    private static byte[] _wrongKey;
-    private static ConnectionManager _manager;
+    private static OpenBusPrivateKey _privKey;
+    private static OpenBusPrivateKey _wrongKey;
+    private static CallContext _context;
     private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
 
     private const int LeaseTime = 10;
@@ -106,19 +105,19 @@ namespace tecgraf.openbus.Test {
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("testKeyFileName");
       }
-      _privKey = File.ReadAllBytes(privateKey);
+      _privKey = Crypto.ReadKeyFile(privateKey);
 
       string wrongKey = ConfigurationManager.AppSettings["wrongKeyFileName"];
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("wrongKeyFileName");
       }
-      _wrongKey = File.ReadAllBytes(wrongKey);
+      _wrongKey = Crypto.ReadKeyFile(wrongKey);
 
-      _manager = ORBInitializer.Manager;
+      _context = ORBInitializer.Context;
     }
 
     private static Connection CreateConnection() {
-      Connection conn = _manager.CreateConnection(_hostName, _hostPort, Props);
+      Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
       return conn;
     }
 
@@ -130,7 +129,7 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNotNull(conn.ORB);
-        Assert.AreEqual(conn.ORB, _manager.ORB);
+        Assert.AreEqual(conn.ORB, _context.ORB);
       }
     }
 
@@ -141,14 +140,18 @@ namespace tecgraf.openbus.Test {
     public void OfferRegistryTest() {
       lock (this) {
         Connection conn = CreateConnection();
+        _context.SetCurrentConnection(conn);
         try {
-          conn.Offers.findServices(new[] {new ServiceProperty("a", "b")});
+          _context.OfferRegistry.findServices(new[] {new ServiceProperty("a", "b")});
         }
         catch (NO_PERMISSION e) {
           Assert.AreEqual(e.Minor, NoLoginCode.ConstVal);
         }
         catch (Exception e) {
           Assert.Fail(e.Message);
+        }
+        finally {
+          _context.SetCurrentConnection(null);
         }
       }
     }
@@ -267,7 +270,7 @@ namespace tecgraf.openbus.Test {
         // chave privada corrompida
         failed = false;
         try {
-          conn.LoginByCertificate(_entity, new byte[0]);
+          conn.LoginByCertificate(_entity, Crypto.ReadKey(new byte[0]));
         }
         catch (InvalidPrivateKeyException) {
           failed = true;
@@ -387,17 +390,17 @@ namespace tecgraf.openbus.Test {
         Connection conn = CreateConnection();
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
-        _manager.SetDispatcher(conn);
-        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn);
+        _context.SetDispatcher(conn);
+        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn);
         Assert.IsTrue(conn.Logout());
-        Assert.AreEqual(_manager.GetDispatcher(conn.BusId), conn);
+        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn);
         Assert.IsNotNull(conn.BusId);
         Assert.IsNull(conn.Login);
-        _manager.ClearDispatcher(conn.BusId);
+        _context.ClearDispatcher(conn.BusId);
         bool failed = false;
         try {
-          _manager.Requester = conn;
-          conn.Offers.findServices(new ServiceProperty[0]);
+          _context.SetCurrentConnection(conn);
+          _context.OfferRegistry.findServices(new ServiceProperty[0]);
         }
         catch (NO_PERMISSION e) {
           failed = true;
@@ -413,7 +416,7 @@ namespace tecgraf.openbus.Test {
             e);
         }
         finally {
-          _manager.Requester = null;
+          _context.SetCurrentConnection(null);
         }
         Assert.IsTrue(failed, "Uma busca sem login foi bem-sucedida.");
       }
@@ -449,7 +452,7 @@ namespace tecgraf.openbus.Test {
         InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login,
                                                                      _password);
         conn.OnInvalidLogin = callback;
-        _manager.DefaultConnection = conn;
+        _context.SetDefaultConnection(conn);
         IComponent busIC = RemotingServices.Connect(
           typeof (IComponent),
           "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
@@ -462,7 +465,7 @@ namespace tecgraf.openbus.Test {
         lr.invalidateLogin(conn.Login.Value.id);
         // faz uma chamada qualquer para refazer o login
         try {
-          conn.Offers.getServices();
+          _context.OfferRegistry.getServices();
           Assert.IsTrue(CallbackCalled);
           Assert.IsFalse(firstLogin.id.Equals(conn.Login.Value.id));
         }
@@ -471,7 +474,7 @@ namespace tecgraf.openbus.Test {
         }
         finally {
           CallbackCalled = false;
-          _manager.DefaultConnection = null;
+          _context.SetDefaultConnection(null);
         }
       }
     }
@@ -483,17 +486,17 @@ namespace tecgraf.openbus.Test {
     public void CallerChainTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        Assert.IsNull(conn.CallerChain);
+        _context.SetDefaultConnection(conn);
+        Assert.IsNull(_context.CallerChain);
         //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário comentar o catch genérico abaixo.
         try {
           const string facetName = "HelloMock";
           conn.LoginByPassword(_login, _password);
-          ComponentContext context =
+          ComponentContext component =
             new DefaultComponentContext(new ComponentId());
-          context.AddFacet(facetName, Repository.GetRepositoryID(typeof (Hello)),
+          component.AddFacet(facetName, Repository.GetRepositoryID(typeof (Hello)),
                            new HelloMock(conn));
-          _manager.DefaultConnection = conn;
-          Hello hello = context.GetFacetByName(facetName).Reference as Hello;
+          Hello hello = component.GetFacetByName(facetName).Reference as Hello;
           Assert.IsNotNull(hello);
           hello.sayHello();
         }
@@ -507,7 +510,7 @@ namespace tecgraf.openbus.Test {
         catch (InvalidOperationException) {
         }
         finally {
-          _manager.DefaultConnection = null;
+          _context.SetDefaultConnection(null);
           conn.Logout();
         }
       }
@@ -520,20 +523,22 @@ namespace tecgraf.openbus.Test {
     public void JoinChainTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        Assert.IsNull(conn.JoinedChain);
+        _context.SetCurrentConnection(conn);
+        Assert.IsNull(_context.JoinedChain);
         // adiciona a chain da getCallerChain
-        conn.JoinChain(null);
-        Assert.IsNull(conn.JoinedChain);
+        _context.JoinChain(null);
+        Assert.IsNull(_context.JoinedChain);
         //TODO testar caso em que a chain da getCallerChain não é vazia
         //TODO não há como testar o caso do TODO acima em C# sem usar processos diferentes para o servidor e cliente. Não há muito problema pois os testes de interoperabilidade cobrem esse caso.
-        conn.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
                                            new LoginInfo[0]));
-        Assert.IsNotNull(conn.JoinedChain);
-        Assert.AreEqual("mock", conn.JoinedChain.BusId);
-        Assert.AreEqual("a", conn.JoinedChain.Caller.id);
-        Assert.AreEqual("b", conn.JoinedChain.Caller.entity);
-        conn.ExitChain();
-        Assert.IsNull(conn.JoinedChain);
+        Assert.IsNotNull(_context.JoinedChain);
+        Assert.AreEqual("mock", _context.JoinedChain.BusId);
+        Assert.AreEqual("a", _context.JoinedChain.Caller.id);
+        Assert.AreEqual("b", _context.JoinedChain.Caller.entity);
+        _context.ExitChain();
+        Assert.IsNull(_context.JoinedChain);
+        _context.SetCurrentConnection(null);
       }
     }
 
@@ -544,13 +549,15 @@ namespace tecgraf.openbus.Test {
     public void ExitChainTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        Assert.IsNull(conn.JoinedChain);
-        conn.ExitChain();
-        Assert.IsNull(conn.JoinedChain);
-        conn.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+        _context.SetCurrentConnection(conn);
+        Assert.IsNull(_context.JoinedChain);
+        _context.ExitChain();
+        Assert.IsNull(_context.JoinedChain);
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
                                            new LoginInfo[0]));
-        conn.ExitChain();
-        Assert.IsNull(conn.JoinedChain);
+        _context.ExitChain();
+        Assert.IsNull(_context.JoinedChain);
+        _context.SetCurrentConnection(null);
       }
     }
   }

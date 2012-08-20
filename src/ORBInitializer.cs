@@ -12,11 +12,11 @@ namespace tecgraf.openbus {
   /// 
   /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
-  /// também apenas uma instância de ConnectionManager.
+  /// também apenas uma instância de CallContext.
   /// 
   /// O objetivo original dessa classe seria fornecer um método "InitORB". Como
   /// o ORB é um singleton, ele é automaticamente inicializado durante a
-  /// primeira obtenção do ConnectionManager e assim o método "InitORB" não é
+  /// primeira obtenção do CallContext e assim o método "InitORB" não é
   /// público.
   /// </summary>
   public static class ORBInitializer {
@@ -24,7 +24,7 @@ namespace tecgraf.openbus {
 
     private static readonly OrbServices ORB = OrbServices.GetSingleton();
     private static volatile bool _initialized;
-    private static ConnectionManagerImpl _manager;
+    private static CallContextImpl _context;
 
     #endregion
 
@@ -35,17 +35,17 @@ namespace tecgraf.openbus {
     /// 
     /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
     /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
-    /// também apenas uma instância de ConnectionManager.
+    /// também apenas uma instância de CallContext.
     /// </summary>
-    public static ConnectionManager Manager { 
+    public static CallContext Context { 
       get {
         if (!_initialized) {
           InitORB();
         }
-        return _manager;
+        return _context;
       } 
       private set {
-        _manager = value as ConnectionManagerImpl;
+        _context = value as CallContextImpl;
       } 
     }
 
@@ -58,7 +58,7 @@ namespace tecgraf.openbus {
         ORB.RegisterPortableInterceptorInitalizer(initializer);
         ORB.CompleteInterceptorRegistration();
         ChannelServices.RegisterChannel(new IiopChannel(0), false);
-        Manager = initializer.Manager;
+        Context = initializer.Context;
         _initialized = true;
       }
       return ORB;

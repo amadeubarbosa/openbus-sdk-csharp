@@ -10,7 +10,7 @@ namespace tecgraf.openbus.test {
     }
 
     public string sayHello() {
-      CallerChain chain = _conn.CallerChain;
+      CallerChain chain = ORBInitializer.Context.CallerChain;
       if (chain == null) {
         // cliente deve receber um CORBA::Unknown
         throw new NullReferenceException();
