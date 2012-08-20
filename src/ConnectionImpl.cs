@@ -423,6 +423,11 @@ namespace tecgraf.openbus {
             "Erro ao decodificar o desafio com a chave privada fornecida.");
           throw new AccessDenied();
         }
+        catch(DataLengthException) {
+          Logger.Error(
+            "Erro ao decodificar o desafio com a chave privada fornecida. O tamanho do dado é maior que a chave.");
+          throw new AccessDenied();
+        }
         LoginByObject(login, answer);
       }
       finally {

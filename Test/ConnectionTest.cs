@@ -279,7 +279,7 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed,
                       "O login de entidade com chave corrompida foi bem-sucedido.");
-        // chave privada inválida
+        // chave privada errada
         failed = false;
         try {
           conn.LoginByCertificate(_entity, _wrongKey);
@@ -289,7 +289,7 @@ namespace tecgraf.openbus.Test {
         }
         catch (Exception e) {
           Assert.Fail(
-            "A exceção deveria ser WrongPrivateKeyException. Exceção recebida: " +
+            "A exceção deveria ser AccessDenied. Exceção recebida: " +
             e);
         }
         Assert.IsTrue(failed,
