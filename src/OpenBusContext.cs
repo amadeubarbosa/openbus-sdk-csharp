@@ -16,7 +16,7 @@ namespace tecgraf.openbus {
   /// identificação da origem das chamadas, ou seja, nome das entidades que
   /// autenticaram os acessos ao barramento que originaram as chamadas.
   /// 
-  /// A identifcação de chamadas no barramento é controlada pelo CallContext 
+  /// A identifcação de chamadas no barramento é controlada pelo OpenBusContext 
   /// através da manipulação de duas abstrações representadas pelas seguintes
   /// interfaces:
   /// - Connection: Representa um acesso ao barramento, que é usado tanto para
@@ -34,11 +34,11 @@ namespace tecgraf.openbus {
   /// 
   /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
-  /// também apenas uma instância de CallContext.
+  /// também apenas uma instância de OpenBusContext.
   /// </summary>
-  public interface CallContext {
+  public interface OpenBusContext {
     /// <summary>
-    /// ORB controlado por esse CallContext. Como no IIOP.Net atualmente o ORB
+    /// ORB controlado por esse OpenBusContext. Como no IIOP.Net atualmente o ORB
     /// é um singleton, a instância será sempre a mesma e pode ser obtida de
     /// outras formas.
     /// </summary>

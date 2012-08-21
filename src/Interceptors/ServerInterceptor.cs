@@ -189,7 +189,6 @@ namespace tecgraf.openbus.interceptors {
         string busId;
         string loginId;
         if (credential.IsLegacy) {
-          //TODO como informar o busId se for uma conexão legacy?
           busId = null;
           loginId = credential.LegacyCredential.identifier;
         }

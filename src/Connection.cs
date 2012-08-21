@@ -29,15 +29,15 @@ namespace tecgraf.openbus {
   /// É importante notar que a conexão não é usada diretamente pela aplicação ao
   /// realizar ou receber chamadas, pois as chamadas ocorrem usando proxies e
   /// servants de um ORB. As conexões que são efetivamente usadas nas chamadas do
-  /// ORB são definidas através do CallContext associado ao ORB.
+  /// ORB são definidas através do OpenBusContext associado ao ORB.
   /// 
   /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
-  /// também apenas uma instância de CallContext.
+  /// também apenas uma instância de OpenBusContext.
   /// </summary>
   public interface Connection {
     /// <summary>
-    /// ORB correspondente ao CallContext a partir do qual essa conexão
+    /// ORB correspondente ao OpenBusContext a partir do qual essa conexão
     /// foi criada. 
     /// </summary>
     ORB ORB { get; }
@@ -84,7 +84,7 @@ namespace tecgraf.openbus {
     /// registrado no barramento indicado.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a autenticação da conexão.</exception>
-    void LoginByCertificate(String entity, OpenBusPrivateKey privateKey);
+    void LoginByCertificate(String entity, PrivateKey privateKey);
 
     /// <summary>
     /// \brief Inicia o processo de login por autenticação compartilhada.

@@ -40,7 +40,7 @@ namespace tecgraf.openbus {
     private LeaseRenewer _leaseRenewer;
 
     internal bool Legacy;
-    internal readonly CallContextImpl Context;
+    internal readonly OpenBusContextImpl Context;
 
     private volatile int _sessionId;
 
@@ -97,7 +97,7 @@ namespace tecgraf.openbus {
 
     #region Constructors
 
-    internal ConnectionImpl(string host, ushort port, CallContextImpl context,
+    internal ConnectionImpl(string host, ushort port, OpenBusContextImpl context,
                             bool legacy, bool delegateOriginator) {
       if (string.IsNullOrEmpty(host)) {
         throw new InvalidBusAddressException("O campo 'host' não é válido");
@@ -380,7 +380,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void LoginByCertificate(string entity, OpenBusPrivateKey privateKey) {
+    public void LoginByCertificate(string entity, PrivateKey privateKey) {
       _loginLock.EnterReadLock();
       try {
         if (_login.HasValue) {
@@ -397,7 +397,7 @@ namespace tecgraf.openbus {
         LoginProcess login = Acs.startLoginByCertificate(entity,
                                                          out
                                                            challenge);
-        AsymmetricKeyParameter key = privateKey._privateKey;
+        AsymmetricKeyParameter key = privateKey.PrivKey;
         byte[] answer;
         try {
           answer = Crypto.Decrypt(key, challenge);

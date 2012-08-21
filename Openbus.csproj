@@ -86,8 +86,8 @@
     <Compile Include="src\CallerChainImpl.cs" />
     <Compile Include="src\Connection.cs" />
     <Compile Include="src\ConnectionImpl.cs" />
-    <Compile Include="src\CallContext.cs" />
-    <Compile Include="src\CallContextImpl.cs" />
+    <Compile Include="src\OpenBusContext.cs" />
+    <Compile Include="src\OpenBusContextImpl.cs" />
     <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
     <Compile Include="src\exceptions\InvalidPrivateKeyException.cs" />
     <Compile Include="src\exceptions\InvalidBusAddressException.cs" />
@@ -107,7 +107,7 @@
     <Compile Include="src\lease\RenewerTask.cs" />
     <Compile Include="src\ORBInitializer.cs" />
     <Compile Include="src\security\Crypto.cs" />
-    <Compile Include="src\security\OpenBusKey.cs" />
+    <Compile Include="src\security\PrivateKey.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

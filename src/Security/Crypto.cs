@@ -29,8 +29,8 @@ namespace tecgraf.openbus.security {
     /// Gera uma nova chave privada do OpenBus.
     /// </summary>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static OpenBusPrivateKey NewKey() {
-      return new OpenBusPrivateKey(GenerateKeyPair());
+    public static PrivateKey NewKey() {
+      return new PrivateKey(GenerateKeyPair());
     }
 
     /// <summary>
@@ -38,8 +38,8 @@ namespace tecgraf.openbus.security {
     /// </summary>
     /// <param name="encoded">Chave privada em bytes.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static OpenBusPrivateKey ReadKey(byte[] encoded) {
-      return new OpenBusPrivateKey(CreatePrivateKeyFromBytes(encoded));
+    public static PrivateKey ReadKey(byte[] encoded) {
+      return new PrivateKey(CreatePrivateKeyFromBytes(encoded));
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ namespace tecgraf.openbus.security {
     /// </summary>
     /// <param name="filepath">Caminho para o arquivo com a chave privada.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static OpenBusPrivateKey ReadKeyFile(string filepath) {
+    public static PrivateKey ReadKeyFile(string filepath) {
       return ReadKey(File.ReadAllBytes(filepath));
     }
 

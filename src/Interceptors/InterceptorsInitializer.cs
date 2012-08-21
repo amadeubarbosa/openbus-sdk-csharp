@@ -13,7 +13,7 @@ namespace tecgraf.openbus.interceptors {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (InterceptorsInitializer));
 
-    public CallContextImpl Context;
+    public OpenBusContextImpl Context;
 
     #endregion
 
@@ -28,7 +28,7 @@ namespace tecgraf.openbus.interceptors {
       int loginSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
-      Context = new CallContextImpl(currentThreadSlotId, ignoreThreadSlotId,
+      Context = new OpenBusContextImpl(currentThreadSlotId, ignoreThreadSlotId,
                                     joinedChainSlotId);
 
       Codec codec = info.codec_factory.create_codec(

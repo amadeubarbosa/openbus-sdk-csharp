@@ -22,7 +22,7 @@ namespace tecgraf.openbus.Test {
     private static String _entity;
     private static string _login;
     private static byte[] _password;
-    private static CallContext _context;
+    private static OpenBusContext _context;
 
     private static readonly IDictionary<string, string> Props =
       new Dictionary<string, string>();

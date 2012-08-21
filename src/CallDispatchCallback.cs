@@ -29,7 +29,7 @@
     /// <param name="objectId">Identificador opaco descrevendo o objeto sendo chamado.</param>
     /// <param name="operation">Nome da operação sendo chamada.</param>
     /// <returns>Conexão a ser utilizada para receber a chamada.</returns>
-    Connection Dispatch(CallContext context, string busid, string loginId,
+    Connection Dispatch(OpenBusContext context, string busid, string loginId,
                         byte[] objectId, string operation);
   };
 }

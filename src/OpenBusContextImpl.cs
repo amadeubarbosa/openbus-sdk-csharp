@@ -13,17 +13,17 @@ using Current = omg.org.PortableInterceptor.Current;
 
 //TODO fazer busca por variáveis com nome manager no sdk, interops e demos
 //TODO revisar comentários de todas as outras interfaces
-//TODO exceção buschanged deve se manter? NAO
-//TODO exceção InvalidPrivateKey vai para o método readKey
 //TODO verificar nomes e comentários de testes
 //TODO procurar pelas palavras requester e dispatcher no sdk, interops e demos
+//TODO Tentar fazer com que createConnection não falhe nunca (não obtendo facetas, o que seria feito no login, e não fazendo narrow pro CORBA::Object do IComponent obtido pelo corbaloc. Pode ser que em C# não dê problema pois não tem narrow de CORBA, mas tem que testar usando valores válidos e inválidos.
+//TODO no assistant testar construtores que recebem params (ver ideia com felipe) ou fabrica que vai dando set em tudo e depois quando pede create, reseta tudo que setou
 //TODO ver todos os TODOs
 namespace tecgraf.openbus {
-  internal class CallContextImpl : CallContext {
+  internal class OpenBusContextImpl : OpenBusContext {
     #region Fields
 
     private static readonly ILog Logger =
-      LogManager.GetLogger(typeof (CallContextImpl));
+      LogManager.GetLogger(typeof (OpenBusContextImpl));
 
     /** Mapa de conexão por thread */
     //TODO tem que mudar de thread pra id gerado.
@@ -54,7 +54,7 @@ namespace tecgraf.openbus {
 
     #region Constructors
 
-    public CallContextImpl(int currentThreadSlotId, int ignoreThreadSlotId, int joinedChainSlotId) {
+    public OpenBusContextImpl(int currentThreadSlotId, int ignoreThreadSlotId, int joinedChainSlotId) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       CurrentThreadSlotId = currentThreadSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
@@ -65,7 +65,7 @@ namespace tecgraf.openbus {
 
     #endregion
 
-    #region CallContext methods
+    #region OpenBusContext methods
 
     public ORB ORB {
       get { return _orb; }

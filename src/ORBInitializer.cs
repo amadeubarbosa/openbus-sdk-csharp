@@ -12,11 +12,11 @@ namespace tecgraf.openbus {
   /// 
   /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
-  /// também apenas uma instância de CallContext.
+  /// também apenas uma instância de OpenBusContext.
   /// 
   /// O objetivo original dessa classe seria fornecer um método "InitORB". Como
   /// o ORB é um singleton, ele é automaticamente inicializado durante a
-  /// primeira obtenção do CallContext e assim o método "InitORB" não é
+  /// primeira obtenção do OpenBusContext e assim o método "InitORB" não é
   /// público.
   /// </summary>
   public static class ORBInitializer {
@@ -24,7 +24,7 @@ namespace tecgraf.openbus {
 
     private static readonly OrbServices ORB = OrbServices.GetSingleton();
     private static volatile bool _initialized;
-    private static CallContextImpl _context;
+    private static OpenBusContextImpl _context;
 
     #endregion
 
@@ -35,9 +35,9 @@ namespace tecgraf.openbus {
     /// 
     /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
     /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
-    /// também apenas uma instância de CallContext.
+    /// também apenas uma instância de OpenBusContext.
     /// </summary>
-    public static CallContext Context { 
+    public static OpenBusContext Context { 
       get {
         if (!_initialized) {
           InitORB();
@@ -45,7 +45,7 @@ namespace tecgraf.openbus {
         return _context;
       } 
       private set {
-        _context = value as CallContextImpl;
+        _context = value as OpenBusContextImpl;
       } 
     }
 

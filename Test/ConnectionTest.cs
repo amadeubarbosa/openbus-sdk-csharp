@@ -30,9 +30,9 @@ namespace tecgraf.openbus.Test {
     private static String _entityNoCert;
     private static string _login;
     private static byte[] _password;
-    private static OpenBusPrivateKey _privKey;
-    private static OpenBusPrivateKey _wrongKey;
-    private static CallContext _context;
+    private static PrivateKey _privKey;
+    private static PrivateKey _wrongKey;
+    private static OpenBusContext _context;
     private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
 
     private const int LeaseTime = 10;
