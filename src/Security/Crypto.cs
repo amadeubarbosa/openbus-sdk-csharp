@@ -30,7 +30,7 @@ namespace tecgraf.openbus.security {
     /// </summary>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
     public static PrivateKey NewKey() {
-      return new PrivateKey(GenerateKeyPair());
+      return new PrivateKeyImpl(GenerateKeyPair());
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ namespace tecgraf.openbus.security {
     /// <param name="encoded">Chave privada em bytes.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
     public static PrivateKey ReadKey(byte[] encoded) {
-      return new PrivateKey(CreatePrivateKeyFromBytes(encoded));
+      return new PrivateKeyImpl(CreatePrivateKeyFromBytes(encoded));
     }
 
     /// <summary>

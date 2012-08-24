@@ -106,8 +106,9 @@
     <Compile Include="src\lease\LeaseRenewer.cs" />
     <Compile Include="src\lease\RenewerTask.cs" />
     <Compile Include="src\ORBInitializer.cs" />
+    <Compile Include="src\PrivateKey.cs" />
     <Compile Include="src\security\Crypto.cs" />
-    <Compile Include="src\security\PrivateKey.cs" />
+    <Compile Include="src\security\PrivateKeyImpl.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

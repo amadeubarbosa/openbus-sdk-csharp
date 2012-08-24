@@ -381,6 +381,12 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByCertificate(string entity, PrivateKey privateKey) {
+      PrivateKeyImpl temp = privateKey as PrivateKeyImpl;
+      if (temp == null) {
+        throw new ArgumentException("A chave privada fornecida deve ser gerada pela API do SDK do OpenBus.");
+      }
+      AsymmetricKeyParameter key = temp.PrivKey;
+
       _loginLock.EnterReadLock();
       try {
         if (_login.HasValue) {
@@ -397,7 +403,6 @@ namespace tecgraf.openbus {
         LoginProcess login = Acs.startLoginByCertificate(entity,
                                                          out
                                                            challenge);
-        AsymmetricKeyParameter key = privateKey.PrivKey;
         byte[] answer;
         try {
           answer = Crypto.Decrypt(key, challenge);
