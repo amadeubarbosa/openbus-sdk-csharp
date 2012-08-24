@@ -90,7 +90,6 @@
     <Compile Include="src\OpenBusContextImpl.cs" />
     <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
     <Compile Include="src\exceptions\InvalidPrivateKeyException.cs" />
-    <Compile Include="src\exceptions\InvalidBusAddressException.cs" />
     <Compile Include="src\exceptions\InvalidLoginProcessException.cs" />
     <Compile Include="src\exceptions\InvalidPropertyValueException.cs" />
     <Compile Include="src\exceptions\OpenBusException.cs" />

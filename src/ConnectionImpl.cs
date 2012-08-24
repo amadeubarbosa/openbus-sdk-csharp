@@ -99,13 +99,6 @@ namespace tecgraf.openbus {
 
     internal ConnectionImpl(string host, ushort port, OpenBusContextImpl context,
                             bool legacy, bool delegateOriginator) {
-      if (string.IsNullOrEmpty(host)) {
-        throw new InvalidBusAddressException("O campo 'host' não é válido");
-      }
-      if (port < 0) {
-        throw new InvalidBusAddressException(
-          "O campo 'port' não pode ser negativo.");
-      }
       _host = host;
       _port = port;
       ORB = OrbServices.GetSingleton();
@@ -120,18 +113,13 @@ namespace tecgraf.openbus {
       const string connErrorMessage =
         "Não foi possível conectar ao barramento com o host e porta fornecidos.";
       try {
-        _acsComponent = RemotingServices.Connect(
+        _acsComponent = (IComponent) RemotingServices.Connect(
           typeof (IComponent),
-          "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal)
-                        as IComponent;
-        if (_acsComponent == null) {
-          Logger.Error(connErrorMessage);
-          throw new InvalidBusAddressException(connErrorMessage);
-        }
+          "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal);
       }
       catch (Exception e) {
         Logger.Error(connErrorMessage, e);
-        throw new InvalidBusAddressException(connErrorMessage, e);
+        throw;
       }
 
       InternalKey = Crypto.GenerateKeyPair();
@@ -168,9 +156,9 @@ namespace tecgraf.openbus {
       Offers = orObjRef as OfferRegistry;
       if ((Acs == null) || (LoginRegistry == null) || (Offers == null)) {
         const string msg =
-          "As facetas de controle de acesso e/ou registro de ofertas não foram encontradas.";
+          "As facetas de controle de acesso, registro de logins e/ou registro de ofertas não foram encontradas.";
         Logger.Error(msg);
-        throw new InvalidBusAddressException(msg);
+        throw new OpenBusInternalException(msg);
       }
 
       if (Legacy) {
