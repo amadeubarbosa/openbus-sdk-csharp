@@ -68,7 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CallDispatchCallbackImpl.cs" />
-    <Compile Include="ConnectionManagerTest.cs" />
+    <Compile Include="OpenBusContextTest.cs" />
     <Compile Include="ConnectionTest.cs" />
     <Compile Include="HelloMock.cs" />
     <Compile Include="InvalidLoginCallbackMock.cs" />

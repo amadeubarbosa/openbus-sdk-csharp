@@ -15,11 +15,11 @@ using tecgraf.openbus.test;
 
 namespace tecgraf.openbus.Test {
   /// <summary>
-  ///This is a test class for ConnectionManagerTest and is intended
-  ///to contain all ConnectionManagerTest Unit Tests
+  ///This is a test class for OpenBusContextTest and is intended
+  ///to contain all OpenBusContextTest Unit Tests
   ///</summary>
   [TestClass]
-  public class ConnectionManagerTest {
+  public class OpenBusTest {
     #region Fields
 
     private static String _hostName;
