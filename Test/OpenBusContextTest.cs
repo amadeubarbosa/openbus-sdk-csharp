@@ -45,12 +45,6 @@ namespace tecgraf.openbus.Test {
     // 
     //You can use the following additional attributes as you write your tests:
     //
-    //Use ClassCleanup to run code after all tests in a class have run
-    //[ClassCleanup()]
-    //public static void MyClassCleanup()
-    //{
-    //}
-    //
     //Use TestInitialize to run code before running each test
     //[TestInitialize()]
     //public void MyTestInitialize()
@@ -196,81 +190,7 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    /// Testes do método GetDispatcher
-    ///</summary>
-    [TestMethod]
-    public void GetDispatcherTest() {
-      lock (_context) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
-        conn.LoginByPassword(_login, _password);
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, Props);
-        conn2.LoginByPassword(_login, _password);
-        _context.SetDefaultConnection(conn);
-        Assert.IsNull(_context.GetDispatcher(conn.BusId));
-        _context.SetCurrentConnection(conn2);
-        Assert.IsNull(_context.GetDispatcher(conn.BusId));
-        _context.SetDispatcher(conn2);
-        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn2);
-        _context.ClearDispatcher(conn.BusId);
-        Assert.IsNull(_context.GetDispatcher(conn2.BusId));
-        _context.SetDispatcher(conn2);
-        Assert.IsTrue(conn2.Logout());
-        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn2);
-        _context.SetCurrentConnection(null);
-        Assert.IsTrue(conn.Logout());
-        _context.SetDefaultConnection(null);
-        _context.ClearDispatcher(conn.BusId);
-      }
-    }
-
-    /// <summary>
-    /// Testes do método ClearDispatcher
-    ///</summary>
-    [TestMethod]
-    public void ClearDispatcherTest() {
-      lock (_context) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, Props);
-        conn.LoginByPassword(_login, _password);
-        conn2.LoginByPassword(_login, _password);
-        Connection removed = _context.ClearDispatcher(conn.BusId);
-        Assert.IsNull(removed);
-        _context.SetDispatcher(conn2);
-        removed = _context.ClearDispatcher(conn.BusId);
-        Assert.AreEqual(removed, conn2);
-        Assert.IsTrue(conn.Logout());
-        Assert.IsTrue(conn2.Logout());
-      }
-    }
-
-    /// <summary>
-    /// Testes do método SetDispatcher
-    ///</summary>
-    [TestMethod]
-    public void SetDispatcherTest() {
-      lock (_context) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
-        conn.LoginByPassword(_login, _password);
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, Props);
-        conn2.LoginByPassword(_login, _password);
-        _context.SetDefaultConnection(conn);
-        Assert.IsNull(_context.GetDispatcher(conn.BusId));
-        _context.SetCurrentConnection(conn);
-        Assert.IsNull(_context.GetDispatcher(conn.BusId));
-        _context.SetDispatcher(conn2);
-        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn2);
-        _context.SetCurrentConnection(conn2);
-        Assert.IsTrue(conn2.Logout());
-        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn2);
-        _context.SetCurrentConnection(null);
-        Assert.IsTrue(conn.Logout());
-        _context.SetDefaultConnection(null);
-        _context.ClearDispatcher(conn.BusId);
-      }
-    }
-
-    /// <summary>
-    /// Teste da auto-propriedade DefaultConnection
+    /// Teste do DefaultConnection
     ///</summary>
     [TestMethod]
     public void DefaultConnectionTest() {
@@ -282,39 +202,79 @@ namespace tecgraf.openbus.Test {
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.GetDefaultConnection());
         _context.SetCurrentConnection(null);
-        _context.SetDefaultConnection(conn);
+        Connection previous = _context.SetDefaultConnection(conn);
+        Assert.IsNull(previous);
         Assert.AreEqual(_context.GetDefaultConnection(), conn);
-        _context.SetDispatcher(conn);
+        CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
+        _context.OnCallDispatch = callback;
         Assert.AreEqual(_context.GetDefaultConnection(), conn);
-        _context.ClearDispatcher(conn.BusId);
+        _context.OnCallDispatch = null;
         Assert.IsTrue(conn.Logout());
         Assert.AreEqual(_context.GetDefaultConnection(), conn);
-        _context.SetDefaultConnection(null);
+        previous = _context.SetDefaultConnection(null);
+        Assert.AreEqual(previous, conn);
+
+        // tentativa de chamada sem current connection setado nem default connection
+        conn.LoginByPassword(_login, _password);
+        Assert.IsNull(_context.GetDefaultConnection());
+        bool failed = false;
+        ServiceProperty[] props = new[] { new ServiceProperty("a", "b") };
+        try {
+          _context.OfferRegistry.findServices(props);
+        }
+        catch (NO_PERMISSION e) {
+          failed = true;
+          if (e.Minor != NoLoginCode.ConstVal) {
+            Assert.Fail(
+              "A exceção deveria ser NO_PERMISSION com minor code NoLoginCode. Minor code recebido: " +
+              e.Minor);
+          }
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser NO_PERMISSION com minor code NoLoginCode. Exceção recebida: " +
+            e);
+        }
+        Assert.IsTrue(failed);
+        // tentativa com default connection setado
+        previous = _context.SetDefaultConnection(conn);
+        Assert.IsNull(previous);
+        try {
+          _context.OfferRegistry.findServices(props);
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A chamada com default connection setado deveria ser bem-sucedida. Exceção recebida: " +
+            e);
+        }
+        previous = _context.SetDefaultConnection(null);
+        Assert.AreEqual(previous, conn);
       }
     }
 
     /// <summary>
-    /// Teste da auto-propriedade Requester
+    /// Teste do CurrentConnection
     ///</summary>
     [TestMethod]
     public void CurrentConnectionTest() {
-//TODO testar valor de retorno
       lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetCurrentConnection());
         _context.SetDefaultConnection(conn);
-        _context.SetDispatcher(conn);
+        CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
+        _context.OnCallDispatch = callback;
         Assert.IsNull(_context.GetCurrentConnection());
         _context.SetCurrentConnection(conn);
         Assert.AreEqual(_context.GetCurrentConnection(), conn);
         _context.SetDefaultConnection(null);
-        _context.ClearDispatcher(conn.BusId);
+        _context.OnCallDispatch = null;
         Assert.IsTrue(conn.Logout());
         Assert.AreEqual(_context.GetCurrentConnection(), conn);
-        _context.SetCurrentConnection(null);
+        Connection previous = _context.SetCurrentConnection(null);
+        Assert.AreEqual(previous, conn);
 
-        // tentativa de chamada sem threadrequester setado
+        // tentativa de chamada sem current connection setado nem default connection
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetCurrentConnection());
         bool failed = false;
@@ -336,17 +296,19 @@ namespace tecgraf.openbus.Test {
             e);
         }
         Assert.IsTrue(failed);
-        // tentativa com threadrequester setado
-        _context.SetCurrentConnection(conn);
+        // tentativa com current connection setado
+        previous = _context.SetCurrentConnection(conn);
+        Assert.IsNull(previous);
         try {
           _context.OfferRegistry.findServices(props);
         }
         catch (Exception e) {
           Assert.Fail(
-            "A chamada com ThreadRequester setado deveria ser bem-sucedida. Exceção recebida: " +
+            "A chamada com current connection setado deveria ser bem-sucedida. Exceção recebida: " +
             e);
         }
-        _context.SetCurrentConnection(null);
+        previous = _context.SetCurrentConnection(null);
+        Assert.AreEqual(previous, conn);
       }
     }
 
@@ -430,6 +392,13 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(_context.JoinedChain);
         _context.SetCurrentConnection(null);
       }
+    }
+
+    // Use ClassCleanup to run code after all tests in a class have run
+    [ClassCleanup]
+    public static void MyClassCleanup() {
+      // não gera erro em testes rodados automaticamente mas permite perceber ao rodar na mão
+      ConnectionTest.CheckConnectionsMapSize();
     }
   }
 }

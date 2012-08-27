@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
@@ -59,19 +58,16 @@ namespace tecgraf.openbus.interceptors {
                       interceptedOperation, anyCredential.IsLegacy));
 
       ConnectionImpl conn = null;
+      Connection previous = null;
       try {
         conn = GetDispatcherForRequest(ri, anyCredential) as ConnectionImpl;
         if (conn == null) {
-          conn = Context.GetDefaultConnection() as ConnectionImpl;
-          if (conn == null) {
-            Logger.Error(
-              "Sem conexão ao barramento, impossível receber a chamada remota.");
-            throw new NO_PERMISSION(UnknownBusCode.ConstVal,
-                                    CompletionStatus.Completed_No);
-          }
+          Logger.Error(
+            "Sem conexão ao barramento, impossível receber a chamada remota.");
+          throw new NO_PERMISSION(UnknownBusCode.ConstVal,
+                                  CompletionStatus.Completed_No);
         }
-        SetCurrentConnection(ri, conn);
-        Context.SetCurrentConnection(conn);
+        previous = Context.SetCurrentConnection(conn);
         conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
@@ -79,10 +75,7 @@ namespace tecgraf.openbus.interceptors {
         throw;
       }
       finally {
-        RemoveCurrentConnection(ri);
-        // Talvez a linha abaixo não seja necessaria, pois o PICurrent deveria
-        // acabar junto com a thread de interceptação (Context.SetCurrentConnection usa PICurrent).
-        Context.SetCurrentConnection(null);
+        Context.SetCurrentConnection(previous);
         if (conn != null) {
           ri.set_slot(ReceivingConnectionSlotId, conn);
         }
@@ -210,30 +203,6 @@ namespace tecgraf.openbus.interceptors {
         Logger.Fatal("Falha inesperada ao limpar informações nos slots", e);
         throw;
       }
-    }
-
-    private void SetCurrentConnection(ServerRequestInfo ri, ConnectionImpl conn) {
-      int id = Thread.CurrentThread.ManagedThreadId;
-      try {
-        ri.set_slot(Context.CurrentThreadSlotId, id);
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
-        throw;
-      }
-      Context.SetConnectionByThreadId(id, conn);
-    }
-
-    private void RemoveCurrentConnection(ServerRequestInfo ri) {
-      try {
-        ri.set_slot(Context.CurrentThreadSlotId, null);
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente", e);
-        throw;
-      }
-      int id = Thread.CurrentThread.ManagedThreadId;
-      Context.SetConnectionByThreadId(id, null);
     }
 
     private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,

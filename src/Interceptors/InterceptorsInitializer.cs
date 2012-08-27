@@ -21,13 +21,13 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      int currentThreadSlotId = info.allocate_slot_id();
+      int connectionIdSlotId = info.allocate_slot_id();
       int chainSlotId = info.allocate_slot_id();
       int receivingSlotId = info.allocate_slot_id();
       int loginSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
-      Context = new OpenBusContextImpl(currentThreadSlotId, ignoreThreadSlotId,
+      Context = new OpenBusContextImpl(connectionIdSlotId, ignoreThreadSlotId,
                                     joinedChainSlotId, chainSlotId);
 
       Codec codec = info.codec_factory.create_codec(

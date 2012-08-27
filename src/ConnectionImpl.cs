@@ -369,7 +369,8 @@ namespace tecgraf.openbus {
     public void LoginByCertificate(string entity, PrivateKey privateKey) {
       PrivateKeyImpl temp = privateKey as PrivateKeyImpl;
       if (temp == null) {
-        throw new ArgumentException("A chave privada fornecida deve ser gerada pela API do SDK do OpenBus.");
+        throw new ArgumentException(
+          "A chave privada fornecida deve ser gerada pela API do SDK do OpenBus.");
       }
       AsymmetricKeyParameter key = temp.PrivKey;
 
@@ -639,23 +640,29 @@ namespace tecgraf.openbus {
                                   CompletionStatus.Completed_No);
         }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
-          LoginInfo originalLogin;
+          LoginInfo? originalLogin;
           try {
-            originalLogin = (LoginInfo) ri.get_slot(_loginSlotId);
+            originalLogin = ri.get_slot(_loginSlotId) as LoginInfo?;
+            if (!originalLogin.HasValue) {
+              const string errorMsg =
+                "Falha inesperada ao acessar o slot do login corrente: o login não foi armazenado no slot.";
+              Logger.Fatal(errorMsg);
+              throw new OpenBusInternalException(errorMsg);
+            }
           }
           catch (InvalidSlot e) {
             Logger.Fatal(
               "Falha inesperada ao acessar o slot do login corrente", e);
             throw;
           }
-          if (_login.HasValue && originalLogin.id.Equals(_login.Value.id)) {
+          if (_login.HasValue && originalLogin.Value.id.Equals(_login.Value.id)) {
             LocalLogout();
             _invalidLogin = originalLogin;
           }
           Logger.Error(
             String.Format(
               "Exceção de login inválido recebida ao tentar realizar a operação {0} com o login {1} da entidade {2}.",
-              operation, originalLogin.id, originalLogin.entity));
+              operation, originalLogin.Value.id, originalLogin.Value.entity));
           LoginInfo? login =
             GetLoginOrThrowNoLogin(
               String.Format(
@@ -771,13 +778,16 @@ namespace tecgraf.openbus {
                               StructuralComparisons.StructuralEqualityComparer)) {
               // credencial valida
               // CheckChain pode lançar exceção com InvalidChainCode
-              CallChain chain = CheckChain(credential.chain, credential.login, loginId, busKey);
+              CallChain chain = CheckChain(credential.chain, credential.login,
+                                           loginId, busKey);
               // CheckTicket já faz o lock no ticket history da sessão
               if (session.CheckTicket(credential.ticket)) {
                 // insere a cadeia no slot para a getCallerChain usar
                 try {
-                  ri.set_slot(_chainSlotId, new CallerChainImpl(BusId, chain.caller, chain.originators,
-                                     anyCredential.Credential.chain));
+                  ri.set_slot(_chainSlotId,
+                              new CallerChainImpl(BusId, chain.caller,
+                                                  chain.originators,
+                                                  anyCredential.Credential.chain));
                 }
                 catch (InvalidSlot e) {
                   Logger.Fatal(
@@ -819,11 +829,12 @@ namespace tecgraf.openbus {
           LoginInfo[] originators = lCredential._delegate.Equals(String.Empty)
                                       ? new LoginInfo[0]
                                       : new[] {
-                                                  new LoginInfo("<unknown>",
-                                                                lCredential.
-                                                                  _delegate)
-                                                };
-          ri.set_slot(_chainSlotId, new CallerChainImpl(BusId, caller, originators));
+                                                new LoginInfo("<unknown>",
+                                                              lCredential.
+                                                                _delegate)
+                                              };
+          ri.set_slot(_chainSlotId,
+                      new CallerChainImpl(BusId, caller, originators));
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
@@ -1104,7 +1115,7 @@ namespace tecgraf.openbus {
     }
 
     private CallChain CheckChain(SignedCallChain signed, string callerId,
-                            string loginId, AsymmetricKeyParameter busKey) {
+                                 string loginId, AsymmetricKeyParameter busKey) {
       CallChain chain = UnmarshalCallChain(signed);
       if (!chain.target.Equals(loginId)) {
         Logger.Error(

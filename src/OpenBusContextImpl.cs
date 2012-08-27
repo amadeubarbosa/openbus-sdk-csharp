@@ -17,9 +17,8 @@ namespace tecgraf.openbus {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (OpenBusContextImpl));
 
-    /** Mapa de conexão por thread */
-    //TODO tem que mudar de thread pra id gerado.
-    private readonly ConcurrentDictionary<int, Connection> _connectedThreads;
+    // Mapa de conexões
+    private readonly ConcurrentDictionary<Guid, Connection> _connections;
 
     private readonly ORB _orb;
 
@@ -29,8 +28,8 @@ namespace tecgraf.openbus {
     private const string LegacyDelegateDefault = "caller";
     private const string LegacyDelegateOriginatorOption = "originator";
 
-    // Identificador do slot de thread corrente.
-    internal int CurrentThreadSlotId { get; private set; }
+    // Identificador do slot de id de conexão corrente.
+    private readonly int _connectionIdSlotId;
 
     // Identificador do slot de interceptação ignorada.
     private readonly int _ignoreThreadSlotId;
@@ -43,14 +42,17 @@ namespace tecgraf.openbus {
     //TODO rever se posso dividir em locks diferentes
     private readonly ReaderWriterLockSlim _lock;
 
+    private const string ConnectionIdErrorMsg =
+      "Falha inesperada ao acessar o slot do id de conexão corrente";
+
     #endregion
 
     #region Constructors
 
-    public OpenBusContextImpl(int currentThreadSlotId, int ignoreThreadSlotId,
+    public OpenBusContextImpl(int connectionIdSlotId, int ignoreThreadSlotId,
                               int joinedChainSlotId, int chainSlotId) {
-      _connectedThreads = new ConcurrentDictionary<int, Connection>();
-      CurrentThreadSlotId = currentThreadSlotId;
+      _connections = new ConcurrentDictionary<Guid, Connection>();
+      _connectionIdSlotId = connectionIdSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
       _joinedChainSlotId = joinedChainSlotId;
       _chainSlotId = chainSlotId;
@@ -154,41 +156,48 @@ namespace tecgraf.openbus {
     }
 
     public Connection GetCurrentConnection() {
-      Current current = GetPICurrent();
-      int id;
       try {
-        Object obj = current.get_slot(CurrentThreadSlotId);
-        if (obj == null) {
+        Guid? guid = GetPICurrent().get_slot(_connectionIdSlotId) as Guid?;
+        if (!guid.HasValue) {
           return null;
         }
-        id = Convert.ToInt32(obj);
+        Connection connection = GetConnectionById(guid.Value);
+        return connection;
       }
       catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente",
-                     e);
+        Logger.Fatal(ConnectionIdErrorMsg, e);
         throw;
       }
-
-      Connection connection;
-      return _connectedThreads.TryGetValue(id, out connection)
-               ? connection
-               : GetDefaultConnection();
     }
 
     public Connection SetCurrentConnection(Connection conn) {
-      Connection previous = GetCurrentConnection();
-      int id = Thread.CurrentThread.ManagedThreadId;
+      Connection previous = null;
       Current current = GetPICurrent();
       try {
-        current.set_slot(CurrentThreadSlotId, id);
+        // tenta reaproveitar o guid
+        Guid? guid = current.get_slot(_connectionIdSlotId) as Guid?;
+        if (guid.HasValue) {
+          previous = GetConnectionById(guid.Value);
+          if (conn == null) {
+            current.set_slot(_connectionIdSlotId, null);
+            SetConnectionById(guid.Value, null);
+            return previous;
+          }
+        }
+        else {
+          if (conn == null) {
+            return null;
+          }
+          guid = Guid.NewGuid();
+          current.set_slot(_connectionIdSlotId, guid);
+        }
+        SetConnectionById(guid.Value, conn);
+        return previous;
       }
       catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot da thread corrente",
-                     e);
+        Logger.Fatal(ConnectionIdErrorMsg, e);
         throw;
       }
-      SetConnectionByThreadId(id, conn);
-      return previous;
     }
 
     public void JoinChain(CallerChain chain) {
@@ -208,16 +217,12 @@ namespace tecgraf.openbus {
     public CallerChain CallerChain {
       get {
         Current current = GetPICurrent();
-        ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
-        if (!conn.Login.HasValue) {
-          return null;
-        }
         try {
           return (CallerChainImpl) current.get_slot(_chainSlotId);
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
-            "Falha inesperada ao acessar o slot da credencial corrente.", e);
+            "Falha inesperada ao acessar o slot da cadeia corrente.", e);
           throw;
         }
       }
@@ -251,7 +256,7 @@ namespace tecgraf.openbus {
 
     public LoginRegistry LoginRegistry {
       get {
-        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
+        ConnectionImpl conn = GetCurrentConnectionOrDefault() as ConnectionImpl;
         if (conn == null) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -262,7 +267,7 @@ namespace tecgraf.openbus {
 
     public OfferRegistry OfferRegistry {
       get {
-        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
+        ConnectionImpl conn = GetCurrentConnectionOrDefault() as ConnectionImpl;
         if (conn == null) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -286,19 +291,23 @@ namespace tecgraf.openbus {
       return current;
     }
 
-    internal void SetConnectionByThreadId(int threadId, Connection conn) {
-      lock (_connectedThreads) {
+    internal Connection GetCurrentConnectionOrDefault() {
+      return GetCurrentConnection() ?? GetDefaultConnection();
+    }
+
+    private void SetConnectionById(Guid connectionId, Connection conn) {
+      lock (_connections) {
         Connection removed;
-        _connectedThreads.TryRemove(threadId, out removed);
+        _connections.TryRemove(connectionId, out removed);
         if (conn != null) {
-          _connectedThreads.TryAdd(threadId, conn);
+          _connections.TryAdd(connectionId, conn);
         }
       }
     }
 
-    internal Connection GetConnectionByThreadId(int threadId) {
+    private Connection GetConnectionById(Guid connectionId) {
       Connection conn;
-      return _connectedThreads.TryGetValue(threadId, out conn) ? conn : null;
+      return _connections.TryGetValue(connectionId, out conn) ? conn : null;
     }
 
     internal void IgnoreCurrentThread() {
@@ -338,6 +347,10 @@ namespace tecgraf.openbus {
 
     private void LogPropertyChanged(string prop, string value) {
       Logger.Info(String.Format("{0} property set to value {1}.", prop, value));
+    }
+
+    internal int GetConnectionsMapSize() {
+      return _connections.Count;
     }
 
     #endregion

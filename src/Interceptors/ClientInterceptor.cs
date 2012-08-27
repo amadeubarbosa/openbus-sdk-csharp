@@ -1,4 +1,3 @@
-using System;
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
@@ -45,7 +44,7 @@ namespace tecgraf.openbus.interceptors {
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
       if (!Context.IsCurrentThreadIgnored(ri)) {
-        ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
+        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn != null) {
           conn.SendRequest(ri);
           return;
@@ -61,7 +60,7 @@ namespace tecgraf.openbus.interceptors {
     /// <inheritdoc />
     public void receive_exception(ClientRequestInfo ri) {
       if (!Context.IsCurrentThreadIgnored(ri)) {
-        ConnectionImpl conn = GetCurrentConnection(ri) as ConnectionImpl;
+        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn != null) {
           conn.ReceiveException(ri);
           return;
@@ -92,32 +91,15 @@ namespace tecgraf.openbus.interceptors {
 
     #endregion
 
-    private Connection GetCurrentConnection(RequestInfo ri) {
-      try {
-        string id = "-1";
-        object obj = ri.get_slot(Context.CurrentThreadSlotId);
-        if (obj != null) {
-          id = obj.ToString();
-        }
-        Connection connection =
-          Context.GetConnectionByThreadId(Convert.ToInt32(id));
-        if (connection == null) {
-          connection = Context.GetDefaultConnection();
-          if (connection == null) {
-            Logger.Error(
-              "Impossível retornar conexão corrente, pois não foi definida.");
-            throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                    CompletionStatus.Completed_No);
-          }
-          Logger.Debug("Utilizando a conexão padrão para realizar a chamada.");
-        }
-        Logger.Debug("Utilizando a conexão da thread para realizar a chamada.");
-        return connection;
+    private Connection GetCurrentConnection() {
+      Connection conn = Context.GetCurrentConnectionOrDefault();
+      if (conn == null) {
+        Logger.Error(
+          "Impossível retornar conexão corrente, pois não foi definida.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao obter o slot da conexão corrente", e);
-        throw;
-      }
+      return conn;
     }
   }
 }

@@ -2,7 +2,6 @@
 using System.Configuration;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
-using Scs.Core;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -11,7 +10,6 @@ using tecgraf.openbus.core.v2_0;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
-using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
 using tecgraf.openbus.test;
 
@@ -48,12 +46,6 @@ namespace tecgraf.openbus.Test {
 
     #region Additional test attributes
 
-    //Use ClassCleanup to run code after all tests in a class have run
-    //[ClassCleanup()]
-    //public static void MyClassCleanup()
-    //{
-    //}
-    //
     //Use TestInitialize to run code before running each test
     //[TestInitialize()]
     //public void MyTestInitialize()
@@ -388,15 +380,14 @@ namespace tecgraf.openbus.Test {
     public void LogoutTest() {
       lock (this) {
         Connection conn = CreateConnection();
+        CallDispatchCallbackImpl dispatchCallback = new CallDispatchCallbackImpl(conn);
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
-        _context.SetDispatcher(conn);
-        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn);
+        _context.OnCallDispatch = dispatchCallback;
         Assert.IsTrue(conn.Logout());
-        Assert.AreEqual(_context.GetDispatcher(conn.BusId), conn);
         Assert.IsNotNull(conn.BusId);
         Assert.IsNull(conn.Login);
-        _context.ClearDispatcher(conn.BusId);
+        _context.OnCallDispatch = null;
         bool failed = false;
         try {
           _context.SetCurrentConnection(conn);
@@ -477,6 +468,21 @@ namespace tecgraf.openbus.Test {
           _context.SetDefaultConnection(null);
         }
       }
+    }
+
+    // Use ClassCleanup to run code after all tests in a class have run
+    [ClassCleanup]
+    public static void MyClassCleanup() {
+      // não gera erro em testes rodados automaticamente mas permite perceber ao rodar na mão
+      CheckConnectionsMapSize();
+    }
+
+    internal static void CheckConnectionsMapSize() {
+      int size;
+      lock (_context) {
+        size = ((OpenBusContextImpl)_context).GetConnectionsMapSize();
+      }
+      Assert.AreEqual(0, size, "Número de conexões no contexto ao final dos testes não é zero, é ." + size);
     }
   }
 }
