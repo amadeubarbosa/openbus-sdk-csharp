@@ -8,6 +8,7 @@ using log4net.Config;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.simple.Properties;
+using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.simple {
   /// <summary>
@@ -21,22 +22,22 @@ namespace tecgraf.openbus.interop.simple {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
+      PrivateKey privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = _conn;
+      OpenBusContext context = ORBInitializer.Context;
+      _conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(_conn);
 
       const string entityName = "interop_hello_csharp_server";
-      byte[] privateKey = File.ReadAllBytes(DemoConfig.Default.privateKey);
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
-                         new HelloImpl(_conn));
+                         new HelloImpl());
 
       _conn.LoginByCertificate(entityName, privateKey);
 
@@ -45,7 +46,7 @@ namespace tecgraf.openbus.interop.simple {
                                              new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
-      Offer = _conn.Offers.registerService(ic, properties);
+      Offer = context.OfferRegistry.registerService(ic, properties);
       _conn.OnInvalidLogin = new HelloInvalidLoginCallback(entityName,
                                                            privateKey, ic,
                                                            properties);

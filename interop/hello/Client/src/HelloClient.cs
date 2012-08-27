@@ -29,9 +29,9 @@ namespace tecgraf.openbus.interop.simple {
       BasicConfigurator.Configure(appender);
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = conn;
+      OpenBusContext context = ORBInitializer.Context;
+      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_hello_csharp_client";
       byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
@@ -47,7 +47,7 @@ namespace tecgraf.openbus.interop.simple {
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp, prop};
-      ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
+      ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
