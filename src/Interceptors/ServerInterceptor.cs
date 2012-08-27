@@ -21,6 +21,7 @@ namespace tecgraf.openbus.interceptors {
     private static ServerInterceptor _instance;
 
     internal int ReceivingConnectionSlotId;
+    internal int ChainSlotId;
 
     #endregion
 
