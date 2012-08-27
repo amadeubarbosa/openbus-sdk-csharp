@@ -19,11 +19,11 @@ namespace tecgraf.openbus.interop.multiplexing {
       ushort[] ports = {hostPort, hostPort2};
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
+      OpenBusContext context = ORBInitializer.Context;
 
       foreach (ushort port in ports) {
-        Connection conn = manager.CreateConnection(hostName, port, props);
-        manager.DefaultConnection = conn;
+        Connection conn = context.CreateConnection(hostName, port, props);
+        context.SetDefaultConnection(conn);
         const string login = "interop_multiplexing_csharp_client";
         conn.LoginByPassword(login, encoding.GetBytes(login));
 
@@ -34,7 +34,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         serviceProperties[1] = new ServiceProperty("offer.domain",
                                                    "Interoperability Tests");
         ServiceOfferDesc[] services =
-          conn.Offers.findServices(serviceProperties);
+          context.OfferRegistry.findServices(serviceProperties);
         foreach (ServiceOfferDesc offer in services) {
           foreach (ServiceProperty prop in offer.properties) {
             if (prop.name.Equals("openbus.offer.entity")) {

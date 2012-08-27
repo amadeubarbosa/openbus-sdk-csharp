@@ -27,7 +27,7 @@ namespace tecgraf.openbus.interop.multiplexing {
       string ret = String.Empty;
       try {
         foreach (Connection conn in _conns) {
-          CallerChain callerChain = conn.CallerChain;
+          CallerChain callerChain = ORBInitializer.Context.CallerChain;
           if (callerChain != null) {
             String entity = callerChain.Caller.entity;
             ret = String.Format("Hello {0}@{1}!", entity,
