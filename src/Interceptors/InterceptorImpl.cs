@@ -24,8 +24,7 @@ namespace tecgraf.openbus.interceptors {
     /// </summary>
     internal Codec Codec { get; set; }
 
-    internal int CredentialSlotId;
-    internal int ConnectionSlotId;
+    internal int ChainSlotId;
 
     internal OpenBusContextImpl Context;
 

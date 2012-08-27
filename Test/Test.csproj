@@ -67,6 +67,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CallDispatchCallbackImpl.cs" />
     <Compile Include="ConnectionManagerTest.cs" />
     <Compile Include="ConnectionTest.cs" />
     <Compile Include="HelloMock.cs" />

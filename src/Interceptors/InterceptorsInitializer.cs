@@ -21,26 +21,22 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void pre_init(omg.org.PortableInterceptor.ORBInitInfo info) {
-      int credentialSlotId = info.allocate_slot_id();
       int currentThreadSlotId = info.allocate_slot_id();
-      int connectionSlotId = info.allocate_slot_id();
+      int chainSlotId = info.allocate_slot_id();
       int receivingSlotId = info.allocate_slot_id();
       int loginSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
       Context = new OpenBusContextImpl(currentThreadSlotId, ignoreThreadSlotId,
-                                    joinedChainSlotId);
+                                    joinedChainSlotId, chainSlotId);
 
       Codec codec = info.codec_factory.create_codec(
         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
       ServerInterceptor.Instance.Codec = codec;
-      ServerInterceptor.Instance.CredentialSlotId = credentialSlotId;
-      ServerInterceptor.Instance.ConnectionSlotId = connectionSlotId;
+      ServerInterceptor.Instance.ChainSlotId = chainSlotId;
       ServerInterceptor.Instance.ReceivingConnectionSlotId = receivingSlotId;
       ServerInterceptor.Instance.Context = Context;
       ClientInterceptor.Instance.Codec = codec;
-      ClientInterceptor.Instance.CredentialSlotId = credentialSlotId;
-      ClientInterceptor.Instance.ConnectionSlotId = connectionSlotId;
       ClientInterceptor.Instance.LoginSlotId = loginSlotId;
       ClientInterceptor.Instance.Context = Context;
 

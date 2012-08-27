@@ -65,7 +65,7 @@ namespace tecgraf.openbus {
     private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
       _sessionId2Session;
 
-    internal readonly LoginCache LoginsCache;
+    private readonly LoginCache _loginsCache;
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
@@ -81,8 +81,7 @@ namespace tecgraf.openbus {
 
     private readonly Codec _codec;
 
-    private readonly int _credentialSlotId;
-    private readonly int _connectionSlotId;
+    private readonly int _chainSlotId;
     private readonly int _loginSlotId;
 
     private readonly bool _delegateOriginator;
@@ -106,8 +105,7 @@ namespace tecgraf.openbus {
       Legacy = legacy;
       _delegateOriginator = delegateOriginator;
       _codec = ServerInterceptor.Instance.Codec;
-      _credentialSlotId = ServerInterceptor.Instance.CredentialSlotId;
-      _connectionSlotId = ServerInterceptor.Instance.ConnectionSlotId;
+      _chainSlotId = ServerInterceptor.Instance.ChainSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
 
       const string connErrorMessage =
@@ -134,7 +132,7 @@ namespace tecgraf.openbus {
       _login = null;
       _invalidLogin = null;
       GetBusFacets();
-      LoginsCache = new LoginCache(LoginRegistry);
+      _loginsCache = new LoginCache(LoginRegistry);
       _busId = GetBusIdAndKey(out _busKey);
     }
 
@@ -733,7 +731,7 @@ namespace tecgraf.openbus {
       LoginCache.LoginEntry login;
       try {
         Context.SetCurrentConnection(this);
-        login = LoginsCache.GetLoginEntry(credentialLogin);
+        login = _loginsCache.GetLoginEntry(credentialLogin);
       }
       catch (Exception e) {
         NO_PERMISSION noPermission = e as NO_PERMISSION;
@@ -773,12 +771,13 @@ namespace tecgraf.openbus {
                               StructuralComparisons.StructuralEqualityComparer)) {
               // credencial valida
               // CheckChain pode lançar exceção com InvalidChainCode
-              CheckChain(credential.chain, credential.login, loginId, busKey);
+              CallChain chain = CheckChain(credential.chain, credential.login, loginId, busKey);
               // CheckTicket já faz o lock no ticket history da sessão
               if (session.CheckTicket(credential.ticket)) {
-                // insere o login no slot para a getCallerChain usar
+                // insere a cadeia no slot para a getCallerChain usar
                 try {
-                  ri.set_slot(_connectionSlotId, this);
+                  ri.set_slot(_chainSlotId, new CallerChainImpl(BusId, chain.caller, chain.originators,
+                                     anyCredential.Credential.chain));
                 }
                 catch (InvalidSlot e) {
                   Logger.Fatal(
@@ -801,7 +800,7 @@ namespace tecgraf.openbus {
               valid = LegacyAccess.isValid(lCredential);
               login.AllowLegacyDelegate = valid;
               // atualiza entrada na cache
-              LoginsCache.UpdateEntryAllowLegacyDelegate(login);
+              _loginsCache.UpdateEntryAllowLegacyDelegate(login);
             }
           }
           else {
@@ -815,7 +814,16 @@ namespace tecgraf.openbus {
               lCredential._delegate));
             throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
           }
-          ri.set_slot(_connectionSlotId, this);
+          LoginInfo caller = new LoginInfo(lCredential.identifier,
+                                           lCredential.owner);
+          LoginInfo[] originators = lCredential._delegate.Equals(String.Empty)
+                                      ? new LoginInfo[0]
+                                      : new[] {
+                                                  new LoginInfo("<unknown>",
+                                                                lCredential.
+                                                                  _delegate)
+                                                };
+          ri.set_slot(_chainSlotId, new CallerChainImpl(BusId, caller, originators));
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
@@ -830,7 +838,7 @@ namespace tecgraf.openbus {
       // TODO FIXME
       // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
       // no código do interceptador servidor, no método receive_request.
-      ri.set_slot(_credentialSlotId, "reset");
+      ri.set_slot(_chainSlotId, "reset");
     }
 
     internal void SendException(ServerRequestInfo ri,
@@ -1033,7 +1041,7 @@ namespace tecgraf.openbus {
       LoginCache.LoginEntry login;
       try {
         Context.SetCurrentConnection(this);
-        login = LoginsCache.GetLoginEntry(remoteLogin);
+        login = _loginsCache.GetLoginEntry(remoteLogin);
         if (login == null) {
           Logger.Error(
             "Não foi encontrada uma entrada na cache de logins para o login " +
@@ -1095,7 +1103,7 @@ namespace tecgraf.openbus {
       return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
     }
 
-    private void CheckChain(SignedCallChain signed, string callerId,
+    private CallChain CheckChain(SignedCallChain signed, string callerId,
                             string loginId, AsymmetricKeyParameter busKey) {
       CallChain chain = UnmarshalCallChain(signed);
       if (!chain.target.Equals(loginId)) {
@@ -1110,6 +1118,7 @@ namespace tecgraf.openbus {
         throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
+      return chain;
     }
 
     private byte[] CreateCredentialHash(string operation, int ticket,

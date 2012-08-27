@@ -3,7 +3,6 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
-using tecgraf.openbus.security;
 
 namespace tecgraf.openbus {
   /// <summary>

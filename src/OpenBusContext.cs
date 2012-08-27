@@ -90,8 +90,6 @@ namespace tecgraf.openbus {
     ///     entidade que originou a cadeia de chamadas, que é o primeiro
     ///     login do campo 'originators' ou o campo 'caller' quando este
     ///     é vazio.</param>
-    /// <exception cref="InvalidBusAddressException">Os parâmetros 'host' e
-    /// 'port' não são válidos.</exception>
     /// <exception cref="InvalidPropertyValueException">O valor de uma
     /// propriedade não é válido.</exception>
     /// <returns>Conexão criada.</returns>

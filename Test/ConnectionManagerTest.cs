@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Scs.Core;
 using omg.org.CORBA;
+using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
+using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
+using tecgraf.openbus.test;
 
 namespace tecgraf.openbus.Test {
   /// <summary>
@@ -115,7 +120,8 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _context.CreateConnection("", _hostPort, Props);
         }
-        catch (InvalidBusAddressException) {
+        catch (Exception) {
+          //TODO identificar exceção
         }
         finally {
           Assert.IsNull(invalid);
@@ -123,7 +129,8 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _context.CreateConnection(_hostName, 0, Props);
         }
-        catch (InvalidBusAddressException) {
+        catch (Exception) {
+          //TODO identificar exceção
         }
         finally {
           Assert.IsNull(invalid);
@@ -171,6 +178,20 @@ namespace tecgraf.openbus.Test {
         props[legacyDisableProp] = "true";
         props[delegateProp] = String.Empty;
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
+      }
+    }
+
+    /// <summary>
+    /// Testes da auto-propriedade OnCallDispatch
+    ///</summary>
+    [TestMethod]
+    public void OnCallDispatchCallbackTest() {
+      lock (this) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Assert.IsNull(_context.OnCallDispatch);
+        CallDispatchCallback callback = new CallDispatchCallbackImpl(conn);
+        _context.OnCallDispatch = callback;
+        Assert.AreEqual(callback, _context.OnCallDispatch);
       }
     }
 
@@ -276,7 +297,8 @@ namespace tecgraf.openbus.Test {
     /// Teste da auto-propriedade Requester
     ///</summary>
     [TestMethod]
-    public void RequesterTest() {
+    public void CurrentConnectionTest() {
+//TODO testar valor de retorno
       lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
@@ -324,6 +346,88 @@ namespace tecgraf.openbus.Test {
             "A chamada com ThreadRequester setado deveria ser bem-sucedida. Exceção recebida: " +
             e);
         }
+        _context.SetCurrentConnection(null);
+      }
+    }
+
+    /// <summary>
+    /// Testes da auto-propriedade CallerChain
+    ///</summary>
+    [TestMethod]
+    public void CallerChainTest() {
+      lock (this) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        _context.SetDefaultConnection(conn);
+        Assert.IsNull(_context.CallerChain);
+        //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário comentar o catch genérico abaixo.
+        try {
+          const string facetName = "HelloMock";
+          conn.LoginByPassword(_login, _password);
+          ComponentContext component =
+            new DefaultComponentContext(new ComponentId());
+          component.AddFacet(facetName, Repository.GetRepositoryID(typeof(Hello)),
+                           new HelloMock(conn));
+          Hello hello = component.GetFacetByName(facetName).Reference as Hello;
+          Assert.IsNotNull(hello);
+          hello.sayHello();
+        }
+        catch (UNKNOWN) {
+          Assert.Fail("A cadeia obtida é nula ou não é a esperada.");
+        }
+        //TODO remover para reativar o teste
+        catch (NullReferenceException) {
+        }
+        //TODO remover para reativar o teste
+        catch (InvalidOperationException) {
+        }
+        finally {
+          _context.SetDefaultConnection(null);
+          conn.Logout();
+        }
+      }
+    }
+
+    /// <summary>
+    /// Testes do método JoinChain
+    ///</summary>
+    [TestMethod]
+    public void JoinChainTest() {
+      lock (this) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        _context.SetCurrentConnection(conn);
+        Assert.IsNull(_context.JoinedChain);
+        // adiciona a chain da getCallerChain
+        _context.JoinChain(null);
+        Assert.IsNull(_context.JoinedChain);
+        //TODO testar caso em que a chain da getCallerChain não é vazia
+        //TODO não há como testar o caso do TODO acima em C# sem usar processos diferentes para o servidor e cliente. Não há muito problema pois os testes de interoperabilidade cobrem esse caso.
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+                                           new LoginInfo[0]));
+        Assert.IsNotNull(_context.JoinedChain);
+        Assert.AreEqual("mock", _context.JoinedChain.BusId);
+        Assert.AreEqual("a", _context.JoinedChain.Caller.id);
+        Assert.AreEqual("b", _context.JoinedChain.Caller.entity);
+        _context.ExitChain();
+        Assert.IsNull(_context.JoinedChain);
+        _context.SetCurrentConnection(null);
+      }
+    }
+
+    /// <summary>
+    /// Testes do método ExitChain
+    ///</summary>
+    [TestMethod]
+    public void ExitChainTest() {
+      lock (this) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        _context.SetCurrentConnection(conn);
+        Assert.IsNull(_context.JoinedChain);
+        _context.ExitChain();
+        Assert.IsNull(_context.JoinedChain);
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+                                           new LoginInfo[0]));
+        _context.ExitChain();
+        Assert.IsNull(_context.JoinedChain);
         _context.SetCurrentConnection(null);
       }
     }

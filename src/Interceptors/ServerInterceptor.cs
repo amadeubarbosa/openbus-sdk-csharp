@@ -57,10 +57,8 @@ namespace tecgraf.openbus.interceptors {
         String.Format("A operação '{0}' possui credencial. É legada? {1}.",
                       interceptedOperation, anyCredential.IsLegacy));
 
-      // insere a credencial no slot para a getCallerChain e send_exception usarem
       ConnectionImpl conn = null;
       try {
-        ri.set_slot(CredentialSlotId, anyCredential);
         conn = GetDispatcherForRequest(ri, anyCredential) as ConnectionImpl;
         if (conn == null) {
           conn = Context.GetDefaultConnection() as ConnectionImpl;
@@ -103,7 +101,7 @@ namespace tecgraf.openbus.interceptors {
       // receive_request*, pois é impossível chamar ri.add_reply_service_context
       // nesses pontos devido a erro do IIOP.Net.
       try {
-        string reset = ri.get_slot(CredentialSlotId) as string;
+        string reset = ri.get_slot(ChainSlotId) as string;
         if ((reset != null) && (reset.Equals("reset"))) {
           throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -205,8 +203,7 @@ namespace tecgraf.openbus.interceptors {
     private void ClearRequest(ServerRequestInfo ri) {
       try {
         ri.set_slot(ReceivingConnectionSlotId, null);
-        ri.set_slot(CredentialSlotId, null);
-        ri.set_slot(ConnectionSlotId, null);
+        ri.set_slot(ChainSlotId, null);
       }
       catch (InvalidSlot e) {
         Logger.Fatal("Falha inesperada ao limpar informações nos slots", e);

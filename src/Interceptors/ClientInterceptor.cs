@@ -119,5 +119,5 @@ namespace tecgraf.openbus.interceptors {
         throw;
       }
     }
-                                     }
+  }
 }

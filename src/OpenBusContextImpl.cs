@@ -5,7 +5,6 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
@@ -37,6 +36,7 @@ namespace tecgraf.openbus {
     private readonly int _ignoreThreadSlotId;
 
     private readonly int _joinedChainSlotId;
+    private readonly int _chainSlotId;
 
     private Connection _defaultConnection;
     private CallDispatchCallback _onCallDispatchCallback;
@@ -47,11 +47,13 @@ namespace tecgraf.openbus {
 
     #region Constructors
 
-    public OpenBusContextImpl(int currentThreadSlotId, int ignoreThreadSlotId, int joinedChainSlotId) {
+    public OpenBusContextImpl(int currentThreadSlotId, int ignoreThreadSlotId,
+                              int joinedChainSlotId, int chainSlotId) {
       _connectedThreads = new ConcurrentDictionary<int, Connection>();
       CurrentThreadSlotId = currentThreadSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
       _joinedChainSlotId = joinedChainSlotId;
+      _chainSlotId = chainSlotId;
       _orb = OrbServices.GetSingleton();
       _lock = new ReaderWriterLockSlim();
     }
@@ -206,37 +208,12 @@ namespace tecgraf.openbus {
     public CallerChain CallerChain {
       get {
         Current current = GetPICurrent();
-        _loginLock.EnterReadLock();
-        try {
-          if (!_login.HasValue) {
-            return null;
-          }
-        }
-        finally {
-          _loginLock.ExitReadLock();
-        }
-        if (!ReferenceEquals(piCurrentConn, this)) {
+        ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
+        if (!conn.Login.HasValue) {
           return null;
         }
         try {
-          AnyCredential anyCredential =
-            (AnyCredential) current.get_slot(_credentialSlotId);
-          if (anyCredential.IsLegacy) {
-            Credential credential = anyCredential.LegacyCredential;
-            LoginInfo caller = new LoginInfo(credential.identifier,
-                                             credential.owner);
-            LoginInfo[] originators = credential._delegate.Equals(String.Empty)
-                                        ? new LoginInfo[0]
-                                        : new[] {
-                                                  new LoginInfo("<unknown>",
-                                                                credential.
-                                                                  _delegate)
-                                                };
-            return new CallerChainImpl(BusId, caller, originators);
-          }
-          CallChain chain = UnmarshalCallChain(anyCredential.Credential.chain);
-          return new CallerChainImpl(BusId, chain.caller, chain.originators,
-                                     anyCredential.Credential.chain);
+          return (CallerChainImpl) current.get_slot(_chainSlotId);
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
@@ -276,7 +253,8 @@ namespace tecgraf.openbus {
       get {
         ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn == null) {
-          throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+          throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                  CompletionStatus.Completed_No);
         }
         return conn.LoginRegistry;
       }
@@ -286,7 +264,8 @@ namespace tecgraf.openbus {
       get {
         ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn == null) {
-          throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+          throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                  CompletionStatus.Completed_No);
         }
         return conn.Offers;
       }
