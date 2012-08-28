@@ -43,9 +43,9 @@ namespace tecgraf.openbus.interop.sharedauth {
           new omg.org.IOP.Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = conn;
+      OpenBusContext context = ORBInitializer.Context;
+      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_sharedauth_csharp_client";
       byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
@@ -56,7 +56,9 @@ namespace tecgraf.openbus.interop.sharedauth {
       LoginProcess login = conn.StartSharedAuth(out secret);
       EncodedSharedAuth sharedAuth = new EncodedSharedAuth {
                                                              secret = secret,
-                                                             attempt = login as MarshalByRefObject
+                                                             attempt =
+                                                               login as
+                                                               MarshalByRefObject
                                                            };
       File.WriteAllBytes(loginFile, codec.encode_value(sharedAuth));
 
@@ -64,13 +66,13 @@ namespace tecgraf.openbus.interop.sharedauth {
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
         new ServiceProperty("openbus.component.interface",
-                            Repository.GetRepositoryID(typeof(Hello)));
+                            Repository.GetRepositoryID(typeof (Hello)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp, prop};
-      ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
+      ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");

@@ -44,9 +44,9 @@ namespace tecgraf.openbus.interop.sharedauth {
           new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = conn;
+      OpenBusContext context = ORBInitializer.Context;
+      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(conn);
 
       byte[] encodedLogin = File.ReadAllBytes(loginFile);
       Type saType = typeof (EncodedSharedAuth);
@@ -65,13 +65,13 @@ namespace tecgraf.openbus.interop.sharedauth {
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
         new ServiceProperty("openbus.component.interface",
-                            Repository.GetRepositoryID(typeof(Hello)));
+                            Repository.GetRepositoryID(typeof (Hello)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp, prop};
-      ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
+      ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Hello não se encontra no barramento.");
@@ -97,7 +97,8 @@ namespace tecgraf.openbus.interop.sharedauth {
             continue;
           }
           foundOne = true;
-          Assert.AreEqual(hello.sayHello(), "Hello " + conn.Login.Value.entity + "!");
+          Assert.AreEqual(hello.sayHello(),
+                          "Hello " + conn.Login.Value.entity + "!");
         }
         catch (TRANSIENT) {
           Console.WriteLine(
