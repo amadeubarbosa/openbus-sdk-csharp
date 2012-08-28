@@ -19,6 +19,20 @@ namespace tecgraf.openbus {
     string BusId { get; }
 
     /// <summary>
+    /// Login para o qual a chamada estava destinada. Só é possível fazer chamadas
+    /// dentro dessa cadeia (através do método joinChain da interface 
+    /// OpenBusContext) se o login da conexão corrente for o mesmo do target.
+    ///
+    /// No caso de conexões legadas, este campo será nulo e será possível fazer
+    /// qualquer chamada como parte dessa cadeia. Contudo, todas as chamadas
+    /// feitas como parte de uma cadeia de uma chamada legada serão feitas
+    /// utilizando apenas o protocolo do OpenBus 1.5 (apenas com credenciais
+    /// legadas) e portanto serão recusadas por serviços que não aceitem chamadas
+    /// legadas (OpenBus 1.5).
+    /// </summary>
+    LoginInfo? Target { get; }
+
+    /// <summary>
     /// Lista de informações de login de todas as entidades que originaram as
     /// chamadas nessa cadeia. Quando essa lista é vazia isso indica que a
     /// chamada não está inclusa em outra cadeia de chamadas.

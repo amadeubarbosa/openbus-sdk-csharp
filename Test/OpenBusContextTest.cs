@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scs.Core;
@@ -51,10 +52,9 @@ namespace tecgraf.openbus.Test {
     //{
     //}
     //
-    //Use TestCleanup to run code after each test has run
-    //[TestCleanup()]
-    //public void MyTestCleanup()
-    //{
+    // Use ClassCleanup to run code after all tests in a class have run
+    //[ClassCleanup]
+    //public static void MyClassCleanup() {
     //}
     //
 
@@ -114,8 +114,7 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _context.CreateConnection("", _hostPort, Props);
         }
-        catch (Exception) {
-          //TODO identificar exceção
+        catch (TRANSIENT) {
         }
         finally {
           Assert.IsNull(invalid);
@@ -123,8 +122,7 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _context.CreateConnection(_hostName, 0, Props);
         }
-        catch (Exception) {
-          //TODO identificar exceção
+        catch (RemotingException) {
         }
         finally {
           Assert.IsNull(invalid);
@@ -180,7 +178,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void OnCallDispatchCallbackTest() {
-      lock (this) {
+      lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         Assert.IsNull(_context.OnCallDispatch);
         CallDispatchCallback callback = new CallDispatchCallbackImpl(conn);
@@ -317,7 +315,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void CallerChainTest() {
-      lock (this) {
+      lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         _context.SetDefaultConnection(conn);
         Assert.IsNull(_context.CallerChain);
@@ -354,7 +352,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void JoinChainTest() {
-      lock (this) {
+      lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
@@ -363,7 +361,9 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(_context.JoinedChain);
         //TODO testar caso em que a chain da getCallerChain não é vazia
         //TODO não há como testar o caso do TODO acima em C# sem usar processos diferentes para o servidor e cliente. Não há muito problema pois os testes de interoperabilidade cobrem esse caso.
-        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+        conn.LoginByPassword(_login, _password);
+        Assert.IsNotNull(conn.Login);
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"), conn.Login.Value, 
                                            new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         Assert.AreEqual("mock", _context.JoinedChain.BusId);
@@ -371,6 +371,7 @@ namespace tecgraf.openbus.Test {
         Assert.AreEqual("b", _context.JoinedChain.Caller.entity);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
+        Assert.IsTrue(conn.Logout());
         _context.SetCurrentConnection(null);
       }
     }
@@ -380,25 +381,37 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void ExitChainTest() {
-      lock (this) {
+      lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
-        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+        conn.LoginByPassword(_login, _password);
+        Assert.IsNotNull(conn.Login);
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"), conn.Login.Value,
                                            new LoginInfo[0]));
+        Assert.IsNotNull(_context.JoinedChain);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
+        Assert.IsTrue(conn.Logout());
         _context.SetCurrentConnection(null);
       }
     }
 
-    // Use ClassCleanup to run code after all tests in a class have run
-    [ClassCleanup]
-    public static void MyClassCleanup() {
+    //Use TestCleanup to run code after each test has run
+    [TestCleanup]
+    public void MyTestCleanup() {
       // não gera erro em testes rodados automaticamente mas permite perceber ao rodar na mão
-      ConnectionTest.CheckConnectionsMapSize();
+      CheckConnectionsMapSize();
+    }
+
+    private void CheckConnectionsMapSize() {
+      int size;
+      lock (_context) {
+        size = ((OpenBusContextImpl)_context).GetConnectionsMapSize();
+      }
+      Assert.AreEqual(0, size, "Número de conexões no contexto ao final dos testes não é zero, é " + size + ".");
     }
   }
 }

@@ -784,8 +784,10 @@ namespace tecgraf.openbus {
               if (session.CheckTicket(credential.ticket)) {
                 // insere a cadeia no slot para a getCallerChain usar
                 try {
+                  // já foi testado que o login é o mesmo que o target, portanto posso inserir meu login como target
                   ri.set_slot(_chainSlotId,
                               new CallerChainImpl(BusId, chain.caller,
+                                                  new LoginInfo(login.LoginId, login.Entity), 
                                                   chain.originators,
                                                   anyCredential.Credential.chain));
                 }
@@ -834,7 +836,7 @@ namespace tecgraf.openbus {
                                                                 _delegate)
                                               };
           ri.set_slot(_chainSlotId,
-                      new CallerChainImpl(BusId, caller, originators));
+                      new CallerChainImpl(BusId, caller, null, originators));
         }
         catch (InvalidSlot e) {
           Logger.Fatal(

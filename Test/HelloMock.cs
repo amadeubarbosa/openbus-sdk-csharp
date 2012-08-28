@@ -17,7 +17,8 @@ namespace tecgraf.openbus.test {
       }
       if ((chain.BusId != _conn.BusId) ||
           (!chain.Caller.id.Equals(_conn.Login.Value.id)) ||
-          (chain.Originators.Length != 0)) {
+          (chain.Originators.Length != 0) ||
+          (!chain.Target.Value.id.Equals(_conn.Login.Value.id))) {
         // cliente deve receber um CORBA::Unknown
         throw new InvalidOperationException();
       }

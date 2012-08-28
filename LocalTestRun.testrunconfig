@@ -2,8 +2,8 @@
 <TestSettings name="Local Test Run" id="076b0803-09ba-4d4b-adae-cafbaffc6465" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
   <Description>This is a default test run configuration for a local test run.</Description>
   <Deployment>
-    <DeploymentItem filename="Test\AccessControlService.crt" />
-    <DeploymentItem filename="Test\marosas.key" />
+    <DeploymentItem filename="Test\SDKUnitTestCertificate_CSharp.key" />
+    <DeploymentItem filename="Test\SDKUnitTestCertificate_CSharpWrong.key" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <TestTypeSpecific>

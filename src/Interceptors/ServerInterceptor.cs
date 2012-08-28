@@ -154,20 +154,17 @@ namespace tecgraf.openbus.interceptors {
             e);
           throw;
         }
-        finally {
-          ClearRequest(ri);
-        }
       }
-    }
-
-    /// <inheritdoc />
-    public virtual void send_reply(ServerRequestInfo ri) {
-      ClearRequest(ri);
     }
 
     #endregion
 
     #region ServerRequestInterceptor Not Implemented
+
+    /// <inheritdoc />
+    public virtual void send_reply(ServerRequestInfo ri) {
+      //Nada a ser feito
+    }
 
     /// <inheritdoc />
     public virtual void send_other(ServerRequestInfo ri) {
@@ -194,17 +191,6 @@ namespace tecgraf.openbus.interceptors {
       return Context.GetDefaultConnection();
     }
     
-    private void ClearRequest(ServerRequestInfo ri) {
-      try {
-        ri.set_slot(ReceivingConnectionSlotId, null);
-        ri.set_slot(ChainSlotId, null);
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao limpar informações nos slots", e);
-        throw;
-      }
-    }
-
     private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,
                                                      out bool legacyContext) {
       legacyContext = false;
