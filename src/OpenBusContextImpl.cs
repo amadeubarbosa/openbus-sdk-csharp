@@ -257,7 +257,7 @@ namespace tecgraf.openbus {
     public LoginRegistry LoginRegistry {
       get {
         ConnectionImpl conn = GetCurrentConnectionOrDefault() as ConnectionImpl;
-        if (conn == null) {
+        if (conn == null || !conn.Login.HasValue) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
@@ -268,7 +268,7 @@ namespace tecgraf.openbus {
     public OfferRegistry OfferRegistry {
       get {
         ConnectionImpl conn = GetCurrentConnectionOrDefault() as ConnectionImpl;
-        if (conn == null) {
+        if (conn == null || !conn.Login.HasValue) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
