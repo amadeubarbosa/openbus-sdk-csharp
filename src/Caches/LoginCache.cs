@@ -77,7 +77,7 @@ namespace tecgraf.openbus.caches {
         _lock.ExitReadLock();
       }
       if (deadline < DateTime.Now.Ticks) {
-        int validity = _lr.getValidity(new[] {loginId})[0];
+        int validity = _lr.getLoginValidity(loginId);
         if (validity <= 0) {
           // login inválido
           Logger.Debug(String.Format("Login {0} é inválido.", loginId));
