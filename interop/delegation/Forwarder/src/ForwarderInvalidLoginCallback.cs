@@ -7,12 +7,12 @@ using tecgraf.openbus.exceptions;
 namespace tecgraf.openbus.interop.delegation {
   internal class ForwarderInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
-    private readonly byte[] _privKey;
+    private readonly PrivateKey _privKey;
     private readonly IComponent _ic;
     private readonly ServiceProperty[] _properties;
     private readonly ForwarderImpl _forwarder;
 
-    internal ForwarderInvalidLoginCallback(string entity, byte[] privKey,
+    internal ForwarderInvalidLoginCallback(string entity, PrivateKey privKey,
                                            IComponent ic,
                                            ServiceProperty[] properties,
                                            ForwarderImpl forwarder) {
@@ -31,7 +31,8 @@ namespace tecgraf.openbus.interop.delegation {
         if (conn.Login == null) {
           _forwarder.Timer.Stop();
         }
-        ForwarderServer.Offer = conn.Offers.registerService(_ic, _properties);
+        ForwarderServer.Offer =
+          ORBInitializer.Context.OfferRegistry.registerService(_ic, _properties);
       }
       catch (AlreadyLoggedInException) {
         // outra thread reconectou

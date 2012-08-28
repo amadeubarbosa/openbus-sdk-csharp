@@ -38,16 +38,16 @@ namespace tecgraf.openbus.interop.delegation {
       ushort hostPort = DemoConfig.Default.busHostPort;
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = conn;
+      OpenBusContext context = ORBInitializer.Context;
+      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_delegation_csharp_client";
       const string userPassword = userLogin;
       ASCIIEncoding encoding = new ASCIIEncoding();
       conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
-      GetServices(conn);
+      GetServices();
 
       conn.Logout();
 
@@ -113,7 +113,8 @@ namespace tecgraf.openbus.interop.delegation {
     private static void FillExpected() {
       PostDesc[] descs = new PostDesc[1];
       descs[0].from = _forwarderName;
-      descs[0].message = "forwarded message by " + Steve + "->" + _broadcasterName + ": " + TestMessage;
+      descs[0].message = "forwarded message by " + Steve + "->" +
+                         _broadcasterName + ": " + TestMessage;
       Expected.Add(William, descs);
       Expected.Add(Bill, null);
       descs = new PostDesc[1];
@@ -132,13 +133,14 @@ namespace tecgraf.openbus.interop.delegation {
       Console.WriteLine();
     }
 
-    private static void GetServices(Connection conn) {
+    private static void GetServices() {
       // propriedade definida pelos servidores
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {prop};
-      ServiceOfferDesc[] offers = conn.Offers.findServices(properties);
+      ServiceOfferDesc[] offers =
+        ORBInitializer.Context.OfferRegistry.findServices(properties);
 
       if (offers.Length != 3) {
         Console.WriteLine("Há mais serviços do que o esperado no barramento.");

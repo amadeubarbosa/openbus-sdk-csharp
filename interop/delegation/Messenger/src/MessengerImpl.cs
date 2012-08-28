@@ -6,22 +6,20 @@ namespace tecgraf.openbus.interop.delegation {
   public class MessengerImpl : MarshalByRefObject, Messenger {
     #region Fields
 
-    private readonly Connection _conn;
     private readonly ConcurrentDictionary<string, List<PostDesc>> _inboxOf;
 
     #endregion
 
     #region Constructors
 
-    internal MessengerImpl(Connection conn) {
-      _conn = conn;
+    internal MessengerImpl() {
       _inboxOf = new ConcurrentDictionary<string, List<PostDesc>>();
     }
 
     #endregion
 
     public void post(string to, string message) {
-      CallerChain chain = _conn.CallerChain;
+      CallerChain chain = ORBInitializer.Context.CallerChain;
       string from = ChainToString(chain);
       Console.WriteLine("post to " + to + " by " + from);
       List<PostDesc> inbox;
@@ -35,7 +33,7 @@ namespace tecgraf.openbus.interop.delegation {
     }
 
     public PostDesc[] receivePosts() {
-      CallerChain chain = _conn.CallerChain;
+      CallerChain chain = ORBInitializer.Context.CallerChain;
       string owner = chain.Originators.Length > 0
                        ? chain.Originators[0].entity
                        : chain.Caller.entity;

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.delegation.Properties;
+using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.delegation {
   /// <summary>
@@ -20,21 +20,20 @@ namespace tecgraf.openbus.interop.delegation {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
+      PrivateKey key = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = _conn;
+      OpenBusContext context = ORBInitializer.Context;
+      _conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(_conn);
 
       const string entity = "interop_delegation_csharp_messenger";
-      string privateKey = DemoConfig.Default.privateKey;
-      byte[] key = File.ReadAllBytes(privateKey);
 
       _conn.LoginByCertificate(entity, key);
 
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Messenger", 1, 0, 0, ".net"));
-      MessengerImpl messenger = new MessengerImpl(_conn);
+      MessengerImpl messenger = new MessengerImpl();
       component.AddFacet("messenger",
                          Repository.GetRepositoryID(typeof (Messenger)),
                          messenger);
@@ -44,7 +43,7 @@ namespace tecgraf.openbus.interop.delegation {
                                              new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
-      Offer = _conn.Offers.registerService(ic, properties);
+      Offer = context.OfferRegistry.registerService(ic, properties);
       _conn.OnInvalidLogin =
         new MessengerInvalidLoginCallback(entity, key, ic, properties);
 

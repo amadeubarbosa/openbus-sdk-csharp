@@ -7,11 +7,11 @@ using tecgraf.openbus.exceptions;
 namespace tecgraf.openbus.interop.delegation {
   internal class BroadcasterInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
-    private readonly byte[] _privKey;
+    private readonly PrivateKey _privKey;
     private readonly IComponent _ic;
     private readonly ServiceProperty[] _properties;
 
-    internal BroadcasterInvalidLoginCallback(string entity, byte[] privKey,
+    internal BroadcasterInvalidLoginCallback(string entity, PrivateKey privKey,
                                              IComponent ic,
                                              ServiceProperty[] properties) {
       _entity = entity;
@@ -25,7 +25,8 @@ namespace tecgraf.openbus.interop.delegation {
         Console.WriteLine(
           "Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(_entity, _privKey);
-        BroadcasterServer.Offer = conn.Offers.registerService(_ic, _properties);
+        BroadcasterServer.Offer =
+          ORBInitializer.Context.OfferRegistry.registerService(_ic, _properties);
       }
       catch (AlreadyLoggedInException) {
         // outra thread reconectou

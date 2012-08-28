@@ -7,7 +7,6 @@ namespace tecgraf.openbus.interop.delegation {
   public class ForwarderImpl : MarshalByRefObject, Forwarder {
     #region Fields
 
-    private readonly Connection _conn;
     private readonly ConcurrentDictionary<string, Forward> _forwardsOf;
     private readonly Messenger _messenger;
     internal readonly Timer Timer;
@@ -16,8 +15,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     #region Constructors
 
-    internal ForwarderImpl(Connection conn, Messenger messenger) {
-      _conn = conn;
+    internal ForwarderImpl(Messenger messenger) {
       _messenger = messenger;
       _forwardsOf = new ConcurrentDictionary<string, Forward>();
       Timer = new Timer(5000);
@@ -30,14 +28,14 @@ namespace tecgraf.openbus.interop.delegation {
     #region Forwarder Members
 
     public void setForward(string to) {
-      CallerChain chain = _conn.CallerChain;
+      CallerChain chain = ORBInitializer.Context.CallerChain;
       string user = chain.Caller.entity;
       Console.WriteLine("setup forward to " + to + " by " + user);
       _forwardsOf.TryAdd(user, new Forward(chain, to));
     }
 
     public void cancelForward(string to) {
-      CallerChain chain = _conn.CallerChain;
+      CallerChain chain = ORBInitializer.Context.CallerChain;
       string user = chain.Caller.entity;
       lock (_forwardsOf) {
         Forward forward;
@@ -49,7 +47,7 @@ namespace tecgraf.openbus.interop.delegation {
     }
 
     public string getForward() {
-      CallerChain chain = _conn.CallerChain;
+      CallerChain chain = ORBInitializer.Context.CallerChain;
       string user = chain.Caller.entity;
       Forward forward;
       if (_forwardsOf.TryGetValue(user, out forward)) {
@@ -66,9 +64,10 @@ namespace tecgraf.openbus.interop.delegation {
           string user = keyValuePair.Key;
           Forward f = keyValuePair.Value;
           Console.WriteLine("Checking messages of " + user);
-          _conn.JoinChain(f.Chain);
+          OpenBusContext context = ORBInitializer.Context;
+          context.JoinChain(f.Chain);
           PostDesc[] posts = _messenger.receivePosts();
-          _conn.ExitChain();
+          context.ExitChain();
           for (int i = 0; i < posts.Length; i++) {
             _messenger.post(f.To,
                             "forwarded message by " + posts[i].from + ": " +

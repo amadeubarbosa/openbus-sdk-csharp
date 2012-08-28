@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -8,6 +7,7 @@ using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.delegation.Properties;
+using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.delegation {
   /// <summary>
@@ -21,15 +21,14 @@ namespace tecgraf.openbus.interop.delegation {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
+      PrivateKey key = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
       IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(hostName, hostPort, props);
-      manager.DefaultConnection = _conn;
+      OpenBusContext context = ORBInitializer.Context;
+      _conn = context.CreateConnection(hostName, hostPort, props);
+      context.SetDefaultConnection(_conn);
 
       const string entity = "interop_delegation_csharp_broadcaster";
-      string privateKey = DemoConfig.Default.privateKey;
-      byte[] key = File.ReadAllBytes(privateKey);
 
       _conn.LoginByCertificate(entity, key);
 
@@ -44,7 +43,7 @@ namespace tecgraf.openbus.interop.delegation {
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("Broadcaster", 1, 0, 0,
                                                     ".net"));
-      BroadcasterImpl broadcaster = new BroadcasterImpl(_conn, messenger);
+      BroadcasterImpl broadcaster = new BroadcasterImpl(messenger);
       component.AddFacet("broadcaster",
                          Repository.GetRepositoryID(typeof (Broadcaster)),
                          broadcaster);
@@ -54,7 +53,7 @@ namespace tecgraf.openbus.interop.delegation {
                                              new ServiceProperty("offer.domain",
                                                                  "Interoperability Tests")
                                            };
-      Offer = _conn.Offers.registerService(ic, properties);
+      Offer = context.OfferRegistry.registerService(ic, properties);
       _conn.OnInvalidLogin = new BroadcasterInvalidLoginCallback(entity, key, ic,
                                                                  properties);
 
@@ -66,13 +65,15 @@ namespace tecgraf.openbus.interop.delegation {
     private static Messenger GetMessenger() {
       // propriedades geradas automaticamente
       ServiceProperty autoProp = new ServiceProperty(
-        "openbus.component.interface", Repository.GetRepositoryID(typeof (Messenger)));
+        "openbus.component.interface",
+        Repository.GetRepositoryID(typeof (Messenger)));
       // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = new[] {autoProp, prop};
-      ServiceOfferDesc[] offers = _conn.Offers.findServices(properties);
+      ServiceOfferDesc[] offers =
+        ORBInitializer.Context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
         Console.WriteLine("O serviço Messenger não se encontra no barramento.");
