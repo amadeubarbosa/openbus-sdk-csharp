@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -112,7 +113,7 @@ namespace tecgraf.openbus {
         bool legacyDisable = false;
         if (props.LegacyDisable == ConnectionPropertiesImpl.LegacyDisableDefault) {
           legacyDisable = props.LegacyDisable;
-          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty, legacyDisable.ToString());
+          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty, legacyDisable.ToString(CultureInfo.InvariantCulture));
         }
         bool originator = false;
         if (!legacyDisable) {
