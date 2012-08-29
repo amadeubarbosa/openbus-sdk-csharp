@@ -2,7 +2,8 @@
 using tecgraf.openbus.security;
 
 namespace tecgraf.openbus {
-  internal class ConnectionPropertiesImpl : ConnectionProperties {
+  /// <inheritdoc />
+  public class ConnectionPropertiesImpl : ConnectionProperties {
     internal const string LegacyDisableProperty = "legacy.disable";
     internal const bool LegacyDisableDefault = false;
     internal const string LegacyDelegateProperty = "legacy.delegate";
@@ -13,6 +14,7 @@ namespace tecgraf.openbus {
     private string _delegate;
     private PrivateKeyImpl _accessKey;
 
+    /// <inheritdoc />
     public ConnectionPropertiesImpl() {
       LegacyDisable = LegacyDisableDefault;
       _delegate = LegacyDelegateDefault;
