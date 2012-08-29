@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using tecgraf.openbus.core.v2_0;
@@ -39,7 +40,7 @@ namespace tecgraf.openbus.security {
     /// <param name="encoded">Chave privada em bytes.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
     public static PrivateKey ReadKey(byte[] encoded) {
-      return new PrivateKeyImpl(CreatePublicKeyFromBytes(encoded), CreatePrivateKeyFromBytes(encoded));
+      return new PrivateKeyImpl(CreatePairFromBytes(encoded));
     }
 
     /// <summary>
@@ -88,6 +89,12 @@ namespace tecgraf.openbus.security {
                                                EncryptedBlockSize.ConstVal * 8));
         return kpGen.GenerateKeyPair();
       }
+    }
+
+    private static AsymmetricCipherKeyPair CreatePairFromBytes(byte[] encoded) {
+      AsymmetricKeyParameter priv = CreatePrivateKeyFromBytes(encoded);
+      RSAParameters rsaParameters = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)priv);
+      return DotNetUtilities.GetRsaKeyPair(rsaParameters);
     }
 
     internal static AsymmetricKeyParameter CreatePublicKeyFromBytes(byte[] key) {

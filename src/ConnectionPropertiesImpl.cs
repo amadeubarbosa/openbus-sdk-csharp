@@ -41,6 +41,10 @@ namespace tecgraf.openbus {
     public PrivateKey AccessKey {
       get { return _accessKey; }
       set {
+        if (value == null) {
+          _accessKey = null;
+          return;
+        }
         PrivateKeyImpl key = value as PrivateKeyImpl;
         if (key == null) {
           throw new InvalidPropertyValueException(AccessKeyProperty,

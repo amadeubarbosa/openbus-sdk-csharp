@@ -92,6 +92,7 @@ namespace tecgraf.openbus.Test {
         throw new ArgumentNullException("testKeyFileName");
       }
       _accessKey = Crypto.ReadKeyFile(privateKey);
+      Props.AccessKey = _accessKey;
 
       _context = ORBInitializer.Context;
     }
@@ -152,8 +153,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
         props.LegacyDelegate = "originator";
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        // cria conexão com propriedade access.key setada
-        props.AccessKey = _accessKey;
+        // cria conexão com propriedade access.key vazia
+        props.AccessKey = null;
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
         // tenta setar propriedade access.key inválida
         failed = false;
@@ -166,6 +167,7 @@ namespace tecgraf.openbus.Test {
         }
         finally {
           Assert.IsTrue(failed);
+          props.AccessKey = _accessKey;
         }
       }
     }
