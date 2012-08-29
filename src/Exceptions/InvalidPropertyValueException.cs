@@ -11,31 +11,22 @@ namespace tecgraf.openbus.exceptions {
     /// </summary>
     public string Property { get; internal set; }
 
-    /// <summary>
-    /// Valor da propriedade que contém o valor inválido.
-    /// </summary>
-    public string Value { get; internal set; }
-
     /// <inheritdoc />
-    internal InvalidPropertyValueException(string property, string value) {
+    internal InvalidPropertyValueException(string property) {
       Property = property;
-      Value = value;
     }
 
     /// <inheritdoc />
-    internal InvalidPropertyValueException(string property, string value,
-                                           string message)
+    internal InvalidPropertyValueException(string property, string message)
       : base(message) {
       Property = property;
-      Value = value;
     }
 
     /// <inheritdoc />
-    internal InvalidPropertyValueException(string property, string value,
-                                           string message, Exception inner)
+    internal InvalidPropertyValueException(string property, string message,
+                                           Exception inner)
       : base(message, inner) {
       Property = property;
-      Value = value;
     }
   }
 }

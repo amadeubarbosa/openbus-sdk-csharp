@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using omg.org.CORBA;
+﻿using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus {
   /// <summary>
@@ -79,6 +77,11 @@ namespace tecgraf.openbus {
     /// configurações sobre a forma que as chamadas realizadas ou validadas
     /// com essa conexão são feitas. A seguir são listadas as propriedades
     /// válidas:
+    /// - access.key: chave de acesso a ser utiliza internamente para a
+    ///   geração de credenciais que identificam as chamadas através do
+    ///   barramento. A chave deve ser uma chave privada RSA de 2048 bits
+    ///   (256 bytes). Quando essa propriedade não é fornecida, uma chave
+    ///   de acesso é gerada automaticamente.
     /// - legacy.disable: desabilita o suporte a chamadas usando protocolo
     ///   OpenBus 1.5. Por padrão o suporte está habilitado.
     /// - legacy.delegate: indica como é preenchido o campo 'delegate' das
@@ -90,11 +93,9 @@ namespace tecgraf.openbus {
     ///     entidade que originou a cadeia de chamadas, que é o primeiro
     ///     login do campo 'originators' ou o campo 'caller' quando este
     ///     é vazio.</param>
-    /// <exception cref="InvalidPropertyValueException">O valor de uma
-    /// propriedade não é válido.</exception>
     /// <returns>Conexão criada.</returns>
     Connection CreateConnection(string host, ushort port,
-                                IDictionary<string, string> props);
+                                ConnectionProperties props);
 
     /// <summary>
     /// Define uma conexão a ser utilizada em chamadas sempre que não houver uma

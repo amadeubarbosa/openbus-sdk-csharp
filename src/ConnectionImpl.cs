@@ -97,7 +97,8 @@ namespace tecgraf.openbus {
     #region Constructors
 
     internal ConnectionImpl(string host, ushort port, OpenBusContextImpl context,
-                            bool legacy, bool delegateOriginator) {
+                            bool legacy, bool delegateOriginator,
+                            PrivateKeyImpl accessKey) {
       _host = host;
       _port = port;
       ORB = OrbServices.GetSingleton();
@@ -120,7 +121,9 @@ namespace tecgraf.openbus {
         throw;
       }
 
-      InternalKey = Crypto.GenerateKeyPair();
+      InternalKey = accessKey != null
+                      ? accessKey.Pair
+                      : Crypto.GenerateKeyPair();
 
       _sessionId2Session =
         new LRUConcurrentDictionaryCache<int, ServerSideSession>();
@@ -372,7 +375,7 @@ namespace tecgraf.openbus {
         throw new ArgumentException(
           "A chave privada fornecida deve ser gerada pela API do SDK do OpenBus.");
       }
-      AsymmetricKeyParameter key = temp.PrivKey;
+      AsymmetricKeyParameter key = temp.Pair.Private;
 
       _loginLock.EnterReadLock();
       try {
@@ -787,7 +790,8 @@ namespace tecgraf.openbus {
                   // já foi testado que o login é o mesmo que o target, portanto posso inserir meu login como target
                   ri.set_slot(_chainSlotId,
                               new CallerChainImpl(BusId, chain.caller,
-                                                  new LoginInfo(login.LoginId, login.Entity), 
+                                                  new LoginInfo(login.LoginId,
+                                                                login.Entity),
                                                   chain.originators,
                                                   anyCredential.Credential.chain));
                 }

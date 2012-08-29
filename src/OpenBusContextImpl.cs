@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -8,6 +7,7 @@ using omg.org.PortableInterceptor;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
+using tecgraf.openbus.security;
 using Current = omg.org.PortableInterceptor.Current;
 
 namespace tecgraf.openbus {
@@ -21,12 +21,6 @@ namespace tecgraf.openbus {
     private readonly ConcurrentDictionary<Guid, Connection> _connections;
 
     private readonly ORB _orb;
-
-    private const string LegacyDisableProperty = "legacy.disable";
-    private const bool LegacyDisableDefault = false;
-    private const string LegacyDelegateProperty = "legacy.delegate";
-    private const string LegacyDelegateDefault = "caller";
-    private const string LegacyDelegateOriginatorOption = "originator";
 
     // Identificador do slot de id de conexão corrente.
     private readonly int _connectionIdSlotId;
@@ -112,43 +106,27 @@ namespace tecgraf.openbus {
     }
 
     public Connection CreateConnection(string host, ushort port,
-                                       IDictionary<string, string> props) {
+                                       ConnectionProperties props) {
       IgnoreCurrentThread();
       try {
-        bool legacyDisable = LegacyDisableDefault;
-        if (props.ContainsKey(LegacyDisableProperty)) {
-          string value = props[LegacyDisableProperty];
-          if (!Boolean.TryParse(value, out legacyDisable)) {
-            Logger.Error(
-              String.Format("Valor {0} é inválido para a propriedade {1}.",
-                            value, LegacyDisableProperty));
-            throw new InvalidPropertyValueException(LegacyDisableProperty, value);
-          }
-          LogPropertyChanged(LegacyDisableProperty, legacyDisable.ToString());
+        bool legacyDisable = false;
+        if (props.LegacyDisable == ConnectionPropertiesImpl.LegacyDisableDefault) {
+          legacyDisable = props.LegacyDisable;
+          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty, legacyDisable.ToString());
         }
         bool originator = false;
         if (!legacyDisable) {
-          if (props.ContainsKey(LegacyDelegateProperty)) {
-            string value = props[LegacyDelegateProperty];
-            string temp = value.ToLower();
-            switch (temp) {
-              case LegacyDelegateOriginatorOption:
-                originator = true;
-                break;
-              case LegacyDelegateDefault:
-                break;
-              default:
-                Logger.Error(
-                  String.Format(
-                    "Valor {0} é inválido para a propriedade {1}.",
-                    value, LegacyDelegateProperty));
-                throw new InvalidPropertyValueException(LegacyDelegateProperty,
-                                                        value);
-            }
-            LogPropertyChanged(LegacyDelegateProperty, temp);
+          if (props.LegacyDelegate.Equals(ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
+            originator = true;
+            LogPropertyChanged(ConnectionPropertiesImpl.LegacyDelegateProperty, props.LegacyDelegate);
           }
         }
-        return new ConnectionImpl(host, port, this, !legacyDisable, originator);
+        PrivateKeyImpl accessKey = null;
+        if (props.AccessKey != null) {
+          accessKey = (PrivateKeyImpl)props.AccessKey;
+          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty, "AccessKey provida pelo usuário.");
+        }
+        return new ConnectionImpl(host, port, this, !legacyDisable, originator, accessKey);
       }
       finally {
         UnignoreCurrentThread();

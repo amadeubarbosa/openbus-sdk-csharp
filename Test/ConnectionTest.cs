@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
@@ -31,7 +30,7 @@ namespace tecgraf.openbus.Test {
     private static PrivateKey _privKey;
     private static PrivateKey _wrongKey;
     private static OpenBusContext _context;
-    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
+    private static readonly ConnectionProperties Props = new ConnectionPropertiesImpl();
 
     private const int LeaseTime = 10;
     internal static volatile bool CallbackCalled;

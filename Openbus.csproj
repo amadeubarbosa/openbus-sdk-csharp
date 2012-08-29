@@ -86,6 +86,8 @@
     <Compile Include="src\CallerChainImpl.cs" />
     <Compile Include="src\Connection.cs" />
     <Compile Include="src\ConnectionImpl.cs" />
+    <Compile Include="src\ConnectionProperties.cs" />
+    <Compile Include="src\ConnectionPropertiesImpl.cs" />
     <Compile Include="src\OpenBusContext.cs" />
     <Compile Include="src\OpenBusContextImpl.cs" />
     <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />

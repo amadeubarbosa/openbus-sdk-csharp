@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
@@ -28,10 +27,11 @@ namespace tecgraf.openbus.Test {
     private static String _entity;
     private static string _login;
     private static byte[] _password;
+    private static PrivateKey _accessKey;
     private static OpenBusContext _context;
 
-    private static readonly IDictionary<string, string> Props =
-      new Dictionary<string, string>();
+    private static readonly ConnectionProperties Props =
+      new ConnectionPropertiesImpl();
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -87,6 +87,12 @@ namespace tecgraf.openbus.Test {
       }
       _password = Crypto.TextEncoding.GetBytes(password);
 
+      string privateKey = ConfigurationManager.AppSettings["testKeyFileName"];
+      if (String.IsNullOrEmpty(password)) {
+        throw new ArgumentNullException("testKeyFileName");
+      }
+      _accessKey = Crypto.ReadKeyFile(privateKey);
+
       _context = ORBInitializer.Context;
     }
 
@@ -129,47 +135,38 @@ namespace tecgraf.openbus.Test {
         }
         // cria conexão com propriedade legacy.delegate com valor inválido
         // essa propriedade só funciona se legacy.disable for false, o que é o padrão
-        IDictionary<string, string> props = new Dictionary<string, string>();
-        const string delegateProp = "legacy.delegate";
-        props.Add(delegateProp, String.Empty);
+        ConnectionProperties props = new ConnectionPropertiesImpl();
         bool failed = false;
         try {
-          _context.CreateConnection(_hostName, _hostPort,
-                                           props);
+          props.LegacyDelegate = String.Empty;
         }
         catch (InvalidPropertyValueException e) {
-          Assert.AreEqual(e.Property, delegateProp);
-          Assert.AreEqual(e.Value, String.Empty);
+          Assert.AreEqual(e.Property, "legacy.delegate");
           failed = true;
         }
         finally {
           Assert.IsTrue(failed);
         }
         // cria conexão com propriedade legacy.delegate com valores válidos
-        props[delegateProp] = "caller";
+        props.LegacyDelegate = "caller";
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        props[delegateProp] = "originator";
+        props.LegacyDelegate = "originator";
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        // cria conexão com propriedade legacy.disable com valor inválido
-        const string legacyDisableProp = "legacy.disable";
-        props.Add(legacyDisableProp, String.Empty);
+        // cria conexão com propriedade access.key setada
+        props.AccessKey = _accessKey;
+        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
+        // tenta setar propriedade access.key inválida
         failed = false;
         try {
-          _context.CreateConnection(_hostName, _hostPort, props);
+          props.AccessKey = new PrivateKeyMock();
         }
         catch (InvalidPropertyValueException e) {
-          Assert.AreEqual(e.Property, legacyDisableProp);
-          Assert.AreEqual(e.Value, String.Empty);
+          Assert.AreEqual(e.Property, "access.key");
           failed = true;
         }
         finally {
           Assert.IsTrue(failed);
         }
-        // cria conexão com propriedade legacy.disable true e legacy.delegate inválido
-        // tem que funcionar pois legacy.delegate deve ser ignorado
-        props[legacyDisableProp] = "true";
-        props[delegateProp] = String.Empty;
-        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
       }
     }
 
@@ -216,7 +213,7 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetDefaultConnection());
         bool failed = false;
-        ServiceProperty[] props = new[] { new ServiceProperty("a", "b") };
+        ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
         try {
           _context.OfferRegistry.findServices(props);
         }
@@ -325,8 +322,9 @@ namespace tecgraf.openbus.Test {
           conn.LoginByPassword(_login, _password);
           ComponentContext component =
             new DefaultComponentContext(new ComponentId());
-          component.AddFacet(facetName, Repository.GetRepositoryID(typeof(Hello)),
-                           new HelloMock(conn));
+          component.AddFacet(facetName,
+                             Repository.GetRepositoryID(typeof (Hello)),
+                             new HelloMock(conn));
           Hello hello = component.GetFacetByName(facetName).Reference as Hello;
           Assert.IsNotNull(hello);
           hello.sayHello();
@@ -334,10 +332,10 @@ namespace tecgraf.openbus.Test {
         catch (UNKNOWN) {
           Assert.Fail("A cadeia obtida é nula ou não é a esperada.");
         }
-        //TODO remover para reativar o teste
+          //TODO remover para reativar o teste
         catch (NullReferenceException) {
         }
-        //TODO remover para reativar o teste
+          //TODO remover para reativar o teste
         catch (InvalidOperationException) {
         }
         finally {
@@ -363,8 +361,9 @@ namespace tecgraf.openbus.Test {
         //TODO não há como testar o caso do TODO acima em C# sem usar processos diferentes para o servidor e cliente. Não há muito problema pois os testes de interoperabilidade cobrem esse caso.
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
-        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"), conn.Login.Value, 
-                                           new LoginInfo[0]));
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+                                               conn.Login.Value,
+                                               new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         Assert.AreEqual("mock", _context.JoinedChain.BusId);
         Assert.AreEqual("a", _context.JoinedChain.Caller.id);
@@ -389,8 +388,9 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(_context.JoinedChain);
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
-        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"), conn.Login.Value,
-                                           new LoginInfo[0]));
+        _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
+                                               conn.Login.Value,
+                                               new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
@@ -409,9 +409,11 @@ namespace tecgraf.openbus.Test {
     private void CheckConnectionsMapSize() {
       int size;
       lock (_context) {
-        size = ((OpenBusContextImpl)_context).GetConnectionsMapSize();
+        size = ((OpenBusContextImpl) _context).GetConnectionsMapSize();
       }
-      Assert.AreEqual(0, size, "Número de conexões no contexto ao final dos testes não é zero, é " + size + ".");
+      Assert.AreEqual(0, size,
+                      "Número de conexões no contexto ao final dos testes não é zero, é " +
+                      size + ".");
     }
   }
 }

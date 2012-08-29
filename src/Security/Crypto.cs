@@ -39,7 +39,7 @@ namespace tecgraf.openbus.security {
     /// <param name="encoded">Chave privada em bytes.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
     public static PrivateKey ReadKey(byte[] encoded) {
-      return new PrivateKeyImpl(CreatePrivateKeyFromBytes(encoded));
+      return new PrivateKeyImpl(CreatePublicKeyFromBytes(encoded), CreatePrivateKeyFromBytes(encoded));
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ namespace tecgraf.openbus.security {
       return k;
     }
 
-    internal static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
+    private static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
       AsymmetricKeyParameter k;
       try {
         k = PrivateKeyFactory.CreateKey(key);
