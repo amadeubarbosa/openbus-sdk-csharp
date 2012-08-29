@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,7 +27,7 @@ namespace tecgraf.openbus.interop.simple {
                                                      };
       BasicConfigurator.Configure(appender);
 
-      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(conn);

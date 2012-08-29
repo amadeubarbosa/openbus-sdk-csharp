@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -27,7 +26,8 @@ namespace tecgraf.openbus.interop.simple {
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
-      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionProperties props = new ConnectionPropertiesImpl();
+      props.AccessKey = privateKey;
       OpenBusContext context = ORBInitializer.Context;
       _conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);
