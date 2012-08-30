@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -23,7 +22,8 @@ namespace tecgraf.openbus.interop.delegation {
       ushort hostPort = DemoConfig.Default.busHostPort;
       PrivateKey key = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
-      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionProperties props = new ConnectionPropertiesImpl();
+      props.AccessKey = key;
       OpenBusContext context = ORBInitializer.Context;
       _conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);

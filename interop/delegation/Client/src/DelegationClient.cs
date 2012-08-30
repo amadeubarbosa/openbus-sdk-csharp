@@ -37,7 +37,7 @@ namespace tecgraf.openbus.interop.delegation {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
 
-      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
