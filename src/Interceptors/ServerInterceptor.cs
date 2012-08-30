@@ -173,7 +173,9 @@ namespace tecgraf.openbus.interceptors {
 
     #endregion
 
-    private Connection GetDispatcherForRequest(ServerRequestInfo request, AnyCredential credential) {
+    private Connection GetDispatcherForRequest(ServerRequestInfo request,
+                                               AnyCredential credential) {
+      Connection dispatcher = null;
       if (Context.OnCallDispatch != null) {
         string busId;
         string loginId;
@@ -185,12 +187,13 @@ namespace tecgraf.openbus.interceptors {
           busId = credential.Credential.bus;
           loginId = credential.Credential.login;
         }
-        return Context.OnCallDispatch.Dispatch(Context, busId, loginId, request.object_id,
-                                               request.operation);
+        dispatcher = Context.OnCallDispatch.Dispatch(Context, busId, loginId,
+                                                     request.object_id,
+                                                     request.operation);
       }
-      return Context.GetDefaultConnection();
+      return dispatcher ?? Context.GetDefaultConnection();
     }
-    
+
     private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,
                                                      out bool legacyContext) {
       legacyContext = false;
