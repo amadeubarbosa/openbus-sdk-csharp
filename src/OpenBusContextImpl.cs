@@ -111,7 +111,7 @@ namespace tecgraf.openbus {
       IgnoreCurrentThread();
       try {
         bool legacyDisable = false;
-        if (props.LegacyDisable == ConnectionPropertiesImpl.LegacyDisableDefault) {
+        if (props.LegacyDisable != ConnectionPropertiesImpl.LegacyDisableDefault) {
           legacyDisable = props.LegacyDisable;
           LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty, legacyDisable.ToString(CultureInfo.InvariantCulture));
         }
@@ -125,7 +125,7 @@ namespace tecgraf.openbus {
         PrivateKeyImpl accessKey = null;
         if (props.AccessKey != null) {
           accessKey = (PrivateKeyImpl)props.AccessKey;
-          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty, "AccessKey provida pelo usuário.");
+          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty, "{AccessKey provida pelo usuário}");
         }
         return new ConnectionImpl(host, port, this, !legacyDisable, originator, accessKey);
       }
@@ -325,7 +325,7 @@ namespace tecgraf.openbus {
     }
 
     private void LogPropertyChanged(string prop, string value) {
-      Logger.Info(String.Format("{0} property set to value {1}.", prop, value));
+      Logger.Info(String.Format("Propriedade {0} alterada para o valor {1}.", prop, value));
     }
 
     internal int GetConnectionsMapSize() {
