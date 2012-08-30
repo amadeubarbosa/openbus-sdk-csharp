@@ -27,7 +27,8 @@ namespace tecgraf.openbus.interop.multiplexing {
       OpenBusContext context = ORBInitializer.Context;
 
       // connect to the bus
-      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionProperties props = new ConnectionPropertiesImpl();
+      props.AccessKey = key;
       Connection conn1AtBus1 = context.CreateConnection(hostName, hostPort,
                                                         props);
       Connection conn2AtBus1 = context.CreateConnection(hostName, hostPort,

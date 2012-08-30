@@ -18,7 +18,7 @@ namespace tecgraf.openbus.interop.multiplexing {
       ASCIIEncoding encoding = new ASCIIEncoding();
       ushort[] ports = {hostPort, hostPort2};
 
-      IDictionary<string, string> props = new Dictionary<string, string>();
+      ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
 
       foreach (ushort port in ports) {
