@@ -119,9 +119,17 @@ namespace tecgraf.openbus.Test {
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
         try {
+          invalid = _context.CreateConnection(null, _hostPort, Props);
+        }
+        catch (ArgumentException) {
+        }
+        finally {
+          Assert.IsNull(invalid);
+        }
+        try {
           invalid = _context.CreateConnection("", _hostPort, Props);
         }
-        catch (TRANSIENT) {
+        catch (ArgumentException) {
         }
         finally {
           Assert.IsNull(invalid);
@@ -129,7 +137,7 @@ namespace tecgraf.openbus.Test {
         try {
           invalid = _context.CreateConnection(_hostName, 0, Props);
         }
-        catch (RemotingException) {
+        catch (ArgumentException) {
         }
         finally {
           Assert.IsNull(invalid);
@@ -183,6 +191,8 @@ namespace tecgraf.openbus.Test {
         CallDispatchCallback callback = new CallDispatchCallbackImpl(conn);
         _context.OnCallDispatch = callback;
         Assert.AreEqual(callback, _context.OnCallDispatch);
+        _context.OnCallDispatch = null;
+        Assert.IsNull(_context.OnCallDispatch);
       }
     }
 

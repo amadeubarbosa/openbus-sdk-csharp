@@ -1,4 +1,5 @@
-﻿using omg.org.CORBA;
+﻿using System;
+using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
@@ -93,6 +94,7 @@ namespace tecgraf.openbus {
     ///     entidade que originou a cadeia de chamadas, que é o primeiro
     ///     login do campo 'originators' ou o campo 'caller' quando este
     ///     é vazio.</param>
+    /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou a porta seja 0.</exception>
     /// <returns>Conexão criada.</returns>
     Connection CreateConnection(string host, ushort port,
                                 ConnectionProperties props);

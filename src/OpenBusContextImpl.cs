@@ -108,26 +108,38 @@ namespace tecgraf.openbus {
 
     public Connection CreateConnection(string host, ushort port,
                                        ConnectionProperties props) {
+      if (host == null || host.Equals(string.Empty)) {
+        throw new ArgumentException("Endereço inválido.");
+      }
+      if (port == 0) {
+        throw new ArgumentException("Porta inválida.");
+      }
       IgnoreCurrentThread();
       try {
         bool legacyDisable = false;
         if (props.LegacyDisable != ConnectionPropertiesImpl.LegacyDisableDefault) {
           legacyDisable = props.LegacyDisable;
-          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty, legacyDisable.ToString(CultureInfo.InvariantCulture));
+          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty,
+                             legacyDisable.ToString(CultureInfo.InvariantCulture));
         }
         bool originator = false;
         if (!legacyDisable) {
-          if (props.LegacyDelegate.Equals(ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
+          if (
+            props.LegacyDelegate.Equals(
+              ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
             originator = true;
-            LogPropertyChanged(ConnectionPropertiesImpl.LegacyDelegateProperty, props.LegacyDelegate);
+            LogPropertyChanged(ConnectionPropertiesImpl.LegacyDelegateProperty,
+                               props.LegacyDelegate);
           }
         }
         PrivateKeyImpl accessKey = null;
         if (props.AccessKey != null) {
-          accessKey = (PrivateKeyImpl)props.AccessKey;
-          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty, "{AccessKey provida pelo usuário}");
+          accessKey = (PrivateKeyImpl) props.AccessKey;
+          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
+                             "{AccessKey provida pelo usuário}");
         }
-        return new ConnectionImpl(host, port, this, !legacyDisable, originator, accessKey);
+        return new ConnectionImpl(host, port, this, !legacyDisable, originator,
+                                  accessKey);
       }
       finally {
         UnignoreCurrentThread();
@@ -325,7 +337,8 @@ namespace tecgraf.openbus {
     }
 
     private void LogPropertyChanged(string prop, string value) {
-      Logger.Info(String.Format("Propriedade {0} alterada para o valor {1}.", prop, value));
+      Logger.Info(String.Format("Propriedade {0} alterada para o valor {1}.",
+                                prop, value));
     }
 
     internal int GetConnectionsMapSize() {

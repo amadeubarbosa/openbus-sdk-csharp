@@ -33,13 +33,14 @@ namespace tecgraf.openbus {
 
     private readonly string _host;
     private readonly ushort _port;
-    private readonly IComponent _acsComponent;
+    private readonly string _corbaloc;
     internal AccessControl Acs;
-    private readonly string _busId;
-    private readonly AsymmetricKeyParameter _busKey;
+    private string _busId;
+    private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
-    internal bool Legacy;
+    private readonly bool _originalLegacy;
+    internal volatile bool Legacy;
     internal readonly OpenBusContextImpl Context;
 
     private volatile int _sessionId;
@@ -101,25 +102,16 @@ namespace tecgraf.openbus {
                             PrivateKeyImpl accessKey) {
       _host = host;
       _port = port;
+      _corbaloc = "corbaloc::1.0@" + _host + ":" + _port + "/" +
+                  BusObjectKey.ConstVal;
       ORB = OrbServices.GetSingleton();
       Context = context;
+      _originalLegacy = legacy;
       Legacy = legacy;
       _delegateOriginator = delegateOriginator;
       _codec = ServerInterceptor.Instance.Codec;
       _chainSlotId = ServerInterceptor.Instance.ChainSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
-
-      const string connErrorMessage =
-        "Não foi possível conectar ao barramento com o host e porta fornecidos.";
-      try {
-        _acsComponent = (IComponent) RemotingServices.Connect(
-          typeof (IComponent),
-          "corbaloc::1.0@" + _host + ":" + _port + "/" + BusObjectKey.ConstVal);
-      }
-      catch (Exception e) {
-        Logger.Error(connErrorMessage, e);
-        throw;
-      }
 
       InternalKey = accessKey != null
                       ? accessKey.Pair
@@ -134,9 +126,7 @@ namespace tecgraf.openbus {
 
       _login = null;
       _invalidLogin = null;
-      GetBusFacets();
       _loginsCache = new LoginCache(LoginRegistry);
-      _busId = GetBusIdAndKey(out _busKey);
     }
 
     #endregion
@@ -144,25 +134,59 @@ namespace tecgraf.openbus {
     #region Internal Members
 
     private void GetBusFacets() {
-      string acsId = Repository.GetRepositoryID(typeof (AccessControl));
-      string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
-      string orId = Repository.GetRepositoryID(typeof (OfferRegistry));
+      const string connErrorMessage =
+        "Não foi possível conectar ao barramento com o host e porta fornecidos.";
+      try {
+        IComponent busIC =
+          (IComponent) RemotingServices.Connect(typeof (IComponent), _corbaloc);
+        string acsId = Repository.GetRepositoryID(typeof (AccessControl));
+        string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
+        string orId = Repository.GetRepositoryID(typeof (OfferRegistry));
 
-      MarshalByRefObject acsObjRef = _acsComponent.getFacet(acsId);
-      MarshalByRefObject lrObjRef = _acsComponent.getFacet(lrId);
-      MarshalByRefObject orObjRef = _acsComponent.getFacet(orId);
+        MarshalByRefObject acsObjRef = busIC.getFacet(acsId);
+        MarshalByRefObject lrObjRef = busIC.getFacet(lrId);
+        MarshalByRefObject orObjRef = busIC.getFacet(orId);
 
-      Acs = acsObjRef as AccessControl;
-      LoginRegistry = lrObjRef as LoginRegistry;
-      Offers = orObjRef as OfferRegistry;
-      if ((Acs == null) || (LoginRegistry == null) || (Offers == null)) {
-        const string msg =
-          "As facetas de controle de acesso, registro de logins e/ou registro de ofertas não foram encontradas.";
-        Logger.Error(msg);
-        throw new OpenBusInternalException(msg);
+        bool maintainLegacy;
+        IAccessControlService legacyACS = GetLegacyFacets(out maintainLegacy);
+
+        _loginLock.EnterWriteLock();
+        try {
+          Acs = acsObjRef as AccessControl;
+          LoginRegistry = lrObjRef as LoginRegistry;
+          Offers = orObjRef as OfferRegistry;
+          if ((Acs == null) || (LoginRegistry == null) || (Offers == null)) {
+            const string msg =
+              "As facetas de controle de acesso, registro de logins e/ou registro de ofertas não foram encontradas.";
+            throw new OpenBusInternalException(msg);
+          }
+          Legacy = maintainLegacy;
+          if (maintainLegacy) {
+            LegacyAccess = legacyACS;
+          }
+        }
+        finally {
+          _loginLock.ExitWriteLock();
+        }
+        AsymmetricKeyParameter busKey;
+        string busId = GetBusIdAndKey(out busKey);
+        _loginLock.EnterWriteLock();
+        try {
+          _busId = busId;
+          _busKey = busKey;
+        }
+        finally {
+          _loginLock.ExitWriteLock();
+        }
       }
+      catch (Exception e) {
+        Logger.Error(connErrorMessage, e);
+        throw;
+      }
+    }
 
-      if (Legacy) {
+    private IAccessControlService GetLegacyFacets(out bool maintainLegacy) {
+      if (_originalLegacy) {
         try {
           IComponent legacy = RemotingServices.Connect(
             typeof (IComponent),
@@ -171,27 +195,31 @@ namespace tecgraf.openbus {
           string legacyId =
             Repository.GetRepositoryID(typeof (IAccessControlService));
           if (legacy == null) {
-            Legacy = false;
             Logger.Warn(
               "O serviço de controle de acesso 1.5 não foi encontrado. O suporte a conexões legadas foi desabilitado.");
+            maintainLegacy = false;
+            return null;
           }
-          else {
-            MarshalByRefObject legacyObjRef = legacy.getFacet(legacyId);
-            LegacyAccess = legacyObjRef as IAccessControlService;
-            if (LegacyAccess == null) {
-              Legacy = false;
-              Logger.Warn(
-                "A faceta IAccessControlService do serviço de controle de acesso 1.5 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
-            }
+          MarshalByRefObject legacyObjRef = legacy.getFacet(legacyId);
+          IAccessControlService legacyAccess =
+            legacyObjRef as IAccessControlService;
+          if (legacyAccess == null) {
+            Logger.Warn(
+              "A faceta IAccessControlService do serviço de controle de acesso 1.5 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
+            maintainLegacy = false;
+            return null;
           }
+          maintainLegacy = true;
+          return legacyAccess;
         }
         catch (Exception e) {
-          Legacy = false;
           Logger.Warn(
             "Erro ao tentar obter a faceta IAccessControlService da versão 1.5. O suporte a conexões legadas foi desabilitado.",
             e);
         }
       }
+      maintainLegacy = false;
+      return null;
     }
 
     private string GetBusIdAndKey(out AsymmetricKeyParameter key) {
@@ -277,6 +305,12 @@ namespace tecgraf.openbus {
       try {
         StopLeaseRenewer();
         _login = null;
+        Acs = null;
+        LoginRegistry = null;
+        Offers = null;
+        LegacyAccess = null;
+        _busId = null;
+        _busKey = null;
         _outgoingLogin2Session.Clear();
         _profile2Login.Clear();
         _sessionId2Session.Clear();
@@ -344,6 +378,9 @@ namespace tecgraf.openbus {
       try {
         byte[] encrypted;
         byte[] pubBytes = Crypto.GetPublicKeyInBytes(InternalKey.Public);
+
+        GetBusFacets();
+
         try {
           LoginAuthenticationInfo info =
             new LoginAuthenticationInfo
@@ -389,6 +426,7 @@ namespace tecgraf.openbus {
 
       Context.IgnoreCurrentThread();
       try {
+        GetBusFacets();
         byte[] challenge;
         LoginProcess login = Acs.startLoginByCertificate(entity,
                                                          out
@@ -444,6 +482,7 @@ namespace tecgraf.openbus {
     public void LoginBySharedAuth(LoginProcess login, byte[] secret) {
       Context.IgnoreCurrentThread();
       try {
+        GetBusFacets();
         LoginByObject(login, secret);
       }
       finally {
