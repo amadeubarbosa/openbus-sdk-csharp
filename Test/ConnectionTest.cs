@@ -96,6 +96,7 @@ namespace tecgraf.openbus.Test {
         throw new ArgumentNullException("testKeyFileName");
       }
       _privKey = Crypto.ReadKeyFile(privateKey);
+      Props.AccessKey = _privKey;
 
       string wrongKey = ConfigurationManager.AppSettings["wrongKeyFileName"];
       if (String.IsNullOrEmpty(password)) {
