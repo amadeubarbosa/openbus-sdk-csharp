@@ -153,12 +153,12 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
         props.LegacyDelegate = "originator";
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        // cria conexão com propriedade access.key vazia
-        props.AccessKey = null;
-        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        // tenta setar propriedade access.key inválida
         failed = false;
         try {
+          // cria conexão com propriedade access.key vazia
+          props.AccessKey = null;
+          Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
+          // tenta setar propriedade access.key inválida
           props.AccessKey = new PrivateKeyMock();
         }
         catch (InvalidPropertyValueException e) {
