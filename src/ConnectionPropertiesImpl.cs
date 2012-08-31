@@ -20,8 +20,10 @@ namespace tecgraf.openbus {
       _delegate = LegacyDelegateDefault;
     }
 
+    /// <inheritdoc />
     public bool LegacyDisable { get; set; }
 
+    /// <inheritdoc />
     public string LegacyDelegate {
       get { return _delegate; }
       set {
@@ -40,6 +42,7 @@ namespace tecgraf.openbus {
       }
     }
 
+    /// <inheritdoc />
     public PrivateKey AccessKey {
       get { return _accessKey; }
       set {

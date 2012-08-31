@@ -66,7 +66,7 @@ namespace tecgraf.openbus {
     private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
       _sessionId2Session;
 
-    private readonly LoginCache _loginsCache;
+    private LoginCache _loginsCache;
 
     /// <summary>
     /// Representam a identificação dos "service contexts" (contextos) utilizados
@@ -126,7 +126,6 @@ namespace tecgraf.openbus {
 
       _login = null;
       _invalidLogin = null;
-      _loginsCache = new LoginCache(LoginRegistry);
     }
 
     #endregion
@@ -160,6 +159,7 @@ namespace tecgraf.openbus {
               "As facetas de controle de acesso, registro de logins e/ou registro de ofertas não foram encontradas.";
             throw new OpenBusInternalException(msg);
           }
+          _loginsCache = new LoginCache(LoginRegistry);
           Legacy = maintainLegacy;
           if (maintainLegacy) {
             LegacyAccess = legacyACS;
@@ -305,6 +305,7 @@ namespace tecgraf.openbus {
       try {
         StopLeaseRenewer();
         _login = null;
+        _loginsCache = null;
         Acs = null;
         LoginRegistry = null;
         Offers = null;
