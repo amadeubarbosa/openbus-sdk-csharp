@@ -1,14 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
+using Ch.Elca.Iiop.Idl;
+using demo.Properties;
 using omg.org.CORBA;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.exceptions;
 
-namespace hello {
+namespace demo {
   /// <summary>
   /// Cliente da demo hello.
   /// </summary>
@@ -17,142 +17,143 @@ namespace hello {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args[3]);
-      string helloEntity = args[4];
+      string helloEntity = args[2];
+      string entity = args[3];
+      byte[] password = new ASCIIEncoding().GetBytes(args[4] ?? helloEntity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(host, port, props);
-      manager.DefaultConnection = conn;
+      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      ConnectionProperties props = new ConnectionPropertiesImpl();
+      OpenBusContext context = ORBInitializer.Context;
+      Connection conn = context.CreateConnection(host, port, props);
+      context.SetDefaultConnection(conn);
 
-      // Faz o login
-      if (!Login(entity, password, conn)) {
-        Exit(1);
-      }
-
-      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-      // propriedade gerada automaticamente
-      ServiceProperty autoProp = new ServiceProperty("openbus.offer.entity",
-                                                     helloEntity);
-      // propriedade definida pelo serviço hello
-      ServiceProperty prop = new ServiceProperty("offer.domain", "OpenBus Demos");
-      ServiceProperty[] properties = new[] {prop, autoProp};
-      ServiceOfferDesc[] offers = Find(properties, conn);
-
-      // analiza as ofertas encontradas
-      Hello hello = GetHello(offers);
-      if (hello == null) {
-        conn.Logout();
-        Exit(1);
-      }
-      else {
-        // utiliza o serviço
-        hello.sayHello();
-      }
-
-      conn.Logout();
-      Console.WriteLine("Fim.");
-      Console.ReadLine();
-    }
-
-    private static Hello GetHello(ICollection<ServiceOfferDesc> offers) {
-      if (offers.Count < 1) {
-        Console.WriteLine("O serviço Hello não se encontra no barramento.");
-        return null;
-      }
-
-      if (offers.Count > 1) {
-        Console.WriteLine(
-          "Existe mais de um serviço Hello no barramento. Tentaremos encontrar uma funcional.");
-      }
-      foreach (ServiceOfferDesc serviceOfferDesc in offers) {
-        Console.WriteLine("Testando uma das ofertas recebidas...");
-        try {
-          MarshalByRefObject helloObj =
-            serviceOfferDesc.service_ref.getFacet(
-              "IDL:Hello:1.0");
-          if (helloObj == null) {
-            Console.WriteLine(
-              "Não foi possível encontrar uma faceta Hello na oferta.");
-            continue;
-          }
-          Hello hello = helloObj as Hello;
-          if (hello == null) {
-            Console.WriteLine(
-              "Faceta encontrada na oferta não implementa Hello.");
-            continue;
-          }
-          Console.WriteLine(
-            "Foi encontrada uma oferta com um serviço funcional.");
-          return hello;
-        }
-        catch (TRANSIENT) {
-          Console.WriteLine(
-            "A oferta é de um cliente inativo. Tentando a próxima.");
-        }
-      }
-      Console.WriteLine(
-        "Não foi encontrada uma oferta com um serviço funcional.");
-      return null;
-    }
-
-    private static ServiceOfferDesc[] Find(ServiceProperty[] properties,
-                                           Connection conn) {
+      string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
+      ServiceOfferDesc[] offers = null;
       try {
-        return conn.Offers.findServices(properties);
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(
-          "Erro ao tentar realizar a busca por um serviço no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e);
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar realizar a busca por um serviço no barramento:");
-        Console.WriteLine(e);
-      }
-      return null;
-    }
-
-    private static bool Login(string login, byte[] password, Connection conn) {
-      try {
-        conn.LoginByPassword(login, password);
-        return true;
-      }
-      catch (AlreadyLoggedInException) {
-        Console.WriteLine(
-          "Falha ao tentar realizar o login por senha no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
-        return true;
+        // Faz o login
+        conn.LoginByPassword(entity, password);
+        // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
+        // propriedade gerada automaticamente
+        ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity",
+                                                        helloEntity);
+        ServiceProperty autoProp2 =
+          new ServiceProperty("openbus.component.interface", helloIDLType);
+        // propriedade definida pelo serviço hello
+        ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
+        ServiceProperty[] properties = new[] { prop, autoProp1, autoProp2 };
+        offers = ORBInitializer.Context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por senha no barramento: a senha fornecida não foi validada para a entidade " +
-          login + ".");
-      }
-      catch (BusChangedException) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por senha no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
+        Console.WriteLine(Resources.ClientAccessDenied + entity + ".");
       }
       catch (ServiceFailure e) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");
+        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
         Console.WriteLine(e);
       }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar realizar o login por senha no barramento:");
-        Console.WriteLine(e);
+      catch (TRANSIENT) {
+        Console.WriteLine(Resources.BusTransientErrorMsg);
       }
-      return false;
-    }
+      catch (COMM_FAILURE) {
+        Console.WriteLine(Resources.BusCommFailureErrorMsg);
+      }
+      catch(NO_PERMISSION e) {
+        if (e.Minor == NoLoginCode.ConstVal) {
+          Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+        }
+        else {
+          throw;
+        }
+      }
 
-    private static void Exit(int code) {
-      Console.WriteLine("Pressione qualquer tecla para sair.");
+      // analiza as ofertas encontradas
+      bool failed = true;
+      if (offers != null) {
+        if (offers.Length < 1) {
+          Console.WriteLine(Resources.ServiceNotFound);
+        }
+        else {
+          if (offers.Length > 1) {
+            Console.WriteLine(Resources.ServiceFoundMoreThanExpected);
+          }
+          foreach (ServiceOfferDesc serviceOfferDesc in offers) {
+            Console.WriteLine(Resources.ServiceFoundTesting);
+            try {
+              MarshalByRefObject helloObj =
+                serviceOfferDesc.service_ref.getFacet(helloIDLType);
+              if (helloObj == null) {
+                Console.WriteLine(Resources.FacetNotFoundInOffer);
+                continue;
+              }
+              Hello hello = helloObj as Hello;
+              if (hello == null) {
+                Console.WriteLine(Resources.FacetFoundWrongType);
+                continue;
+              }
+              Console.WriteLine(Resources.OfferFound);
+              // utiliza o serviço
+              hello.sayHello();
+              failed = false;
+              break;
+            }
+            catch (TRANSIENT) {
+              Console.WriteLine(Resources.ServiceTransientErrorMsg);
+            }
+            catch (COMM_FAILURE) {
+              Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
+            }
+            catch(NO_PERMISSION e) {
+              bool found = false;
+              string message = String.Empty;
+              switch(e.Minor) {
+                case NoLoginCode.ConstVal:
+                  message = Resources.NoLoginCodeErrorMsg;
+                  found = true;
+                  break;
+                case UnknownBusCode.ConstVal:
+                  message = Resources.UnknownBusCodeErrorMsg;
+                  found = true;
+                  break;
+                case UnverifiedLoginCode.ConstVal:
+                  message = Resources.UnverifiedLoginCodeErrorMsg;
+                  found = true;
+                  break;
+                case InvalidRemoteCode.ConstVal:
+                  message = Resources.InvalidRemoteCodeErrorMsg;
+                  found = true;
+                  break;
+              }
+              if (found) {
+                Console.WriteLine(message);
+              }
+              else {
+                throw;
+              }
+            }
+          }
+          if (failed) {
+            Console.WriteLine(Resources.OfferFunctionalNotFound);
+          }
+        }
+      }
+
+      try {
+        conn.Logout();
+      }
+      catch(ServiceFailure e) {
+        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+        Console.WriteLine(e);
+      }
+      catch (TRANSIENT) {
+        Console.WriteLine(Resources.BusTransientErrorMsg);
+      }
+      catch (COMM_FAILURE) {
+        Console.WriteLine(Resources.BusCommFailureErrorMsg);
+      }
+      if (!failed) {
+        Console.WriteLine(Resources.ClientOK);
+      }
       Console.ReadLine();
-      Environment.Exit(code);
     }
   }
 }
