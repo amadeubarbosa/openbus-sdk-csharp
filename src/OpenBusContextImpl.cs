@@ -117,26 +117,28 @@ namespace tecgraf.openbus {
       IgnoreCurrentThread();
       try {
         bool legacyDisable = false;
-        if (props.LegacyDisable != ConnectionPropertiesImpl.LegacyDisableDefault) {
-          legacyDisable = props.LegacyDisable;
-          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty,
-                             legacyDisable.ToString(CultureInfo.InvariantCulture));
-        }
         bool originator = false;
-        if (!legacyDisable) {
-          if (
-            props.LegacyDelegate.Equals(
-              ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
-            originator = true;
-            LogPropertyChanged(ConnectionPropertiesImpl.LegacyDelegateProperty,
-                               props.LegacyDelegate);
-          }
-        }
         PrivateKeyImpl accessKey = null;
-        if (props.AccessKey != null) {
-          accessKey = (PrivateKeyImpl) props.AccessKey;
-          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
-                             "{AccessKey provida pelo usuário}");
+        if (props != null) {
+          if (props.LegacyDisable != ConnectionPropertiesImpl.LegacyDisableDefault) {
+            legacyDisable = props.LegacyDisable;
+            LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty,
+                               legacyDisable.ToString(CultureInfo.InvariantCulture));
+          }
+          if (!legacyDisable) {
+            if (
+              props.LegacyDelegate.Equals(
+                ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
+              originator = true;
+              LogPropertyChanged(ConnectionPropertiesImpl.LegacyDelegateProperty,
+                                 props.LegacyDelegate);
+            }
+          }
+          if (props.AccessKey != null) {
+            accessKey = (PrivateKeyImpl)props.AccessKey;
+            LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
+                               "{AccessKey provida pelo usuário}");
+          }
         }
         return new ConnectionImpl(host, port, this, !legacyDisable, originator,
                                   accessKey);

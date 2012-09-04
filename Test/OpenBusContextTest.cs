@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scs.Core;
@@ -114,8 +113,7 @@ namespace tecgraf.openbus.Test {
     public void CreateConnectionTest() {
       lock (_context) {
         // cria conexão válida
-        Connection valid = _context.CreateConnection(_hostName, _hostPort, Props);
-        Assert.IsNotNull(valid);
+        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, Props));
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
         try {
@@ -163,9 +161,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
         failed = false;
         try {
-          // cria conexão com propriedade access.key vazia
-          props.AccessKey = null;
-          Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
+          // cria conexão sem propriedades opcionais (inclui AccessKey nula)
+          Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, null));
           // tenta setar propriedade access.key inválida
           props.AccessKey = new PrivateKeyMock();
         }

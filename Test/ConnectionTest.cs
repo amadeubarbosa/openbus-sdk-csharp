@@ -184,8 +184,34 @@ namespace tecgraf.openbus.Test {
     public void LoginByPasswordTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        // entidade errada
         bool failed = false;
+        // login nulo
+        try {
+          conn.LoginByPassword(null, _password);
+        }
+        catch (ArgumentException) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail("A exceção deveria ser ArgumentException. Exceção recebida: " +
+                      e);
+        }
+        Assert.IsTrue(failed, "O login com entidade nula foi bem-sucedido.");
+        // senha nula
+        failed = false;
+        try {
+          conn.LoginByPassword(_login, null);
+        }
+        catch (ArgumentException) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail("A exceção deveria ser ArgumentException. Exceção recebida: " +
+                      e);
+        }
+        Assert.IsTrue(failed, "O login com senha nula foi bem-sucedido.");
+        // entidade errada
+        failed = false;
         try {
           conn.LoginByPassword("", _password);
         }
@@ -244,8 +270,34 @@ namespace tecgraf.openbus.Test {
     public void LoginByCertificateTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        // entidade sem certificado cadastrado
         bool failed = false;
+        // login nulo
+        try {
+          conn.LoginByCertificate(null, _privKey);
+        }
+        catch (ArgumentException) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail("A exceção deveria ser ArgumentException. Exceção recebida: " +
+                      e);
+        }
+        Assert.IsTrue(failed, "O login com entidade nula foi bem-sucedido.");
+        // chave privada nula
+        failed = false;
+        try {
+          conn.LoginByCertificate(_login, null);
+        }
+        catch (ArgumentException) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail("A exceção deveria ser ArgumentException. Exceção recebida: " +
+                      e);
+        }
+        Assert.IsTrue(failed, "O login com chave privada nula foi bem-sucedido.");
+        // entidade sem certificado cadastrado
+        failed = false;
         try {
           conn.LoginByCertificate(_entityNoCert, _privKey);
         }
@@ -340,6 +392,34 @@ namespace tecgraf.openbus.Test {
             "A exceção deveria ser WrongSecretException. Exceção recebida: " + e);
         }
         Assert.IsTrue(failed, "O login com segredo errado foi bem-sucedido.");
+        // login nulo
+        failed = false;
+        try {
+          conn.StartSharedAuth(out secret);
+          conn2.LoginBySharedAuth(null, secret);
+        }
+        catch (ArgumentException) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser ArgumentException. Exceção recebida: " + e);
+        }
+        Assert.IsTrue(failed, "O login com LoginProcess nulo foi bem-sucedido.");
+        // segredo nulo
+        failed = false;
+        try {
+          login = conn.StartSharedAuth(out secret);
+          conn2.LoginBySharedAuth(login, null);
+        }
+        catch (ArgumentException) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser ArgumentException. Exceção recebida: " + e);
+        }
+        Assert.IsTrue(failed, "O login com segredo nulo foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn2.Login);
         login = conn.StartSharedAuth(out secret);

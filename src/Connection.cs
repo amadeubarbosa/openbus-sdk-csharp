@@ -60,6 +60,7 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="entity">Identificador da entidade a ser autenticada.</param>
     /// <param name="password">Senha de autenticação da entidade no barramento.</param>
+    /// <exception cref="ArgumentException">Caso a entidade ou a senha sejam nulas.</exception>
     /// <exception cref="AccessDenied"> A senha fornecida para autenticação da 
     /// entidade não foi validada pelo barramento.</exception>
     /// <exception cref="AlreadyLoggedInException">A conexão já está autenticada.</exception>
@@ -76,6 +77,7 @@ namespace tecgraf.openbus {
     /// <param name="entity"> Identificador da entidade a ser autenticada.</param>
     /// <param name="privateKey"> Chave privada correspondente ao certificado registrado
     /// a ser utilizada na autenticação, no formato esperado pelo OpenBus.</param>
+    /// <exception cref="ArgumentException">Caso a entidade seja nula ou a chave privada seja nula ou não tenha sido gerada pelo SDK do OpenBus.</exception>
     /// <exception cref="AccessDenied"> A chave privada fornecida não corresponde ao
     /// certificado da entidade registrado no barramento indicado.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>
@@ -112,6 +114,7 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="login"> Objeto que represeta o processo de login iniciado.</param>
     /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
+    /// <exception cref="ArgumentException">Caso o login ou o segredo sejam nulos.</exception>
     /// <exception cref="AccessDenied"> O segredo fornecido não corresponde ao esperado
     /// pelo barramento.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>

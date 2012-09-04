@@ -365,6 +365,9 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByPassword(string entity, byte[] password) {
+      if (entity == null || password == null) {
+        throw new ArgumentException("A entidade e a senha não podem ser nulas.");
+      }
       _loginLock.EnterReadLock();
       try {
         if (_login.HasValue) {
@@ -408,6 +411,9 @@ namespace tecgraf.openbus {
     }
 
     public void LoginByCertificate(string entity, PrivateKey privateKey) {
+      if (entity == null) {
+        throw new ArgumentException("A entidade não pode ser nula.");
+      }
       PrivateKeyImpl temp = privateKey as PrivateKeyImpl;
       if (temp == null) {
         throw new ArgumentException(
@@ -481,6 +487,9 @@ namespace tecgraf.openbus {
     }
 
     public void LoginBySharedAuth(LoginProcess login, byte[] secret) {
+      if (login == null || secret == null) {
+        throw new ArgumentException("O login e o segredo não podem ser nulos.");
+      }
       Context.IgnoreCurrentThread();
       try {
         GetBusFacets();
