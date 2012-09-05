@@ -126,9 +126,9 @@ namespace demo.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Erro ao ler a entrada do teclado..
         /// </summary>
-        internal static string GreetingsLanguageReadError {
+        internal static string GreetingsLanguageReadErrorMsg {
             get {
-                return ResourceManager.GetString("GreetingsLanguageReadError", resourceCulture);
+                return ResourceManager.GetString("GreetingsLanguageReadErrorMsg", resourceCulture);
             }
         }
         
@@ -282,6 +282,33 @@ namespace demo.Properties {
         internal static string ServiceTransientErrorMsg {
             get {
                 return ResourceManager.GetString("ServiceTransientErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro ao obter a fábrica de codecs do ORB..
+        /// </summary>
+        internal static string SharedAuthCodecFactoryErrorMsg {
+            get {
+                return ResourceManager.GetString("SharedAuthCodecFactoryErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  da autenticação compartilhada..
+        /// </summary>
+        internal static string SharedAuthEntity {
+            get {
+                return ResourceManager.GetString("SharedAuthEntity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro ao tentar realizar o login por autenticação compartilhada no barramento: este login por autenticação compartilhada foi cancelado ou expirou. O login deve ser realizado antes que se passe o tempo de lease..
+        /// </summary>
+        internal static string SharedAuthInvalidLoginProcessErrorMsg {
+            get {
+                return ResourceManager.GetString("SharedAuthInvalidLoginProcessErrorMsg", resourceCulture);
             }
         }
         

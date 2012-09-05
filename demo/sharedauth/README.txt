@@ -51,16 +51,14 @@ Servidor
 Cliente
 1) host do barramento
 2) porta do barramento
-3) nome de entidade
-4) senha
-5) nome de entidade utilizado no Servidor
-6) caminho para o arquivo onde serão escritos os dados da autenticação compartilhada
+3) caminho para o arquivo onde serão escritos os dados da autenticação compartilhada
+4) nome de entidade
+5) senha (opcional - se não for fornecida, será usado o nome de entidade)
 
 Cliente SharedAuth:
 1) host do barramento
 2) porta do barramento
-3) nome de entidade utilizado no Servidor
-4) caminho para o arquivo com os dados da autenticação compartilhada
+3) caminho para o arquivo com os dados da autenticação compartilhada
 
 
 ------------------------------

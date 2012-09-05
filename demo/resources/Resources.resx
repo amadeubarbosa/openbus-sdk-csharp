@@ -195,13 +195,22 @@
   <data name="UnverifiedLoginCodeErrorMsg" xml:space="preserve">
     <value>O serviço sendo utilizado não foi capaz de validar a chamada.</value>
   </data>
-  <data name="GreetingsNoLanguageSpecified">
-    <value xml:space="preserve">Nenhuma língua especificada. Todos os serviços greetings que forem encontrados serão utilizados.</value>
+  <data name="GreetingsNoLanguageSpecified" xml:space="preserve">
+    <value>Nenhuma língua especificada. Todos os serviços greetings que forem encontrados serão utilizados.</value>
   </data>
-  <data name="GreetingsWhichLanguage">
-    <value xml:space="preserve">Digite a língua para a qual deseja obter saudações, ou enter para todas: (english, spanish, portuguese)</value>
+  <data name="GreetingsWhichLanguage" xml:space="preserve">
+    <value>Digite a língua para a qual deseja obter saudações, ou enter para todas: (english, spanish, portuguese)</value>
   </data>
-  <data name="GreetingsLanguageReadError">
-    <value xml:space="preserve">Erro ao ler a entrada do teclado.</value>
+  <data name="GreetingsLanguageReadErrorMsg" xml:space="preserve">
+    <value>Erro ao ler a entrada do teclado.</value>
+  </data>
+  <data name="SharedAuthCodecFactoryErrorMsg" xml:space="preserve">
+    <value>Erro ao obter a fábrica de codecs do ORB.</value>
+  </data>
+  <data name="SharedAuthEntity">
+    <value xml:space="preserve"> da autenticação compartilhada.</value>
+  </data>
+  <data name="SharedAuthInvalidLoginProcessErrorMsg">
+    <value xml:space="preserve">Erro ao tentar realizar o login por autenticação compartilhada no barramento: este login por autenticação compartilhada foi cancelado ou expirou. O login deve ser realizado antes que se passe o tempo de lease.</value>
   </data>
 </root>
