@@ -40,8 +40,7 @@ Cliente
 1) host do barramento
 2) porta do barramento
 3) nome de entidade
-4) senha
-5) nome de entidade utilizado no Servidor
+4) senha (opcional - se não for fornecida, será usado o nome de entidade)
 
 
 ------------------------------
