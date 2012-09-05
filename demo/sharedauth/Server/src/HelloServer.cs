@@ -1,19 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
+using demo.Properties;
+using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.exceptions;
+using tecgraf.openbus.security;
 
-namespace sharedauth {
+namespace demo {
   /// <summary>
-  /// Servidor da demo sharedauth.
+  /// Servidor da demo shared auth.
   /// </summary>
   internal static class HelloServer {
     private static Connection _conn;
@@ -27,17 +27,7 @@ namespace sharedauth {
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      string key = args[3];
-
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      _conn = manager.CreateConnection(host, port, props);
-      manager.DefaultConnection = _conn;
-
-      // Lê a chave privada de um arquivo
-      byte[] privateKey = File.ReadAllBytes(key);
+      PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =
@@ -45,131 +35,132 @@ namespace sharedauth {
 
       // Cria a faceta Hello para o componente
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
-                         new HelloImpl(_conn));
+                         new HelloImpl());
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
       ServiceProperty[] properties = new[] {
                                              new ServiceProperty("offer.domain",
-                                                                 "OpenBus Demos")
+                                                                 "Demo SharedAuth")
                                            };
 
-      // Faz o login
-      if (!Login(entity, privateKey)) {
-        Exit(1);
-      }
+      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
+      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      OpenBusContext context = ORBInitializer.Context;
+      _conn = context.CreateConnection(host, port, null);
+      context.SetDefaultConnection(_conn);
 
-      // Registra a oferta no barramento
-      if (!Register(ic, properties)) {
-        Exit(1);
+      bool failed = true;
+      try {
+        // Faz o login
+        _conn.LoginByCertificate(entity, privateKey);
+        // Registra a oferta no barramento
+        _offer = ORBInitializer.Context.OfferRegistry.registerService(ic,
+                                                                      properties);
+        failed = false;
       }
-
-      // Registra uma callback para o caso do login ser perdido
-      _conn.OnInvalidLogin = new HelloInvalidLoginCallback(
-        entity, privateKey, ic, properties);
+        // Login
+      catch (AccessDenied) {
+        Console.WriteLine(Resources.ServerAccessDenied);
+      }
+      catch (MissingCertificate) {
+        Console.WriteLine(Resources.MissingCertificateForEntity + entity);
+      }
+        // Registro
+      catch (UnauthorizedFacets) {
+        Console.WriteLine(Resources.UnauthorizedFacets);
+      }
+        // Barramento
+      catch (ServiceFailure e) {
+        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+        Console.WriteLine(e);
+      }
+      catch (TRANSIENT) {
+        Console.WriteLine(Resources.BusTransientErrorMsg);
+      }
+      catch (COMM_FAILURE) {
+        Console.WriteLine(Resources.BusCommFailureErrorMsg);
+      }
+      catch (NO_PERMISSION e) {
+        if (e.Minor == NoLoginCode.ConstVal) {
+          Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+        }
+        else {
+          throw;
+        }
+      }
+      finally {
+        if (failed) {
+          Exit(1);
+        }
+      }
 
       // Mantém a thread ativa para aguardar requisições
-      Console.WriteLine("Servidor no ar.");
+      Console.WriteLine(Resources.ServerOK);
       Thread.Sleep(Timeout.Infinite);
     }
 
-    internal static bool Register(IComponent ic, ServiceProperty[] properties) {
-      try {
-        _offer = _conn.Offers.registerService(ic, properties);
-        return true;
+    private static void RemoveOfferAndLogout() {
+      if (_offer != null) {
+        try {
+          Console.WriteLine(Resources.RemovingOffer);
+          _offer.remove();
+          Console.WriteLine(Resources.RemovedOffer);
+        }
+        catch (UnauthorizedOperation) {
+          Console.WriteLine(Resources.UnauthorizedRemoveOffer);
+        }
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
       }
-      catch (InvalidService) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: o IComponent fornecido não é válido, por não apresentar facetas padrão definidas pelo modelo de componetes SCS.");
+      if (_conn.Login.HasValue) {
+        try {
+          _conn.Logout();
+        }
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
       }
-      catch (InvalidProperties) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: A lista de propriedades fornecida inclui propriedades inválidas, tais como propriedades com nomes reservados (cujos nomes começam com 'openbus.').");
-      }
-      catch (UnauthorizedFacets) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: O componente que implementa o serviço apresenta facetas com interfaces que não estão autorizadas para a entidade realizando o registro da oferta de serviço.");
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar registrar a oferta no barramento:");
-        Console.WriteLine(e);
-      }
-      return false;
-    }
-
-    internal static bool Login(string entity, byte[] privateKey) {
-      try {
-        _conn.LoginByCertificate(entity, privateKey);
-        return true;
-      }
-      catch (AlreadyLoggedInException) {
-        Console.WriteLine(
-          "Falha ao tentar realizar o login por certificado no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
-        return true;
-      }
-      catch (InvalidPrivateKeyException) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: a chave privada está corrompida ou em um formato errado.");
-      }
-      catch (AccessDenied) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: a chave privada fornecida não é a esperada.");
-      }
-      catch (BusChangedException) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
-      }
-      catch (MissingCertificate) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: o barramento não tem certificado registrado para a entidade " +
-          entity);
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e);
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar realizar o login por certificado no barramento:");
-        Console.WriteLine(e);
-      }
-      return false;
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
-      if (_offer == null) {
-        return;
-      }
-      try {
-        Console.WriteLine(
-          "Removendo oferta do barramento antes de terminar o processo...");
-        _offer.remove();
-        Console.WriteLine("Oferta removida do barramento.");
-      }
-      catch (UnauthorizedOperation) {
-        Console.WriteLine(
-          "Erro ao tentar remover a oferta do barramento: operação não autorizada. O login utilizado para remover a oferta não é o mesmo que a registrou e não é um administrador do barramento.");
-      }
-      catch (ServiceFailure exc) {
-        Console.WriteLine(
-          "Erro ao tentar remover a oferta do barramento: erro no serviço remoto. Causa:");
-        Console.WriteLine(exc);
-      }
-      catch (Exception exc) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar remover a oferta do barramento:");
-        Console.WriteLine(exc);
-      }
-      if (_conn != null) {
-        _conn.Logout();
-      }
+      RemoveOfferAndLogout();
     }
 
     private static void Exit(int code) {
-      _conn.Logout();
-      Console.WriteLine("Pressione qualquer tecla para sair.");
+      RemoveOfferAndLogout();
+      Console.WriteLine(Resources.PressAnyKeyToExit);
       Console.ReadLine();
       Environment.Exit(code);
     }
