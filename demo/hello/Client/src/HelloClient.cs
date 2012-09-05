@@ -23,9 +23,8 @@ namespace demo {
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, props);
+      Connection conn = context.CreateConnection(host, port, null);
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
@@ -41,7 +40,7 @@ namespace demo {
           new ServiceProperty("openbus.component.interface", helloIDLType);
         // propriedade definida pelo serviço hello
         ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
-        ServiceProperty[] properties = new[] { prop, autoProp1, autoProp2 };
+        ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
         offers = ORBInitializer.Context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {
@@ -57,7 +56,7 @@ namespace demo {
       catch (COMM_FAILURE) {
         Console.WriteLine(Resources.BusCommFailureErrorMsg);
       }
-      catch(NO_PERMISSION e) {
+      catch (NO_PERMISSION e) {
         if (e.Minor == NoLoginCode.ConstVal) {
           Console.WriteLine(Resources.NoLoginCodeErrorMsg);
         }
@@ -102,10 +101,10 @@ namespace demo {
             catch (COMM_FAILURE) {
               Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
             }
-            catch(NO_PERMISSION e) {
+            catch (NO_PERMISSION e) {
               bool found = false;
               string message = String.Empty;
-              switch(e.Minor) {
+              switch (e.Minor) {
                 case NoLoginCode.ConstVal:
                   message = Resources.NoLoginCodeErrorMsg;
                   found = true;
@@ -140,7 +139,7 @@ namespace demo {
       try {
         conn.Logout();
       }
-      catch(ServiceFailure e) {
+      catch (ServiceFailure e) {
         Console.WriteLine(Resources.BusServiceFailureErrorMsg);
         Console.WriteLine(e);
       }

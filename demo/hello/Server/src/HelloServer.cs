@@ -59,18 +59,18 @@ namespace demo {
                                                                       properties);
         failed = false;
       }
-      // Login
+        // Login
       catch (AccessDenied) {
         Console.WriteLine(Resources.ServerAccessDenied);
       }
       catch (MissingCertificate) {
         Console.WriteLine(Resources.MissingCertificateForEntity + entity);
       }
-      // Registro
+        // Registro
       catch (UnauthorizedFacets) {
         Console.WriteLine(Resources.UnauthorizedFacets);
       }
-      // Barramento
+        // Barramento
       catch (ServiceFailure e) {
         Console.WriteLine(Resources.BusServiceFailureErrorMsg);
         Console.WriteLine(e);
