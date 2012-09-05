@@ -1,14 +1,13 @@
 using System;
 using tecgraf.openbus;
 
-namespace greetings {
+namespace demo {
   /// <summary>
   /// Implementação do servant Greetings.
   /// </summary>  
   public class GreetingsImpl : MarshalByRefObject, Greetings {
     #region Fields
 
-    private readonly Connection _dispatcherConn;
     private readonly Language _language;
     private readonly Period _period;
 
@@ -28,9 +27,7 @@ namespace greetings {
 
     #region Constructors
 
-    internal GreetingsImpl(Connection dispatcherConn, Language language,
-                           Period period) {
-      _dispatcherConn = dispatcherConn;
+    internal GreetingsImpl(Language language, Period period) {
       _language = language;
       _period = period;
     }
@@ -40,7 +37,7 @@ namespace greetings {
     #region Greetings Members
 
     public string sayGreetings() {
-      string caller = _dispatcherConn.CallerChain.Caller.entity;
+      string caller = ORBInitializer.Context.CallerChain.Caller.entity;
       switch (_language) {
         case Language.English:
           return EnglishGreetings(caller);
