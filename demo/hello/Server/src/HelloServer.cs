@@ -55,8 +55,7 @@ namespace demo {
         // Faz o login
         _conn.LoginByCertificate(entity, privateKey);
         // Registra a oferta no barramento
-        _offer = ORBInitializer.Context.OfferRegistry.registerService(ic,
-                                                                      properties);
+        _offer = context.OfferRegistry.registerService(ic, properties);
         failed = false;
       }
         // Login

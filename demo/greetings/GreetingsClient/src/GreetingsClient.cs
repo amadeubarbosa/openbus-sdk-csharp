@@ -57,7 +57,7 @@ namespace demo {
           properties = new[] {prop, autoProp1};
         }
 
-        offers = ORBInitializer.Context.OfferRegistry.findServices(properties);
+        offers = context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {
         Console.WriteLine(Resources.ClientAccessDenied + entity + ".");

@@ -98,7 +98,7 @@ namespace demo {
         // Faz o login
         _conn.LoginByCertificate(entity, privateKey);
         // Registra as ofertas no barramento
-        OfferRegistry registry = ORBInitializer.Context.OfferRegistry;
+        OfferRegistry registry = context.OfferRegistry;
         Offers.Add(registry.registerService(english.GetIComponent(), properties));
         Offers.Add(registry.registerService(spanish.GetIComponent(), properties));
         Offers.Add(registry.registerService(portuguese.GetIComponent(),

@@ -63,7 +63,7 @@ namespace demo {
         // propriedade definida pelo serviço hello
         ServiceProperty prop = new ServiceProperty("offer.domain", "Demo SharedAuth");
         ServiceProperty[] properties = new[] {prop, autoProp};
-        offers = ORBInitializer.Context.OfferRegistry.findServices(properties);
+        offers = context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {
         Console.WriteLine(Resources.ClientAccessDenied + entity + ".");
