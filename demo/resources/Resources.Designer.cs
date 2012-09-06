@@ -169,6 +169,51 @@ namespace demo.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to   notificação feita fora da chamada original!.
+        /// </summary>
+        internal static string MultiplexingTimerNotificationOutOfOriginalCall {
+            get {
+                return ResourceManager.GetString("MultiplexingTimerNotificationOutOfOriginalCall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notificação do timer esperado recebida!.
+        /// </summary>
+        internal static string MultiplexingTimerNotificationReceived {
+            get {
+                return ResourceManager.GetString("MultiplexingTimerNotificationReceived", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notificação inesperada recebida:.
+        /// </summary>
+        internal static string MultiplexingUnexpectedNotification {
+            get {
+                return ResourceManager.GetString("MultiplexingUnexpectedNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   recebida de: .
+        /// </summary>
+        internal static string MultiplexingUnexpectedNotificationFrom {
+            get {
+                return ResourceManager.GetString("MultiplexingUnexpectedNotificationFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   esperada de: .
+        /// </summary>
+        internal static string MultiplexingUnexpectedNotificationShouldBeFrom {
+            get {
+                return ResourceManager.GetString("MultiplexingUnexpectedNotificationShouldBeFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Não há um login válido no momento para a entidade utilizada..
         /// </summary>
         internal static string NoLoginCodeErrorMsg {

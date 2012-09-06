@@ -213,4 +213,19 @@
   <data name="SharedAuthInvalidLoginProcessErrorMsg">
     <value xml:space="preserve">Erro ao tentar realizar o login por autenticação compartilhada no barramento: este login por autenticação compartilhada foi cancelado ou expirou. O login deve ser realizado antes que se passe o tempo de lease.</value>
   </data>
+  <data name="MultiplexingTimerNotificationReceived">
+    <value xml:space="preserve">Notificação do timer esperado recebida!</value>
+  </data>
+  <data name="MultiplexingTimerNotificationOutOfOriginalCall">
+    <value xml:space="preserve">  notificação feita fora da chamada original!</value>
+  </data>
+  <data name="MultiplexingUnexpectedNotification">
+    <value xml:space="preserve">Notificação inesperada recebida:</value>
+  </data>
+  <data name="MultiplexingUnexpectedNotificationFrom">
+    <value xml:space="preserve">  recebida de: </value>
+  </data>
+  <data name="MultiplexingUnexpectedNotificationShouldBeFrom">
+    <value xml:space="preserve">  esperada de: </value>
+  </data>
 </root>
