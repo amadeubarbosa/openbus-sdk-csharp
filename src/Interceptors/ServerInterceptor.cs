@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Text;
 using Ch.Elca.Iiop.Idl;
+using Ch.Elca.Iiop.Util;
 using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
@@ -188,7 +190,8 @@ namespace tecgraf.openbus.interceptors {
           loginId = credential.Credential.login;
         }
         dispatcher = Context.OnCallDispatch.Dispatch(Context, busId, loginId,
-                                                     request.object_id,
+                                                     GetObjectUriForObjectKey(
+                                                       request.object_id),
                                                      request.operation);
       }
       return dispatcher ?? Context.GetDefaultConnection();
@@ -263,5 +266,112 @@ namespace tecgraf.openbus.interceptors {
         (Credential) Codec.decode_value(data, credentialTypeCode);
       return new AnyCredential(cred);
     }
+
+    #region Métodos copiados do IIOP.NET
+
+    private static string GetObjectUriForObjectKey(byte[] objectKey) {
+      string result = System.Text.Encoding.ASCII.GetString(objectKey);
+      return UnescapeNonAscii(result);
+    }
+
+    private static string UnescapeNonAscii(string uri) {
+      StringBuilder result = null;
+      int escapeSequenceStartIndex = 0;
+      for (int i = 0; i != uri.Length; ++i) {
+        bool endOfSequence;
+        if (IsPotentiallyEscapedCharacterRepresentation1(uri, i,
+                                                         i -
+                                                         escapeSequenceStartIndex,
+                                                         out endOfSequence)) {
+          // either new escape sequence starting with \ or continue of a sequence
+          if (endOfSequence) {
+            // it's an escape char in form \uQRST
+            if (result == null) {
+              result = new StringBuilder(uri, 0, escapeSequenceStartIndex,
+                                         uri.Length);
+            }
+            int charNr = StringConversions.Parse(uri,
+                                                 escapeSequenceStartIndex + 2, 4);
+            result.Append(Convert.ToChar(charNr));
+            escapeSequenceStartIndex = i;
+          }
+          else {
+            continue;
+          }
+        }
+        else if (IsPotentiallyEscapedCharacterRepresentation2(uri, i,
+                                                              i -
+                                                              escapeSequenceStartIndex,
+                                                              out endOfSequence)) {
+          if (endOfSequence) {
+            // it's an escape char in form \\u
+            if (result == null) {
+              result = new StringBuilder(uri, 0, escapeSequenceStartIndex,
+                                         uri.Length);
+            }
+            result.Append(@"\u");
+            escapeSequenceStartIndex = i;
+          }
+          else {
+            continue;
+          }
+        }
+        else {
+          // no escape sequence, add string directly to result
+          if (result != null) {
+            result.Append(uri, escapeSequenceStartIndex,
+                          i - escapeSequenceStartIndex + 1);
+          }
+          escapeSequenceStartIndex = i;
+        }
+        ++escapeSequenceStartIndex;
+      }
+      return result != null ? result.ToString() : uri;
+    }
+
+    /// <summary>
+    /// checks, if a given candidate sequence may represent an escaped character
+    /// </summary>
+    /// <returns>true, if possible, otherwise false</returns>
+    private static bool IsPotentiallyEscapedCharacterRepresentation1(
+      string candidate, int index, int escapedCharRepIndex,
+      out bool lastChar) {
+      // look for '\uQRST'
+      lastChar = escapedCharRepIndex == 5;
+      switch (escapedCharRepIndex) {
+        case 0:
+          return candidate[index] == '\\';
+        case 1:
+          return candidate[index] == 'u';
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+          return Char.IsDigit(candidate, index) ||
+                 (candidate[index] >= 'A' && candidate[index] <= 'F') ||
+                 (candidate[index] >= 'a' && candidate[index] <= 'f');
+        default:
+          return false;
+      }
+    }
+
+    private static bool IsPotentiallyEscapedCharacterRepresentation2(
+      string candidate, int index, int escapedCharRepIndex,
+      out bool lastChar) {
+      lastChar = false;
+      // look for \\u
+      switch (escapedCharRepIndex) {
+        case 0:
+        case 1:
+          return candidate[index] == '\\';
+        case 2:
+          lastChar = true;
+          return candidate[index] == 'u';
+        default:
+          return false;
+      }
+    }
+
+    #endregion
                                      }
 }

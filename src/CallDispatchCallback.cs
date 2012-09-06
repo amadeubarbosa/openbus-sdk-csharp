@@ -26,10 +26,10 @@
     /// <param name="busid">Identificação do barramento através do qual a chamada foi
     ///              feita.</param>
     /// <param name="loginId">Informações do login do cliente da chamada.</param>
-    /// <param name="objectId">Identificador opaco descrevendo o objeto sendo chamado.</param>
+    /// <param name="uri">Identificador opaco descrevendo o objeto sendo chamado.</param>
     /// <param name="operation">Nome da operação sendo chamada.</param>
     /// <returns>Conexão a ser utilizada para receber a chamada.</returns>
     Connection Dispatch(OpenBusContext context, string busid, string loginId,
-                        byte[] objectId, string operation);
+                        string uri, string operation);
   };
 }

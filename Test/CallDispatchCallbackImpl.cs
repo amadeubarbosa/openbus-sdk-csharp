@@ -7,7 +7,7 @@
     }
 
     public Connection Dispatch(OpenBusContext context, string busid,
-                               string loginId, byte[] objectId, string operation) {
+                               string caller, string uri, string operation) {
       return _conn.BusId.Equals(busid) ? _conn : null;
     }
   }
