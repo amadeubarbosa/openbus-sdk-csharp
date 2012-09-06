@@ -8,7 +8,7 @@
     <ProjectGuid>{692DDC7E-2585-460E-8356-89ABBC840775}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>multiplexing</RootNamespace>
+    <RootNamespace>demo</RootNamespace>
     <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
@@ -41,8 +41,8 @@
     <Reference Include="Openbus">
       <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Demo.Greetings.Idl">
-      <HintPath>..\..\..\lib\Openbus.Demo.Greetings.Idl.dll</HintPath>
+    <Reference Include="Openbus.Demo.Multiplexing.Idl">
+      <HintPath>..\..\..\lib\Openbus.Demo.Multiplexing.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
@@ -55,12 +55,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="src\CallbackImpl.cs" />
     <Compile Include="src\MultiplexingClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

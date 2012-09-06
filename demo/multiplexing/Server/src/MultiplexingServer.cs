@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
+using demo.Properties;
+using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.exceptions;
+using tecgraf.openbus.security;
 
-namespace multiplexing {
+namespace demo {
   /// <summary>
   /// Servidor da demo multiplexing.
   /// </summary>
@@ -27,241 +29,155 @@ namespace multiplexing {
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      string key = args[3];
+      PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
+
+      // Associa uma callback de escolha de conexão de despacho
+      OpenBusContext context = ORBInitializer.Context;
+      Dictionary<string, Connection> connections =
+        new Dictionary<string, Connection>();
+      context.OnCallDispatch = new MultiplexingCallDispatchCallback(connections);
 
       // Cria 3 conexões com o mesmo barramento, uma para cada componente.
-      IDictionary<string, string> props = new Dictionary<string, string>();
-      ConnectionManager manager = ORBInitializer.Manager;
-      Connection conn = manager.CreateConnection(host, port, props);
-      Connection conn2 = manager.CreateConnection(host, port, props);
-      Connection conn3 = manager.CreateConnection(host, port, props);
+      for (int i = 0; i < 3; i++) {
+        ComponentContext component =
+          new DefaultComponentContext(new ComponentId("Timer", 1, 0, 0, ".net"));
 
-      // Lê a chave privada de um arquivo
-      byte[] privateKey = File.ReadAllBytes(key);
+        // Cria a faceta Hello para o componente
+        TimerImpl timer = new TimerImpl();
+        component.AddFacet("Timer", Repository.GetRepositoryID(typeof (Timer)),
+                           timer);
 
-      // Faz o login das três conexões
-      if (!Login(conn, entity, privateKey)) {
-        Exit(1);
-      }
-      if (!Login(conn2, entity, privateKey)) {
-        Exit(1);
-      }
-      if (!Login(conn3, entity, privateKey)) {
-        Exit(1);
-      }
+        // Define propriedades para a oferta de serviço a ser registrada no barramento
+        IComponent ic = component.GetIComponent();
+        ServiceProperty[] properties = new[] {
+                                               new ServiceProperty(
+                                                 "offer.domain",
+                                                 "Demo Multiplexing")
+                                             };
 
-      // Escolhe uma conexão para atender requisições
-      manager.SetDispatcher(conn2);
-      // Se ocorrer um logout, o dispatcher será removido, portanto colocamos a conn2 também como default
-      manager.DefaultConnection = conn2;
+        // Cria a conexão e a define como conexão corrente
+        ConnectionProperties props = new ConnectionPropertiesImpl();
+        props.AccessKey = privateKey;
+        Connection conn = context.CreateConnection(host, port, props);
+        context.SetCurrentConnection(conn);
 
-      // Cria o componente que responde em inglês
-      ComponentContext english =
-        new DefaultComponentContext(new ComponentId("english", 1, 0, 0, ".net"));
-      english.AddFacet("GoodMorning",
-                       Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2,
-                                         GreetingsImpl.Language.English,
-                                         GreetingsImpl.Period.Morning));
-      english.AddFacet("GoodAfternoon",
-                       Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2,
-                                         GreetingsImpl.Language.English,
-                                         GreetingsImpl.Period.Afternoon));
-      english.AddFacet("GoodNight",
-                       Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2,
-                                         GreetingsImpl.Language.English,
-                                         GreetingsImpl.Period.Night));
+        // Associa a conexão à URI do servant para que a callback possa escolher
+        connections.Add(RemotingServices.GetObjectUri(timer), conn);
 
-      // Cria o componente que responde em espanhol
-      ComponentContext spanish =
-        new DefaultComponentContext(new ComponentId("spanish", 1, 0, 0, ".net"));
-      spanish.AddFacet("GoodMorning",
-                       Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2,
-                                         GreetingsImpl.Language.Spanish,
-                                         GreetingsImpl.Period.Morning));
-      spanish.AddFacet("GoodAfternoon",
-                       Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2,
-                                         GreetingsImpl.Language.Spanish,
-                                         GreetingsImpl.Period.Afternoon));
-      spanish.AddFacet("GoodNight",
-                       Repository.GetRepositoryID(typeof (Greetings)),
-                       new GreetingsImpl(conn2,
-                                         GreetingsImpl.Language.Spanish,
-                                         GreetingsImpl.Period.Night));
-
-      // Cria o componente que responde em português
-      ComponentContext portuguese =
-        new DefaultComponentContext(new ComponentId("portuguese", 1, 0, 0,
-                                                    ".net"));
-      portuguese.AddFacet("GoodMorning",
-                          Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn2,
-                                            GreetingsImpl.Language.Portuguese,
-                                            GreetingsImpl.Period.Morning));
-      portuguese.AddFacet("GoodAfternoon",
-                          Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn2,
-                                            GreetingsImpl.Language.Portuguese,
-                                            GreetingsImpl.Period.Afternoon));
-      portuguese.AddFacet("GoodNight",
-                          Repository.GetRepositoryID(typeof (Greetings)),
-                          new GreetingsImpl(conn2,
-                                            GreetingsImpl.Language.Portuguese,
-                                            GreetingsImpl.Period.Night));
-
-      // Define propriedade para as ofertas de serviço a serem registradas no barramento
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "OpenBus Demos")
-                                           };
-      IComponent englishIC = english.GetIComponent();
-      IComponent spanishIC = spanish.GetIComponent();
-      IComponent portugueseIC = portuguese.GetIComponent();
-
-      // adiciona as callbacks de recuperação de login
-      conn.OnInvalidLogin = new MultiplexingInvalidLoginCallback(entity,
-                                                                 privateKey,
-                                                                 englishIC,
-                                                                 properties);
-      conn2.OnInvalidLogin = new MultiplexingInvalidLoginCallback(entity,
-                                                                  privateKey,
-                                                                  spanishIC,
-                                                                  properties);
-      conn3.OnInvalidLogin = new MultiplexingInvalidLoginCallback(entity,
-                                                                  privateKey,
-                                                                  portugueseIC,
-                                                                  properties);
-
-      // Registra as ofertas no barramento das três conexões
-      if (!Register(conn, englishIC, properties)) {
-        Exit(1);
-      }
-      if (!Register(conn2, spanishIC, properties)) {
-        Exit(1);
-      }
-      if (!Register(conn3, portugueseIC, properties)) {
-        Exit(1);
+        bool failed = true;
+        try {
+          // Faz o login
+          conn.LoginByCertificate(entity, privateKey);
+          // Registra a oferta no barramento
+          Offers.Add(conn, context.OfferRegistry.registerService(ic, properties));
+          failed = false;
+        }
+          // Login
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + entity);
+        }
+          // Registro
+        catch (UnauthorizedFacets) {
+          Console.WriteLine(Resources.UnauthorizedFacets);
+        }
+          // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+        finally {
+          if (failed) {
+            Exit(1);
+          }
+        }
       }
 
       // Mantém a thread ativa para aguardar requisições
-      Console.WriteLine("Servidor no ar.");
+      Console.WriteLine(Resources.ServerOK);
       Thread.Sleep(Timeout.Infinite);
     }
 
-    internal static bool Register(Connection conn, IComponent component,
-                                  ServiceProperty[] properties) {
-      try {
-        // Seta a conexão a ser usada para essa chamada
-        ConnectionManager manager = ORBInitializer.Manager;
-        manager.Requester = conn;
-        Offers.Add(conn, conn.Offers.registerService(component, properties));
-        return true;
+    private static void RemoveOfferAndLogout() {
+      if (Offers.Count > 0) {
+        foreach (KeyValuePair<Connection, ServiceOffer> pair in Offers) {
+          try {
+            Console.WriteLine(Resources.RemovingOffer);
+            pair.Value.remove();
+            Console.WriteLine(Resources.RemovedOffer);
+          }
+          catch (UnauthorizedOperation) {
+            Console.WriteLine(Resources.UnauthorizedRemoveOffer);
+          }
+          catch (ServiceFailure e) {
+            Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+            Console.WriteLine(e);
+          }
+          catch (TRANSIENT) {
+            Console.WriteLine(Resources.BusTransientErrorMsg);
+          }
+          catch (COMM_FAILURE) {
+            Console.WriteLine(Resources.BusCommFailureErrorMsg);
+          }
+          catch (NO_PERMISSION e) {
+            if (e.Minor == NoLoginCode.ConstVal) {
+              Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+            }
+            else {
+              throw;
+            }
+          }
+          Connection conn = pair.Key;
+          if (conn.Login.HasValue) {
+            try {
+              conn.Logout();
+            }
+            catch (ServiceFailure e) {
+              Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+              Console.WriteLine(e);
+            }
+            catch (TRANSIENT) {
+              Console.WriteLine(Resources.BusTransientErrorMsg);
+            }
+            catch (COMM_FAILURE) {
+              Console.WriteLine(Resources.BusCommFailureErrorMsg);
+            }
+            catch (NO_PERMISSION e) {
+              if (e.Minor == NoLoginCode.ConstVal) {
+                Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+              }
+              else {
+                throw;
+              }
+            }
+          }
+        }
       }
-      catch (InvalidService) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: o IComponent fornecido não é válido, por não apresentar facetas padrão definidas pelo modelo de componetes SCS.");
-      }
-      catch (InvalidProperties) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: A lista de propriedades fornecida inclui propriedades inválidas, tais como propriedades com nomes reservados (cujos nomes começam com 'openbus.').");
-      }
-      catch (UnauthorizedFacets) {
-        Console.WriteLine(
-          "Erro ao tentar registrar a oferta no barramento: O componente que implementa o serviço apresenta facetas com interfaces que não estão autorizadas para a entidade realizando o registro da oferta de serviço.");
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar registrar a oferta no barramento:");
-        Console.WriteLine(e);
-      }
-      return false;
-    }
-
-    internal static bool Login(Connection conn, string entity, byte[] privateKey) {
-      try {
-        conn.LoginByCertificate(entity, privateKey);
-        return true;
-      }
-      catch (AlreadyLoggedInException) {
-        Console.WriteLine(
-          "Falha ao tentar realizar o login por certificado no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
-        return true;
-      }
-      catch (BusChangedException) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
-      }
-      catch (InvalidPrivateKeyException) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: a chave privada está corrompida ou em um formato errado.");
-      }
-      catch (AccessDenied) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: a chave privada fornecida não é a esperada.");
-      }
-      catch (MissingCertificate) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: o barramento não tem certificado registrado para a entidade " +
-          entity);
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por certificado no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e);
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar realizar o login por certificado no barramento:");
-        Console.WriteLine(e);
-      }
-      return false;
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
-      if (Offers.Count == 0) {
-        return;
-      }
-      Console.WriteLine(
-        "Removendo ofertas do barramento antes de terminar o processo...");
-      ConnectionManager manager = ORBInitializer.Manager;
-      foreach (KeyValuePair<Connection, ServiceOffer> kvp in Offers) {
-        try {
-          // ativa a conexão correta
-          manager.Requester = kvp.Key;
-          // remove a oferta
-          kvp.Value.remove();
-          Console.WriteLine("Oferta removida do barramento.");
-        }
-        catch (UnauthorizedOperation) {
-          Console.WriteLine(
-            "Erro ao tentar remover a oferta do barramento: operação não autorizada. O login utilizado para remover a oferta não é o mesmo que a registrou e não é um administrador do barramento.");
-        }
-        catch (ServiceFailure exc) {
-          Console.WriteLine(
-            "Erro ao tentar remover a oferta do barramento: erro no serviço remoto. Causa:");
-          Console.WriteLine(exc);
-        }
-        catch (Exception exc) {
-          Console.WriteLine(
-            "Erro inesperado ao tentar remover a oferta do barramento:");
-          Console.WriteLine(exc);
-        }
-      }
-      // faz o logout de todas as conexões
-      foreach (KeyValuePair<Connection, ServiceOffer> kvp in Offers) {
-        kvp.Key.Logout();
-      }
+      RemoveOfferAndLogout();
     }
 
     private static void Exit(int code) {
-      foreach (KeyValuePair<Connection, ServiceOffer> kvp in Offers) {
-        kvp.Key.Logout();
-      }
-      Console.WriteLine("Pressione qualquer tecla para sair.");
+      RemoveOfferAndLogout();
+      Console.WriteLine(Resources.PressAnyKeyToExit);
       Console.ReadLine();
       Environment.Exit(code);
     }
