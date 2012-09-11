@@ -17,9 +17,8 @@ namespace demo {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      string helloEntity = args[2];
-      string entity = args[3];
-      byte[] password = new ASCIIEncoding().GetBytes(args[4] ?? entity);
+      string entity = args[2];
+      byte[] password = new ASCIIEncoding().GetBytes(args[3] ?? entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
@@ -34,13 +33,11 @@ namespace demo {
         conn.LoginByPassword(entity, password);
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
         // propriedade gerada automaticamente
-        ServiceProperty autoProp1 = new ServiceProperty("openbus.offer.entity",
-                                                        helloEntity);
-        ServiceProperty autoProp2 =
+        ServiceProperty autoProp =
           new ServiceProperty("openbus.component.interface", helloIDLType);
         // propriedade definida pelo serviço hello
         ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
-        ServiceProperty[] properties = new[] {prop, autoProp1, autoProp2};
+        ServiceProperty[] properties = new[] {prop, autoProp};
         offers = context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {
