@@ -37,9 +37,8 @@ Servidor
 Cliente
 1) host do barramento
 2) porta do barramento
-3) nome de entidade utilizado no Servidor
-4) nome de entidade
-5) senha (opcional - se não for fornecida, será usado o nome de entidade)
+3) nome de entidade
+4) senha (opcional - se não for fornecida, será usado o nome de entidade)
 
 
 ------------------------------
@@ -59,4 +58,4 @@ A demo deve ser executada na seguinte ordem:
 -------------------------------
 
 1) Server.exe localhost 2089 demo_hello_csharp_server DemoHello.key
-2) Client.exe localhost 2089 demo_hello_csharp_server demo_hello_csharp_client minhasenha
+2) Client.exe localhost 2089 demo_hello_csharp_client minhasenha
