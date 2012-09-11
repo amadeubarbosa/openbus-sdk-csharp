@@ -228,4 +228,25 @@
   <data name="MultiplexingUnexpectedNotificationShouldBeFrom">
     <value xml:space="preserve">  esperada de: </value>
   </data>
+  <data name="CallChainRefuseMessage">
+    <value xml:space="preserve">Recusando mensagem de </value>
+  </data>
+  <data name="CallChainAcceptMessage">
+    <value xml:space="preserve">Aceitando mensagem de </value>
+  </data>
+  <data name="CallChainProxyForwardingMessage">
+    <value xml:space="preserve">Repassando mensagem de </value>
+  </data>
+  <data name="CallChainProxyUnavailableMessage">
+    <value xml:space="preserve">Erro: serviços encontrados não estão disponíveis.</value>
+  </data>
+  <data name="CallChainClientServiceRoleErrorMessage">
+    <value xml:space="preserve">Erro: serviço com papel </value>
+  </data>
+  <data name="CallChainClientNotAutorizedMessage">
+    <value xml:space="preserve"> não autorizou a chamada.</value>
+  </data>
+  <data name="CallChainClientUnavailableMessage">
+    <value xml:space="preserve"> está indisponível.</value>
+  </data>
 </root>

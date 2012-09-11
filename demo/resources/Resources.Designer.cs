@@ -88,6 +88,69 @@ namespace demo.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Aceitando mensagem de .
+        /// </summary>
+        internal static string CallChainAcceptMessage {
+            get {
+                return ResourceManager.GetString("CallChainAcceptMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  não autorizou a chamada..
+        /// </summary>
+        internal static string CallChainClientNotAutorizedMessage {
+            get {
+                return ResourceManager.GetString("CallChainClientNotAutorizedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro: serviço com papel .
+        /// </summary>
+        internal static string CallChainClientServiceRoleErrorMessage {
+            get {
+                return ResourceManager.GetString("CallChainClientServiceRoleErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  está indisponível..
+        /// </summary>
+        internal static string CallChainClientUnavailableMessage {
+            get {
+                return ResourceManager.GetString("CallChainClientUnavailableMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Repassando mensagem de .
+        /// </summary>
+        internal static string CallChainProxyForwardingMessage {
+            get {
+                return ResourceManager.GetString("CallChainProxyForwardingMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro: serviços encontrados não estão disponíveis..
+        /// </summary>
+        internal static string CallChainProxyUnavailableMessage {
+            get {
+                return ResourceManager.GetString("CallChainProxyUnavailableMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recusando mensagem de .
+        /// </summary>
+        internal static string CallChainRefuseMessage {
+            get {
+                return ResourceManager.GetString("CallChainRefuseMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro ao tentar realizar o login por senha no barramento: a senha fornecida não foi validada para a entidade .
         /// </summary>
         internal static string ClientAccessDenied {
