@@ -517,8 +517,9 @@ namespace tecgraf.openbus {
         Acs.logout();
       }
       catch (NO_PERMISSION e) {
-        if ((e.Minor != InvalidLoginCode.ConstVal) ||
-            (e.Status.Equals("COMPLETED_NO"))) {
+        // Não lança NoLoginCode com COMPLETED_NO, retorna falso
+        if ((e.Minor != NoLoginCode.ConstVal) ||
+            (!e.Status.Equals("COMPLETED_NO"))) {
           throw;
         }
         // já fui deslogado do barramento
