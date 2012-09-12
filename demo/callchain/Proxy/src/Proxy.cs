@@ -44,7 +44,7 @@ namespace demo {
       ServiceProperty prop1 = new ServiceProperty("offer.domain",
                                                   "Demo CallChain");
       ServiceProperty prop2 = new ServiceProperty("offer.role",
-                                                  "mensageiro real");
+                                                  "mensageiro proxy");
       ServiceProperty[] properties = new[] {prop1, prop2};
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
@@ -61,7 +61,8 @@ namespace demo {
         OfferRegistry offerRegistry = context.OfferRegistry;
         ServiceProperty autoProp =
           new ServiceProperty("openbus.component.interface", messengerIDLType);
-        ServiceProperty[] findProps = new[] {autoProp, prop1, prop2};
+        ServiceProperty findProp = new ServiceProperty("offer.role", "mensageiro real");
+        ServiceProperty[] findProps = new[] {autoProp, findProp, prop1};
         Offers = offerRegistry.findServices(findProps);
         // Registra a própria oferta no barramento
         _offer = offerRegistry.registerService(ic, properties);
@@ -104,7 +105,7 @@ namespace demo {
       }
 
       // Mantém a thread ativa para aguardar requisições
-      Console.WriteLine(Resources.ServerOK);
+      Console.WriteLine(Resources.CallChainProxyOK);
       Thread.Sleep(Timeout.Infinite);
     }
 

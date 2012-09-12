@@ -24,7 +24,7 @@ namespace demo {
         throw new Unauthorized();
       }
       Console.WriteLine(Resources.CallChainAcceptMessage +
-                        ChainToString.ToString(chain));
+                        ChainToString.ToString(chain) + ": " + message);
     }
 
     #endregion

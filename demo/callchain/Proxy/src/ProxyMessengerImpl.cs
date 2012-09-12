@@ -41,6 +41,10 @@ namespace demo {
           messenger.showMessage(message);
           return;
         }
+        catch (Unauthorized) {
+        }
+        catch (Unavailable) {
+        }
         catch (TRANSIENT) {
           Console.WriteLine(Resources.ServiceTransientErrorMsg);
         }
