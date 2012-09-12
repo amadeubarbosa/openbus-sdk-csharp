@@ -207,46 +207,49 @@
   <data name="SharedAuthCodecFactoryErrorMsg" xml:space="preserve">
     <value>Erro ao obter a fábrica de codecs do ORB.</value>
   </data>
-  <data name="SharedAuthEntity">
-    <value xml:space="preserve"> da autenticação compartilhada.</value>
+  <data name="SharedAuthEntity" xml:space="preserve">
+    <value> da autenticação compartilhada.</value>
   </data>
-  <data name="SharedAuthInvalidLoginProcessErrorMsg">
-    <value xml:space="preserve">Erro ao tentar realizar o login por autenticação compartilhada no barramento: este login por autenticação compartilhada foi cancelado ou expirou. O login deve ser realizado antes que se passe o tempo de lease.</value>
+  <data name="SharedAuthInvalidLoginProcessErrorMsg" xml:space="preserve">
+    <value>Erro ao tentar realizar o login por autenticação compartilhada no barramento: este login por autenticação compartilhada foi cancelado ou expirou. O login deve ser realizado antes que se passe o tempo de lease.</value>
   </data>
-  <data name="MultiplexingTimerNotificationReceived">
-    <value xml:space="preserve">Notificação do timer esperado recebida!</value>
+  <data name="MultiplexingTimerNotificationReceived" xml:space="preserve">
+    <value>Notificação do timer esperado recebida!</value>
   </data>
-  <data name="MultiplexingTimerNotificationOutOfOriginalCall">
-    <value xml:space="preserve">  notificação feita fora da chamada original!</value>
+  <data name="MultiplexingTimerNotificationOutOfOriginalCall" xml:space="preserve">
+    <value>  notificação feita fora da chamada original!</value>
   </data>
-  <data name="MultiplexingUnexpectedNotification">
-    <value xml:space="preserve">Notificação inesperada recebida:</value>
+  <data name="MultiplexingUnexpectedNotification" xml:space="preserve">
+    <value>Notificação inesperada recebida:</value>
   </data>
-  <data name="MultiplexingUnexpectedNotificationFrom">
-    <value xml:space="preserve">  recebida de: </value>
+  <data name="MultiplexingUnexpectedNotificationFrom" xml:space="preserve">
+    <value>  recebida de: </value>
   </data>
-  <data name="MultiplexingUnexpectedNotificationShouldBeFrom">
-    <value xml:space="preserve">  esperada de: </value>
+  <data name="MultiplexingUnexpectedNotificationShouldBeFrom" xml:space="preserve">
+    <value>  esperada de: </value>
   </data>
-  <data name="CallChainRefuseMessage">
-    <value xml:space="preserve">Recusando mensagem de </value>
+  <data name="CallChainRefuseMessage" xml:space="preserve">
+    <value>Recusando mensagem de </value>
   </data>
-  <data name="CallChainAcceptMessage">
-    <value xml:space="preserve">Aceitando mensagem de </value>
+  <data name="CallChainAcceptMessage" xml:space="preserve">
+    <value>Aceitando mensagem de </value>
   </data>
-  <data name="CallChainProxyForwardingMessage">
-    <value xml:space="preserve">Repassando mensagem de </value>
+  <data name="CallChainProxyForwardingMessage" xml:space="preserve">
+    <value>Repassando mensagem de </value>
   </data>
-  <data name="CallChainProxyUnavailableMessage">
-    <value xml:space="preserve">Erro: serviços encontrados não estão disponíveis.</value>
+  <data name="CallChainProxyUnavailableMessage" xml:space="preserve">
+    <value>Erro: os serviços encontrados não estão disponíveis.</value>
   </data>
-  <data name="CallChainClientServiceRoleErrorMessage">
-    <value xml:space="preserve">Erro: serviço com papel </value>
+  <data name="CallChainClientServiceRoleErrorMessage" xml:space="preserve">
+    <value>Erro: serviço com papel </value>
   </data>
-  <data name="CallChainClientNotAutorizedMessage">
-    <value xml:space="preserve"> não autorizou a chamada.</value>
+  <data name="CallChainClientNotAutorizedMessage" xml:space="preserve">
+    <value> não autorizou a chamada.</value>
   </data>
-  <data name="CallChainClientUnavailableMessage">
-    <value xml:space="preserve"> está indisponível.</value>
+  <data name="CallChainClientUnavailableMessage" xml:space="preserve">
+    <value> está indisponível.</value>
+  </data>
+  <data name="CallChainProxyOK" xml:space="preserve">
+    <value>Proxy no ar.</value>
   </data>
 </root>

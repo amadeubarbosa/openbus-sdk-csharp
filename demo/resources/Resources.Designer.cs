@@ -133,7 +133,16 @@ namespace demo.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Erro: serviços encontrados não estão disponíveis..
+        ///   Looks up a localized string similar to Proxy no ar..
+        /// </summary>
+        internal static string CallChainProxyOK {
+            get {
+                return ResourceManager.GetString("CallChainProxyOK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro: os serviços encontrados não estão disponíveis..
         /// </summary>
         internal static string CallChainProxyUnavailableMessage {
             get {
