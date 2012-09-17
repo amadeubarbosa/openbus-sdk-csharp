@@ -41,10 +41,9 @@ Cliente
 1) host do barramento
 2) porta do barramento
 3) nome de entidade
-4) senha
-5) nome de entidade utilizado no Servidor
-6) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos)
-7) tempo de espera total máximo (em milisegundos)
+4) senha (opcional - se não for fornecida, será usado o nome de entidade)
+5) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos e opcional - se não for fornecido, será 1)
+6) número máximo de tentativas de acesso ao barramento (opcional - se não for fornecido, será 10)
 
 
 ------------------------------
