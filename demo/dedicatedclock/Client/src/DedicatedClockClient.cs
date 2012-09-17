@@ -1,215 +1,173 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Ch.Elca.Iiop.Idl;
+using demo.Properties;
 using omg.org.CORBA;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.exceptions;
 
-namespace Client {
+namespace demo {
   /// <summary>
-  /// Cliente da demo Dedicated Clock.
+  /// Cliente da demo dedicated clock.
   /// </summary>
   internal static class DedicatedClockClient {
-    private static Connection _conn;
-    private static readonly IDictionary<string, string> Props = new Dictionary<string, string>();
+    private static int _retries;
+    private static int _interval;
 
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args[3]);
-      string serverEntity = args[4];
-      int waitTime = Convert.ToInt32(args[5]);
-      int totalWaitTime = Convert.ToInt32(args[6]);
+      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
+      _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
+      _retries = Convert.ToInt32(args.Length > 5 ? args[5] : "10");
 
-      DateTime max = DateTime.Now.AddMilliseconds(totalWaitTime);
-      bool ok = false;
-      bool firstTime = true;
+      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
+      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      OpenBusContext context = ORBInitializer.Context;
+      Connection conn = context.CreateConnection(host, port, null);
+      context.SetDefaultConnection(conn);
 
-      while (true) {
-        // Se não for a primeira vez, espera
-        if (firstTime) {
-          firstTime = false;
+      // Define a callback de login inválido e faz o login
+      conn.OnInvalidLogin = new DedicatedClockClientInvalidLoginCallback(entity, password);
+      conn.OnInvalidLogin.InvalidLogin(conn, new LoginInfo());
+
+      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
+      string clockIDLType = Repository.GetRepositoryID(typeof(Clock));
+      // propriedade gerada automaticamente
+      ServiceProperty autoProp =
+        new ServiceProperty("openbus.component.interface", clockIDLType);
+      // propriedade definida pelo serviço dedicated clock
+      ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Dedicated Clock");
+      ServiceProperty[] properties = new[] { prop, autoProp };
+      ServiceOfferDesc[] offers = null;
+      bool failed = true;
+      do {
+        try {
+          offers = context.OfferRegistry.findServices(properties);
         }
-        else {
-          Console.WriteLine(String.Format("Aguardando {0} milisegundos.",
-                                          waitTime));
-          Thread.Sleep(waitTime);
-          if (DateTime.Now > max) {
-            break;
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
           }
         }
-
-        // Tenta conectar
-        if (_conn == null) {
-          if (!Connect(host, port)) {
-            continue;
-          }
-        }
-
-        // Faz o login
-        if ((_conn.Login == null) && (!Login(entity, password))) {
-          continue;
-        }
-
-        // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-        // propriedade gerada automaticamente
-        ServiceProperty autoProp = new ServiceProperty("openbus.offer.entity",
-                                                       serverEntity);
-        // propriedade definida pelo serviço clock
-        ServiceProperty prop = new ServiceProperty("offer.domain",
-                                                   "OpenBus Demos");
-        ServiceProperty[] properties = new[] {prop, autoProp};
-        ServiceOfferDesc[] offers = Find(properties);
-
         // analiza as ofertas encontradas
-        Clock clock = GetClock(offers);
-        if (clock == null) {
-          continue;
+        if (offers != null) {
+          if (offers.Length < 1) {
+            Console.WriteLine(Resources.ServiceNotFound);
+          }
+          else {
+            if (offers.Length > 1) {
+              Console.WriteLine(Resources.ServiceFoundMoreThanExpected);
+            }
+            foreach (ServiceOfferDesc serviceOfferDesc in offers) {
+              Console.WriteLine(Resources.ServiceFoundTesting);
+              try {
+                MarshalByRefObject clockObj =
+                  serviceOfferDesc.service_ref.getFacet(clockIDLType);
+                if (clockObj == null) {
+                  Console.WriteLine(Resources.FacetNotFoundInOffer);
+                  continue;
+                }
+                Clock clock = clockObj as Clock;
+                if (clock == null) {
+                  Console.WriteLine(Resources.FacetFoundWrongType);
+                  continue;
+                }
+                Console.WriteLine(Resources.OfferFound);
+                // utiliza o serviço
+                long ticks = clock.getTimeInTicks();
+                DateTime serverTime = new DateTime(ticks);
+                Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
+                                                serverTime));
+                failed = false;
+                break;
+              }
+              catch (TRANSIENT) {
+                Console.WriteLine(Resources.ServiceTransientErrorMsg);
+              }
+              catch (COMM_FAILURE) {
+                Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
+              }
+              catch (NO_PERMISSION e) {
+                bool found = false;
+                string message = String.Empty;
+                switch (e.Minor) {
+                  case NoLoginCode.ConstVal:
+                    message = Resources.NoLoginCodeErrorMsg;
+                    found = true;
+                    break;
+                  case UnknownBusCode.ConstVal:
+                    message = Resources.UnknownBusCodeErrorMsg;
+                    found = true;
+                    break;
+                  case UnverifiedLoginCode.ConstVal:
+                    message = Resources.UnverifiedLoginCodeErrorMsg;
+                    found = true;
+                    break;
+                  case InvalidRemoteCode.ConstVal:
+                    message = Resources.InvalidRemoteCodeErrorMsg;
+                    found = true;
+                    break;
+                }
+                if (found) {
+                  Console.WriteLine(message);
+                }
+                else {
+                  throw;
+                }
+              }
+            }
+            if (failed) {
+              Console.WriteLine(Resources.OfferFunctionalNotFound);
+            }
+          }
         }
+      } while (failed && Retry());
 
-        // utiliza o serviço
-        long ticks = clock.getTimeInTicks();
-        DateTime serverTime = new DateTime(ticks);
-        Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
-                                        serverTime));
-        ok = true;
-        break;
+
+      try {
+        conn.Logout();
       }
-      Console.WriteLine(ok
-                          ? "Fim."
-                          : "Não foi possível realizar o login ou encontrar o servidor.");
-      _conn.Logout();
-      Console.WriteLine("Pressione qualquer tecla para sair.");
+      catch (ServiceFailure e) {
+        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+        Console.WriteLine(e);
+      }
+      catch (TRANSIENT) {
+        Console.WriteLine(Resources.BusTransientErrorMsg);
+      }
+      catch (COMM_FAILURE) {
+        Console.WriteLine(Resources.BusCommFailureErrorMsg);
+      }
+      if (!failed) {
+        Console.WriteLine(Resources.ClientOK);
+      }
       Console.ReadLine();
     }
 
-    private static Clock GetClock(ICollection<ServiceOfferDesc> offers) {
-      if (offers.Count < 1) {
-        Console.WriteLine("O serviço Clock não se encontra no barramento.");
-        return null;
-      }
-
-      if (offers.Count > 1) {
-        Console.WriteLine(
-          "Existe mais de um serviço Clock no barramento. Tentaremos encontrar uma funcional.");
-      }
-      foreach (ServiceOfferDesc serviceOfferDesc in offers) {
-        Console.WriteLine("Testando uma das ofertas recebidas...");
-        try {
-          MarshalByRefObject clockObj =
-            serviceOfferDesc.service_ref.getFacet(
-              "IDL:Clock:1.0");
-          if (clockObj == null) {
-            Console.WriteLine(
-              "Não foi possível encontrar uma faceta Clock na oferta.");
-            continue;
-          }
-          Clock clock = clockObj as Clock;
-          if (clock == null) {
-            Console.WriteLine(
-              "Faceta encontrada na oferta não implementa Clock.");
-            continue;
-          }
-          Console.WriteLine(
-            "Foi encontrada uma oferta com um serviço funcional.");
-          return clock;
-        }
-        catch (TRANSIENT) {
-          Console.WriteLine(
-            "A oferta é de um cliente inativo. Tentando a próxima.");
-        }
-      }
-      Console.WriteLine(
-        "Não foi encontrada uma oferta com um serviço funcional.");
-      return null;
-    }
-
-    private static ServiceOfferDesc[] Find(ServiceProperty[] properties) {
-      try {
-        return _conn.Offers.findServices(properties);
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(
-          "Erro ao tentar realizar a busca por um serviço no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e);
-      }
-      catch (NO_PERMISSION e) {
-        if (e.Minor.Equals(NoLoginCode.ConstVal)) {
-          // o login foi perdido, precisa tentar fazer o login novamente
-          return null;
-        }
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar realizar a busca por um serviço no barramento:");
-        Console.WriteLine(e);
-        _conn = null;
-      }
-      return null;
-    }
-
-    private static bool Login(string login, byte[] password) {
-      try {
-        _conn.LoginByPassword(login, password);
+    internal static bool Retry() {
+      if (_retries > 0) {
+        _retries--;
+        Thread.Sleep(_interval);
         return true;
       }
-      catch (AlreadyLoggedInException) {
-        Console.WriteLine(
-          "Falha ao tentar realizar o login por senha no barramento: a entidade já está com o login realizado. Esta falha será ignorada.");
-        return true;
-      }
-      catch (AccessDenied) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por senha no barramento: a senha fornecida não foi validada para a entidade " +
-          login + ".");
-      }
-      catch (BusChangedException) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por senha no barramento: o identificador do barramento mudou. Uma nova conexão deve ser criada.");
-        _conn = null;
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(
-          "Erro ao tentar realizar o login por senha no barramento: Falha no serviço remoto. Causa:");
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(
-          "O barramento não está acessível para realizar o login.");
-        _conn = null;
-      }
-      catch (Exception e) {
-        Console.WriteLine(
-          "Erro inesperado ao tentar realizar o login por senha no barramento:");
-        Console.WriteLine(e);
-        _conn = null;
-      }
-      return false;
-    }
-
-    private static bool Connect(string host, ushort port) {
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de requester e dispatcher) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      ConnectionManager manager = ORBInitializer.Manager;
-      try {
-        _conn = manager.CreateConnection(host, port, Props);
-        manager.DefaultConnection = _conn;
-        return true;
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine("O barramento não está acessível.");
-      }
-      catch (Exception e) {
-        Console.WriteLine("Erro inesperado ao tentar conectar ao barramento:");
-        Console.WriteLine(e);
-      }
-      _conn = null;
       return false;
     }
   }

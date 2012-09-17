@@ -1,6 +1,6 @@
 using System;
 
-namespace Server {
+namespace demo {
   /// <summary>
   /// Implementação do servant Clock.
   /// </summary>  

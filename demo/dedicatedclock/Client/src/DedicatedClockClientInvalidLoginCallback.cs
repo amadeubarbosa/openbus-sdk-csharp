@@ -7,29 +7,28 @@ using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
 
 namespace demo {
-  internal class DedicatedClockInvalidLoginCallback : InvalidLoginCallback {
+  internal class DedicatedClockClientInvalidLoginCallback : InvalidLoginCallback {
     private readonly string _entity;
-    private readonly PrivateKey _privKey;
-    private readonly Registerer _registerer;
+    private readonly byte[] _password;
 
-    internal DedicatedClockInvalidLoginCallback(string entity, PrivateKey privKey, Registerer registerer) {
+    internal DedicatedClockClientInvalidLoginCallback(string entity,
+                                                      byte[] password) {
       _entity = entity;
-      _privKey = privKey;
-      _registerer = registerer;
+      _password = password;
     }
 
     public void InvalidLogin(Connection conn, LoginInfo login) {
-      bool succeeded = false;
-      while (!succeeded) {
+      bool failed = true;
+      do {
         try {
           // Faz o login
-          conn.LoginByCertificate(_entity, _privKey);
-          succeeded = true;
+          conn.LoginByPassword(_entity, _password);
+          failed = false;
         }
         // Login
         catch (AlreadyLoggedInException) {
-          // Ignora o erro e retorna, pois já está reautenticado e portanto já há uma thread tentando registrar
-          return;
+          // Ignora o erro
+          failed = false;
         }
         catch (AccessDenied) {
           Console.WriteLine(Resources.ServerAccessDenied);
@@ -56,11 +55,7 @@ namespace demo {
             throw;
           }
         }
-        if (succeeded) {
-          // Inicia o processo de re-registro da oferta
-          _registerer.Activate();
-        }
-      }
+      } while (failed && DedicatedClockClient.Retry());
     }
   }
 }
