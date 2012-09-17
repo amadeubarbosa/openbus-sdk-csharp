@@ -28,7 +28,7 @@ namespace demo {
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
-      int interval = Convert.ToInt32(args[4]);
+      int interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =

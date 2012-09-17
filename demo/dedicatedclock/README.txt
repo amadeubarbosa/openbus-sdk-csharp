@@ -35,7 +35,7 @@ Servidor
 2) porta do barramento
 3) nome de entidade
 4) caminho para a chave privada
-5) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos)
+5) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos e opcional - se não for fornecido, será 1)
 
 Cliente
 1) host do barramento
