@@ -1,14 +1,66 @@
-﻿using tecgraf.openbus;
+﻿using System;
+using demo.Properties;
+using omg.org.CORBA;
+using tecgraf.openbus;
+using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.exceptions;
 
-namespace Client {
+namespace demo {
   internal class IndependentClockClientInvalidLoginCallback :
     InvalidLoginCallback {
+    private readonly string _entity;
+    private readonly byte[] _password;
+    private readonly Finder _finder;
+
+    internal IndependentClockClientInvalidLoginCallback(string entity,
+                                                        byte[] password,
+                                                        Finder finder) {
+      _entity = entity;
+      _password = password;
+      _finder = finder;
+    }
+
     public void InvalidLogin(Connection conn, LoginInfo login) {
-      // Nesta demo, outra parte do código se responsabiliza por relançar a 
-      // tentativa de conexão. Essa callback poderia nem ter sido incluída,
-      // mas outra opção seria colocar aqui o lançamento de uma thread que
-      // tentasse refazer a conexão.
+      bool failed = true;
+      do {
+        try {
+          // Faz o login
+          conn.LoginByPassword(_entity, _password);
+          failed = false;
+        }
+        // Login
+        catch (AlreadyLoggedInException) {
+          // Ignora o erro
+          failed = false;
+        }
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + _entity);
+        }
+        // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+      } while (failed);
+      _finder.Activate();
     }
   }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace Server {
+namespace demo {
   /// <summary>
   /// Implementação do servant Clock.
   /// </summary>  
@@ -10,7 +10,7 @@ namespace Server {
     public long getTimeInTicks() {
       DateTime now = DateTime.Now;
       Console.WriteLine(
-        String.Format("Requisição de hora atual às: {0:HH:mm:ss}", now));
+        String.Format("Hora atual: {0:HH:mm:ss}", now));
       return now.Ticks;
     }
 

@@ -1,21 +1,66 @@
-﻿using scs.core;
+﻿using System;
+using demo.Properties;
+using omg.org.CORBA;
 using tecgraf.openbus;
+using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
-namespace Server {
+namespace demo {
   internal class IndependentClockInvalidLoginCallback : InvalidLoginCallback {
-    private readonly IComponent _ic;
-    private readonly ServiceProperty[] _properties;
+    private readonly string _entity;
+    private readonly PrivateKey _privKey;
+    private readonly Registerer _registerer;
 
-    internal IndependentClockInvalidLoginCallback(IComponent ic,
-                                                  ServiceProperty[] properties) {
-      _ic = ic;
-      _properties = properties;
+    internal IndependentClockInvalidLoginCallback(string entity, PrivateKey privKey, Registerer registerer) {
+      _entity = entity;
+      _privKey = privKey;
+      _registerer = registerer;
     }
 
     public void InvalidLogin(Connection conn, LoginInfo login) {
-      IndependentClockServer.TryLoginAndRegisterForever(_ic, _properties);
+      bool succeeded = false;
+      while (!succeeded) {
+        try {
+          // Faz o login
+          conn.LoginByCertificate(_entity, _privKey);
+          succeeded = true;
+        }
+        // Login
+        catch (AlreadyLoggedInException) {
+          // Ignora o erro e retorna, pois já está reautenticado e portanto já há uma thread tentando registrar
+          return;
+        }
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + _entity);
+        }
+        // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+        if (succeeded) {
+          // Inicia o processo de re-registro da oferta
+          _registerer.Activate();
+        }
+      }
     }
   }
 }
