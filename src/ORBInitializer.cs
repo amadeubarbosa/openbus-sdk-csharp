@@ -25,6 +25,7 @@ namespace tecgraf.openbus {
     private static readonly OrbServices ORB = OrbServices.GetSingleton();
     private static volatile bool _initialized;
     private static OpenBusContextImpl _context;
+    private static readonly object Lock = new object();
 
     #endregion
 
@@ -52,14 +53,16 @@ namespace tecgraf.openbus {
     #endregion
 
     private static ORB InitORB() {
-      if (!_initialized) {
-        // Adiciona interceptadores
-        InterceptorsInitializer initializer = new InterceptorsInitializer();
-        ORB.RegisterPortableInterceptorInitalizer(initializer);
-        ORB.CompleteInterceptorRegistration();
-        ChannelServices.RegisterChannel(new IiopChannel(0), false);
-        Context = initializer.Context;
-        _initialized = true;
+      lock (Lock) {
+        if (!_initialized) {
+          // Adiciona interceptadores
+          InterceptorsInitializer initializer = new InterceptorsInitializer();
+          ORB.RegisterPortableInterceptorInitalizer(initializer);
+          ORB.CompleteInterceptorRegistration();
+          ChannelServices.RegisterChannel(new IiopChannel(0), false);
+          Context = initializer.Context;
+          _initialized = true;
+        }
       }
       return ORB;
     }

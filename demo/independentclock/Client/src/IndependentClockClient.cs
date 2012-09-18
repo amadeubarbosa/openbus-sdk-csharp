@@ -26,9 +26,6 @@ namespace demo {
       byte[] password = new ASCIIEncoding().GetBytes(args[3]);
       _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
-      // Inicializa o ORB antes de tudo
-      OpenBusContext context = ORBInitializer.Context;
-
       // Cria o finder que será responsável por encontrar o servidor no barramento
       _finder = new Finder(_interval);
 
@@ -39,6 +36,7 @@ namespace demo {
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      OpenBusContext context = ORBInitializer.Context;
       _conn = context.CreateConnection(host, port, null);
       context.SetDefaultConnection(_conn);
 
