@@ -21,7 +21,7 @@ namespace demo {
       ushort port = Convert.ToUInt16(args[1]);
       string loginFile = args[2];
       string entity = args[3];
-      byte[] password = new ASCIIEncoding().GetBytes(args[4] ?? entity);
+      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 4 ? args[4] : entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.

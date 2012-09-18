@@ -27,7 +27,7 @@ namespace demo {
       _host = args[0];
       _port = Convert.ToUInt16(args[1]);
       _entity = args[2];
-      _password = new ASCIIEncoding().GetBytes(args[3] ?? _entity);
+      _password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : _entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       OpenBusContext context = ORBInitializer.Context;
