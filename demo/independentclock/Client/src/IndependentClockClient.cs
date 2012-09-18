@@ -46,9 +46,8 @@ namespace demo {
     }
 
     private static void PrintTime() {
-      bool failed;
-      for (int i = 0; i < 100; i++) {
-        failed = true;
+      while (true) {
+        bool failed = true;
         Clock clock = _finder.Clock;
         if (clock != null) {
           try {
@@ -104,28 +103,6 @@ namespace demo {
         }
         Thread.Sleep(_interval);
       }
-      // faz logout
-      failed = true;
-      try {
-        if (_conn != null && _conn.Login.HasValue) {
-          _conn.Logout();
-        }
-        failed = false;
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      if (!failed) {
-        Console.WriteLine(Resources.ClientOK);
-      }
-      Environment.Exit(0);
     }
   }
 

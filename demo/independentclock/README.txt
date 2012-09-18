@@ -62,4 +62,4 @@ A demo deve ser executada na seguinte ordem:
 -------------------------------
 
 1) Server.exe localhost 2089 demo_independentclock_csharp_server DemoIndependentClock.key 3000
-2) Client.exe localhost 2089 demo_independentclock_csharp_client minhasenha demo_independentclock_csharp_server 3000
+2) Client.exe localhost 2089 demo_independentclock_csharp_client minhasenha 3000
