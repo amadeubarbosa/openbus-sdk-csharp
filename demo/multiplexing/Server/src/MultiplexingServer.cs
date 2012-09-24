@@ -42,7 +42,7 @@ namespace demo {
         ComponentContext component =
           new DefaultComponentContext(new ComponentId("Timer", 1, 0, 0, ".net"));
 
-        // Cria a faceta Hello para o componente
+        // Cria a faceta Timer para o componente
         TimerImpl timer = new TimerImpl();
         component.AddFacet("Timer", Repository.GetRepositoryID(typeof (Timer)),
                            timer);
@@ -56,9 +56,7 @@ namespace demo {
                                              };
 
         // Cria a conexão e a define como conexão corrente
-        ConnectionProperties props = new ConnectionPropertiesImpl();
-        props.AccessKey = privateKey;
-        Connection conn = context.CreateConnection(host, port, props);
+        Connection conn = context.CreateConnection(host, port, null);
         context.SetCurrentConnection(conn);
 
         // Associa a conexão à URI do servant para que a callback possa escolher

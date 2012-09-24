@@ -17,8 +17,7 @@ namespace demo {
       Connection conn = context.GetCurrentConnection();
       CallerChain chain = context.CallerChain;
       // Inicia thread para realizar a chamada remota na callback 
-      var t = new Thread(() => NotifyTrigger(conn, chain, timeout, cb));
-      t.Start();
+      new Thread(() => NotifyTrigger(conn, chain, timeout, cb)).Start();
     }
 
     #endregion

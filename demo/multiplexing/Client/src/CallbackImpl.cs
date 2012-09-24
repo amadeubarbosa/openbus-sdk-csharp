@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using demo.Properties;
-using omg.org.CORBA;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
 namespace demo {
@@ -15,15 +14,15 @@ namespace demo {
 
     private readonly string _loginId;
     private readonly Dictionary<string, string> _timerOfferProperties;
-    private static volatile int _pending;
-    private static readonly object Lock = new object();
+    private readonly Thread _waitingThread;
 
     #endregion
 
     #region Constructors
 
-    public CallbackImpl(string loginId, ServiceOfferDesc timerOffer) {
+    public CallbackImpl(string loginId, ServiceOfferDesc timerOffer, Thread waitingThread) {
       _loginId = loginId;
+      _waitingThread = waitingThread;
       _timerOfferProperties = new Dictionary<string, string>();
       foreach (ServiceProperty serviceProperty in timerOffer.properties) {
         _timerOfferProperties.Add(serviceProperty.name, serviceProperty.value);
@@ -53,34 +52,12 @@ namespace demo {
         Console.WriteLine(
           Resources.MultiplexingUnexpectedNotificationShouldBeFrom + timerId);
       }
-      int temp;
-      lock (Lock) {
-        --_pending;
-        temp = _pending;
-      }
-      if (temp == 0) {
-        try {
-          context.GetDefaultConnection().Logout();
-        }
-        catch (ServiceFailure e) {
-          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-          Console.WriteLine(e);
-        }
-        catch (TRANSIENT) {
-          Console.WriteLine(Resources.BusTransientErrorMsg);
-        }
-        catch (COMM_FAILURE) {
-          Console.WriteLine(Resources.BusCommFailureErrorMsg);
-        }
+      --MultiplexingClient.Pending;
+      if (MultiplexingClient.Pending == 0) {
+        _waitingThread.Interrupt();
       }
     }
 
     #endregion
-
-    internal static void RaisePending() {
-      lock (Lock) {
-        _pending++;
-      }
-    }
   }
 }

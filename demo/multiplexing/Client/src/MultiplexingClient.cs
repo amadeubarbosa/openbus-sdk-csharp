@@ -18,6 +18,7 @@ namespace demo {
     private static ushort _port;
     private static string _entity;
     private static byte[] _password;
+    internal static volatile int Pending;
 
     private static readonly string TimerIDLType =
       Repository.GetRepositoryID(typeof (Timer));
@@ -27,12 +28,12 @@ namespace demo {
       _host = args[0];
       _port = Convert.ToUInt16(args[1]);
       _entity = args[2];
-      _password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : _entity);
+      _password =
+        new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : _entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = NewLogin();
-      context.SetDefaultConnection(conn);
+      context.SetDefaultConnection(NewLogin());
 
       ServiceOfferDesc[] offers = null;
       try {
@@ -66,9 +67,34 @@ namespace demo {
       }
       if (offers != null) {
         for (int i = 0; i < offers.Length; i++) {
-          StartTheThread(i, offers[i]);
+          StartTheThread(i, offers[i], Thread.CurrentThread);
         }
       }
+
+      // Mantém a thread ativa para aguardar requisições
+      try {
+        Thread.Sleep(Timeout.Infinite);
+      }
+      catch (ThreadInterruptedException) {
+        // Se a thread for acordada, é porque não há mais requisições pendentes
+        Console.WriteLine(Resources.ClientOK);
+      }
+
+      // Faz logout da conexão usada nessa thread
+      try {
+        context.GetDefaultConnection().Logout();
+      }
+      catch (ServiceFailure e) {
+        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+        Console.WriteLine(e);
+      }
+      catch (TRANSIENT) {
+        Console.WriteLine(Resources.BusTransientErrorMsg);
+      }
+      catch (COMM_FAILURE) {
+        Console.WriteLine(Resources.BusCommFailureErrorMsg);
+      }
+      Console.ReadLine();
     }
 
     private static Connection NewLogin() {
@@ -102,12 +128,14 @@ namespace demo {
       return conn;
     }
 
-    private static void StartTheThread(int timeout, ServiceOfferDesc desc) {
-      var t = new Thread(() => UseOffer(timeout, desc));
+    private static void StartTheThread(int timeout, ServiceOfferDesc desc,
+                                       Thread wThread) {
+      var t = new Thread(() => UseOffer(timeout, desc, wThread));
       t.Start();
     }
 
-    private static void UseOffer(int timeout, ServiceOfferDesc desc) {
+    private static void UseOffer(int timeout, ServiceOfferDesc desc,
+                                 Thread wThread) {
       Connection conn = NewLogin();
       if (!conn.Login.HasValue) {
         return;
@@ -128,7 +156,8 @@ namespace demo {
         }
         Console.WriteLine(Resources.OfferFound);
         // utiliza o serviço
-        timer.newTrigger(timeout, new CallbackImpl(conn.Login.Value.id, desc));
+        timer.newTrigger(timeout,
+                         new CallbackImpl(conn.Login.Value.id, desc, wThread));
         failed = false;
       }
       catch (TRANSIENT) {
@@ -181,7 +210,7 @@ namespace demo {
           Console.WriteLine(Resources.BusCommFailureErrorMsg);
         }
         if (!failed) {
-          CallbackImpl.RaisePending();
+          Pending++;
         }
       }
     }

@@ -17,7 +17,7 @@ namespace demo {
       lock (_connections) {
         return _connections.ContainsKey(uri)
                  ? _connections[uri]
-                 : _connections.Select(pair => pair.Value).FirstOrDefault();
+                 : _connections.Values.FirstOrDefault();
       }
     }
   }
