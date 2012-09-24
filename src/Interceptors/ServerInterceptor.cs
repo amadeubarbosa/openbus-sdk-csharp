@@ -60,7 +60,6 @@ namespace tecgraf.openbus.interceptors {
                       interceptedOperation, anyCredential.IsLegacy));
 
       ConnectionImpl conn = null;
-      Connection previous = null;
       try {
         conn = GetDispatcherForRequest(ri, anyCredential) as ConnectionImpl;
         if (conn == null) {
@@ -69,7 +68,7 @@ namespace tecgraf.openbus.interceptors {
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        previous = Context.SetCurrentConnection(conn);
+        Context.SetCurrentConnection(conn, ri);
         conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
@@ -77,7 +76,6 @@ namespace tecgraf.openbus.interceptors {
         throw;
       }
       finally {
-        Context.SetCurrentConnection(previous);
         if (conn != null) {
           ri.set_slot(ReceivingConnectionSlotId, conn);
         }

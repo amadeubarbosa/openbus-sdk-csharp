@@ -268,7 +268,7 @@ namespace tecgraf.openbus.Test {
         _context.SetDefaultConnection(conn);
         CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
         _context.OnCallDispatch = callback;
-        Assert.IsNull(_context.GetCurrentConnection());
+        Assert.AreEqual(_context.GetCurrentConnection(), conn);
         _context.SetCurrentConnection(conn);
         Assert.AreEqual(_context.GetCurrentConnection(), conn);
         _context.SetDefaultConnection(null);

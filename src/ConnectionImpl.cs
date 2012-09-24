@@ -580,7 +580,7 @@ namespace tecgraf.openbus {
         throw;
       }
 
-      int sessionId = 0;
+      int sessionId = -1;
       int ticket = 0;
       byte[] secret = new byte[0];
 
@@ -606,13 +606,20 @@ namespace tecgraf.openbus {
       try {
         byte[] hash;
         SignedCallChain chain;
-        if (sessionId != 0) {
+        if (sessionId >= 0) {
+          Logger.Debug(
+            String.Format(
+              "Criando hash com operação {0}, ticket {1} e segredo {2}",
+              operation, ticket, BitConverter.ToString(secret)));
           hash = CreateCredentialHash(operation, ticket, secret);
+          Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           // CreateCredentialSignedCallChain pode mudar o login
           chain = CreateCredentialSignedCallChain(remoteLogin);
           login = GetLoginOrThrowNoLogin(errMsg, null);
         }
         else {
+          // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
+          sessionId = 0;
           if (Legacy) {
             // Testa se tem cadeia para enviar
             string lastCaller = String.Empty;
@@ -709,6 +716,7 @@ namespace tecgraf.openbus {
             throw;
           }
           if (_login.HasValue && originalLogin.Value.id.Equals(_login.Value.id)) {
+            //TODO colocar aqui o teste da issue OPENBUS-1958
             LocalLogout();
             _invalidLogin = originalLogin;
           }
@@ -759,7 +767,7 @@ namespace tecgraf.openbus {
     internal void ReceiveRequest(ServerRequestInfo ri,
                                  AnyCredential anyCredential) {
       string interceptedOperation = ri.operation;
-      string loginId;
+      LoginInfo myLogin;
       AsymmetricKeyParameter busKey;
       _loginLock.EnterReadLock();
       try {
@@ -768,7 +776,7 @@ namespace tecgraf.openbus {
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
-        loginId = _login.Value.id;
+        myLogin = new LoginInfo(_login.Value.id, _login.Value.entity);
         busKey = _busKey;
       }
       finally {
@@ -788,10 +796,10 @@ namespace tecgraf.openbus {
                                  ? anyCredential.LegacyCredential.identifier
                                  : anyCredential.Credential.login;
 
-      LoginCache.LoginEntry login;
+      LoginCache.LoginEntry clientLogin;
       try {
         Context.SetCurrentConnection(this);
-        login = _loginsCache.GetLoginEntry(credentialLogin);
+        clientLogin = _loginsCache.GetLoginEntry(credentialLogin);
       }
       catch (Exception e) {
         NO_PERMISSION noPermission = e as NO_PERMISSION;
@@ -808,14 +816,10 @@ namespace tecgraf.openbus {
                                 CompletionStatus.Completed_No);
       }
 
-      if (login == null) {
-        Logger.Error(String.Format("A credencial {0} está fora da validade.",
-                                   credentialLogin));
+      if (clientLogin == null) {
         throw new NO_PERMISSION(InvalidLoginCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
-      Logger.Debug(String.Format("A credencial {0} está na validade.",
-                                 credentialLogin));
 
       if (!anyCredential.IsLegacy) {
         CredentialData credential = anyCredential.Credential;
@@ -823,16 +827,21 @@ namespace tecgraf.openbus {
         if (_sessionId2Session.TryGetValue(credential.session, out session)) {
           // login tem que ser o mesmo que originou essa sessão
           if (credential.login.Equals(session.RemoteLogin)) {
+            Logger.Debug(
+              String.Format(
+                "Testando hash com operação {0}, ticket {1} e segredo {2}, pertencente à sessão {3} do login {4}.",
+                interceptedOperation, credential.ticket, BitConverter.ToString(session.Secret), session.Id, session.RemoteLogin));
             byte[] hash = CreateCredentialHash(interceptedOperation,
                                                credential.ticket,
                                                session.Secret);
+            Logger.Debug("Hash recriado: " + BitConverter.ToString(hash));
             IStructuralEquatable eqHash = hash;
             if (eqHash.Equals(credential.hash,
                               StructuralComparisons.StructuralEqualityComparer)) {
               // credencial valida
               // CheckChain pode lançar exceção com InvalidChainCode
               CallChain chain = CheckChain(credential.chain, credential.login,
-                                           loginId, busKey);
+                                           myLogin.id, busKey);
               // CheckTicket já faz o lock no ticket history da sessão
               if (session.CheckTicket(credential.ticket)) {
                 // insere a cadeia no slot para a getCallerChain usar
@@ -840,8 +849,8 @@ namespace tecgraf.openbus {
                   // já foi testado que o login é o mesmo que o target, portanto posso inserir meu login como target
                   ri.set_slot(_chainSlotId,
                               new CallerChainImpl(BusId, chain.caller,
-                                                  new LoginInfo(login.LoginId,
-                                                                login.Entity),
+                                                  new LoginInfo(myLogin.id,
+                                                                myLogin.entity),
                                                   chain.originators,
                                                   anyCredential.Credential.chain));
                 }
@@ -852,8 +861,24 @@ namespace tecgraf.openbus {
                 }
                 return;
               }
+              Logger.Debug(String.Format("O ticket {0} não confere.",
+                                         credential.ticket));
+            }
+            else {
+              Logger.Debug("O hash não confere com o esperado.");
             }
           }
+          else {
+            Logger.Debug(
+              String.Format(
+                "O login associado a esta sessão é {0} e a credencial foi enviada com o login {1}.",
+                session.RemoteLogin, credential.login));
+          }
+        }
+        else {
+          Logger.Debug(
+            String.Format("Não foi encontrada a sessão {0} nesta conexão.",
+                          credential.session));
         }
       }
       else {
@@ -862,11 +887,11 @@ namespace tecgraf.openbus {
           bool valid = false;
           if (!lCredential._delegate.Equals(string.Empty)) {
             // tem delegate, então precisa validar a credencial
-            if (!login.AllowLegacyDelegate.HasValue) {
+            if (!clientLogin.AllowLegacyDelegate.HasValue) {
               valid = LegacyAccess.isValid(lCredential);
-              login.AllowLegacyDelegate = valid;
+              clientLogin.AllowLegacyDelegate = valid;
               // atualiza entrada na cache
-              _loginsCache.UpdateEntryAllowLegacyDelegate(login);
+              _loginsCache.UpdateEntryAllowLegacyDelegate(clientLogin);
             }
           }
           else {
@@ -1011,6 +1036,7 @@ namespace tecgraf.openbus {
     private SignedCallChain CreateCredentialSignedCallChain(string remoteLogin) {
       SignedCallChain signed;
       CallerChainImpl chain = Context.JoinedChain as CallerChainImpl;
+      Logger.Debug(string.Format("Requisição para o login {0} tem joined chain? {1}.", remoteLogin, chain != null));
       if (!remoteLogin.Equals(BusLogin.ConstVal)) {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {

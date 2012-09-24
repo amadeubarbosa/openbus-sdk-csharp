@@ -151,11 +151,8 @@ namespace tecgraf.openbus {
     public Connection GetCurrentConnection() {
       try {
         Guid? guid = GetPICurrent().get_slot(_connectionIdSlotId) as Guid?;
-        if (!guid.HasValue) {
-          return null;
-        }
-        Connection connection = GetConnectionById(guid.Value);
-        return connection;
+        Connection current = guid.HasValue ? GetConnectionById(guid.Value) : null;
+        return current ?? GetDefaultConnection();
       }
       catch (InvalidSlot e) {
         Logger.Fatal(ConnectionIdErrorMsg, e);
@@ -164,33 +161,9 @@ namespace tecgraf.openbus {
     }
 
     public Connection SetCurrentConnection(Connection conn) {
-      Connection previous = null;
-      Current current = GetPICurrent();
-      try {
-        // tenta reaproveitar o guid
-        Guid? guid = current.get_slot(_connectionIdSlotId) as Guid?;
-        if (guid.HasValue) {
-          previous = GetConnectionById(guid.Value);
-          if (conn == null) {
-            current.set_slot(_connectionIdSlotId, null);
-            SetConnectionById(guid.Value, null);
-            return previous;
-          }
-        }
-        else {
-          if (conn == null) {
-            return null;
-          }
-          guid = Guid.NewGuid();
-          current.set_slot(_connectionIdSlotId, guid);
-        }
-        SetConnectionById(guid.Value, conn);
-        return previous;
-      }
-      catch (InvalidSlot e) {
-        Logger.Fatal(ConnectionIdErrorMsg, e);
-        throw;
-      }
+      // somente ignora o guid
+      Guid? guid;
+      return SetCurrentConnection(conn, out guid);
     }
 
     public void JoinChain(CallerChain chain) {
@@ -249,7 +222,7 @@ namespace tecgraf.openbus {
 
     public LoginRegistry LoginRegistry {
       get {
-        ConnectionImpl conn = GetCurrentConnectionOrDefault() as ConnectionImpl;
+        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn == null || !conn.Login.HasValue) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -260,7 +233,7 @@ namespace tecgraf.openbus {
 
     public OfferRegistry OfferRegistry {
       get {
-        ConnectionImpl conn = GetCurrentConnectionOrDefault() as ConnectionImpl;
+        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn == null || !conn.Login.HasValue) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
                                   CompletionStatus.Completed_No);
@@ -273,6 +246,44 @@ namespace tecgraf.openbus {
 
     #region Internal Members
 
+    internal void SetCurrentConnection(Connection conn, ServerRequestInfo ri) {
+      Guid? guid;
+      SetCurrentConnection(conn, out guid);
+      if (conn != null && guid.HasValue) {
+        ri.set_slot(_connectionIdSlotId, guid);
+      }
+    }
+
+    private Connection SetCurrentConnection(Connection conn, out Guid? guid) {
+      Connection previous = null;
+      Current current = GetPICurrent();
+      try {
+        // tenta reaproveitar o guid
+        guid = current.get_slot(_connectionIdSlotId) as Guid?;
+        if (guid.HasValue) {
+          previous = GetConnectionById(guid.Value);
+          if (conn == null) {
+            current.set_slot(_connectionIdSlotId, null);
+            SetConnectionById(guid.Value, null);
+            return previous;
+          }
+        }
+        else {
+          if (conn == null) {
+            return null;
+          }
+          guid = Guid.NewGuid();
+          current.set_slot(_connectionIdSlotId, guid);
+        }
+        SetConnectionById(guid.Value, conn);
+        return previous;
+      }
+      catch (InvalidSlot e) {
+        Logger.Fatal(ConnectionIdErrorMsg, e);
+        throw;
+      }
+    }
+
     internal Current GetPICurrent() {
       Current current = ORB.resolve_initial_references("PICurrent") as Current;
       if (current == null) {
@@ -282,10 +293,6 @@ namespace tecgraf.openbus {
         throw new OpenBusInternalException(message);
       }
       return current;
-    }
-
-    internal Connection GetCurrentConnectionOrDefault() {
-      return GetCurrentConnection() ?? GetDefaultConnection();
     }
 
     private void SetConnectionById(Guid connectionId, Connection conn) {

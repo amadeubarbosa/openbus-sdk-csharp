@@ -92,7 +92,7 @@ namespace tecgraf.openbus.interceptors {
     #endregion
 
     private Connection GetCurrentConnection() {
-      Connection conn = Context.GetCurrentConnectionOrDefault();
+      Connection conn = Context.GetCurrentConnection();
       if (conn == null) {
         Logger.Error(
           "Impossível retornar conexão corrente, pois não foi definida.");
