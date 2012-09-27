@@ -67,6 +67,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssistantTest.cs" />
     <Compile Include="CallDispatchCallbackImpl.cs" />
     <Compile Include="OpenBusContextTest.cs" />
     <Compile Include="ConnectionTest.cs" />
