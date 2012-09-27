@@ -927,7 +927,7 @@ namespace tecgraf.openbus {
 
       // credencial invalida por nao ter sessao conhecida, ticket inválido, hash errado ou login errado
       Logger.Debug("Credencial inválida, enviando CredentialReset.");
-      // TODO FIXME
+      // FIXME
       // Uma explicação detalhada para a linha abaixo encontra-se em um FIXME 
       // no código do interceptador servidor, no método receive_request.
       ri.set_slot(_chainSlotId, "reset");

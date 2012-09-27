@@ -13,7 +13,6 @@ namespace tecgraf.openbus.caches {
     private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
     internal const int DefaultSize = 1024;
-    private TValue _default;
 
     public LRUConcurrentDictionaryCache() : this(DefaultSize) {
     }
@@ -44,7 +43,7 @@ namespace tecgraf.openbus.caches {
       finally {
         _lock.ExitUpgradeableReadLock();
       }
-      value = _default;
+      value = default(TValue);
       return false;
     }
 
@@ -104,7 +103,7 @@ namespace tecgraf.openbus.caches {
       finally {
         _lock.ExitWriteLock();
       }
-      value = _default;
+      value = default(TValue);
       return false;
     }
   }

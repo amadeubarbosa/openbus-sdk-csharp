@@ -84,7 +84,7 @@ namespace tecgraf.openbus.interceptors {
 
     /// <inheritdoc />
     public void receive_request(ServerRequestInfo ri) {
-      // TODO FIXME: O código abaixo é necessário porque:
+      // FIXME: O código abaixo é necessário porque:
       // (1) para que informações possam ser colocadas nos slots do PICurrent, 
       // esse tipo de código deve ficar na receive_request_service_contexts. 
       // No entanto, essas informações acabam não ficando disponíveis para a 
