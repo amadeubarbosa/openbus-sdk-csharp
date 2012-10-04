@@ -29,6 +29,9 @@ namespace tecgraf.openbus.assistant {
     /// Para que o registro de serviços seja bem sucedido é necessário que o ORB
     /// utilizado pelo assistente esteja processando chamadas, por exemplo,
     /// fazendo com que a aplicação mantenha ao menos uma thread ativa.
+    ///
+    /// Caso ocorram erros, a callback de tratamento de erro apropriada será
+    /// chamada.
     /// </summary>
     /// <param name="component">Referência do serviço sendo ofertado.</param>
     /// <param name="properties">Propriedades do serviço sendo ofertado.</param>
@@ -41,6 +44,9 @@ namespace tecgraf.openbus.assistant {
     /// mantido como uma oferta de serviço válida no barramento. A oferta é
     /// removida de forma assíncrona e todas as tentativas de registro atuais
     /// são canceladas.
+    /// 
+    /// Caso ocorram erros, a callback de tratamento de erro apropriada será
+    /// chamada.
     /// </summary>
     /// <param name="component">Referência do serviço a ser removido.</param>
     /// <returns>Conjunto de propriedades do serviço removido ou null caso o 
@@ -54,6 +60,10 @@ namespace tecgraf.openbus.assistant {
     /// propriedades especificadas. As propriedades utilizadas nas buscas podem
     /// ser aquelas fornecidas no momento do registro da oferta de serviço, assim
     /// como as propriedades automaticamente geradas pelo barramento.
+    /// 
+    /// Caso ocorram erros, a callback de tratamento de erro apropriada será
+    /// chamada. Se o número de tentativas se esgotar e não houver sucesso, uma
+    /// sequência vazia será retornada.
     /// </summary>
     /// <param name="properties">Propriedades que as ofertas de serviços 
     /// encontradas devem apresentar.</param>
@@ -70,6 +80,10 @@ namespace tecgraf.openbus.assistant {
 
     /// <summary>
     /// Devolve uma lista de todas as ofertas de serviço registradas.
+    ///
+    /// Caso ocorram erros, a callback de tratamento de erro apropriada será
+    /// chamada. Se o número de tentativas se esgotar e não houver sucesso, uma
+    /// sequência vazia será retornada.
     /// </summary>
     /// <param name="retries">Parâmetro opcional indicando o número de novas 
     /// tentativas de busca de ofertas em caso de falhas, como o barramento 

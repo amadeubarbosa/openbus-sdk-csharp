@@ -56,6 +56,7 @@ namespace tecgraf.openbus.assistant {
       t.Start();
     }
 
+    /// <inheritdoc/>
     public void RegisterService(IComponent component,
                                 ServiceProperty[] properties) {
       Offeror offeror = new Offeror(component, properties, this);
@@ -72,6 +73,7 @@ namespace tecgraf.openbus.assistant {
       }
     }
 
+    /// <inheritdoc/>
     public ServiceProperty[] UnregisterService(IComponent component) {
       _lock.EnterWriteLock();
       try {
@@ -88,15 +90,18 @@ namespace tecgraf.openbus.assistant {
       }
     }
 
+    /// <inheritdoc/>
     public ServiceOfferDesc[] FindServices(ServiceProperty[] properties,
                                            int retries) {
       return Find(properties, retries, false);
     }
 
+    /// <inheritdoc/>
     public ServiceOfferDesc[] GetAllServices(int retries) {
       return Find(null, retries, true);
     }
 
+    /// <inheritdoc/>
     public void Shutdown() {
       _lock.EnterWriteLock();
       try {
@@ -111,6 +116,7 @@ namespace tecgraf.openbus.assistant {
       _conn.Logout();
     }
 
+    /// <inheritdoc/>
     public ORB Orb { get; private set; }
 
     internal AssistantProperties Properties {

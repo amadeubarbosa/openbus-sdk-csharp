@@ -9,7 +9,7 @@ namespace tecgraf.openbus.assistant {
   /// </summary>
   public static class Utils {
     /// <summary>
-    /// Constroi sequencia de propriedades para determinada faceta e entidade.
+    /// Constrói sequencia de propriedades para determinada faceta e entidade.
     /// </summary>
     /// <param name="entity">Nome da entidade criadora da oferta.</param>
     /// <param name="facet">Nome da faceta que a oferta deve possuir.</param>
@@ -41,8 +41,8 @@ namespace tecgraf.openbus.assistant {
     /// </summary>
     /// <param name="offers">Ofertas a ser verificadas por responsividade.</param>
     /// <returns>Conjunto de ofertas responsivas no momento do teste.</returns>
-    public static ServiceOffer[] FilterWorkingOffers(
-      IEnumerable<ServiceOffer> offers) {
+    public static ServiceOfferDesc[] FilterWorkingOffers(
+      IEnumerable<ServiceOfferDesc> offers) {
       OrbServices orb = OrbServices.GetSingleton();
       return
         offers.Where(offer => orb.non_existent(offer.service_ref)).ToArray();

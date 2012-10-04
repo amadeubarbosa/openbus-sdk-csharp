@@ -20,6 +20,7 @@ namespace tecgraf.openbus.assistant {
 
     private OnFindFailure _findFailureCallback = OnFindFailure;
 
+    /// <inheritdoc/>
     public int Interval {
       get { return _interval; }
       set {
@@ -31,32 +32,39 @@ namespace tecgraf.openbus.assistant {
       }
     }
 
+    /// <inheritdoc/>
     public ORB ORB {
       get { return _orb; }
     }
 
+    /// <inheritdoc/>
     public ConnectionProperties ConnectionProperties { get; set; }
 
+    /// <inheritdoc/>
     public OnLoginFailure LoginFailureCallback {
       get { return _loginFailureCallback; }
       set { _loginFailureCallback = value; }
     }
 
+    /// <inheritdoc/>
     public OnRegisterFailure RegisterFailureCallback {
       get { return _registerFailureCallback; }
       set { _registerFailureCallback = value; }
     }
 
+    /// <inheritdoc/>
     public OnRemoveOfferFailure RemoveOfferFailureCallback {
       get { return _removeOfferFailureCallback; }
       set { _removeOfferFailureCallback = value; }
     }
 
+    /// <inheritdoc/>
     public OnFindFailure FindFailureCallback {
       get { return _findFailureCallback; }
       set { _findFailureCallback = value; }
     }
 
+    /// <inheritdoc/>
     public LoginType Type { get; internal set; }
 
     private static void OnLoginFailure(Assistant assistant, Exception e) {
