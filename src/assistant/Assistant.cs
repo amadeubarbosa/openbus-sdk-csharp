@@ -12,7 +12,14 @@ namespace tecgraf.openbus.assistant {
     /// </summary>
     /// <param name="component"></param>
     /// <param name="properties"></param>
-    void AddOffer(IComponent component, ServiceProperty[] properties);
+    void RegisterService(IComponent component, ServiceProperty[] properties);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="component"></param>
+    /// <returns></returns>
+    ServiceProperty[] UnregisterService(IComponent component);
 
     /// <summary>
     /// 
@@ -20,7 +27,22 @@ namespace tecgraf.openbus.assistant {
     /// <param name="properties"></param>
     /// <param name="retries"></param>
     /// <returns></returns>
-    ServiceOfferDesc[] FindOffers(ServiceProperty[] properties, int retries);
+    ServiceOfferDesc[] FindServices(ServiceProperty[] properties, int retries);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="retries"></param>
+    /// <returns></returns>
+    ServiceOfferDesc[] GetAllServices(int retries);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="observer"></param>
+    /// <param name="properties"></param>
+    void SubscribeObserver(OfferRegistrationObserver observer,
+                           ServiceProperty[] properties);
 
     /// <summary>
     /// 

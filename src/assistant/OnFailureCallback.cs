@@ -32,13 +32,5 @@ namespace tecgraf.openbus.assistant {
     /// <param name="assistant"></param>
     /// <param name="e"></param>
     void OnFindFailure(Assistant assistant, Exception e);
-  
-    //TODO: Faz sentido em todas as linguagens ou é específico de C++?
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="assistant"></param>
-    /// <param name="e"></param>
-    void OnFatalFailure(Assistant assistant, Exception e);
   }
 }

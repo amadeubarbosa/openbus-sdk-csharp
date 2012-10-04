@@ -2,6 +2,24 @@
 
 namespace tecgraf.openbus.assistant.properties {
   /// <summary>
+  /// Identifica o tipo de login que será usado pelo assistente.
+  /// </summary>
+  public enum LoginType {
+    /// <summary>
+    /// O login será feito por nome de entidade e senha.
+    /// </summary>
+    Password,
+    /// <summary>
+    /// O login será feito por nome de entidade e chave privada.
+    /// </summary>
+    PrivateKey,
+    /// <summary>
+    /// O login será feito por autenticação compartilhada.
+    /// </summary>
+    SharedAuth
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public interface AssistantProperties {
@@ -13,17 +31,21 @@ namespace tecgraf.openbus.assistant.properties {
     /// <summary>
     /// 
     /// </summary>
-    //TODO manter ORB aqui já que é singleton? sou inclinado a remover pois não vejo isso mudando tão cedo e precisará mudar em outros pontos de qq forma.
     ORB ORB { get; }
 
     /// <summary>
     /// 
     /// </summary>
-    ConnectionProperties Props { get; set; }
+    ConnectionProperties ConnectionProperties { get; set; }
 
     /// <summary>
     /// 
     /// </summary>
     OnFailureCallback FailureCallback { get; set; }
+
+    /// <summary>
+    /// Tipo de login que será usado pelo assistente.
+    /// </summary>
+    LoginType Type { get; }
   }
 }

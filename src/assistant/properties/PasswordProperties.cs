@@ -11,6 +11,7 @@
     public PasswordProperties(string entity, byte[] password) {
       Entity = entity;
       Password = password;
+      Type = LoginType.Password;
     }
 
     /// <summary>

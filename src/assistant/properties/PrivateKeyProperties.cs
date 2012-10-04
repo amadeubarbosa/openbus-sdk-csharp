@@ -11,6 +11,7 @@
     public PrivateKeyProperties(string entity, PrivateKey privateKey) {
       Entity = entity;
       PrivateKey = privateKey;
+      Type = LoginType.PrivateKey;
     }
 
     /// <summary>

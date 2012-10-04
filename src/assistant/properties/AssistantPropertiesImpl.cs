@@ -13,7 +13,8 @@ namespace tecgraf.openbus.assistant.properties {
       get { return _interval; }
       set {
         if (value < -1) {
-          throw new InvalidPropertyValueException("interval", "O intervalo deve ser positivo, 0 ou -1.");
+          throw new InvalidPropertyValueException("interval",
+                                                  "O intervalo deve ser positivo, 0 ou -1.");
         }
         _interval = value;
       }
@@ -23,8 +24,10 @@ namespace tecgraf.openbus.assistant.properties {
       get { return _orb; }
     }
 
-    public ConnectionProperties Props { get; set; }
+    public ConnectionProperties ConnectionProperties { get; set; }
 
     public OnFailureCallback FailureCallback { get; set; }
+
+    public LoginType Type { get; internal set; }
   }
 }

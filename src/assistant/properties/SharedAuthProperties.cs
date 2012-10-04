@@ -18,6 +18,7 @@ namespace tecgraf.openbus.assistant.properties {
     /// <param name="callback"></param>
     public SharedAuthProperties(SharedAuthHandler callback) {
       Callback = callback;
+      Type = LoginType.SharedAuth;
     }
 
     /// <summary>
