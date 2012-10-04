@@ -4,7 +4,6 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using scs.core;
-using tecgraf.openbus.assistant.properties;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
 
@@ -78,7 +77,7 @@ namespace tecgraf.openbus.assistant.callbacks {
         }
         else {
           try {
-            _assistant.Properties.FailureCallback.OnLoginFailure(_assistant, caught);
+            _assistant.Properties.LoginFailureCallback(_assistant, caught);
           }
           catch (Exception e) {
             Logger.Error("Erro ao executar a callback de falha de login fornecida pelo usuário.", e);

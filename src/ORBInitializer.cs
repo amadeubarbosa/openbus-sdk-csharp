@@ -10,7 +10,7 @@ namespace tecgraf.openbus {
   /// Esse objeto é utilizado para a obtenção de ORBs CORBA a serem utilizados
   /// exclusivamente para chamadas através de barramentos OpenBus.
   /// 
-  /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
+  /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
   /// também apenas uma instância de OpenBusContext.
   /// 
@@ -34,7 +34,7 @@ namespace tecgraf.openbus {
     /// <summary>
     /// Devolve o gerenciador de conexões.
     /// 
-    /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
+    /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
     /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
     /// também apenas uma instância de OpenBusContext.
     /// </summary>

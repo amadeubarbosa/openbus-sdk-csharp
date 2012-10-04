@@ -74,15 +74,15 @@
   <ItemGroup>
     <Compile Include="src\assistant\Assistant.cs" />
     <Compile Include="src\assistant\AssistantImpl.cs" />
-    <Compile Include="src\assistant\callbacks\AssistantOnFailureCallback.cs" />
     <Compile Include="src\assistant\callbacks\AssistantOnInvalidLoginCallback.cs" />
     <Compile Include="src\assistant\Offeror.cs" />
-    <Compile Include="src\assistant\properties\AssistantProperties.cs" />
-    <Compile Include="src\assistant\properties\AssistantPropertiesImpl.cs" />
+    <Compile Include="src\assistant\AssistantProperties.cs" />
+    <Compile Include="src\assistant\AssistantPropertiesImpl.cs" />
     <Compile Include="src\assistant\OnFailureCallback.cs" />
-    <Compile Include="src\assistant\properties\PasswordProperties.cs" />
-    <Compile Include="src\assistant\properties\PrivateKeyProperties.cs" />
-    <Compile Include="src\assistant\properties\SharedAuthProperties.cs" />
+    <Compile Include="src\assistant\PasswordProperties.cs" />
+    <Compile Include="src\assistant\PrivateKeyProperties.cs" />
+    <Compile Include="src\assistant\SharedAuthProperties.cs" />
+    <Compile Include="src\assistant\Utils.cs" />
     <Compile Include="src\CallDispatchCallback.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

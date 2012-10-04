@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.assistant.callbacks;
-using tecgraf.openbus.assistant.properties;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
@@ -24,11 +22,16 @@ namespace tecgraf.openbus.assistant {
     private readonly ReaderWriterLockSlim _lock;
 
     /// <summary>
-    /// 
+    /// Cria um assistente que efetua login no barramento utilizando o método 
+    /// de autenticação definido pelo tipo de AssistantProperties fornecido.
     /// </summary>
-    /// <param name="host"></param>
-    /// <param name="port"></param>
-    /// <param name="properties"></param>
+    /// <param name="host">Endereço ou nome de rede onde os serviços núcleo do 
+    /// barramento estão executando.</param>
+    /// <param name="port">Porta onde os serviços núcleo do barramento estão 
+    /// executando.</param>
+    /// <param name="properties">Conjunto de parâmetros obrigatórios e 
+    /// opcionais. Fornece também o método de autenticação a ser utilizado para
+    /// efetuar login no barramento.</param>
     public AssistantImpl(string host, ushort port,
                          AssistantProperties properties) {
       OpenBusContext context = ORBInitializer.Context;
@@ -38,9 +41,6 @@ namespace tecgraf.openbus.assistant {
       _port = port;
       _properties = properties;
       _offers = new Dictionary<IComponent, Offeror>();
-      if (properties.FailureCallback == null) {
-        properties.FailureCallback = new AssistantOnFailureCallback();
-      }
       // cria conexão e seta como padrão
       _conn = ORBInitializer.Context.CreateConnection(_host, _port,
                                                       properties.
@@ -73,13 +73,19 @@ namespace tecgraf.openbus.assistant {
     }
 
     public ServiceProperty[] UnregisterService(IComponent component) {
-      Offeror offeror;
-      Offers.TryGetValue(component, out offeror);
-      if (offeror != null) {
-        offeror.Cancel();
-        return offeror.Properties;
+      _lock.EnterWriteLock();
+      try {
+        if (_offers.ContainsKey(component)) {
+          _offers[component].Cancel();
+          if (_offers.Remove(component)) {
+            return _offers[component].Properties;
+          }
+        }
+        return null;
       }
-      return null;
+      finally {
+        _lock.ExitWriteLock();
+      }
     }
 
     public ServiceOfferDesc[] FindServices(ServiceProperty[] properties,
@@ -91,59 +97,21 @@ namespace tecgraf.openbus.assistant {
       return Find(null, retries, true);
     }
 
-    public void SubscribeObserver(OfferRegistrationObserver observer,
-                                  ServiceProperty[] properties) {
-      throw new NotImplementedException();
-    }
-
     public void Shutdown() {
-      foreach (KeyValuePair<IComponent, Offeror> pair in Offers) {
-        pair.Value.Cancel();
+      _lock.EnterWriteLock();
+      try {
+        foreach (KeyValuePair<IComponent, Offeror> pair in _offers) {
+          pair.Value.Cancel();
+        }
+        _offers.Clear();
+      }
+      finally {
+        _lock.ExitWriteLock();
       }
       _conn.Logout();
     }
 
     public ORB Orb { get; private set; }
-
-    //TODO jogar esses metodos estaticos pra um utilitario?
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="entity"></param>
-    /// <param name="facet"></param>
-    /// <returns></returns>
-    public static ServiceProperty[] NewSearchProperties(string entity,
-                                                        string facet) {
-      return new[] {
-                     new ServiceProperty("openbus.offer.entity", entity),
-                     new ServiceProperty("openbus.component.facet", facet)
-                   };
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="properties"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static string GetProperty(IEnumerable<ServiceProperty> properties,
-                                     string name) {
-      return (from property in properties
-              where property.name.Equals(name)
-              select property.value).FirstOrDefault();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="offers"></param>
-    /// <returns></returns>
-    public static ServiceOffer[] GetActiveOffersOnly(
-      IEnumerable<ServiceOffer> offers) {
-      OrbServices orb = OrbServices.GetSingleton();
-      return
-        offers.Where(offer => orb.non_existent(offer.service_ref)).ToArray();
-    }
 
     internal AssistantProperties Properties {
       get { return _properties; }
@@ -185,7 +153,7 @@ namespace tecgraf.openbus.assistant {
         }
         Logger.Error("Erro ao tentar encontrar serviços.");
         try {
-          Properties.FailureCallback.OnFindFailure(this, caught);
+          Properties.FindFailureCallback(this, caught);
         }
         catch (Exception e) {
           Logger.Error(

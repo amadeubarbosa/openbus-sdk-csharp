@@ -31,7 +31,7 @@ namespace tecgraf.openbus {
   ///   executada, é possível obter um CallChain através do qual é possível
   ///   inspecionar as informações de acesso que originaram a chamada recebida.
   /// 
-  /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
+  /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
   /// também apenas uma instância de OpenBusContext.
   /// </summary>

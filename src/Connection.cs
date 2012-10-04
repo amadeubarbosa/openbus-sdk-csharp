@@ -30,7 +30,7 @@ namespace tecgraf.openbus {
   /// servants de um ORB. As conexões que são efetivamente usadas nas chamadas do
   /// ORB são definidas através do OpenBusContext associado ao ORB.
   /// 
-  /// Na versão atual do IIOP.Net, a implementação do ORB é um singleton e,
+  /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
   /// também apenas uma instância de OpenBusContext.
   /// </summary>
