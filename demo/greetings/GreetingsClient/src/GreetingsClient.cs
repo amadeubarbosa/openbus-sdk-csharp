@@ -166,7 +166,7 @@ namespace demo {
         Console.WriteLine(Resources.BusCommFailureErrorMsg);
       }
       Console.WriteLine(Resources.ClientOK);
-      Console.ReadLine();
+      Console.ReadKey();
     }
   }
 }

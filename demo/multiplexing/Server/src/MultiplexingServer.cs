@@ -176,7 +176,7 @@ namespace demo {
     private static void Exit(int code) {
       RemoveOfferAndLogout();
       Console.WriteLine(Resources.PressAnyKeyToExit);
-      Console.ReadLine();
+      Console.ReadKey();
       Environment.Exit(code);
     }
   }

@@ -94,7 +94,7 @@ namespace demo {
       catch (COMM_FAILURE) {
         Console.WriteLine(Resources.BusCommFailureErrorMsg);
       }
-      Console.ReadLine();
+      Console.ReadKey();
     }
 
     private static Connection NewLogin() {

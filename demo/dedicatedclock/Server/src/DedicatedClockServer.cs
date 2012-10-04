@@ -52,7 +52,7 @@ namespace demo {
 
       // Cria registrador e adiciona a callback de login inválido
       Registerer registerer = new Registerer(ic, properties, interval);
-      _conn.OnInvalidLogin = new DedicatedClockInvalidLoginCallback(entity, privateKey, registerer);
+      _conn.OnInvalidLogin = new DedicatedClockInvalidLoginCallback(entity, privateKey, registerer, interval);
 
       // Faz o login e registra no barramento
       try {
@@ -133,7 +133,7 @@ namespace demo {
     private static void Exit(int code) {
       RemoveOfferAndLogout();
       Console.WriteLine(Resources.PressAnyKeyToExit);
-      Console.ReadLine();
+      Console.ReadKey();
       Environment.Exit(code);
     }
   }

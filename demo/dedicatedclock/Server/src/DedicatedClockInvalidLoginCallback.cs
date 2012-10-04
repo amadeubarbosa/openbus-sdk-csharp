@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using demo.Properties;
 using omg.org.CORBA;
 using tecgraf.openbus;
@@ -11,11 +12,13 @@ namespace demo {
     private readonly string _entity;
     private readonly PrivateKey _privKey;
     private readonly Registerer _registerer;
+    private readonly int _waitTime;
 
-    internal DedicatedClockInvalidLoginCallback(string entity, PrivateKey privKey, Registerer registerer) {
+    internal DedicatedClockInvalidLoginCallback(string entity, PrivateKey privKey, Registerer registerer, int waitTime) {
       _entity = entity;
       _privKey = privKey;
       _registerer = registerer;
+      _waitTime = waitTime;
     }
 
     public void InvalidLogin(Connection conn, LoginInfo login) {
@@ -59,6 +62,9 @@ namespace demo {
         if (succeeded) {
           // Inicia o processo de re-registro da oferta
           _registerer.Activate();
+        }
+        else {
+          Thread.Sleep(_waitTime * 1000);
         }
       }
     }

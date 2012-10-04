@@ -174,7 +174,7 @@ namespace demo {
       if (!failed) {
         Console.WriteLine(Resources.ClientOK);
       }
-      Console.ReadLine();
+      Console.ReadKey();
     }
   }
 }

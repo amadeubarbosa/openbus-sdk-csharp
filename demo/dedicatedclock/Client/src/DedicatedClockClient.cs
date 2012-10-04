@@ -159,7 +159,7 @@ namespace demo {
       if (!failed) {
         Console.WriteLine(Resources.ClientOK);
       }
-      Console.ReadLine();
+      Console.ReadKey();
     }
 
     internal static bool Retry() {

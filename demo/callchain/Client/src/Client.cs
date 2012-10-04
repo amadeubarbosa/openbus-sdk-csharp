@@ -162,7 +162,7 @@ namespace demo {
       if (!failed) {
         Console.WriteLine(Resources.ClientOK);
       }
-      Console.ReadLine();
+      Console.ReadKey();
     }
 
     private static string GetProperty(ServiceOfferDesc offer, string name) {
