@@ -12,7 +12,7 @@ using tecgraf.openbus.core.v2_0.services.offer_registry;
 namespace tecgraf.openbus.assistant {
   /// <inheritdoc/>
   public class AssistantImpl : Assistant {
-    private static readonly ILog Logger = LogManager.GetLogger(typeof (Offeror));
+    private static readonly ILog Logger = LogManager.GetLogger(typeof(AssistantImpl));
 
     private readonly string _host;
     private readonly ushort _port;
@@ -157,7 +157,7 @@ namespace tecgraf.openbus.assistant {
         catch (Exception e) {
           caught = e;
         }
-        Logger.Error("Erro ao tentar encontrar serviços.");
+        Logger.Error("Erro ao tentar encontrar serviços.", caught);
         try {
           Properties.FindFailureCallback(this, caught);
         }

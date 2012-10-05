@@ -10,7 +10,7 @@ namespace tecgraf.openbus.assistant {
   /// para definir parâmetros de configuração do Assistente.
   /// </summary>
   public abstract class AssistantPropertiesImpl : AssistantProperties {
-    private int _interval;
+    private int _interval = 1;
     private readonly ORB _orb = OrbServices.GetSingleton();
     private OnLoginFailure _loginFailureCallback = OnLoginFailure;
     private OnRegisterFailure _registerFailureCallback = OnRegisterFailure;

@@ -45,7 +45,7 @@ namespace tecgraf.openbus.assistant {
       IEnumerable<ServiceOfferDesc> offers) {
       OrbServices orb = OrbServices.GetSingleton();
       return
-        offers.Where(offer => orb.non_existent(offer.service_ref)).ToArray();
+        offers.Where(offer => !orb.non_existent(offer.service_ref)).ToArray();
     }
   }
 }
