@@ -30,7 +30,7 @@ namespace demo {
         new ServiceProperty("openbus.component.interface", helloIDLType);
       // propriedade definida pelo serviço hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
-      ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(assistant.FindServices(new[] {prop, autoProp}, 0));
+      ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(assistant.FindServices(new[] {prop, autoProp}, 10));
 
       // utiliza as ofertas encontradas
       bool failed = true;
