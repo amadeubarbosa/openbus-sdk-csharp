@@ -29,8 +29,9 @@ namespace tecgraf.openbus.assistant {
   /// remoção de ofertas de serviço.
   /// </summary>
   /// <param name="assistant">Assistente que chama a callback.</param>
-  /// <param name="component">Componente sendo registrado.</param>
-  /// <param name="props">Lista de propriedades com que o serviço deveria ter sido registrado.</param>
+  /// <param name="component">Componente sendo removido.</param>
+  /// <param name="props">Lista de propriedades do serviço que deveria ter sido
+  ///  removido.</param>
   /// <param name="e">Objeto que descreve a falha ocorrida.</param>
   public delegate void OnRemoveOfferFailure(Assistant assistant,
                                             IComponent component,
