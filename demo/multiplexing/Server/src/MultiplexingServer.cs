@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -21,6 +22,9 @@ namespace demo {
     private static readonly IDictionary<Connection, ServiceOffer> Offers =
       new Dictionary<Connection, ServiceOffer>();
 
+    private static readonly IDictionary<string, Connection> Connections =
+      new Dictionary<string, Connection>();
+
     private static void Main(String[] args) {
       // Registra handler para o caso do processo ser finalizado
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
@@ -33,9 +37,7 @@ namespace demo {
 
       // Associa uma callback de escolha de conexão de despacho
       OpenBusContext context = ORBInitializer.Context;
-      Dictionary<string, Connection> connections =
-        new Dictionary<string, Connection>();
-      context.OnCallDispatch = new MultiplexingCallDispatchCallback(connections);
+      context.OnCallDispatch = Dispatch;
 
       // Cria 3 conexões com o mesmo barramento, uma para cada componente.
       for (int i = 0; i < 3; i++) {
@@ -60,7 +62,7 @@ namespace demo {
         context.SetCurrentConnection(conn);
 
         // Associa a conexão à URI do servant para que a callback possa escolher
-        connections.Add(RemotingServices.GetObjectUri(timer), conn);
+        Connections.Add(RemotingServices.GetObjectUri(timer), conn);
 
         bool failed = true;
         try {
@@ -166,6 +168,17 @@ namespace demo {
             }
           }
         }
+      }
+    }
+
+    private static Connection Dispatch(OpenBusContext context, string busid,
+                                       string caller, string uri,
+                                       string operation) {
+      // tenta obter a conexão associada a esse servant. Se não conseguir, retorna qualquer uma disponível.
+      lock (Connections) {
+        return Connections.ContainsKey(uri)
+                 ? Connections[uri]
+                 : Connections.Values.FirstOrDefault();
       }
     }
 

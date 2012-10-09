@@ -64,7 +64,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\TimerImpl.cs" />
-    <Compile Include="src\MultiplexingCallDispatchCallback.cs" />
     <Compile Include="src\MultiplexingServer.cs" />
   </ItemGroup>
   <ItemGroup>

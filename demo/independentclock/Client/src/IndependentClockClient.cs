@@ -8,6 +8,7 @@ using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
 namespace demo {
   /// <summary>
@@ -17,13 +18,15 @@ namespace demo {
     private static Connection _conn;
     private static Finder _finder;
     private static int _interval;
+    private static string _entity;
+    private static byte[] _password;
 
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args[3]);
+      _entity = args[2];
+      _password = new ASCIIEncoding().GetBytes(args[3]);
       _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
       // Cria o finder que será responsável por encontrar o servidor no barramento
@@ -41,8 +44,8 @@ namespace demo {
       context.SetDefaultConnection(_conn);
 
       // Define a callback de login inválido e faz o login
-      _conn.OnInvalidLogin = new IndependentClockClientInvalidLoginCallback(entity, password, _finder);
-      _conn.OnInvalidLogin.InvalidLogin(_conn, new LoginInfo());
+      _conn.OnInvalidLogin = InvalidLogin;
+      _conn.OnInvalidLogin(_conn, new LoginInfo());
     }
 
     private static void PrintTime() {
@@ -103,6 +106,48 @@ namespace demo {
         }
         Thread.Sleep(_interval);
       }
+    }
+
+    private static void InvalidLogin(Connection conn, LoginInfo login) {
+      bool failed = true;
+      do {
+        try {
+          // Faz o login
+          conn.LoginByPassword(_entity, _password);
+          failed = false;
+        }
+        // Login
+        catch (AlreadyLoggedInException) {
+          // Ignora o erro
+          failed = false;
+        }
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + _entity);
+        }
+        // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+      } while (failed);
+      _finder.Activate();
     }
   }
 

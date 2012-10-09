@@ -9,6 +9,7 @@ using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
 
 namespace demo {
@@ -16,6 +17,10 @@ namespace demo {
   /// Servidor da demo Dedicated Clock.
   /// </summary>
   internal static class DedicatedClockServer {
+    private static string _entity;
+    private static PrivateKey _privateKey;
+    private static int _interval;
+    private static Registerer _registerer;
     private static Connection _conn;
     internal static ServiceOffer Offer;
 
@@ -26,9 +31,9 @@ namespace demo {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      string entity = args[2];
-      PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
-      int interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
+      _entity = args[2];
+      _privateKey = Crypto.ReadKeyFile(args[3]);
+      _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =
@@ -51,12 +56,12 @@ namespace demo {
       context.SetDefaultConnection(_conn);
 
       // Cria registrador e adiciona a callback de login inválido
-      Registerer registerer = new Registerer(ic, properties, interval);
-      _conn.OnInvalidLogin = new DedicatedClockInvalidLoginCallback(entity, privateKey, registerer, interval);
+      _registerer = new Registerer(ic, properties, _interval);
+      _conn.OnInvalidLogin = InvalidLogin;
 
       // Faz o login e registra no barramento
       try {
-        _conn.OnInvalidLogin.InvalidLogin(_conn, new LoginInfo());
+        _conn.OnInvalidLogin(_conn, new LoginInfo());
       }
       catch (Exception e) {
         Console.WriteLine(e);
@@ -122,6 +127,54 @@ namespace demo {
           else {
             throw;
           }
+        }
+      }
+    }
+
+    private static void InvalidLogin(Connection conn, LoginInfo login) {
+      bool succeeded = false;
+      while (!succeeded) {
+        try {
+          // Faz o login
+          conn.LoginByCertificate(_entity, _privateKey);
+          succeeded = true;
+        }
+        // Login
+        catch (AlreadyLoggedInException) {
+          // Ignora o erro e retorna, pois já está reautenticado e portanto já há uma thread tentando registrar
+          return;
+        }
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + _entity);
+        }
+        // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+        if (succeeded) {
+          // Inicia o processo de re-registro da oferta
+          _registerer.Activate();
+        }
+        else {
+          Thread.Sleep(_interval);
         }
       }
     }

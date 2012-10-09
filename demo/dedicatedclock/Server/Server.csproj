@@ -64,7 +64,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\ClockImpl.cs" />
-    <Compile Include="src\DedicatedClockInvalidLoginCallback.cs" />
     <Compile Include="src\DedicatedClockServer.cs" />
   </ItemGroup>
   <ItemGroup>

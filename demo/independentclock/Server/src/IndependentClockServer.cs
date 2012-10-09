@@ -9,6 +9,7 @@ using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
 
 namespace demo {
@@ -24,6 +25,7 @@ namespace demo {
     private static string _entity;
     private static PrivateKey _privateKey;
     private static ComponentContext _component;
+    private static Registerer _registerer;
 
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
@@ -73,12 +75,12 @@ namespace demo {
       context.SetDefaultConnection(_conn);
 
       // Cria registrador e adiciona a callback de login inválido
-      Registerer registerer = new Registerer(ic, properties, _interval);
-      _conn.OnInvalidLogin = new IndependentClockInvalidLoginCallback(_entity, _privateKey, registerer, _interval);
+      _registerer = new Registerer(ic, properties, _interval);
+      _conn.OnInvalidLogin = InvalidLogin;
 
       // Faz o login e registra no barramento
       try {
-        _conn.OnInvalidLogin.InvalidLogin(_conn, new LoginInfo());
+        _conn.OnInvalidLogin(_conn, new LoginInfo());
       }
       catch (Exception e) {
         Console.WriteLine(e);
@@ -140,6 +142,54 @@ namespace demo {
           else {
             throw;
           }
+        }
+      }
+    }
+
+    private static void InvalidLogin(Connection conn, LoginInfo login) {
+      bool succeeded = false;
+      while (!succeeded) {
+        try {
+          // Faz o login
+          conn.LoginByCertificate(_entity, _privateKey);
+          succeeded = true;
+        }
+        // Login
+        catch (AlreadyLoggedInException) {
+          // Ignora o erro e retorna, pois já está reautenticado e portanto já há uma thread tentando registrar
+          return;
+        }
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + _entity);
+        }
+        // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+        if (succeeded) {
+          // Inicia o processo de re-registro da oferta
+          _registerer.Activate();
+        }
+        else {
+          Thread.Sleep(_interval);
         }
       }
     }

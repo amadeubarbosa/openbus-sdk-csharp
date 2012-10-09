@@ -63,4 +63,4 @@ A demo deve ser executada na seguinte ordem:
 -------------------------------
 
 1) Server.exe localhost 2089 demo_dedicatedclock_csharp_server DemoDedicatedClock.key 2000
-2) Client.exe localhost 2089 demo_dedicatedclock_csharp_client minhasenha 3000 12000
+2) Client.exe localhost 2089 demo_dedicatedclock_csharp_client minhasenha 3000 12

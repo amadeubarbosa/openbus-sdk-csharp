@@ -8,12 +8,15 @@ using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
 namespace demo {
   /// <summary>
   /// Cliente da demo dedicated clock.
   /// </summary>
   internal static class DedicatedClockClient {
+    private static string _entity;
+    private static byte[] _password;
     private static int _retries;
     private static int _interval;
 
@@ -21,8 +24,8 @@ namespace demo {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
+      _entity = args[2];
+      _password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : _entity);
       _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
       _retries = Convert.ToInt32(args.Length > 5 ? args[5] : "10");
 
@@ -33,8 +36,8 @@ namespace demo {
       context.SetDefaultConnection(conn);
 
       // Define a callback de login inválido e faz o login
-      conn.OnInvalidLogin = new DedicatedClockClientInvalidLoginCallback(entity, password);
-      conn.OnInvalidLogin.InvalidLogin(conn, new LoginInfo());
+      conn.OnInvalidLogin = InvalidLogin;
+      conn.OnInvalidLogin(conn, new LoginInfo());
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       string clockIDLType = Repository.GetRepositoryID(typeof(Clock));
@@ -169,6 +172,47 @@ namespace demo {
         return true;
       }
       return false;
+    }
+
+    private static void InvalidLogin(Connection conn, LoginInfo login) {
+      bool failed = true;
+      do {
+        try {
+          // Faz o login
+          conn.LoginByPassword(_entity, _password);
+          failed = false;
+        }
+        // Login
+        catch (AlreadyLoggedInException) {
+          // Ignora o erro
+          failed = false;
+        }
+        catch (AccessDenied) {
+          Console.WriteLine(Resources.ServerAccessDenied);
+        }
+        catch (MissingCertificate) {
+          Console.WriteLine(Resources.MissingCertificateForEntity + _entity);
+        }
+        // Barramento
+        catch (ServiceFailure e) {
+          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
+          Console.WriteLine(e);
+        }
+        catch (TRANSIENT) {
+          Console.WriteLine(Resources.BusTransientErrorMsg);
+        }
+        catch (COMM_FAILURE) {
+          Console.WriteLine(Resources.BusCommFailureErrorMsg);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
+          }
+          else {
+            throw;
+          }
+        }
+      } while (failed && Retry());
     }
   }
 }
