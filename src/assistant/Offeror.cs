@@ -125,7 +125,7 @@ namespace tecgraf.openbus.assistant {
           catch (Exception e) {
             Logger.Error("Erro ao executar a callback de falha de registro fornecida pelo usuário.", e);
           }
-          Thread.Sleep(_assistant.Properties.Interval * 1000);
+          Thread.Sleep(_assistant.Properties.Interval);
         }
       }
     }
@@ -157,7 +157,7 @@ namespace tecgraf.openbus.assistant {
           catch (Exception e) {
             Logger.Error("Erro ao executar a callback de falha de registro fornecida pelo usuário.", e);
           }
-          Thread.Sleep(_assistant.Properties.Interval * 1000);
+          Thread.Sleep(_assistant.Properties.Interval);
         }
       }
     }

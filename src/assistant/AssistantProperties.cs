@@ -27,7 +27,7 @@ namespace tecgraf.openbus.assistant {
   /// </summary>
   public interface AssistantProperties {
     /// <summary>
-    /// Tempo em segundos indicando o tempo mínimo de espera antes de cada nova 
+    /// Tempo em milisegundos indicando o tempo mínimo de espera antes de cada nova 
     /// tentativa após uma falha na execução de uma tarefa. Por exemplo, depois 
     /// de uma falha na tentativa de um login ou registro de oferta, o 
     /// assistente espera pelo menos o tempo indicado por esse parâmetro antes 

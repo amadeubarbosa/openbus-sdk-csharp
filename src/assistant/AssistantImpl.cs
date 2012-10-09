@@ -140,7 +140,7 @@ namespace tecgraf.openbus.assistant {
             e);
         }
         if (retries > 0) {
-          Thread.Sleep(Properties.Interval * 1000);
+          Thread.Sleep(Properties.Interval);
           retries--;
         }
       } while (retries != 0);
@@ -214,7 +214,7 @@ namespace tecgraf.openbus.assistant {
             e);
         }
         if (retries > 0) {
-          Thread.Sleep(Properties.Interval * 1000);
+          Thread.Sleep(Properties.Interval);
           retries--;
         }
       } while (retries != 0);
@@ -285,7 +285,7 @@ namespace tecgraf.openbus.assistant {
               "Erro ao executar a callback de falha de login fornecida pelo usuário.",
               e);
           }
-          Thread.Sleep(Properties.Interval * 1000);
+          Thread.Sleep(Properties.Interval);
         }
       }
     }
