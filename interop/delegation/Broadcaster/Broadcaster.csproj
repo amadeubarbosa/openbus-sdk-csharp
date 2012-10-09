@@ -64,7 +64,6 @@
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
     <Compile Include="src\BroadcasterImpl.cs" />
-    <Compile Include="src\BroadcasterInvalidLoginCallback.cs" />
     <Compile Include="src\BroadcasterServer.cs" />
   </ItemGroup>
   <ItemGroup>

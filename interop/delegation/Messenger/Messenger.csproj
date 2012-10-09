@@ -64,7 +64,6 @@
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
     <Compile Include="src\MessengerImpl.cs" />
-    <Compile Include="src\MessengerInvalidLoginCallback.cs" />
     <Compile Include="src\MessengerServer.cs" />
   </ItemGroup>
   <ItemGroup>

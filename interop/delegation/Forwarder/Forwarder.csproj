@@ -64,7 +64,6 @@
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
     <Compile Include="src\ForwarderImpl.cs" />
-    <Compile Include="src\ForwarderInvalidLoginCallback.cs" />
     <Compile Include="src\ForwarderServer.cs" />
   </ItemGroup>
   <ItemGroup>

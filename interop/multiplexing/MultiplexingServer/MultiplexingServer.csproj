@@ -63,9 +63,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
-    <Compile Include="src\HelloCallDispatchCallback.cs" />
     <Compile Include="src\HelloImpl.cs" />
-    <Compile Include="src\HelloInvalidLoginCallback.cs" />
     <Compile Include="src\Server.cs" />
   </ItemGroup>
   <ItemGroup>
