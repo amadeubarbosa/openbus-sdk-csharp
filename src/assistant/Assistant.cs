@@ -149,6 +149,6 @@ namespace tecgraf.openbus.assistant {
     /// <summary>
     /// ORB utilizado pelo assistente.
     /// </summary>
-    ORB Orb { get; }
+    OrbServices Orb { get; }
   }
 }

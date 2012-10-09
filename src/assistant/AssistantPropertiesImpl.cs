@@ -11,7 +11,7 @@ namespace tecgraf.openbus.assistant {
   /// </summary>
   public abstract class AssistantPropertiesImpl : AssistantProperties {
     private int _interval = 1;
-    private readonly ORB _orb = OrbServices.GetSingleton();
+    private readonly OrbServices _orb = OrbServices.GetSingleton();
     private OnLoginFailure _loginFailureCallback = OnLoginFailure;
     private OnRegisterFailure _registerFailureCallback = OnRegisterFailure;
     private OnRemoveOfferFailure _removeOfferFailureCallback = OnRemoveOfferFailure;
@@ -31,7 +31,7 @@ namespace tecgraf.openbus.assistant {
     }
 
     /// <inheritdoc/>
-    public ORB ORB {
+    public OrbServices ORB {
       get { return _orb; }
     }
 

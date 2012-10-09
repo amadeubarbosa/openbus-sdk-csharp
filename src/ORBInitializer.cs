@@ -52,7 +52,7 @@ namespace tecgraf.openbus {
 
     #endregion
 
-    private static ORB InitORB() {
+    private static OrbServices InitORB() {
       lock (Lock) {
         if (!_initialized) {
           // Adiciona interceptadores

@@ -44,7 +44,7 @@ namespace tecgraf.openbus.assistant {
     /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
     /// portanto, há sempre apenas uma instância de ORB.
     /// </summary>
-    ORB ORB { get; }
+    OrbServices ORB { get; }
 
     /// <summary>
     /// Propriedades da conexão a ser criada com o barramento especificado. 

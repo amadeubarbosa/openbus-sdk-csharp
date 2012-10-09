@@ -21,7 +21,7 @@ namespace tecgraf.openbus {
     // Mapa de conexões
     private readonly ConcurrentDictionary<Guid, Connection> _connections;
 
-    private readonly ORB _orb;
+    private readonly OrbServices _orb;
 
     // Identificador do slot de id de conexão corrente.
     private readonly int _connectionIdSlotId;
@@ -59,7 +59,7 @@ namespace tecgraf.openbus {
 
     #region OpenBusContext methods
 
-    public ORB ORB {
+    public OrbServices ORB {
       get { return _orb; }
     }
 

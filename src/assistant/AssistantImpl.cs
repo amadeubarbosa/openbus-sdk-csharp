@@ -164,7 +164,7 @@ namespace tecgraf.openbus.assistant {
     }
 
     /// <inheritdoc/>
-    public ORB Orb { get; private set; }
+    public OrbServices Orb { get; private set; }
 
     internal AssistantProperties Properties {
       get { return _properties; }

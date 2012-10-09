@@ -41,7 +41,7 @@ namespace tecgraf.openbus {
     /// é um singleton, a instância será sempre a mesma e pode ser obtida de
     /// outras formas.
     /// </summary>
-    ORB ORB { get; }
+    OrbServices ORB { get; }
 
     /// <summary>
     /// Callback a ser chamada para determinar a conexão a ser utilizada

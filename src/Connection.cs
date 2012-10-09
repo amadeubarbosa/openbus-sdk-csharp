@@ -39,7 +39,7 @@ namespace tecgraf.openbus {
     /// ORB correspondente ao OpenBusContext a partir do qual essa conexão
     /// foi criada. 
     /// </summary>
-    ORB ORB { get; }
+    OrbServices ORB { get; }
 
     /// <summary>
     /// Identificador do barramento ao qual essa conexão se refere.

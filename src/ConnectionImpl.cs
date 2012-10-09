@@ -346,7 +346,7 @@ namespace tecgraf.openbus {
 
     #region Connection Members
 
-    public ORB ORB { get; private set; }
+    public OrbServices ORB { get; private set; }
 
     public string BusId {
       get { return _busId; }
