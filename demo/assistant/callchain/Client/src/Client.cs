@@ -3,8 +3,7 @@ using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
-using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
@@ -14,56 +13,32 @@ namespace demo {
   /// </summary>
   internal static class Client {
     private static void Main(String[] args) {
+      //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
+      byte[] password =
+        new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
 
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, null);
-      context.SetDefaultConnection(conn);
+      // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
+      Assistant assistant = new AssistantImpl(host, port,
+                                              new PasswordProperties(entity,
+                                                                     password));
 
+      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       string messengerIDLType = Repository.GetRepositoryID(typeof (Messenger));
-      ServiceOfferDesc[] offers = null;
-      try {
-        // Faz o login
-        conn.LoginByPassword(entity, password);
-        // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-        // propriedade gerada automaticamente
-        ServiceProperty autoProp =
-          new ServiceProperty("openbus.component.interface", messengerIDLType);
-        // propriedade definida pelo serviço messenger
-        ServiceProperty prop = new ServiceProperty("offer.domain",
-                                                   "Demo CallChain");
-        ServiceProperty[] properties = new[] {prop, autoProp};
-        offers = context.OfferRegistry.findServices(properties);
-      }
-      catch (AccessDenied) {
-        Console.WriteLine(Resources.ClientAccessDenied + entity + ".");
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == NoLoginCode.ConstVal) {
-          Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-        }
-        else {
-          throw;
-        }
-      }
+      // propriedade gerada automaticamente
+      ServiceProperty autoProp =
+        new ServiceProperty("openbus.component.interface", messengerIDLType);
+      // propriedade definida pelo serviço messenger
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Demo CallChain");
+      ServiceOfferDesc[] offers =
+        Utils.FilterWorkingOffers(assistant.FindServices(
+          new[] {prop, autoProp}, 10));
 
-      // analiza as ofertas encontradas
+      // utiliza as ofertas encontradas
       bool failed = true;
       if (offers != null) {
         if (offers.Length < 1) {
@@ -96,13 +71,13 @@ namespace demo {
             catch (Unauthorized) {
               Console.WriteLine(
                 Resources.CallChainClientServiceRoleErrorMessage +
-                GetProperty(desc, "offer.role") +
+                Utils.GetProperty(desc.properties, "offer.role") +
                 Resources.CallChainClientNotAutorizedMessage);
             }
             catch (Unavailable) {
               Console.WriteLine(
                 Resources.CallChainClientServiceRoleErrorMessage +
-                GetProperty(desc, "offer.role") +
+                Utils.GetProperty(desc.properties, "offer.role") +
                 Resources.CallChainClientUnavailableMessage);
             }
             catch (TRANSIENT) {
@@ -146,32 +121,9 @@ namespace demo {
         }
       }
 
-      try {
-        conn.Logout();
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      if (!failed) {
-        Console.WriteLine(Resources.ClientOK);
-      }
+      assistant.Shutdown();
+      Console.WriteLine(Resources.ClientOK);
       Console.ReadKey();
-    }
-
-    private static string GetProperty(ServiceOfferDesc offer, string name) {
-      foreach (ServiceProperty property in offer.properties) {
-        if (property.name.Equals(name)) {
-          return property.value;
-        }
-      }
-      return null;
     }
   }
 }

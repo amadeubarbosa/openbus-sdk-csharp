@@ -36,19 +36,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel">
-      <HintPath>..\..\..\lib\IIOPChannel.dll</HintPath>
+      <HintPath>..\..\..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="Openbus">
-      <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
+      <HintPath>..\..\..\..\bin\Debug\OpenBus.dll</HintPath>
     </Reference>
     <Reference Include="Openbus.Demo.Clock.Idl">
-      <HintPath>..\..\..\lib\Openbus.Demo.Clock.Idl.dll</HintPath>
+      <HintPath>..\..\..\..\lib\Openbus.Demo.Clock.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
-      <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
+      <HintPath>..\..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
-      <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
+      <HintPath>..\..\..\..\lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -61,7 +61,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="src\IndependentClockClient.cs" />
-    <Compile Include="src\IndependentClockClientInvalidLoginCallback.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

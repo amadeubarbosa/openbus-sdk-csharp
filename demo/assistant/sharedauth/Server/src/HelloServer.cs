@@ -3,11 +3,9 @@ using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using demo.Properties;
-using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.security;
 
@@ -16,8 +14,7 @@ namespace demo {
   /// Servidor da demo shared auth.
   /// </summary>
   internal static class HelloServer {
-    private static Connection _conn;
-    private static ServiceOffer _offer;
+    private static Assistant _assistant;
 
     private static void Main(String[] args) {
       // Registra handler para o caso do processo ser finalizado
@@ -44,124 +41,18 @@ namespace demo {
                                                                  "Demo SharedAuth")
                                            };
 
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port, null);
-      context.SetDefaultConnection(_conn);
-
-      bool failed = true;
-      try {
-        // Faz o login
-        _conn.LoginByCertificate(entity, privateKey);
-        // Registra a oferta no barramento
-        _offer = context.OfferRegistry.registerService(ic, properties);
-        failed = false;
-      }
-        // Login
-      catch (AccessDenied) {
-        Console.WriteLine(Resources.ServerAccessDenied);
-      }
-      catch (MissingCertificate) {
-        Console.WriteLine(Resources.MissingCertificateForEntity + entity);
-      }
-        // Registro
-      catch (UnauthorizedFacets) {
-        Console.WriteLine(Resources.UnauthorizedFacets);
-      }
-        // Barramento
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == NoLoginCode.ConstVal) {
-          Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-        }
-        else {
-          throw;
-        }
-      }
-      finally {
-        if (failed) {
-          Exit(1);
-        }
-      }
+      // Usa o assistente do OpenBus para se conectar ao barramento, realizar a autenticação e se registrar.
+      _assistant = new AssistantImpl(host, port,
+                                     new PrivateKeyProperties(entity, privateKey));
+      _assistant.RegisterService(ic, properties);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine(Resources.ServerOK);
       Thread.Sleep(Timeout.Infinite);
     }
 
-    private static void RemoveOfferAndLogout() {
-      if (_offer != null) {
-        try {
-          Console.WriteLine(Resources.RemovingOffer);
-          _offer.remove();
-          Console.WriteLine(Resources.RemovedOffer);
-        }
-        catch (UnauthorizedOperation) {
-          Console.WriteLine(Resources.UnauthorizedRemoveOffer);
-        }
-        catch (ServiceFailure e) {
-          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-          Console.WriteLine(e);
-        }
-        catch (TRANSIENT) {
-          Console.WriteLine(Resources.BusTransientErrorMsg);
-        }
-        catch (COMM_FAILURE) {
-          Console.WriteLine(Resources.BusCommFailureErrorMsg);
-        }
-        catch (NO_PERMISSION e) {
-          if (e.Minor == NoLoginCode.ConstVal) {
-            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-          }
-          else {
-            throw;
-          }
-        }
-      }
-      if (_conn.Login.HasValue) {
-        try {
-          _conn.Logout();
-        }
-        catch (ServiceFailure e) {
-          Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-          Console.WriteLine(e);
-        }
-        catch (TRANSIENT) {
-          Console.WriteLine(Resources.BusTransientErrorMsg);
-        }
-        catch (COMM_FAILURE) {
-          Console.WriteLine(Resources.BusCommFailureErrorMsg);
-        }
-        catch (NO_PERMISSION e) {
-          if (e.Minor == NoLoginCode.ConstVal) {
-            Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-          }
-          else {
-            throw;
-          }
-        }
-      }
-    }
-
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
-      RemoveOfferAndLogout();
-    }
-
-    private static void Exit(int code) {
-      RemoveOfferAndLogout();
-      Console.WriteLine(Resources.PressAnyKeyToExit);
-      Console.ReadKey();
-      Environment.Exit(code);
+      _assistant.Shutdown();
     }
   }
 }

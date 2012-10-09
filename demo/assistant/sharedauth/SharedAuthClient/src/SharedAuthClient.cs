@@ -1,15 +1,10 @@
 ﻿using System;
-using System.IO;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
-using omg.org.IOP;
-using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.exceptions;
-using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace demo {
   internal static class SharedAuthClient {
@@ -17,74 +12,24 @@ namespace demo {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
+      //TODO trocar por alguma forma comum de serializacao em c#
       string loginFile = args[2];
 
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, null);
-      context.SetDefaultConnection(conn);
+      // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
+      Assistant assistant = new AssistantImpl(host, port,
+                                              new SharedAuthProperties(SharedAuthObtainer));
 
-      string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
-      ServiceOfferDesc[] offers = null;
-      try {
-        // Faz o login por autenticação compartilhada
-        CodecFactory factory =
-          OrbServices.GetSingleton().resolve_initial_references("CodecFactory")
-          as
-          CodecFactory;
-        if (factory == null) {
-          Console.WriteLine(Resources.SharedAuthCodecFactoryErrorMsg);
-        }
-        else {
-          Codec codec =
-            factory.create_codec(new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
-          byte[] encodedLogin = File.ReadAllBytes(loginFile);
-          Type saType = typeof (EncodedSharedAuth);
-          TypeCode saTypeCode =
-            OrbServices.GetSingleton().create_interface_tc(
-              Repository.GetRepositoryID(saType), saType.Name);
-          EncodedSharedAuth sharedAuth =
-            (EncodedSharedAuth) codec.decode_value(encodedLogin, saTypeCode);
-
-          LoginProcess login = sharedAuth.attempt as LoginProcess;
-          conn.LoginBySharedAuth(login, sharedAuth.secret);
-          // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-          // propriedade gerada automaticamente
-          ServiceProperty autoProp =
-            new ServiceProperty("openbus.component.interface", helloIDLType);
-          // propriedade definida pelo serviço hello
-          ServiceProperty prop = new ServiceProperty("offer.domain",
-                                                     "Demo SharedAuth");
-          ServiceProperty[] properties = new[] {prop, autoProp};
-          offers = context.OfferRegistry.findServices(properties);
-        }
-      }
-      catch (AccessDenied) {
-        Console.WriteLine(Resources.ClientAccessDenied +
-                          Resources.SharedAuthEntity);
-      }
-      catch (InvalidLoginProcessException) {
-        Console.WriteLine(Resources.SharedAuthInvalidLoginProcessErrorMsg);
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == NoLoginCode.ConstVal) {
-          Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-        }
-        else {
-          throw;
-        }
-      }
+      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
+      string helloIDLType = Repository.GetRepositoryID(typeof(Hello));
+      // propriedade gerada automaticamente
+      ServiceProperty autoProp =
+        new ServiceProperty("openbus.component.interface", helloIDLType);
+      // propriedade definida pelo serviço hello
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Demo SharedAuth");
+      ServiceOfferDesc[] offers =
+        Utils.FilterWorkingOffers(assistant.FindServices(
+          new[] { prop, autoProp }, 10));
 
       // analiza as ofertas encontradas
       bool failed = true;
@@ -157,23 +102,13 @@ namespace demo {
         }
       }
 
-      try {
-        conn.Logout();
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      if (!failed) {
-        Console.WriteLine(Resources.ClientOK);
-      }
+      assistant.Shutdown();
+      Console.WriteLine(Resources.ClientOK);
       Console.ReadKey();
+    }
+
+    private static LoginProcess SharedAuthObtainer(out byte[] secret) {
+      throw new NotImplementedException();
     }
   }
 }

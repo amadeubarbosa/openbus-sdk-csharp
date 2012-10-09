@@ -4,8 +4,7 @@ using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
-using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
@@ -14,41 +13,27 @@ namespace demo {
   /// Cliente da demo Independent Clock.
   /// </summary>
   internal static class IndependentClockClient {
-    private static Connection _conn;
-    private static Finder _finder;
-    private static int _interval;
-
     private static void Main(String[] args) {
+      //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
       byte[] password = new ASCIIEncoding().GetBytes(args[3]);
-      _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
+      int interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
+
+      // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
+      PasswordProperties assistantProps = new PasswordProperties(entity,
+                                                                 password) { Interval = interval };
+      Assistant assistant = new AssistantImpl(host, port, assistantProps);
 
       // Cria o finder que será responsável por encontrar o servidor no barramento
-      _finder = new Finder(_interval);
+      Finder finder = new Finder(assistant, interval);
 
-      // Inicia thread que imprime a hora
-      ThreadStart ts = PrintTime;
-      Thread t = new Thread(ts);
-      t.Start();
-
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port, null);
-      context.SetDefaultConnection(_conn);
-
-      // Define a callback de login inválido e faz o login
-      _conn.OnInvalidLogin = new IndependentClockClientInvalidLoginCallback(entity, password, _finder);
-      _conn.OnInvalidLogin.InvalidLogin(_conn, new LoginInfo());
-    }
-
-    private static void PrintTime() {
+      // Imprime a hora, buscando a faceta clock em outra thread se necessário
       while (true) {
         bool failed = true;
-        Clock clock = _finder.Clock;
+        Clock clock = finder.Clock;
         if (clock != null) {
           try {
             // utiliza o serviço
@@ -93,28 +78,30 @@ namespace demo {
           }
           if (failed) {
             // descarta o clock atual e busca um novo
-            _finder.Clock = null;
+            finder.Clock = null;
           }
         }
         if (failed) {
-          _finder.Activate();
+          finder.Activate();
           Console.WriteLine(String.Format("Hora local: {0:HH:mm:ss}",
                                           DateTime.Now));
         }
-        Thread.Sleep(_interval);
+        Thread.Sleep(interval);
       }
     }
   }
 
   internal class Finder {
     private Clock _clock;
+    private readonly Assistant _assistant;
     private readonly int _interval;
     private bool _active;
     // lock propositalmente não é um ReaderWriterLockSlim pois não queremos otimizar as leituras
     private readonly object _lock;
     private readonly ServiceProperty[] _properties;
 
-    internal Finder(int interval) {
+    internal Finder(Assistant assistant, int interval) {
+      _assistant = assistant;
       _interval = interval;
       _clock = null;
       _active = false;
@@ -160,30 +147,8 @@ namespace demo {
     private void Find() {
       try {
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-        ServiceOfferDesc[] offers = null;
         while (true) {
-          try {
-            offers =
-              ORBInitializer.Context.OfferRegistry.findServices(_properties);
-          }
-          catch (ServiceFailure e) {
-            Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-            Console.WriteLine(e);
-          }
-          catch (TRANSIENT) {
-            Console.WriteLine(Resources.BusTransientErrorMsg);
-          }
-          catch (COMM_FAILURE) {
-            Console.WriteLine(Resources.BusCommFailureErrorMsg);
-          }
-          catch (NO_PERMISSION e) {
-            if (e.Minor == NoLoginCode.ConstVal) {
-              Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-            }
-            else {
-              throw;
-            }
-          }
+          ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(_assistant.FindServices(_properties));
           // analiza as ofertas encontradas
           bool foundClock = false;
           if (offers != null) {

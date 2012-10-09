@@ -36,22 +36,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel">
-      <HintPath>..\..\..\lib\IIOPChannel.dll</HintPath>
+      <HintPath>..\..\..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus">
-      <HintPath>..\..\..\bin\Debug\OpenBus.dll</HintPath>
+      <HintPath>..\..\..\..\bin\Debug\OpenBus.dll</HintPath>
     </Reference>
     <Reference Include="Openbus.Demo.CallChain.Idl">
-      <HintPath>..\..\..\lib\Openbus.Demo.CallChain.Idl.dll</HintPath>
+      <HintPath>..\..\..\..\lib\Openbus.Demo.CallChain.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
-      <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
+      <HintPath>..\..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs">
-      <HintPath>..\..\..\lib\Scs.dll</HintPath>
+      <HintPath>..\..\..\..\lib\Scs.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
-      <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
+      <HintPath>..\..\..\..\lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -3,8 +3,7 @@ using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
-using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
@@ -14,17 +13,18 @@ namespace demo {
   /// </summary>
   internal static class GreetingsClient {
     private static void Main(String[] args) {
+      //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
+      byte[] password =
+        new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
 
-      // Cria conexão e a define como conexão padrão tanto para entrada como saída.
-      // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, null);
-      context.SetDefaultConnection(conn);
+      // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
+      Assistant assistant = new AssistantImpl(host, port,
+                                              new PasswordProperties(entity,
+                                                                     password));
 
       // Pergunta ao usuário qual língua deseja utilizar
       Console.WriteLine(Resources.GreetingsWhichLanguage);
@@ -34,54 +34,28 @@ namespace demo {
         Environment.Exit(1);
       }
 
+      // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       string greetingsIDLType = Repository.GetRepositoryID(typeof (Greetings));
-      ServiceOfferDesc[] offers = null;
-      try {
-        // Faz o login
-        conn.LoginByPassword(entity, password);
-        // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
-        // propriedade gerada automaticamente
-        ServiceProperty autoProp1 =
-          new ServiceProperty("openbus.component.interface", greetingsIDLType);
-        // propriedade definida pelo serviço greetings
-        ServiceProperty prop = new ServiceProperty("offer.domain",
-                                                   "Demo Greetings");
-        ServiceProperty[] properties;
-        if (!language.Equals("")) {
-          ServiceProperty autoProp2 = new ServiceProperty(
-            "openbus.component.name", language.ToLower());
-          properties = new[] {prop, autoProp1, autoProp2};
-        }
-        else {
-          Console.WriteLine(Resources.GreetingsNoLanguageSpecified);
-          properties = new[] {prop, autoProp1};
-        }
+      // propriedade gerada automaticamente
+      ServiceProperty autoProp1 =
+        new ServiceProperty("openbus.component.interface", greetingsIDLType);
+      // propriedade definida pelo serviço greetings
+      ServiceProperty prop = new ServiceProperty("offer.domain",
+                                                 "Demo Greetings");
+      ServiceProperty[] properties;
+      if (!language.Equals("")) {
+        ServiceProperty autoProp2 = new ServiceProperty(
+          "openbus.component.name", language.ToLower());
+        properties = new[] {prop, autoProp1, autoProp2};
+      }
+      else {
+        Console.WriteLine(Resources.GreetingsNoLanguageSpecified);
+        properties = new[] {prop, autoProp1};
+      }
+      ServiceOfferDesc[] offers =
+        Utils.FilterWorkingOffers(assistant.FindServices(properties, 10));
 
-        offers = context.OfferRegistry.findServices(properties);
-      }
-      catch (AccessDenied) {
-        Console.WriteLine(Resources.ClientAccessDenied + entity + ".");
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
-      catch (NO_PERMISSION e) {
-        if (e.Minor == NoLoginCode.ConstVal) {
-          Console.WriteLine(Resources.NoLoginCodeErrorMsg);
-        }
-        else {
-          throw;
-        }
-      }
-
-      // analiza as ofertas encontradas
+      // utiliza as ofertas encontradas
       if (offers != null) {
         if (offers.Length < 1) {
           Console.WriteLine(Resources.ServiceNotFound);
@@ -152,19 +126,7 @@ namespace demo {
         }
       }
 
-      try {
-        conn.Logout();
-      }
-      catch (ServiceFailure e) {
-        Console.WriteLine(Resources.BusServiceFailureErrorMsg);
-        Console.WriteLine(e);
-      }
-      catch (TRANSIENT) {
-        Console.WriteLine(Resources.BusTransientErrorMsg);
-      }
-      catch (COMM_FAILURE) {
-        Console.WriteLine(Resources.BusCommFailureErrorMsg);
-      }
+      assistant.Shutdown();
       Console.WriteLine(Resources.ClientOK);
       Console.ReadKey();
     }

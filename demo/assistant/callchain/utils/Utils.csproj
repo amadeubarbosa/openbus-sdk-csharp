@@ -39,13 +39,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IIOPChannel">
-      <HintPath>..\..\..\lib\IIOPChannel.dll</HintPath>
+      <HintPath>..\..\..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="Openbus">
-      <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
+      <HintPath>..\..\..\..\bin\Debug\OpenBus.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
-      <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
+      <HintPath>..\..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
   </ItemGroup>

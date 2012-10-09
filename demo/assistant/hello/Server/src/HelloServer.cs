@@ -42,7 +42,8 @@ namespace demo {
                                            };
 
       // Usa o assistente do OpenBus para se conectar ao barramento, realizar a autenticação e se registrar.
-      _assistant = new AssistantImpl(host, port, new PrivateKeyProperties(entity, privateKey));
+      _assistant = new AssistantImpl(host, port,
+                                     new PrivateKeyProperties(entity, privateKey));
       _assistant.RegisterService(ic, properties);
 
       // Mantém a thread ativa para aguardar requisições

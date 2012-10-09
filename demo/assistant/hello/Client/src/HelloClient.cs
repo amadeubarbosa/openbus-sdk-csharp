@@ -18,19 +18,24 @@ namespace demo {
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
+      byte[] password =
+        new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      Assistant assistant = new AssistantImpl(host, port, new PasswordProperties(entity, password));
+      Assistant assistant = new AssistantImpl(host, port,
+                                              new PasswordProperties(entity,
+                                                                     password));
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       // propriedade gerada automaticamente
-      string helloIDLType = Repository.GetRepositoryID(typeof(Hello));
+      string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
       ServiceProperty autoProp =
         new ServiceProperty("openbus.component.interface", helloIDLType);
       // propriedade definida pelo serviço hello
       ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
-      ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(assistant.FindServices(new[] {prop, autoProp}, 10));
+      ServiceOfferDesc[] offers =
+        Utils.FilterWorkingOffers(assistant.FindServices(
+          new[] {prop, autoProp}, 10));
 
       // utiliza as ofertas encontradas
       bool failed = true;
