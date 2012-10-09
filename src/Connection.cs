@@ -88,7 +88,7 @@ namespace tecgraf.openbus {
     void LoginByCertificate(String entity, PrivateKey privateKey);
 
     /// <summary>
-    /// \brief Inicia o processo de login por autenticação compartilhada.
+    /// Inicia o processo de login por autenticação compartilhada.
     /// 
     /// A autenticação compartilhada permite criar um novo login compartilhando a
     /// mesma autenticação do login atual da conexão. Portanto essa operação só
@@ -101,7 +101,7 @@ namespace tecgraf.openbus {
     /// inválidas e não podem mais ser utilizadas para criar um login.
     /// </summary>
     /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
-    /// <returns> Objeto que represeta o processo de login iniciado.</returns>
+    /// <returns> Objeto que representa o processo de login iniciado.</returns>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a obtenção do objeto de login e segredo.</exception>
     LoginProcess StartSharedAuth(out Byte[] secret);
