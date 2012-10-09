@@ -35,14 +35,14 @@ Servidor
 2) porta do barramento
 3) nome de entidade
 4) caminho para a chave privada
-5) tempo de espera entre cada tentativa de acesso ao barramento (em segundos e opcional - se não for fornecido, será 1)
+5) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos e opcional - se não for fornecido, será 1)
 
 Cliente
 1) host do barramento
 2) porta do barramento
 3) nome de entidade
 4) senha (opcional - se não for fornecida, será usado o nome de entidade)
-5) tempo de espera entre cada tentativa de acesso ao barramento (em segundos e opcional - se não for fornecido, será 1)
+5) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos e opcional - se não for fornecido, será 1)
 6) número máximo de tentativas de acesso ao barramento (opcional - se não for fornecido, será 10)
 
 
@@ -62,5 +62,5 @@ A demo deve ser executada na seguinte ordem:
 ----------- EXEMPLO -----------
 -------------------------------
 
-1) Server.exe localhost 2089 demo_dedicatedclock_csharp_server DemoDedicatedClock.key 2
-2) Client.exe localhost 2089 demo_dedicatedclock_csharp_client minhasenha 3 12
+1) Server.exe localhost 2089 demo_dedicatedclock_csharp_server DemoDedicatedClock.key 2000
+2) Client.exe localhost 2089 demo_dedicatedclock_csharp_client minhasenha 3000 12
