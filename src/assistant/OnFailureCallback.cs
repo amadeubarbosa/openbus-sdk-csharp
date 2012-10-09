@@ -44,4 +44,12 @@ namespace tecgraf.openbus.assistant {
   /// <param name="assistant">Assistente que chama a callback.</param>
   /// <param name="e">Objeto que descreve a falha ocorrida.</param>
   public delegate void OnFindFailure(Assistant assistant, Exception e);
+
+  /// <summary>
+  /// Callback de notificação de falhas capturadas pelo assistente durante a 
+  /// inicialização de autenticação compartilhada.
+  /// </summary>
+  /// <param name="assistant">Assistente que chama a callback.</param>
+  /// <param name="e">Objeto que descreve a falha ocorrida.</param>
+  public delegate void OnStartSharedAuthFailure(Assistant assistant, Exception e);
 }

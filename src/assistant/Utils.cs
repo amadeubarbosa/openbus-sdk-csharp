@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
@@ -38,14 +39,29 @@ namespace tecgraf.openbus.assistant {
 
     /// <summary>
     /// Filtra ofertas e retorna somente as que se encontram responsivas.
+    /// Qualquer erro encontrado ao tentar acessar uma oferta faz com que não
+    /// seja inclusa no conjunto retornado, inclusive erros NO_PERMISSION com
+    /// minor code NoLogin.
     /// </summary>
     /// <param name="offers">Ofertas a ser verificadas por responsividade.</param>
     /// <returns>Conjunto de ofertas responsivas no momento do teste.</returns>
     public static ServiceOfferDesc[] FilterWorkingOffers(
       IEnumerable<ServiceOfferDesc> offers) {
       OrbServices orb = OrbServices.GetSingleton();
-      return
-        offers.Where(offer => !orb.non_existent(offer.service_ref)).ToArray();
+      IList<ServiceOfferDesc> working = new List<ServiceOfferDesc>();
+      foreach (ServiceOfferDesc offerDesc in offers) {
+        try {
+          if (!orb.non_existent(offerDesc.service_ref)) {
+            working.Add(offerDesc);
+          }
+        }
+// ReSharper disable EmptyGeneralCatchClause
+        catch (Exception) {
+// ReSharper restore EmptyGeneralCatchClause
+          // não adiciona essa oferta
+        }
+      }
+      return working.ToArray();
     }
   }
 }

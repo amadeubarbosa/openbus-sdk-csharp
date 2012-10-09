@@ -102,6 +102,42 @@ namespace tecgraf.openbus.assistant {
     }
 
     /// <inheritdoc/>
+    public LoginProcess StartSharedAuth(out byte[] secret, int retries) {
+      do {
+        Exception caught;
+        try {
+          return _conn.StartSharedAuth(out secret);
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            caught = e;
+          }
+          else {
+            throw;
+          }
+        }
+        catch (Exception e) {
+          caught = e;
+        }
+        Logger.Error("Erro ao tentar iniciar uma autenticação compartilhada.", caught);
+        try {
+          Properties.StartSharedAuthFailureCallback(this, caught);
+        }
+        catch (Exception e) {
+          Logger.Error(
+            "Erro ao executar a callback de falha de inicialização de autenticação compartilhada fornecida pelo usuário.",
+            e);
+        }
+        if (retries > 0) {
+          Thread.Sleep(Properties.Interval * 1000);
+          retries--;
+        }
+      } while (retries != 0);
+      secret = null;
+      return null;
+    }
+
+    /// <inheritdoc/>
     public void Shutdown() {
       _lock.EnterWriteLock();
       try {

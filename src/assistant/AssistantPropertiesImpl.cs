@@ -14,11 +14,9 @@ namespace tecgraf.openbus.assistant {
     private readonly ORB _orb = OrbServices.GetSingleton();
     private OnLoginFailure _loginFailureCallback = OnLoginFailure;
     private OnRegisterFailure _registerFailureCallback = OnRegisterFailure;
-
-    private OnRemoveOfferFailure _removeOfferFailureCallback =
-      OnRemoveOfferFailure;
-
+    private OnRemoveOfferFailure _removeOfferFailureCallback = OnRemoveOfferFailure;
     private OnFindFailure _findFailureCallback = OnFindFailure;
+    private OnStartSharedAuthFailure _startSharedAuthFailureCallback = OnStartSharedAuthFailure;
 
     /// <inheritdoc/>
     public int Interval {
@@ -64,6 +62,11 @@ namespace tecgraf.openbus.assistant {
       set { _findFailureCallback = value; }
     }
 
+    public OnStartSharedAuthFailure StartSharedAuthFailureCallback {
+      get { return _startSharedAuthFailureCallback; }
+      set { _startSharedAuthFailureCallback = value; }
+    }
+
     /// <inheritdoc/>
     public LoginType Type { get; internal set; }
 
@@ -85,6 +88,10 @@ namespace tecgraf.openbus.assistant {
     }
 
     private static void OnFindFailure(Assistant assistant, Exception e) {
+      // não faz nada
+    }
+
+    private static void OnStartSharedAuthFailure (Assistant assistant, Exception e) {
       // não faz nada
     }
   }

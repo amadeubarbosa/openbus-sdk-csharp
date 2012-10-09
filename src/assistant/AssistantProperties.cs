@@ -78,6 +78,12 @@ namespace tecgraf.openbus.assistant {
     OnFindFailure FindFailureCallback { get; set; }
 
     /// <summary>
+    /// Callback que recebe notificações de falhas de inicializações de 
+    /// autenticação compartilhada realizadas pelo assistente.
+    /// </summary>
+    OnStartSharedAuthFailure StartSharedAuthFailureCallback { get; set; }
+
+    /// <summary>
     /// Tipo de login que será usado pelo assistente.
     /// </summary>
     LoginType Type { get; }
