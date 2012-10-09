@@ -185,9 +185,9 @@ namespace tecgraf.openbus.Test {
       lock (_context) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         Assert.IsNull(_context.OnCallDispatch);
-        CallDispatchCallback callback = new CallDispatchCallbackImpl(conn);
-        _context.OnCallDispatch = callback;
-        Assert.AreEqual(callback, _context.OnCallDispatch);
+        CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
+        _context.OnCallDispatch = callback.Dispatch;
+        Assert.AreEqual(callback.Dispatch, _context.OnCallDispatch);
         _context.OnCallDispatch = null;
         Assert.IsNull(_context.OnCallDispatch);
       }
@@ -210,7 +210,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(previous);
         Assert.AreEqual(_context.GetDefaultConnection(), conn);
         CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
-        _context.OnCallDispatch = callback;
+        _context.OnCallDispatch = callback.Dispatch;
         Assert.AreEqual(_context.GetDefaultConnection(), conn);
         _context.OnCallDispatch = null;
         Assert.IsTrue(conn.Logout());
@@ -267,7 +267,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(_context.GetCurrentConnection());
         _context.SetDefaultConnection(conn);
         CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
-        _context.OnCallDispatch = callback;
+        _context.OnCallDispatch = callback.Dispatch;
         Assert.AreEqual(_context.GetCurrentConnection(), conn);
         _context.SetCurrentConnection(conn);
         Assert.AreEqual(_context.GetCurrentConnection(), conn);

@@ -981,7 +981,7 @@ namespace tecgraf.openbus {
         while (originalInvalid.HasValue) {
           if (onInvalidLogin != null) {
             try {
-              onInvalidLogin.InvalidLogin(this, originalCopy);
+              onInvalidLogin(this, originalCopy);
             }
             catch (Exception e) {
               Logger.Warn("Callback OnInvalidLogin lançou exceção: ", e);

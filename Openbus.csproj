@@ -74,7 +74,6 @@
   <ItemGroup>
     <Compile Include="src\assistant\Assistant.cs" />
     <Compile Include="src\assistant\AssistantImpl.cs" />
-    <Compile Include="src\assistant\callbacks\AssistantOnInvalidLoginCallback.cs" />
     <Compile Include="src\assistant\Offeror.cs" />
     <Compile Include="src\assistant\AssistantProperties.cs" />
     <Compile Include="src\assistant\AssistantPropertiesImpl.cs" />

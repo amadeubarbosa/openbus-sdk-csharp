@@ -187,10 +187,10 @@ namespace tecgraf.openbus.interceptors {
           busId = credential.Credential.bus;
           loginId = credential.Credential.login;
         }
-        dispatcher = Context.OnCallDispatch.Dispatch(Context, busId, loginId,
-                                                     GetObjectUriForObjectKey(
-                                                       request.object_id),
-                                                     request.operation);
+        dispatcher = Context.OnCallDispatch(Context, busId, loginId,
+                                            GetObjectUriForObjectKey(
+                                              request.object_id),
+                                            request.operation);
       }
       return dispatcher ?? Context.GetDefaultConnection();
     }

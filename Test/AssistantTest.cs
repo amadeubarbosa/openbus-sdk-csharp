@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -136,11 +137,20 @@ namespace tecgraf.openbus.test {
       lock (_context) {
         bool failed = false;
         // cria com senha
-        new AssistantImpl(_hostName, _hostPort, new PasswordProperties(_entity, _password));
+        Assistant a1 = new AssistantImpl(_hostName, _hostPort, new PasswordProperties(_entity, _password));
+        a1.Shutdown();
+        // dá tempo do shutdown terminar
+        Thread.Sleep(1000);
         // cria com chave privada
-        new AssistantImpl(_hostName, _hostPort, new PrivateKeyProperties(_entity, _privKey));
+        a1 = new AssistantImpl(_hostName, _hostPort, new PrivateKeyProperties(_entity, _privKey));
+        a1.Shutdown();
+        // dá tempo do shutdown terminar
+        Thread.Sleep(1000);
         // cria com autenticação compartilhada
-        new AssistantImpl(_hostName, _hostPort, new SharedAuthProperties(StartSharedAuth));
+        a1 = new AssistantImpl(_hostName, _hostPort, new SharedAuthProperties(StartSharedAuth));
+        a1.Shutdown();
+        // dá tempo do shutdown terminar
+        Thread.Sleep(1000);
         // cria com uma implementação diferente
         try {
           new AssistantImpl(_hostName, _hostPort, new AssistantPropertiesMock());

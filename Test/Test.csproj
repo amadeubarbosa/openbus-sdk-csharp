@@ -72,7 +72,6 @@
     <Compile Include="OpenBusContextTest.cs" />
     <Compile Include="ConnectionTest.cs" />
     <Compile Include="HelloMock.cs" />
-    <Compile Include="InvalidLoginCallbackMock.cs" />
     <Compile Include="ORBInitializerTest.cs" />
     <Compile Include="PrivateKeyMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

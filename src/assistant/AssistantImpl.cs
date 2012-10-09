@@ -5,14 +5,15 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using scs.core;
-using tecgraf.openbus.assistant.callbacks;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.assistant {
   /// <inheritdoc/>
   public class AssistantImpl : Assistant {
-    private static readonly ILog Logger = LogManager.GetLogger(typeof(AssistantImpl));
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof (AssistantImpl));
 
     private readonly string _host;
     private readonly ushort _port;
@@ -32,8 +33,17 @@ namespace tecgraf.openbus.assistant {
     /// <param name="properties">Conjunto de parâmetros obrigatórios e 
     /// opcionais. Fornece também o método de autenticação a ser utilizado para
     /// efetuar login no barramento.</param>
+    /// <exception cref="ArgumentException">Caso o parâmetro properties não 
+    /// seja uma instância de PasswordProperties, PrivateKeyProperties ou 
+    /// SharedAuthProperties.</exception>
     public AssistantImpl(string host, ushort port,
                          AssistantProperties properties) {
+      if ((properties as PasswordProperties == null) &&
+          (properties as PrivateKeyProperties == null) &&
+          (properties as SharedAuthProperties == null)) {
+        throw new ArgumentException(
+          "O parâmetro properties deve ser uma instância de PasswordProperties, PrivateKeyProperties ou SharedAuthProperties.");
+      }
       OpenBusContext context = ORBInitializer.Context;
       _lock = new ReaderWriterLockSlim();
       Orb = context.ORB;
@@ -47,11 +57,11 @@ namespace tecgraf.openbus.assistant {
                                                         ConnectionProperties);
       context.SetDefaultConnection(_conn);
       // adiciona callback de login inválido
-      _conn.OnInvalidLogin = new AssistantOnInvalidLoginCallback(this);
+      _conn.OnInvalidLogin = InvalidLogin;
       // lança a thread que faz o login inicial
       Thread t =
         new Thread(
-          () => _conn.OnInvalidLogin.InvalidLogin(_conn, new LoginInfo()))
+          () => _conn.OnInvalidLogin(_conn, new LoginInfo()))
         {IsBackground = true};
       t.Start();
     }
@@ -119,7 +129,8 @@ namespace tecgraf.openbus.assistant {
         catch (Exception e) {
           caught = e;
         }
-        Logger.Error("Erro ao tentar iniciar uma autenticação compartilhada.", caught);
+        Logger.Error("Erro ao tentar iniciar uma autenticação compartilhada.",
+                     caught);
         try {
           Properties.StartSharedAuthFailureCallback(this, caught);
         }
@@ -208,6 +219,75 @@ namespace tecgraf.openbus.assistant {
         }
       } while (retries != 0);
       return new ServiceOfferDesc[0];
+    }
+
+    private void InvalidLogin(Connection conn, LoginInfo login) {
+      bool succeeded = false;
+      while (!succeeded) {
+        // remove todas as ofertas locais
+        foreach (KeyValuePair<IComponent, Offeror> pair in Offers) {
+          pair.Value.Reset();
+        }
+        Exception caught = null;
+        try {
+          switch (Properties.Type) {
+            case LoginType.Password:
+              PasswordProperties passwordProps = (PasswordProperties) Properties;
+              conn.LoginByPassword(passwordProps.Entity, passwordProps.Password);
+              break;
+            case LoginType.PrivateKey:
+              PrivateKeyProperties privKeyProps =
+                (PrivateKeyProperties) Properties;
+              conn.LoginByCertificate(privKeyProps.Entity,
+                                      privKeyProps.PrivateKey);
+              break;
+            case LoginType.SharedAuth:
+              SharedAuthProperties saProps = (SharedAuthProperties) Properties;
+              byte[] secret;
+              LoginProcess lp = saProps.Callback.Invoke(out secret);
+              conn.LoginBySharedAuth(lp, secret);
+              break;
+          }
+          succeeded = true;
+        }
+        catch (AlreadyLoggedInException e) {
+          caught = e;
+          succeeded = true;
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor == NoLoginCode.ConstVal) {
+            caught = e;
+          }
+          else {
+            // provavelmente é um buug, então deixa estourar
+            throw;
+          }
+        }
+        catch (Exception e) {
+          // passa qualquer erro para a aplicação, menos erros que pareçam bugs do SDK
+          caught = e;
+        }
+        if (succeeded) {
+          // Se houve exceção recebida e foi AlreadyLoggedIn, já existe uma thread tentando registrar as ofertas
+          if ((caught as AlreadyLoggedInException) == null) {
+            // Inicia o processo de re-registro das ofertas
+            foreach (KeyValuePair<IComponent, Offeror> pair in Offers) {
+              pair.Value.Activate();
+            }
+          }
+        }
+        else {
+          try {
+            Properties.LoginFailureCallback(this, caught);
+          }
+          catch (Exception e) {
+            Logger.Error(
+              "Erro ao executar a callback de falha de login fornecida pelo usuário.",
+              e);
+          }
+          Thread.Sleep(Properties.Interval * 1000);
+        }
+      }
     }
   }
 }

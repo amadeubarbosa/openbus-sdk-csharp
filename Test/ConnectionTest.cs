@@ -462,7 +462,7 @@ namespace tecgraf.openbus.Test {
         CallDispatchCallbackImpl dispatchCallback = new CallDispatchCallbackImpl(conn);
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password);
-        _context.OnCallDispatch = dispatchCallback;
+        _context.OnCallDispatch = dispatchCallback.Dispatch;
         Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.BusId);
         Assert.IsNull(conn.Login);
@@ -500,8 +500,7 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.OnInvalidLogin);
-        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login,
-                                                                     _password);
+        InvalidLoginCallback callback = InvalidLogin;
         conn.OnInvalidLogin = callback;
         Assert.AreEqual(callback, conn.OnInvalidLogin);
       }
@@ -519,9 +518,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(conn.Login);
         LoginInfo firstLogin = new LoginInfo(conn.Login.Value.id,
                                              conn.Login.Value.entity);
-        InvalidLoginCallback callback = new InvalidLoginCallbackMock(_login,
-                                                                     _password);
-        conn.OnInvalidLogin = callback;
+        conn.OnInvalidLogin = InvalidLogin;
         _context.SetDefaultConnection(conn);
         IComponent busIC = RemotingServices.Connect(
           typeof (IComponent),
@@ -562,6 +559,11 @@ namespace tecgraf.openbus.Test {
         size = ((OpenBusContextImpl)_context).GetConnectionsMapSize();
       }
       Assert.AreEqual(0, size, "Número de conexões no contexto ao final dos testes não é zero, é " + size + ".");
+    }
+
+    private void InvalidLogin(Connection conn, LoginInfo login) {
+      CallbackCalled = true;
+      conn.LoginByPassword(_login, _password);
     }
   }
 }

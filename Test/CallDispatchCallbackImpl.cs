@@ -1,5 +1,5 @@
 ﻿namespace tecgraf.openbus.test {
-  public class CallDispatchCallbackImpl : CallDispatchCallback {
+  public class CallDispatchCallbackImpl {
     private readonly Connection _conn;
 
     public CallDispatchCallbackImpl(Connection conn) {
