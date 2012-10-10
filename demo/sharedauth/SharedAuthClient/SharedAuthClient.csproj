@@ -44,9 +44,6 @@
     <Reference Include="Openbus.Demo.Hello.Idl">
       <HintPath>..\..\..\lib\Openbus.Demo.Hello.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Demo.SharedAuth.Idl">
-      <HintPath>..\..\..\lib\Openbus.Demo.SharedAuth.Idl.dll</HintPath>
-    </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>

@@ -4,7 +4,6 @@ using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
-using omg.org.IOP;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -36,25 +35,12 @@ namespace demo {
         conn.LoginByPassword(entity, password);
 
         // Obtém os dados para uma autenticação compartilhada
-        CodecFactory factory =
-          OrbServices.GetSingleton().resolve_initial_references("CodecFactory")
-          as
-          CodecFactory;
-        if (factory != null) {
-          Codec codec =
-            factory.create_codec(
-              new omg.org.IOP.Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
-          byte[] secret;
-          LoginProcess login = conn.StartSharedAuth(out secret);
-          // Escreve os dados da autenticação compartilhada em um arquivo
-          EncodedSharedAuth sharedAuth = new EncodedSharedAuth {
-                                                                 secret = secret,
-                                                                 attempt =
-                                                                   login as
-                                                                   MarshalByRefObject
-                                                               };
-          File.WriteAllBytes(loginFile, codec.encode_value(sharedAuth));
-        }
+        byte[] secret;
+        string loginIOR = context.ORB.object_to_string(conn.StartSharedAuth(out secret));
+
+        // Escreve os dados da autenticação compartilhada em um arquivo (talvez
+        // seja mais interessante para a aplicação trocar esses dados de outra forma)
+        File.WriteAllLines(loginFile, new []{Convert.ToBase64String(secret), loginIOR});
 
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
         // propriedade gerada automaticamente
