@@ -1,4 +1,4 @@
-A demo Shared Auth tenta demonstrar como se realiza o login por autenticação compartilhada. Um servidor fornece o servant da interface Hello e um cliente realiza uma chamada "sayHello" nesse servant. Além disso, esse cliente inicia o processo de login por autenticação, recebendo um objeto LoginProcess e um segredo, que codifica em CDR utilizando uma estrutura definida em IDL. Por fim, guarda essa informação codificada em um arquivo.
+A demo Shared Auth tenta demonstrar como se realiza o login por autenticação compartilhada. Um servidor fornece o servant da interface Hello e um cliente realiza uma chamada "sayHello" nesse servant. Além disso, esse cliente inicia o processo de login por autenticação, recebendo um objeto LoginProcess e um segredo, que codifica em um arquivo texto.
 
 Um outro cliente, que fará o login por autenticação compartilhada, lê então esse arquivo para obter o objeto LoginProcess e o segredo. De posse desses dados, consegue realizar o login, procurar pelo serviço Hello e realizar também uma chamada "sayHello", com a mesma entidade mas um identificador de login diferente.
 
@@ -24,7 +24,6 @@ Cliente:
 IIOPChannel.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
-OpenBus.Demo.SharedAuth.Idl.dll
 OpenBus.Idl
 Scs.Core.dll
 
@@ -33,7 +32,6 @@ Cliente SharedAuth:
 IIOPChannel.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
-OpenBus.Demo.SharedAuth.Idl.dll
 OpenBus.Idl
 Scs.Core.dll
 

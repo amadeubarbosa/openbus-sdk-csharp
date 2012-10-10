@@ -31,7 +31,12 @@ namespace demo {
       string loginIOR = assistant.ORB.object_to_string(assistant.StartSharedAuth(out secret, 10));
 
       // Escreve os dados da autenticação compartilhada em um arquivo (talvez
-      // seja mais interessante para a aplicação trocar esses dados de outra forma)
+      // seja mais interessante para a aplicação trocar esses dados de outra
+      // forma. No mínimo, essas informações deveriam ser encriptadas. Além 
+      // disso, escreveremos apenas uma vez esses dados, que têm validade igual
+      // ao lease do login atual. Caso o cliente demore a executar, esses dados
+      // não funcionarão, portanto uma outra forma mais dinâmica seria mais
+      // eficaz. No entanto, isso foge ao escopo dessa demo)
       File.WriteAllLines(loginFile, new[] { Convert.ToBase64String(secret), loginIOR });
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
