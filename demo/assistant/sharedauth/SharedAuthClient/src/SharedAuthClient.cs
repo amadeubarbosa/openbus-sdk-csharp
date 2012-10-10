@@ -1,19 +1,22 @@
 ﻿using System;
+using System.IO;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
+using tecgraf.openbus;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
 namespace demo {
   internal static class SharedAuthClient {
+    private static string _loginFile;
+
     private static void Main(String[] args) {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      //TODO trocar por alguma forma comum de serializacao em c#
-      string loginFile = args[2];
+      _loginFile = args[2];
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
       Assistant assistant = new AssistantImpl(host, port,
@@ -108,7 +111,12 @@ namespace demo {
     }
 
     private static LoginProcess SharedAuthObtainer(out byte[] secret) {
-      throw new NotImplementedException();
+      // Lê o arquivo com o login process e o segredo (talvez seja mais 
+      // interessante para a aplicação trocar esses dados de outra forma)
+      OpenBusContext context = ORBInitializer.Context;
+      string[] data = File.ReadAllLines(_loginFile);
+      secret = Convert.FromBase64String(data[0]);
+      return (LoginProcess)context.ORB.string_to_object(data[1]);
     }
   }
 }

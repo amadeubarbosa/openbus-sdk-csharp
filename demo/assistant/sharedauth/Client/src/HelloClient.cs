@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
@@ -25,10 +26,13 @@ namespace demo {
                                               new PasswordProperties(entity,
                                                                      password));
 
-      //TODO mover código de shared auth para alguma forma comum de serialização em C#
       // inicia o processo de autenticação compartilhada e serializa os dados
       byte[] secret;
-      LoginProcess login = assistant.StartSharedAuth(out secret, 10);
+      string loginIOR = assistant.ORB.object_to_string(assistant.StartSharedAuth(out secret, 10));
+
+      // Escreve os dados da autenticação compartilhada em um arquivo (talvez
+      // seja mais interessante para a aplicação trocar esses dados de outra forma)
+      File.WriteAllLines(loginFile, new[] { Convert.ToBase64String(secret), loginIOR });
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       string helloIDLType = Repository.GetRepositoryID(typeof(Hello));
