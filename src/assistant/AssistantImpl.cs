@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using log4net;
@@ -46,7 +45,7 @@ namespace tecgraf.openbus.assistant {
       }
       OpenBusContext context = ORBInitializer.Context;
       _lock = new ReaderWriterLockSlim();
-      Orb = context.ORB;
+      ORB = context.ORB;
       _host = host;
       _port = port;
       _properties = properties;
@@ -164,23 +163,10 @@ namespace tecgraf.openbus.assistant {
     }
 
     /// <inheritdoc/>
-    public OrbServices Orb { get; private set; }
+    public OrbServices ORB { get; private set; }
 
     internal AssistantProperties Properties {
       get { return _properties; }
-    }
-
-    internal ConcurrentDictionary<IComponent, Offeror> Offers {
-      get {
-        // retorna uma cópia
-        _lock.EnterReadLock();
-        try {
-          return new ConcurrentDictionary<IComponent, Offeror>(_offers);
-        }
-        finally {
-          _lock.ExitReadLock();
-        }
-      }
     }
 
     private ServiceOfferDesc[] Find(ServiceProperty[] properties, int retries,
@@ -225,8 +211,14 @@ namespace tecgraf.openbus.assistant {
       bool succeeded = false;
       while (!succeeded) {
         // remove todas as ofertas locais
-        foreach (KeyValuePair<IComponent, Offeror> pair in Offers) {
-          pair.Value.Reset();
+        _lock.EnterWriteLock();
+        try {
+          foreach (KeyValuePair<IComponent, Offeror> pair in _offers) {
+            pair.Value.Reset();
+          }
+        }
+        finally {
+          _lock.ExitWriteLock();
         }
         Exception caught = null;
         try {
@@ -271,8 +263,14 @@ namespace tecgraf.openbus.assistant {
           // Se houve exceção recebida e foi AlreadyLoggedIn, já existe uma thread tentando registrar as ofertas
           if ((caught as AlreadyLoggedInException) == null) {
             // Inicia o processo de re-registro das ofertas
-            foreach (KeyValuePair<IComponent, Offeror> pair in Offers) {
-              pair.Value.Activate();
+            _lock.EnterWriteLock();
+            try {
+              foreach (KeyValuePair<IComponent, Offeror> pair in _offers) {
+                pair.Value.Activate();
+              }
+            }
+            finally {
+              _lock.ExitWriteLock();
             }
           }
         }
