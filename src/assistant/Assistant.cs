@@ -15,9 +15,10 @@ namespace tecgraf.openbus.assistant {
   ///   de login.
   /// - Busca de ofetas de serviço disponíveis no barramento.
   /// 
-  /// O assistente nunca lança exceções, pois todas as operações são realizadas
-  /// de forma assíncrona. Eventuais falhas nessas operações assíncronas são 
-  /// notificadas através de callbacks.
+  /// O assistente nunca lança exceções em operações assíncronas. Eventuais 
+  /// falhas são notificadas através de callbacks, em qualquer tipo de 
+  /// operação. Operações síncronas, no entanto, lançam a última exceção 
+  /// encontrada (devido ao parâmetro 'retries').
   /// </summary>
   public interface Assistant {
     /// <summary>

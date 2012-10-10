@@ -92,7 +92,11 @@ namespace tecgraf.openbus.assistant {
             return _offers[component].Properties;
           }
         }
-        return null;
+        //TODO avaliar melhor se seria interessante lançar alguma exceção mais específica aqui.
+        const string err =
+          "O componente fornecido não estava registrado ou houve um problema para removê-lo.";
+        Logger.Error(err);
+        throw new ArgumentException(err);
       }
       finally {
         _lock.ExitWriteLock();
@@ -142,9 +146,17 @@ namespace tecgraf.openbus.assistant {
           Thread.Sleep(Properties.Interval);
           retries--;
         }
+        else {
+          Logger.Warn(
+            "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
+          throw caught;
+        }
       } while (retries != 0);
-      secret = null;
-      return null;
+      // não é possível chegar aqui, código existe apenas para remover erro de compilação. Se chegar, sinaliza que há um erro na implementação.
+      const string err =
+        "Erro interno do OpenBus. A inicialização de autenticação compartilhada deveria ter funcionado ou lançado uma exceção diferente.";
+      Logger.Error(err);
+      throw new OpenBusInternalException(err);
     }
 
     /// <inheritdoc/>
@@ -203,8 +215,17 @@ namespace tecgraf.openbus.assistant {
           Thread.Sleep(Properties.Interval);
           retries--;
         }
+        else {
+          Logger.Warn(
+            "Número de tentativas esgotado ao tentar encontrar serviços. A última exceção recebida será lançada.");
+          throw caught;
+        }
       } while (retries != 0);
-      return new ServiceOfferDesc[0];
+      // não é possível chegar aqui, código existe apenas para remover erro de compilação. Se chegar, sinaliza que há um erro na implementação.
+      const string err =
+        "Erro interno do OpenBus. A busca deveria ter funcionado ou lançado uma exceção diferente.";
+      Logger.Error(err);
+      throw new OpenBusInternalException(err);
     }
 
     private void InvalidLogin(Connection conn, LoginInfo login) {
