@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -11,6 +10,9 @@ using tecgraf.openbus.exceptions;
 namespace tecgraf.openbus.assistant {
   /// <inheritdoc/>
   public class AssistantImpl : Assistant {
+
+    #region Private Fields
+
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (AssistantImpl));
 
@@ -18,8 +20,11 @@ namespace tecgraf.openbus.assistant {
     private readonly ushort _port;
     private readonly AssistantProperties _properties;
     private readonly Connection _conn;
-    private readonly IDictionary<IComponent, Offeror> _offers;
-    private readonly ReaderWriterLockSlim _lock;
+    private readonly Offeror _offeror;
+
+    #endregion
+
+    #region Constructor
 
     /// <summary>
     /// Cria um assistente que efetua login no barramento utilizando o método 
@@ -44,12 +49,11 @@ namespace tecgraf.openbus.assistant {
           "O parâmetro properties deve ser uma instância de PasswordProperties, PrivateKeyProperties ou SharedAuthProperties.");
       }
       OpenBusContext context = ORBInitializer.Context;
-      _lock = new ReaderWriterLockSlim();
       ORB = context.ORB;
       _host = host;
       _port = port;
       _properties = properties;
-      _offers = new Dictionary<IComponent, Offeror>();
+      _offeror = new Offeror(this);
       // cria conexão e seta como padrão
       _conn = ORBInitializer.Context.CreateConnection(_host, _port,
                                                       properties.
@@ -65,42 +69,28 @@ namespace tecgraf.openbus.assistant {
       t.Start();
     }
 
+    #endregion
+
+    #region Assistant Interface
+
     /// <inheritdoc/>
     public void RegisterService(IComponent component,
                                 ServiceProperty[] properties) {
-      Offeror offeror = new Offeror(component, properties, this);
-      _lock.EnterWriteLock();
-      try {
-        _offers.Add(component, offeror);
-      }
-      finally {
-        _lock.ExitWriteLock();
-      }
+      _offeror.AddOffer(component, properties);
       // se não tiver login, próxima chamada à callback de login inválido vai relogar e registrar essa oferta
       if (_conn.Login.HasValue) {
-        offeror.Activate();
+        _offeror.Activate();
       }
     }
 
     /// <inheritdoc/>
-    public ServiceProperty[] UnregisterService(IComponent component) {
-      _lock.EnterWriteLock();
-      try {
-        if (_offers.ContainsKey(component)) {
-          _offers[component].Cancel();
-          if (_offers.Remove(component)) {
-            return _offers[component].Properties;
-          }
-        }
-        //TODO avaliar melhor se seria interessante lançar alguma exceção mais específica aqui.
-        const string err =
-          "O componente fornecido não estava registrado ou houve um problema para removê-lo.";
-        Logger.Error(err);
-        throw new ArgumentException(err);
-      }
-      finally {
-        _lock.ExitWriteLock();
-      }
+    public void UnregisterService(IComponent component) {
+      _offeror.RemoveOffers(component);
+    }
+
+    /// <inheritdoc/>
+    public void UnregisterAll() {
+      _offeror.RemoveAllOffers();
     }
 
     /// <inheritdoc/>
@@ -143,13 +133,13 @@ namespace tecgraf.openbus.assistant {
             e);
         }
         if (retries > 0) {
-          Thread.Sleep(Properties.Interval);
           retries--;
-        }
-        else {
-          Logger.Warn(
-            "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
-          throw caught;
+          if (retries == 0) {
+            Logger.Warn(
+              "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
+            throw caught;
+          }
+          Thread.Sleep(Properties.Interval);
         }
       } while (retries != 0);
       // não é possível chegar aqui, código existe apenas para remover erro de compilação. Se chegar, sinaliza que há um erro na implementação.
@@ -161,21 +151,16 @@ namespace tecgraf.openbus.assistant {
 
     /// <inheritdoc/>
     public void Shutdown() {
-      _lock.EnterWriteLock();
-      try {
-        foreach (KeyValuePair<IComponent, Offeror> pair in _offers) {
-          pair.Value.Cancel();
-        }
-        _offers.Clear();
-      }
-      finally {
-        _lock.ExitWriteLock();
-      }
+      _offeror.Finish();
       _conn.Logout();
     }
 
     /// <inheritdoc/>
     public OrbServices ORB { get; private set; }
+
+    #endregion
+
+    #region Internal Methods
 
     internal AssistantProperties Properties {
       get { return _properties; }
@@ -212,8 +197,13 @@ namespace tecgraf.openbus.assistant {
             e);
         }
         if (retries > 0) {
-          Thread.Sleep(Properties.Interval);
           retries--;
+          if (retries == 0) {
+            Logger.Warn(
+              "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
+            throw caught;
+          }
+          Thread.Sleep(Properties.Interval);
         }
         else {
           Logger.Warn(
@@ -228,19 +218,15 @@ namespace tecgraf.openbus.assistant {
       throw new OpenBusInternalException(err);
     }
 
+    #endregion
+
+    #region OnInvalidLogin
+
     private void InvalidLogin(Connection conn, LoginInfo login) {
       bool succeeded = false;
       while (!succeeded) {
         // remove todas as ofertas locais
-        _lock.EnterWriteLock();
-        try {
-          foreach (KeyValuePair<IComponent, Offeror> pair in _offers) {
-            pair.Value.Reset();
-          }
-        }
-        finally {
-          _lock.ExitWriteLock();
-        }
+        _offeror.ResetAllOffers();
         Exception caught = null;
         try {
           switch (Properties.Type) {
@@ -281,19 +267,7 @@ namespace tecgraf.openbus.assistant {
           caught = e;
         }
         if (succeeded) {
-          // Se houve exceção recebida e foi AlreadyLoggedIn, já existe uma thread tentando registrar as ofertas
-          if ((caught as AlreadyLoggedInException) == null) {
-            // Inicia o processo de re-registro das ofertas
-            _lock.EnterWriteLock();
-            try {
-              foreach (KeyValuePair<IComponent, Offeror> pair in _offers) {
-                pair.Value.Activate();
-              }
-            }
-            finally {
-              _lock.ExitWriteLock();
-            }
-          }
+          _offeror.Activate();
         }
         else {
           try {
@@ -308,5 +282,7 @@ namespace tecgraf.openbus.assistant {
         }
       }
     }
+
+    #endregion
   }
 }

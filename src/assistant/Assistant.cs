@@ -52,9 +52,21 @@ namespace tecgraf.openbus.assistant {
     /// chamada.
     /// </summary>
     /// <param name="component">Referência do serviço a ser removido.</param>
-    /// <returns>Conjunto de propriedades do serviço removido ou null caso o 
-    /// serviço não esteja registrado no assistente.</returns>
-    ServiceProperty[] UnregisterService(IComponent component);
+    void UnregisterService(IComponent component);
+
+    /// <summary>
+    /// Solicita que o assistente remova todos os serviços registrados no 
+    /// barramento por ele.
+    /// 
+    /// Esse método notifica o assistente de que os serviços não devem mais ser
+    /// mantidos como ofertas de serviço válidas no barramento. As ofertas são
+    /// removidas de forma assíncrona e todas as tentativas de registro atuais
+    /// são canceladas.
+    /// 
+    /// Caso ocorram erros, a callback de tratamento de erro apropriada será
+    /// chamada.
+    /// </summary>
+    void UnregisterAll();
 
     /// <summary>
     /// Busca por ofertas que apresentem um conjunto de propriedades definido.
