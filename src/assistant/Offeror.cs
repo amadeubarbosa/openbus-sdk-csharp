@@ -138,6 +138,8 @@ namespace tecgraf.openbus.assistant {
           finally {
             _lock.ExitWriteLock();
           }
+          // força a troca de contexto
+          Thread.Sleep(1);
         }
       }
 

@@ -221,6 +221,7 @@ namespace tecgraf.openbus.Test {
         // tentativa de chamada sem current connection setado nem default connection
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetDefaultConnection());
+        Assert.IsNull(_context.GetCurrentConnection());
         bool failed = false;
         ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
         try {
@@ -333,7 +334,7 @@ namespace tecgraf.openbus.Test {
             new DefaultComponentContext(new ComponentId());
           component.AddFacet(facetName,
                              Repository.GetRepositoryID(typeof (Hello)),
-                             new HelloMock(conn));
+                             new HelloMock());
           Hello hello = component.GetFacetByName(facetName).Reference as Hello;
           Assert.IsNotNull(hello);
           hello.sayHello();

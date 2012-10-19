@@ -536,8 +536,8 @@ namespace tecgraf.openbus.Test {
           Assert.IsTrue(CallbackCalled);
           Assert.IsFalse(firstLogin.id.Equals(conn.Login.Value.id));
         }
-        catch (Exception) {
-          Assert.Fail("O login não foi refeito.");
+        catch (Exception e) {
+          Assert.Fail("O login não foi refeito. Erro: " + e);
         }
         finally {
           CallbackCalled = false;

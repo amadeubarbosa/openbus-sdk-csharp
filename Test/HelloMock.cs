@@ -3,22 +3,17 @@ using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.test {
   internal class HelloMock : MarshalByRefObject, Hello {
-    private readonly Connection _conn;
-
-    internal HelloMock(Connection conn) {
-      _conn = conn;
-    }
-
     public string sayHello() {
       CallerChain chain = ORBInitializer.Context.CallerChain;
       if (chain == null) {
         // cliente deve receber um CORBA::Unknown
         throw new NullReferenceException();
       }
-      if ((chain.BusId != _conn.BusId) ||
-          (!chain.Caller.id.Equals(_conn.Login.Value.id)) ||
+      Connection conn = ORBInitializer.Context.GetCurrentConnection();
+      if ((chain.BusId != conn.BusId) ||
+          (!chain.Caller.id.Equals(conn.Login.Value.id)) ||
           (chain.Originators.Length != 0) ||
-          (!chain.Target.Value.id.Equals(_conn.Login.Value.id))) {
+          (!chain.Target.Value.id.Equals(conn.Login.Value.id))) {
         // cliente deve receber um CORBA::Unknown
         throw new InvalidOperationException();
       }
