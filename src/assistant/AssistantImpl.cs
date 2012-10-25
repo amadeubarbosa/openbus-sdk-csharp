@@ -173,7 +173,7 @@ namespace tecgraf.openbus.assistant {
         Exception caught;
         try {
           return all
-                   ? context.OfferRegistry.getServices()
+                   ? context.OfferRegistry.getAllServices()
                    : context.OfferRegistry.findServices(properties);
         }
         catch (NO_PERMISSION e) {

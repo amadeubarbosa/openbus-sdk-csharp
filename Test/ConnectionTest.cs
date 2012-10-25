@@ -532,7 +532,7 @@ namespace tecgraf.openbus.Test {
         lr.invalidateLogin(conn.Login.Value.id);
         // faz uma chamada qualquer para refazer o login
         try {
-          _context.OfferRegistry.getServices();
+          _context.OfferRegistry.getAllServices();
           Assert.IsTrue(CallbackCalled);
           Assert.IsFalse(firstLogin.id.Equals(conn.Login.Value.id));
         }
