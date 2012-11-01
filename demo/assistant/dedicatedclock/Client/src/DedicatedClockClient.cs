@@ -21,7 +21,7 @@ namespace demo {
       byte[] password =
         new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
       int interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
-      int retries = Convert.ToInt32(args.Length > 5 ? args[5] : "10");
+      int retries = Convert.ToInt32(args.Length > 5 ? args[5] : "-1");
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação, respeitando um intervalo a cada tentativa.
       AssistantProperties assistantProps = new PasswordProperties(entity,

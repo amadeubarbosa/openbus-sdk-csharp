@@ -35,7 +35,7 @@ namespace demo {
       ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
       ServiceOfferDesc[] offers =
         Utils.FilterWorkingOffers(assistant.FindServices(
-          new[] {prop, autoProp}, 10));
+          new[] {prop, autoProp}, -1));
 
       // utiliza as ofertas encontradas
       bool failed = true;

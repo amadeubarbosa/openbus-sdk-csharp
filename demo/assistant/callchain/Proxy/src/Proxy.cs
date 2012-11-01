@@ -55,7 +55,7 @@ namespace demo {
                                                      "mensageiro real");
       Offers =
         Utils.FilterWorkingOffers(
-          _assistant.FindServices(new[] {autoProp, findProp, prop1}, 10));
+          _assistant.FindServices(new[] {autoProp, findProp, prop1}, -1));
 
       // Registra a própria oferta no barramento
       _assistant.RegisterService(ic, properties);

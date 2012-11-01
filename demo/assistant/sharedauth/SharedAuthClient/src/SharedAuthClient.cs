@@ -32,7 +32,7 @@ namespace demo {
                                                  "Demo SharedAuth");
       ServiceOfferDesc[] offers =
         Utils.FilterWorkingOffers(assistant.FindServices(
-          new[] { prop, autoProp }, 10));
+          new[] { prop, autoProp }, -1));
 
       // analiza as ofertas encontradas
       bool failed = true;

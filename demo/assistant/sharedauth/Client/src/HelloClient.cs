@@ -28,7 +28,7 @@ namespace demo {
 
       // inicia o processo de autenticação compartilhada e serializa os dados
       byte[] secret;
-      string loginIOR = assistant.ORB.object_to_string(assistant.StartSharedAuth(out secret, 10));
+      string loginIOR = assistant.ORB.object_to_string(assistant.StartSharedAuth(out secret, -1));
 
       // Escreve os dados da autenticação compartilhada em um arquivo (talvez
       // seja mais interessante para a aplicação trocar esses dados de outra
@@ -48,7 +48,7 @@ namespace demo {
       ServiceProperty prop = new ServiceProperty("offer.domain", "Demo SharedAuth");
       ServiceOfferDesc[] offers =
         Utils.FilterWorkingOffers(assistant.FindServices(
-          new[] { prop, autoProp }, 10));
+          new[] { prop, autoProp }, -1));
 
       // utiliza as ofertas encontradas
       bool failed = true;

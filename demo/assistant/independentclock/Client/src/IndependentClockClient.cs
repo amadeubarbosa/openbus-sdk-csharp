@@ -148,7 +148,7 @@ namespace demo {
       try {
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
         while (true) {
-          ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(_assistant.FindServices(_properties));
+          ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(_assistant.FindServices(_properties, -1));
           // analiza as ofertas encontradas
           bool foundClock = false;
           if (offers != null) {

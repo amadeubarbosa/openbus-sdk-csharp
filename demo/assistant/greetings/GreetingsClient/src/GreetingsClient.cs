@@ -53,7 +53,7 @@ namespace demo {
         properties = new[] {prop, autoProp1};
       }
       ServiceOfferDesc[] offers =
-        Utils.FilterWorkingOffers(assistant.FindServices(properties, 10));
+        Utils.FilterWorkingOffers(assistant.FindServices(properties, -1));
 
       // utiliza as ofertas encontradas
       if (offers != null) {
