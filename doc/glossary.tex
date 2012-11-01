@@ -1,0 +1,102 @@
+\section{Glossário}\label{sec:glossary}
+
+\subsection*{A}
+
+\begin{description}
+
+\item [API] \emph{Application Program Interface}. Interface de programação oferecida às aplicações que precisam acessar o barramento, seja para fazer ou receber chamadas através do barramento, ou acessar serviços oferecidos pelo barramento.
+
+\item[Autorização] Associação de uma interface IDL a uma entidade, indicando que processos autenticados como essa entidade possam oferecer serviços que implementem essa interface no Registro de Ofertas do barramento.
+
+\end{description}
+
+\subsection*{B}
+
+\begin{description}
+
+\item [Barramento] Toda infraestrutura oferecida pelo \openbus{} que permite fazer chamadas \corba{} com a identificação das entidades com que os processos que originaram a chamada foram autenticados.
+
+\item [Biblioteca de Acesso] Biblioteca de programação que implementa a API do \openbus{}.
+O projeto \openbus{} oferece implementações dessa biblioteca nas linguagens Lua, Java, C++ e C\#.
+
+\end{description}
+
+\subsection*{C}
+
+\begin{description}
+
+\item[Certificado] Chave pública que pode ser usado para autenticar uma
+dada entidade no barramento.
+
+\item [\corba{}] \emph{Common Object Request Broker Architecture}. Espeficiação de um padrão de ORB sobre a qual o OpenBus é definido e implementado.
+O \openbus{} pode ser visto como uma extensão do padrão \corba{}.
+
+\end{description}
+
+\subsection*{E}
+
+\begin{description}
+
+\item [Entidade] Qualquer coisa que pode ser autorizada a acessar o barramento. 
+Cada entidade possui um identificador único na forma de um nome. 
+Entidades podem ser usuários humanos de sistemas ou mesmo instalações de serviços específicos de aplicações.
+
+\end{description}
+
+\subsection*{I}
+
+\begin{description}
+
+\item [IDL] \emph{Interface Description Language}. Linguagem de descrição de tipos e interfaces de \corba{}.
+
+\item [IIOP.NET] Implementação de \orb em C\# utilizada pelas APIs do \openbus.
+
+\end{description}
+
+\subsection*{L}
+
+\begin{description}
+
+\item [Login] Representa uma autenticação de uma entidade junto ao barramento para poder acessá-lo.
+
+\item [Logout] Processo no qual o criador de um login o invalida, fazendo com que esse login não possa mais ser usado para acessar o barramento.
+
+\end{description}
+
+\subsection*{O}
+
+\begin{description}
+
+\item [Oferta de Serviço] Cadastro no Registro de Ofertas de um componente \scs{} que implementa um conjunto de interfaces autorizadas que representam um dado serviço a ser utilizado através do barramento.
+
+\item [\openbus{}] Nome deste projeto que define um barramento baseado em \corba{} para integração de aplicações corporativas multilinguagem.
+
+\end{description}
+
+\subsection*{P}
+
+\begin{description}
+
+\item [Propriedades da Oferta] Conjunto de pares nome e valor que descrevem uma oferta de serviço.
+
+\item [Protocolo] Conjunto de regras de comunicação para acesso ao barramento \openbus{}.
+
+\end{description}
+
+\subsection*{R}
+
+\begin{description}
+
+\item [Registro de Ofertas] Serviço núcleo do barramento que permite registrar e buscar ofertas de serviços no barramento.
+Esse serviço é disponibilizado através da API.
+
+\end{description}
+
+\subsection*{S}
+
+\begin{description}
+
+\item [\scs{}] \emph{Software Component System}. Modelo de componentes de software distribuído adotado pelo \openbus{}.
+Todos serviços ofertados no barramento devem ser modelados como componentes \scs{}.
+
+\end{description}
