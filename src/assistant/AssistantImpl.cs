@@ -125,7 +125,9 @@ namespace tecgraf.openbus.assistant {
         Logger.Error("Erro ao tentar iniciar uma autenticação compartilhada.",
                      caught);
         try {
-          Properties.StartSharedAuthFailureCallback(this, caught);
+          if (Properties.StartSharedAuthFailureCallback != null) {
+            Properties.StartSharedAuthFailureCallback(this, caught);
+          }
         }
         catch (Exception e) {
           Logger.Error(
@@ -189,7 +191,9 @@ namespace tecgraf.openbus.assistant {
         }
         Logger.Error("Erro ao tentar encontrar serviços.", caught);
         try {
-          Properties.FindFailureCallback(this, caught);
+          if (Properties.FindFailureCallback != null) {
+            Properties.FindFailureCallback(this, caught);
+          }
         }
         catch (Exception e) {
           Logger.Error(
@@ -271,7 +275,9 @@ namespace tecgraf.openbus.assistant {
         }
         else {
           try {
-            Properties.LoginFailureCallback(this, caught);
+            if (Properties.LoginFailureCallback != null) {
+              Properties.LoginFailureCallback(this, caught);
+            }
           }
           catch (Exception e) {
             Logger.Error(

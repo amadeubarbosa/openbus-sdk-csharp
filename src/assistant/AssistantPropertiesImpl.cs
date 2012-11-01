@@ -1,7 +1,4 @@
-﻿using System;
-using omg.org.CORBA;
-using scs.core;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+﻿using omg.org.CORBA;
 using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.assistant {
@@ -12,11 +9,6 @@ namespace tecgraf.openbus.assistant {
   public abstract class AssistantPropertiesImpl : AssistantProperties {
     private int _interval = 1000;
     private readonly OrbServices _orb = OrbServices.GetSingleton();
-    private OnLoginFailure _loginFailureCallback = OnLoginFailure;
-    private OnRegisterFailure _registerFailureCallback = OnRegisterFailure;
-    private OnRemoveOfferFailure _removeOfferFailureCallback = OnRemoveOfferFailure;
-    private OnFindFailure _findFailureCallback = OnFindFailure;
-    private OnStartSharedAuthFailure _startSharedAuthFailureCallback = OnStartSharedAuthFailure;
 
     /// <inheritdoc/>
     public int Interval {
@@ -39,60 +31,20 @@ namespace tecgraf.openbus.assistant {
     public ConnectionProperties ConnectionProperties { get; set; }
 
     /// <inheritdoc/>
-    public OnLoginFailure LoginFailureCallback {
-      get { return _loginFailureCallback; }
-      set { _loginFailureCallback = value; }
-    }
+    public OnLoginFailure LoginFailureCallback { get; set; }
 
     /// <inheritdoc/>
-    public OnRegisterFailure RegisterFailureCallback {
-      get { return _registerFailureCallback; }
-      set { _registerFailureCallback = value; }
-    }
+    public OnRegisterFailure RegisterFailureCallback { get; set; }
 
     /// <inheritdoc/>
-    public OnRemoveOfferFailure RemoveOfferFailureCallback {
-      get { return _removeOfferFailureCallback; }
-      set { _removeOfferFailureCallback = value; }
-    }
+    public OnRemoveOfferFailure RemoveOfferFailureCallback { get; set; }
 
     /// <inheritdoc/>
-    public OnFindFailure FindFailureCallback {
-      get { return _findFailureCallback; }
-      set { _findFailureCallback = value; }
-    }
+    public OnFindFailure FindFailureCallback { get; set; }
 
-    public OnStartSharedAuthFailure StartSharedAuthFailureCallback {
-      get { return _startSharedAuthFailureCallback; }
-      set { _startSharedAuthFailureCallback = value; }
-    }
+    public OnStartSharedAuthFailure StartSharedAuthFailureCallback { get; set; }
 
     /// <inheritdoc/>
     public LoginType Type { get; internal set; }
-
-    private static void OnLoginFailure(Assistant assistant, Exception e) {
-      // não faz nada
-    }
-
-    private static void OnRegisterFailure(Assistant assistant,
-                                          IComponent component,
-                                          ServiceProperty[] props, Exception e) {
-      // não faz nada
-    }
-
-    private static void OnRemoveOfferFailure(Assistant assistant,
-                                             IComponent component,
-                                             ServiceProperty[] props,
-                                             Exception e) {
-      // não faz nada
-    }
-
-    private static void OnFindFailure(Assistant assistant, Exception e) {
-      // não faz nada
-    }
-
-    private static void OnStartSharedAuthFailure (Assistant assistant, Exception e) {
-      // não faz nada
-    }
   }
 }

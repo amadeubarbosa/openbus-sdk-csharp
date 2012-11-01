@@ -221,8 +221,10 @@ namespace tecgraf.openbus.assistant {
         }
         if (!succeeded) {
           try {
-            _assistant.Properties.RegisterFailureCallback(_assistant, _ic,
-                                                          _properties, caught);
+            if (_assistant.Properties.RegisterFailureCallback != null) {
+              _assistant.Properties.RegisterFailureCallback(_assistant, _ic,
+                                                            _properties, caught);
+            }
           }
           catch (Exception e) {
             Logger.Error(
@@ -276,9 +278,11 @@ namespace tecgraf.openbus.assistant {
           if (!succeeded) {
             Logger.Error("Erro ao tentar remover uma oferta cancelada.");
             try {
-              _assistant.Properties.RemoveOfferFailureCallback(_assistant, _ic,
-                                                               _properties,
-                                                               caught);
+              if (_assistant.Properties.RemoveOfferFailureCallback != null) {
+                _assistant.Properties.RemoveOfferFailureCallback(_assistant, _ic,
+                                                                 _properties,
+                                                                 caught);
+              }
             }
             catch (Exception e) {
               Logger.Error(

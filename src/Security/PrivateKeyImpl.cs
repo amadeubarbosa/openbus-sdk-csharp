@@ -4,7 +4,7 @@ namespace tecgraf.openbus.security {
   /// <summary>
   /// Representação do OpenBus para chaves de acesso.
   /// </summary>
-  public class PrivateKeyImpl : PrivateKey {
+  internal class PrivateKeyImpl : PrivateKey {
     internal readonly AsymmetricCipherKeyPair Pair;
 
     /// <summary>
