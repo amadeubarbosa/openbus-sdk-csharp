@@ -10,7 +10,6 @@ using tecgraf.openbus.exceptions;
 namespace tecgraf.openbus.assistant {
   /// <inheritdoc/>
   public class AssistantImpl : Assistant {
-
     #region Private Fields
 
     private static readonly ILog Logger =
@@ -134,21 +133,17 @@ namespace tecgraf.openbus.assistant {
             "Erro ao executar a callback de falha de inicialização de autenticação compartilhada fornecida pelo usuário.",
             e);
         }
-        if (retries > 0) {
-          retries--;
-          if (retries == 0) {
-            Logger.Warn(
-              "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
-            throw caught;
-          }
-          Thread.Sleep(Properties.Interval);
+        if (retries == 0) {
+          Logger.Warn(
+            "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
+          throw caught;
         }
-      } while (retries != 0);
-      // não é possível chegar aqui, código existe apenas para remover erro de compilação. Se chegar, sinaliza que há um erro na implementação.
-      const string err =
-        "Erro interno do OpenBus. A inicialização de autenticação compartilhada deveria ter funcionado ou lançado uma exceção diferente.";
-      Logger.Error(err);
-      throw new OpenBusInternalException(err);
+        if (retries > 0) {
+          Logger.Debug("Erro ao tentar iniciar uma autenticação compartilhada. Uma nova tentativa será realizada.");
+          retries--;
+        }
+        Thread.Sleep(Properties.Interval);
+      } while (true);
     }
 
     /// <inheritdoc/>
@@ -200,26 +195,17 @@ namespace tecgraf.openbus.assistant {
             "Erro ao executar a callback de falha de busca fornecida pelo usuário.",
             e);
         }
-        if (retries > 0) {
-          retries--;
-          if (retries == 0) {
-            Logger.Warn(
-              "Número de tentativas esgotado ao tentar iniciar uma autenticação compartilhada. A última exceção recebida será lançada.");
-            throw caught;
-          }
-          Thread.Sleep(Properties.Interval);
-        }
-        else {
+        if (retries == 0) {
           Logger.Warn(
             "Número de tentativas esgotado ao tentar encontrar serviços. A última exceção recebida será lançada.");
           throw caught;
         }
-      } while (retries != 0);
-      // não é possível chegar aqui, código existe apenas para remover erro de compilação. Se chegar, sinaliza que há um erro na implementação.
-      const string err =
-        "Erro interno do OpenBus. A busca deveria ter funcionado ou lançado uma exceção diferente.";
-      Logger.Error(err);
-      throw new OpenBusInternalException(err);
+        if (retries > 0) {
+          Logger.Debug("Erro ao tentar encontrar serviços. Uma nova tentativa será realizada.");
+          retries--;
+        }
+        Thread.Sleep(Properties.Interval);
+      } while (true);
     }
 
     #endregion
