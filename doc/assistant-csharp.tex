@@ -377,7 +377,6 @@ Começaremos com uma implementação que apenas imprime localmente "Hello World!" p
   }
 \end{samplelisting}
 
-
 É interessante (mas não obrigatório) que um \emph{ProcessExit} seja instalado
  para garantir o término correto das conexões do \orb. Um exemplo pode ser
  conferido nos Códigos ~\ref{lst:processExit} e ~\ref{lst:hookinstall}.
@@ -391,6 +390,18 @@ static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
 
 \begin{samplelisting}[language=CSharp]{hookinstall}{Instalação de um \emph{EventHandler}}
 AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
+\end{samplelisting}
+
+Um outro detalhe importante é que, devido à forma como objetos do tipo "MarshalByRefObject" podem definir sua política de "tempo de vida", os \emph{servants} podem ser coletados pelo coletor de lixo mesmo ainda estando ativos e aguardando por chamadas. Isso pode ocorrer, por exemplo, caso não haja chamadas por um tempo. Para evitar esse tipo de comportamento e manter os \emph{servants} ativos indefinidamente, é necessário sobrescrever o método "InitializeLifetimeService" que indica quando o objeto deve ser coletado, como descrito no Código~\ref{lst:lifetime}. Isso deve ser feito em cada \emph{servant} implementado.
+
+\begin{samplelisting}[language=CSharp]{lifetime}{Implementação da faceta Hello sobrescrevendo o método InitializeLifetimeService}
+  public class HelloImpl : MarshalByRefObject, Hello {
+    ...
+
+    public  override object InitializeLifetimeService() {
+      return null;
+    }
+  }
 \end{samplelisting}
 
 Até este ponto, o servidor basicamente se autenticou ao barramento e registrou seu
