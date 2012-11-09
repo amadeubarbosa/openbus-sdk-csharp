@@ -1,52 +1,26 @@
 using System;
-using System.Text;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
-
-namespace Tecgraf.Openbus.Lease
-{
+namespace tecgraf.openbus.lease {
   /// <summary>
   /// Tarefa responsável por renovar o <i>lease</i> perante o serviço de 
   /// controle de acesso.
   /// </summary>
-  class RenewerTask
-  {
+  internal class RenewerTask {
     #region Fields
 
-    private static ILog logger = LogManager.GetLogger(typeof(RenewerTask));
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof (RenewerTask));
+
+    private readonly AutoResetEvent _autoEvent = new AutoResetEvent(false);
 
     /// <summary>
-    /// A credencial.
+    /// A conexão que deve ser mantida ativa.
     /// </summary>
-    private Credential credential;
-
-    /// <summary>
-    /// A faceta do serviço de controle de acesso provedora de <i>lease</i>.
-    /// </summary>
-    private ILeaseProvider leaseProvider;
-
-    /// <summary>
-    /// <i>Callback</i> usada para informar que a renovação de um <i>lease</i>
-    /// falhou.
-    /// </summary>
-    public LeaseExpiredCallback ExpiredCallback {
-      set { expiredCallback = value; }
-    }
-    private LeaseExpiredCallback expiredCallback;
-
-    /// <summary>
-    /// Indica se a <i>thread</i> deve continuar executando.
-    /// </summary>
-    private bool mustContinue;
-
-    #endregion
-
-    #region Constants
-
-    private const int DEFAULT_LEASE_TIME = 60;
+    private readonly WeakReference _conn;
 
     #endregion
 
@@ -55,14 +29,12 @@ namespace Tecgraf.Openbus.Lease
     /// <summary>
     /// Inicializa uma instância de renovação de <i>lease</i>.
     /// </summary>
-    /// <param name="credential">A credencial.</param>
-    /// <param name="provider">A faceta do serviço de controle de acesso 
-    /// provedora de <i>lease</i>.</param>
-    public RenewerTask(Credential credential, ILeaseProvider provider) {
-      this.credential = credential;
-      this.leaseProvider = provider;
-      this.expiredCallback = null;
-      this.mustContinue = true;
+    /// <param name="connection">A conexão que deve ser renovada.</param>
+    /// <param name="lease">O tempo de <i>lease</i>.</param>
+    public RenewerTask(Connection connection, int lease) {
+      Lease = lease;
+      ConnectionImpl conn = connection as ConnectionImpl;
+      _conn = new WeakReference(conn);
     }
 
     #endregion
@@ -73,44 +45,33 @@ namespace Tecgraf.Openbus.Lease
     /// Inicia a renovação de lease.
     /// </summary>
     public void Run() {
-      int newLease = DEFAULT_LEASE_TIME;
       try {
-        while (this.mustContinue) {
+        while (!_autoEvent.WaitOne(Lease * 1000)) {
           try {
-            bool ok = false;
-
-            try {
-              ok = this.leaseProvider.renewLease(this.credential, out newLease);
+            ConnectionImpl conn = _conn.Target as ConnectionImpl;
+            if (conn == null) {
+              break;
             }
-            catch (NO_PERMISSION) {
-              ok = false;
-            }
-
-            if (!ok) {
-              this.mustContinue = false;
-              logger.Warn("Falha na renovação da credencial.");
-              if (this.expiredCallback != null)
-                this.expiredCallback.Expired();
-            }
-            else {
-              StringBuilder msg = new StringBuilder();
-              msg.Append(DateTime.Now);
-              msg.Append(" - Lease renovado. Próxima renovação em ");
-              msg.Append(newLease + " segundos.");
-              logger.Debug(msg.ToString());
-            }
+            conn.Context.SetCurrentConnection(conn);
+            AccessControl ac = conn.Acs;
+            Lease = ac.renew();
+            Logger.Debug(
+              String.Format(
+                "{0} - Lease renovado. Próxima renovação em {1} segundos.",
+                DateTime.Now, Lease));
+          }
+          catch (NO_PERMISSION) {
+            Logger.Error(
+              "Impossível renovar a credencial pois a conexão não está logada no barramento.");
           }
           catch (AbstractCORBASystemException e) {
-            logger.Error("Erro ao tentar renovar o lease", e);
-          }
-
-          if (this.mustContinue) {
-            Thread.Sleep(newLease * 1000);
+            Logger.Error("Erro ao tentar renovar o lease", e);
           }
         }
+        Logger.Debug("Thread de renovação de login finalizada.");
       }
       catch (ThreadInterruptedException) {
-        logger.Debug("Lease Interrompido");
+        Logger.Warn("Lease Interrompido");
       }
     }
 
@@ -118,8 +79,10 @@ namespace Tecgraf.Openbus.Lease
     /// Solicita o fim da renovação do <i>lease</i>.
     /// </summary>
     public void Finish() {
-      this.mustContinue = false;
+      _autoEvent.Set();
     }
+
+    public int Lease { get; private set; }
 
     #endregion
   }

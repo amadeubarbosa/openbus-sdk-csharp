@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{2EE67AFC-23B8-421F-8106-3D4664ABC53D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proxy", "Proxy\Proxy.csproj", "{824290C7-A8D8-47E0-B252-51D16411EF47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{3B1ACD58-47E5-4659-A78D-6C91E8049B06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "utils\Utils.csproj", "{E5E41A19-E3B5-4E78-8ACD-B0C6F45E98F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2EE67AFC-23B8-421F-8106-3D4664ABC53D}.Debug|x86.ActiveCfg = Debug|x86
+		{2EE67AFC-23B8-421F-8106-3D4664ABC53D}.Debug|x86.Build.0 = Debug|x86
+		{2EE67AFC-23B8-421F-8106-3D4664ABC53D}.Release|x86.ActiveCfg = Release|x86
+		{2EE67AFC-23B8-421F-8106-3D4664ABC53D}.Release|x86.Build.0 = Release|x86
+		{824290C7-A8D8-47E0-B252-51D16411EF47}.Debug|x86.ActiveCfg = Debug|x86
+		{824290C7-A8D8-47E0-B252-51D16411EF47}.Debug|x86.Build.0 = Debug|x86
+		{824290C7-A8D8-47E0-B252-51D16411EF47}.Release|x86.ActiveCfg = Release|x86
+		{824290C7-A8D8-47E0-B252-51D16411EF47}.Release|x86.Build.0 = Release|x86
+		{3B1ACD58-47E5-4659-A78D-6C91E8049B06}.Debug|x86.ActiveCfg = Debug|x86
+		{3B1ACD58-47E5-4659-A78D-6C91E8049B06}.Debug|x86.Build.0 = Debug|x86
+		{3B1ACD58-47E5-4659-A78D-6C91E8049B06}.Release|x86.ActiveCfg = Release|x86
+		{3B1ACD58-47E5-4659-A78D-6C91E8049B06}.Release|x86.Build.0 = Release|x86
+		{E5E41A19-E3B5-4E78-8ACD-B0C6F45E98F6}.Debug|x86.ActiveCfg = Debug|x86
+		{E5E41A19-E3B5-4E78-8ACD-B0C6F45E98F6}.Debug|x86.Build.0 = Debug|x86
+		{E5E41A19-E3B5-4E78-8ACD-B0C6F45E98F6}.Release|x86.ActiveCfg = Release|x86
+		{E5E41A19-E3B5-4E78-8ACD-B0C6F45E98F6}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

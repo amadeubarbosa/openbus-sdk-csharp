@@ -1,31 +1,37 @@
 using log4net;
-using omg.org.IOP;
+using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v1_05.access_control_service;
+using tecgraf.openbus.core.v2_0.services.access_control;
 
-
-namespace Tecgraf.Openbus.Interceptors
-{
+namespace tecgraf.openbus.interceptors {
   /// <summary>
   /// Representa o interceptador cliente.
   /// Implementa PortableInterceptor.ClientRequestInterceptor.
   /// </summary>
-  internal class ClientInterceptor : InterceptorImpl, ClientRequestInterceptor
-  {
+  internal class ClientInterceptor : InterceptorImpl,
+                                     ClientRequestInterceptor {
     #region Fields
 
-    private static ILog logger = LogManager.GetLogger(typeof(ClientInterceptor));
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof (ClientInterceptor));
+
+    private static ClientInterceptor _instance;
+
+    internal int LoginSlotId;
 
     #endregion
 
     #region Contructor
 
     /// <summary>
-    /// Inicializa uma nova instância de OpenbusAPI.Interceptors.ClientInterceptor
+    /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardClientInterceptor
     /// </summary>
-    /// <param name="codec">Codificador</param>
-    public ClientInterceptor(Codec codec)
-      : base("ClientInterceptor", codec) {
+    private ClientInterceptor()
+      : base("ClientInterceptor") {
+    }
+
+    internal static ClientInterceptor Instance {
+      get { return _instance ?? (_instance = new ClientInterceptor()); }
     }
 
     #endregion
@@ -37,37 +43,36 @@ namespace Tecgraf.Openbus.Interceptors
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
-      logger.Debug("executando método: " + ri.operation);
-
-      /* Verifica se existe uma credencial para envio */
-      Openbus openbus = Openbus.GetInstance();
-      Credential credential = openbus.Credential;
-      if (string.IsNullOrEmpty(credential.identifier)) {
-        logger.Info("Sem Credencial!");
-        return;
+      if (!Context.IsCurrentThreadIgnored(ri)) {
+        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
+        if (conn != null) {
+          conn.SendRequest(ri);
+          return;
+        }
+        Logger.Error(
+          "Sem conexão ao barramento, impossível realizar a chamada remota.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
       }
+      Logger.Debug("O login está sendo ignorado para esta chamada.");
+    }
 
-      logger.Debug("Tem Credencial");
-
-      byte[] value = null;
-      try {
-        value = this.Codec.encode_value(credential);
+    /// <inheritdoc />
+    public void receive_exception(ClientRequestInfo ri) {
+      if (!Context.IsCurrentThreadIgnored(ri)) {
+        ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
+        if (conn != null) {
+          conn.ReceiveException(ri);
+          return;
+        }
+        Logger.Warn("Sem conexão ao barramento para receber uma exceção.");
       }
-      catch {
-        logger.Fatal("Erro na codificação da credencial.");
-      }
-      ServiceContext serviceContext = new ServiceContext(CONTEXT_ID, value);
-      ri.add_request_service_context(serviceContext, false);
+      Logger.Debug("O login está sendo ignorado para receber uma exceção.");
     }
 
     #endregion
 
     #region ClientRequestInterceptor Not Implemented
-
-    /// <inheritdoc />
-    public virtual void receive_exception(ClientRequestInfo ri) {
-      //Nada a ser feito;
-    }
 
     /// <inheritdoc />
     public virtual void receive_other(ClientRequestInfo ri) {
@@ -86,5 +91,15 @@ namespace Tecgraf.Openbus.Interceptors
 
     #endregion
 
+    private Connection GetCurrentConnection() {
+      Connection conn = Context.GetCurrentConnection();
+      if (conn == null) {
+        Logger.Error(
+          "Impossível retornar conexão corrente, pois não foi definida.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+      return conn;
+    }
   }
 }

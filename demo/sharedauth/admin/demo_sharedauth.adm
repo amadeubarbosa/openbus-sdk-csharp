@@ -1,0 +1,26 @@
+Category {
+  id = "openbus_demos",
+  name = "Categoria para demos do OpenBus",
+}
+
+Entity {
+  id = "demo_sharedauth_csharp_server",
+  category = "openbus_demos",
+  name = "Demo Shared Auth do SDK CSharp",
+}
+
+Certificate {
+  id = "demo_sharedauth_csharp_server",
+  certificate = "DemoSharedAuth.crt",
+}
+
+Interface {
+  id = "IDL:demo/Hello:1.0",
+}
+
+Grant {
+  id = "demo_sharedauth_csharp_server",
+  interfaces = {
+	"IDL:demo/Hello:1.0",
+  }
+}

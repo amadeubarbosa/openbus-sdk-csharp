@@ -1,0 +1,26 @@
+Category {
+  id = "openbus_demos",
+  name = "Categoria para demos do OpenBus",
+}
+
+Entity {
+  id = "demo_multiplexing_csharp",
+  category = "openbus_demos",
+  name = "Demo Multiplexing do SDK CSharp",
+}
+
+Certificate {
+  id = "demo_multiplexing_csharp",
+  certificate = "DemoMultiplexing.crt",
+}
+
+Interface {
+  id = "IDL:demo/Timer:1.0",
+}
+
+Grant {
+  id = "demo_multiplexing_csharp",
+  interfaces = {
+	"IDL:demo/Timer:1.0",
+  }
+}

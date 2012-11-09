@@ -1,26 +1,21 @@
-
 using System.Threading;
-using tecgraf.openbus.core.v1_05.access_control_service;
 
-
-namespace Tecgraf.Openbus.Lease
-{
+namespace tecgraf.openbus.lease {
   /// <summary>
   /// Classe responsável por renovar o <i>lease</i>.
   /// </summary>
-  class LeaseRenewer
-  {
+  internal class LeaseRenewer {
     #region Fields
 
     /// <summary>
     /// O renovador de lease.
     /// </summary>
-    private RenewerTask renewer;
+    private RenewerTask _renewer;
 
     /// <summary>
     /// A thread responsável por renovar o <i>lease</i>.
     /// </summary>
-    private Thread leaseThread;
+    private readonly Thread _leaseThread;
 
     #endregion
 
@@ -29,19 +24,12 @@ namespace Tecgraf.Openbus.Lease
     /// <summary>
     /// Inicializa um renovador de <i>lease</i>.
     /// </summary>
-    /// <param name="credential">A credencial correspondente ao <i>lease</i>.
-    /// </param>
-    /// <param name="leaseProvider">Faceta do serviço de controle de acesso.>
-    /// </param>
-    /// <param name="leaseExpiredCallback"><i>Callback</i> usada para informar 
-    /// que a renovaçãode um <i>lease</i> falhou.</param>
-    public LeaseRenewer(Credential credential, ILeaseProvider leaseProvider,
-      LeaseExpiredCallback leaseExpiredCallback) {
-      this.renewer = new RenewerTask(credential, leaseProvider);
-      this.leaseThread = new Thread(new ThreadStart(renewer.Run));
-      this.leaseThread.Name = "LeaseRenewer";
-      this.leaseThread.IsBackground = true;
-      this.renewer.ExpiredCallback = leaseExpiredCallback;
+    /// <param name="connection">A conexão que deve ser renovada.</param>
+    /// <param name="lease">O tempo de <i>lease</i>.</param>
+    public LeaseRenewer(Connection connection, int lease) {
+      _renewer = new RenewerTask(connection, lease);
+      _leaseThread = new Thread(_renewer.Run)
+                     {Name = "LeaseRenewer", IsBackground = true};
     }
 
     #endregion
@@ -49,27 +37,31 @@ namespace Tecgraf.Openbus.Lease
     #region Members
 
     /// <summary>
-    /// Define o observador do <i>lease</i>. 
-    /// </summary>
-    /// <param name="leaseExpiredCallback">O observador do <i>lease</i>.</param>
-    public void SetLeaseExpiredCallback(LeaseExpiredCallback leaseExpiredCallback) {
-      this.renewer.ExpiredCallback = leaseExpiredCallback;
-    }
-
-    /// <summary>
     /// Inicia uma renovação de <i>lease</i>.
     /// </summary>
     public void Start() {
-      this.leaseThread.Start();
+      _leaseThread.Start();
     }
 
     /// <summary>
     /// Solicita o fim da renovação do <i>lease</i>.
     /// </summary>
     public void Finish() {
-      this.renewer.Finish();
-      this.renewer = null;
-      this.leaseThread.Interrupt();
+      _renewer.Finish();
+      // Não devo dar join "em mim mesmo" para evitar deadlock
+      if (!Thread.CurrentThread.ManagedThreadId.Equals(_leaseThread.ManagedThreadId)) {
+        _leaseThread.Join();
+      }
+      _renewer = null;
+    }
+
+    public int Lease {
+      get {
+        if (_renewer != null) {
+          return _renewer.Lease;
+        }
+        return -1;
+      }
     }
 
     #endregion

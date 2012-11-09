@@ -8,8 +8,8 @@
     <ProjectGuid>{F7F4E7D6-0952-43B7-9468-A211E5153A15}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Tecgraf.Openbus</RootNamespace>
-    <AssemblyName>Openbus</AssemblyName>
+    <RootNamespace>tecgraf.openbus</RootNamespace>
+    <AssemblyName>OpenBus</AssemblyName>
     <StartupObject>
     </StartupObject>
     <FileUpgradeFlags>
@@ -19,7 +19,12 @@
     </UpgradeBackupLocation>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Openbus.snk</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <SccProjectName>Svn</SccProjectName>
+    <SccLocalPath>Svn</SccLocalPath>
+    <SccAuxPath>Svn</SccAuxPath>
+    <SccProvider>SubversionScc</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,6 +34,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\OpenBus.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,65 +46,80 @@
     <DocumentationFile>doc\Openbus.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="IIOPChannel, Version=1.9.1.0, Culture=neutral, PublicKeyToken=737d7ebb1cf8d684, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>lib\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="IIOPChannel">
       <HintPath>lib\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Idl, Version=1.5.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+    <Reference Include="OpenBus.Idl, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\generated\Openbus.Idl.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>lib\OpenBus.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Scs, Version=1.3.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\Scs.dll</HintPath>
+    <Reference Include="OpenBus.Legacy.Idl">
+      <HintPath>lib\OpenBus.Legacy.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Scs.Core, Version=1.3.0.0, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Scs.Core">
       <HintPath>lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\assistant\Assistant.cs" />
+    <Compile Include="src\assistant\AssistantImpl.cs" />
+    <Compile Include="src\assistant\Offeror.cs" />
+    <Compile Include="src\assistant\AssistantProperties.cs" />
+    <Compile Include="src\assistant\AssistantPropertiesImpl.cs" />
+    <Compile Include="src\assistant\OnFailureCallback.cs" />
+    <Compile Include="src\assistant\PasswordProperties.cs" />
+    <Compile Include="src\assistant\PrivateKeyProperties.cs" />
+    <Compile Include="src\assistant\SharedAuthProperties.cs" />
+    <Compile Include="src\assistant\Utils.cs" />
+    <Compile Include="src\CallDispatchCallback.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="src\Exception\OpenbusAlreadyInitialized.cs" />
-    <Compile Include="src\Exception\ACSLoginFailureException.cs" />
-    <Compile Include="src\Exception\ACSUnavailableException.cs" />
-    <Compile Include="src\Exception\InvalidCredentialException.cs" />
-    <Compile Include="src\Exception\OpenbusException.cs" />
-    <Compile Include="src\FaultToleranceManager.cs" />
-    <Compile Include="src\Interceptors\CachedCredentialValidatorServerInterceptor.cs" />
-    <Compile Include="src\Interceptors\ClientInitializer.cs" />
-    <Compile Include="src\Interceptors\ClientInterceptor.cs" />
-    <Compile Include="src\Interceptors\CredentialValidationPolicy.cs" />
-    <Compile Include="src\Interceptors\CredentialValidatorServerInterceptor.cs" />
-    <Compile Include="src\Interceptors\FTClientInterceptor.cs" />
-    <Compile Include="src\Interceptors\InterceptorImpl.cs" />
-    <Compile Include="src\Interceptors\ServerInitializer.cs" />
-    <Compile Include="src\Interceptors\ServerInterceptor.cs" />
-    <Compile Include="src\Lease\LeaseExpiredCallback.cs" />
-    <Compile Include="src\Lease\LeaseRenewer.cs" />
-    <Compile Include="src\Lease\RenewerTask.cs" />
-    <Compile Include="src\Openbus.cs" />
-    <Compile Include="src\Security\Crypto.cs" />
-    <Compile Include="src\Security\RSAPKCS8KeyFormatter.cs" />
-    <Compile Include="src\Utils\LRUCache.cs" />
+    <Compile Include="src\AnyCredential.cs" />
+    <Compile Include="src\caches\LoginCache.cs" />
+    <Compile Include="src\caches\LRUConcurrentDictionaryCache.cs" />
+    <Compile Include="src\CallerChain.cs" />
+    <Compile Include="src\CallerChainImpl.cs" />
+    <Compile Include="src\Connection.cs" />
+    <Compile Include="src\ConnectionImpl.cs" />
+    <Compile Include="src\ConnectionProperties.cs" />
+    <Compile Include="src\ConnectionPropertiesImpl.cs" />
+    <Compile Include="src\OpenBusContext.cs" />
+    <Compile Include="src\OpenBusContextImpl.cs" />
+    <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
+    <Compile Include="src\exceptions\InvalidPrivateKeyException.cs" />
+    <Compile Include="src\exceptions\InvalidLoginProcessException.cs" />
+    <Compile Include="src\exceptions\InvalidPropertyValueException.cs" />
+    <Compile Include="src\exceptions\OpenBusException.cs" />
+    <Compile Include="src\exceptions\OpenBusInternalException.cs" />
+    <Compile Include="src\interceptors\ClientInterceptor.cs" />
+    <Compile Include="src\interceptors\EffectiveProfile.cs" />
+    <Compile Include="src\interceptors\InterceptorImpl.cs" />
+    <Compile Include="src\interceptors\InterceptorsInitializer.cs" />
+    <Compile Include="src\interceptors\ServerInterceptor.cs" />
+    <Compile Include="src\interceptors\Session.cs" />
+    <Compile Include="src\interceptors\TicketsHistory.cs" />
+    <Compile Include="src\InvalidLoginCallback.cs" />
+    <Compile Include="src\lease\LeaseRenewer.cs" />
+    <Compile Include="src\lease\RenewerTask.cs" />
+    <Compile Include="src\ORBInitializer.cs" />
+    <Compile Include="src\PrivateKey.cs" />
+    <Compile Include="src\security\Crypto.cs" />
+    <Compile Include="src\security\PrivateKeyImpl.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -109,14 +130,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Openbus.snk" />
-    <None Include="Resources\ftConfigSchema.xsd">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Resources\Openbus.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

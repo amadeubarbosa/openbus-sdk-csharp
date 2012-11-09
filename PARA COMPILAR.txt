@@ -1,0 +1,19 @@
+IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.0.0 -r Scs.Core.dll -vtSkel OpenBus.Idl access_control.idl core.idl credential.idl offer_registry.idl
+
+IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.0.0 OpenBus.Demo.Hello.Idl hello.idl
+
+IDLToCLSCompiler.exe -snk ScsKey.snk -asmVersion 1.2.1.0 Scs.Core scs.idl auxiliar.idl
+(atualmente versao-do-scs é 1.2.1.0)
+
+IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.0.0 -r Scs.Core.dll -vtSkel OpenBus.Legacy.Idl access_control_service.idl core.idl fault_tolerance.idl registry_service.idl session_service.idl
+
+
+#####################
+para compilar com uma nova versão do IIOP.NET:
+- copiar as novas versões do IIOPChannel.dll (assinada - strong name), IDLPreprocessor.dll e IDLToCLSCompiler.exe
+- regerar Scs.Core.dll
+- regerar OpenBus.Idl.dll
+- regerar OpenBus.Demo.Hello.Idl.dll
+- recompilar projeto SCS com a nova Scs.Core.dll
+- recompilar projeto OpenBus com as novas dlls do scs e do openbus
+- recompilar projeto demo hello com todas as novas dlls

@@ -1,39 +1,38 @@
 using System;
 using omg.org.IOP;
+using tecgraf.openbus.core.v2_0.credential;
 
-
-namespace Tecgraf.Openbus.Interceptors
-{
+namespace tecgraf.openbus.interceptors {
   /// <summary>
   /// Implementa um interceptador.
   /// </summary>
-  internal class InterceptorImpl : omg.org.PortableInterceptor.Interceptor
-  {
-
+  internal class InterceptorImpl : omg.org.PortableInterceptor.Interceptor {
     #region Fields
-
-    /// <summary>
-    /// Representa a identificação do "service context" (contexto) utilizado
-    /// para transporte de credenciais em requisições de serviço.
-    /// </summary>
-    internal protected readonly int CONTEXT_ID = 1234;
 
     /// <summary>
     /// Fornece o nome do interceptador.
     /// </summary>
     public string Name {
-      get { return name; }
+      get { return _name; }
     }
-    private String name = String.Empty;
+
+    private readonly String _name = String.Empty;
 
     /// <summary>
     /// Fornece o objeto responsável pelo marshall/unmarshall de credenciais 
     /// para transporte/obtenção de contextos de requisições de servico.
     /// </summary>
-    public Codec Codec {
-      get { return codec; }
-    }
-    private Codec codec;
+    internal Codec Codec { get; set; }
+
+    internal OpenBusContextImpl Context;
+
+    /// <summary>
+    /// Representam a identificação dos "service contexts" (contextos) utilizados
+    /// para transporte de credenciais em requisições de serviço.
+    /// </summary>
+    protected const int ContextId = CredentialContextId.ConstVal;
+
+    protected const int PrevContextId = 1234;
 
     #endregion
 
@@ -43,10 +42,8 @@ namespace Tecgraf.Openbus.Interceptors
     /// Inicializa uma nova instância de OpenbusAPI.Interceptors.InterceptorImpl
     /// </summary>
     /// <param name="name">O nome do interceptador</param>
-    /// <param name="codec">Elemento codificador/decodificador</param>
-    public InterceptorImpl(String name, Codec codec) {
-      this.name = name;
-      this.codec = codec;
+    protected InterceptorImpl(String name) {
+      _name = name;
     }
 
     #endregion
