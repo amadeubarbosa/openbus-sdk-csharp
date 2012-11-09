@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -16,7 +15,6 @@ namespace tecgraf.openbus.interop.multiplexing {
     private const string Entity = "interop_multiplexing_csharp_server";
     private static PrivateKey _privateKey;
     private static IComponent _ic;
-    private static readonly IList<Connection> Conns = new List<Connection>();
 
     private static readonly ServiceProperty[] ServiceProperties =
       new[] {new ServiceProperty("offer.domain", "Interoperability Tests")};
@@ -43,16 +41,11 @@ namespace tecgraf.openbus.interop.multiplexing {
                                                         props);
       _connAtBus2 = context.CreateConnection(hostName, hostPort2, props);
 
-      Conns.Add(_conn1AtBus1);
-      Conns.Add(conn2AtBus1);
-      Conns.Add(conn3AtBus1);
-      Conns.Add(_connAtBus2);
-
       // create service SCS component
       ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
       ComponentContext component = new DefaultComponentContext(id);
       component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)),
-                         new HelloImpl(Conns));
+                         new HelloImpl());
       _ic = component.GetIComponent();
 
       // login to the bus

@@ -22,5 +22,9 @@ namespace tecgraf.openbus.interop.simple {
     }
 
     #endregion
+
+    public override object InitializeLifetimeService() {
+      return null;
+    }
   }
 }

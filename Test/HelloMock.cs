@@ -19,5 +19,9 @@ namespace tecgraf.openbus.test {
       }
       return "";
     }
+
+    public override object InitializeLifetimeService() {
+      return null;
+    }
   }
 }

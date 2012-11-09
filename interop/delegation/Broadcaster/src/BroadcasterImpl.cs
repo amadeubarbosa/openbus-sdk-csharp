@@ -47,5 +47,9 @@ namespace tecgraf.openbus.interop.delegation {
         _subscribers.Remove(user);
       }
     }
+
+    public override object InitializeLifetimeService() {
+      return null;
+    }
   }
 }

@@ -71,5 +71,9 @@ namespace demo {
     }
 
     #endregion
+
+    public override object InitializeLifetimeService() {
+      return null;
+    }
   }
 }

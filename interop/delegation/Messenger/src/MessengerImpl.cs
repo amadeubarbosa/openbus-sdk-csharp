@@ -57,5 +57,9 @@ namespace tecgraf.openbus.interop.delegation {
       }
       return ret + chain.Caller.entity;
     }
+
+    public override object InitializeLifetimeService() {
+      return null;
+    }
   }
 }

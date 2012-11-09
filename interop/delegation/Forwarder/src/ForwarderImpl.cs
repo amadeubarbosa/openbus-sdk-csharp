@@ -77,6 +77,10 @@ namespace tecgraf.openbus.interop.delegation {
       }
     }
 
+    public override object InitializeLifetimeService() {
+      return null;
+    }
+
     private class Forward {
       internal readonly CallerChain Chain;
       internal readonly string To;

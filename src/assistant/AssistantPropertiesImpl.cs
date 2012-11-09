@@ -42,6 +42,7 @@ namespace tecgraf.openbus.assistant {
     /// <inheritdoc/>
     public OnFindFailure FindFailureCallback { get; set; }
 
+    /// <inheritdoc/>
     public OnStartSharedAuthFailure StartSharedAuthFailureCallback { get; set; }
 
     /// <inheritdoc/>
