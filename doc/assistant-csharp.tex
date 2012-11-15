@@ -53,13 +53,11 @@
 \newcommand{\term}[1]{\textit{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
 
-\newcommand{\openbus}{\textsc{OpenBus }}
-\newcommand{\corba}{\textsc{CORBA }}
-\newcommand{\orb}{\textsc{ORB }}
-\newcommand{\scs}{\textsc{SCS }}
-\newcommand{\lua}{\textsc{Lua }}
-\newcommand{\oil}{\textsc{OiL }}
-\newcommand{\assistant}{\textsc{Assistant }}
+\newcommand{\openbus}{\textsc{OpenBus}}
+\newcommand{\corba}{\textsc{CORBA}}
+\newcommand{\orb}{\textsc{ORB}}
+\newcommand{\scs}{\textsc{SCS}}
+\newcommand{\assistant}{\textsc{Assistant}}
 \newcommand{\version}{2.0.0 }
 
 
@@ -103,29 +101,29 @@ Este documento é destinado aos usuários desenvolvedores de aplicações .NET que
 
 \begin{itemize}
   \item Linguagem de programação C\#.
-  \item \corba.
-  \item Modelo de Componentes \scs.
-  \item Conceitos básicos do \openbus.
+  \item \corba{}.
+  \item Modelo de Componentes \scs{}.
+  \item Conceitos básicos do \openbus{}.
 \end{itemize}
 
 A proposta do manual é capacitar o desenvolvedor, que atenda aos
 pré-requisitos do documento, a escrever serviços para o barramento
-\openbus dentro do escopo dessa API.
+\openbus{} dentro do escopo dessa API.
 
 
 \section {Escopo}
 
-Assistente, ou \assistant, é o nome que damos a uma abstração da biblioteca de acesso do
-\openbus. Ela visa a facilitar os recursos mais utilizados pelos
-clientes do barramento. Para atingir esse objetivo, o \assistant torna-se menos flexível que o
+Assistente, ou \assistant{}, é o nome que damos a uma abstração da biblioteca de acesso do
+\openbus{}. Ela visa a facilitar os recursos mais utilizados pelos
+clientes do barramento. Para atingir esse objetivo, o \assistant{} torna-se menos flexível que o
 uso direto da API básica, mas atende a maioria dos casos de uso
-envolvendo o barramento \openbus.
+envolvendo o barramento \openbus{}.
 
 
-\subsection{Aplicações do \assistant}
+\subsection{Aplicações do \assistant{}}
 
 As aplicações mais comuns, e as que são melhor implementadas usando
-o \assistant, têm o seguinte em comum:
+o \assistant{}, têm o seguinte em comum:
 
 \begin{itemize}
   \item Comunica-se com um único barramento.
@@ -146,10 +144,10 @@ mais serviços através destas ofertas. Um cliente, por outro lado,
 consulta o barramento por ofertas de serviços que deseja consumir.
 
 
-\subsection{O que o \assistant não faz}
+\subsection{O que o \assistant{} não faz}
 
 Por ser uma abstração mais simples e focada em um grupo de casos de
-uso, naturalmente o \assistant não consegue resolver todos os
+uso, naturalmente o \assistant{} não consegue resolver todos os
 problemas que a API básica (em cima da qual ele é implementado),
 consegue.
 
@@ -161,23 +159,23 @@ API básica:
   \item São necessárias múltiplas autenticações com um ou mais barramentos.
 \end{itemize}
 
-O \assistant recebe as informações de autenticação (como usuário,
+O \assistant{} recebe as informações de autenticação (como usuário,
 senha, chave privada, etc) em sua construção, assim
-como outras informações necessárias para o uso de \corba.
+como outras informações necessárias para o uso de \corba{}.
 
 Com essas informações ele se autentica ao barramento de forma assíncrona e 
 mantém válida essa autenticação, renovando-a quando expirar. Também é refeita a autenticação se a
 mesma ficar inválida por qualquer motivo, como por exemplo erros de rede temporários.
 
-A construção do \assistant não implica que a autenticação já tenha ocorrido com sucesso.
+A construção do \assistant{} não implica que a autenticação já tenha ocorrido com sucesso.
 Isso significa que métodos síncronos como "FindServices" podem falhar com a exceção NO\_PERMISSION\{NoLogin\} pelo
 fato de a aplicação não estar ainda autenticada no barramento. No entanto, alguns mecanismos são oferecidos para
 facilitar o tratamento desses erros, como veremos na próxima seção.
 
 
-\subsection{Vantagens de se utilizar o \assistant}
+\subsection{Vantagens de se utilizar o \assistant{}}
 
-Para as aplicações que estão no escopo do \assistant, o mesmo possui várias vantagens, dentre as principais:
+Para as aplicações que estão no escopo do \assistant{}, o mesmo possui várias vantagens, dentre as principais:
 
 \begin{itemize}
   \item Autenticação simplificada com o barramento.
@@ -187,33 +185,33 @@ Para as aplicações que estão no escopo do \assistant, o mesmo possui várias vant
 
 Como foi dito anteriormente, a autenticação ocorre de forma
 assíncrona. O mesmo ocorre com o registro de ofertas. Essa diferença
-entre o \assistant e a API básica é crucial para entender as
+entre o \assistant{} e a API básica é crucial para entender as
 vantagens de se usar o mesmo.
 
 O registro de ofertas ocorre de forma assíncrona e, se por qualquer
 motivo o registro se perder, como por perder a autenticação com o
-barramento, o \assistant automaticamente faz um novo registro da
+barramento, o \assistant{} automaticamente faz um novo registro da
 oferta. Assim, o usuário não precisa se preocupar com os vários casos
 de erro que possam acontecer num sistema distribuido para garantir
 que suas ofertas estarão sempre visíveis a outros serviços.
 
-Métodos síncronos  da API do \assistant, como por exemplo a busca de ofertas que tem um valor de retorno, em geral contam com um 
+Métodos síncronos  da API do \assistant{}, como por exemplo a busca de ofertas que tem um valor de retorno, em geral contam com um 
 parâmetro que indica quantas tentativas devem ser feitas, já para evitar que erros como NO\_PERMISSION\{NoLogin\} e outros precisem ser capturados.
-É possivel ainda definir um parâmetro opcional do \assistant que informa o tempo de espera entre as tentativas.
+É possivel ainda definir um parâmetro opcional do \assistant{} que informa o tempo de espera entre as tentativas.
 Essas e outras funcionalidades serão explicadas com mais detalhes neste documento em seções posteriores.
 
-Utilizando o \assistant precisamos nos preocupar apenas com o conceito da autenticação ao barramento, 
+Utilizando o \assistant{} precisamos nos preocupar apenas com o conceito da autenticação ao barramento, 
 já que apenas um barramento é utilizado. Caso a API básica fosse utilizada, teríamos de nos preocupar ainda 
 com o conceito de conexão ao barramento (para mais detalhes, consultar a documentação da API básica).
 
 
 \section{Preparação do Ambiente}
 
-O \openbus utiliza o mecanismo de interceptação de \corba no processo de controle
+O \openbus{} utiliza o mecanismo de interceptação de \corba{} no processo de controle
  de acesso aos serviços. Após a chamada de requisição de \emph{login} no
  barramento, todas as chamadas seguintes devem estar com a credencial de acesso
  anexada. Sendo assim, faz-se necessário a habilitação dos interceptadores
- frente ao \orb que será utilizado. No SDK C\# a comunicação será feira
+ frente ao \orb{} que será utilizado. No SDK C\# a comunicação será feira
  utilizando o IIOP.NET, e o SDK se encarregará de registrar os interceptadores
  em sua inicialização, não sendo necessária nenhuma ação por parte do usuário
  nesse aspecto.
@@ -221,13 +219,13 @@ O \openbus utiliza o mecanismo de interceptação de \corba no processo de control
 \subsection{Teste}
 
 Antes de começar a programação, é aconselhável que o usuário coloque em
- funcionamento a demo Hello que acompanha o pacote do \assistant. O correto funcionamento
+ funcionamento a demo Hello que acompanha o pacote do \assistant{}. O correto funcionamento
  da demo elimina uma série de possíveis problemas que o desenvolvedor possa
  enfrentar durante o seu projeto, como por exemplo: problemas de comunicação
  com o barramento, serviços básicos não disponíveis e ausência de bibliotecas
  externas.
 
-A demo Hello C\# do \assistant possui um executável servidor e outro cliente e pode ser executada de acordo com as instruções do arquivo README.txt que a acompanha.
+A demo Hello C\# do \assistant{} possui um executável servidor e outro cliente e pode ser executada de acordo com as instruções do arquivo README.txt que a acompanha.
 
 Após a execução do cliente, no terminal do processo servidor a seguinte
  mensagem deve ser exibida: "Hello <nome-da-entidade-cliente>!"
@@ -237,19 +235,19 @@ Após a execução do cliente, no terminal do processo servidor a seguinte
 
 \subsection{API}\label{api}
 
-Prover ou buscar serviços em um barramento \openbus usando o \assistant são tarefas bem
+Prover ou buscar serviços em um barramento \openbus{} usando o \assistant{} são tarefas bem
 simples. Para isso, precisamos construir uma instância da classe
-\assistant que nos proverá as funções necessárias para ofertar ou buscar
+\assistant{} que nos proverá as funções necessárias para ofertar ou buscar
 serviços no barramento.
 
 Em C\# instancia-se a classe "tecgraf.openbus.assistant.AssistantImpl" da interface "tecgraf.openbus.assistant.Assistant".
-Além dessa classe, a API do \assistant é composta pela classe utilitária e estática "tecgraf.openbus.assistant.Utils".
+Além dessa classe, a API do \assistant{} é composta pela classe utilitária e estática "tecgraf.openbus.assistant.Utils".
 
 No caso de aplicações do tipo servidor, que recebam chamadas, pode ser necessário o uso de mais uma classe: "tecgraf.openbus.ConnectionContext". 
-Em C\# essa classe é um \emph{singleton} pois ela representa o escopo das chamadas de um \orb, e o IIOP.NET não permite mais do que uma instância de \orb.
-Através dela, será possível obter a identidade do cliente ou cadeia de clientes de uma chamada. Para obter a instância \emph{singleton} tanto do \orb como da classe "ConnectionContext",
-devemos utilizar a classe estática "tecgraf.openbus.ORBInitializer". Essa classe é responsável por instanciar e configurar o \orb e o "ConnectionContext". No futuro, caso o IIOP.NET suporte 
-mais de uma instância de \orb, essa classe terá mais funcionalidades e será mais semelhante ao seus pares em outras linguagens suportadas pelo \openbus.
+Em C\# essa classe é um \emph{singleton} pois ela representa o escopo das chamadas de um \orb{}, e o IIOP.NET não permite mais do que uma instância de \orb{}.
+Através dela, será possível obter a identidade do cliente ou cadeia de clientes de uma chamada. Para obter a instância \emph{singleton} tanto do \orb{} como da classe "ConnectionContext",
+devemos utilizar a classe estática "tecgraf.openbus.ORBInitializer". Essa classe é responsável por instanciar e configurar o \orb{} e o "ConnectionContext". No futuro, caso o IIOP.NET suporte 
+mais de uma instância de \orb{}, essa classe terá mais funcionalidades e será mais semelhante ao seus pares em outras linguagens suportadas pelo \openbus{}.
 
 Nas próximas seções veremos o uso dessas classes em mais detalhes.
 
@@ -259,7 +257,7 @@ Basicamente há dois tipos de aplicações distribuídas. Uma que oferta serviços e 
  que consome serviços, sendo possível e natural uma aplicação híbrida que tanto
  oferte quanto consuma. Para ambos os tipos, a API do assistente tenta facilitar toda funcionalidade comum ou \emph{boilerplate}.
 
-O uso do Assistente será demonstrado com base na demo Hello do \assistant. Propositalmente esta é
+O uso do Assistente será demonstrado com base na demo Hello do \assistant{}. Propositalmente esta é
  uma demo muito simplória, que é composta de um processo cliente e outro
  servidor. O servidor oferta um serviço do tipo "Hello" num determinado
  barramento, enquanto que o cliente procura por este serviço no barramento e o
@@ -268,7 +266,7 @@ Posteriormente, alteraremos o exemplo para que imprima a frase "Hello <nome-da-e
 
 \subsubsection{Autenticação em um Barramento}
 
-O primeiro passo de qualquer aplicação que utilize um barramento \openbus através do \assistant é se autenticar. Atualmente existem três modos de autenticação:
+O primeiro passo de qualquer aplicação que utilize um barramento \openbus{} através do \assistant{} é se autenticar. Atualmente existem três modos de autenticação:
 
 \begin{itemize}
   \item Par usuário e senha.
@@ -290,7 +288,7 @@ No caso da autenticação via certificado, o responsável pelo serviço deve previam
 Um exemplo do código necessário para a autenticação em um barramento pode ser visto
  no Código~\ref{lst:autent}.
 
-\begin{samplelisting}[language=CSharp]{autent}{Autenticação em um Barramento}
+\begin{samplelisting}[language=Java]{autent}{Autenticação em um Barramento}
 string host = args[0];
 ushort port = Convert.ToUInt16(args[1]);
 string entity = args[2];
@@ -322,42 +320,43 @@ Uma instância que implemente a interface "tecgraf.openbus.PrivateKey" deve ser c
 
 Como vimos anteriormente, após a construção de "tecgraf.openbus.assistant.AssistantImpl", a autenticação não necessariamente já
 terá ocorrido, pois a mesma é feita assincronamente e pode se repetir
-indefinidamente, sem intervenção do usuário. O \assistant assume
+indefinidamente, sem intervenção do usuário. O \assistant{} assume
 que a aplicação pretende se manter autenticada por todo o tempo em que o
-\assistant se mantiver vivo. Por isso, qualquer erro que
-implique na perda de autenticação será tratado pelo \assistant, que tentará
+\assistant{} se mantiver vivo. Por isso, qualquer erro que
+implique na perda de autenticação será tratado pelo \assistant{}, que tentará
 se autenticar novamente até conseguir. Essa é uma das principais
-vantagens de se usar o \assistant.
+vantagens de se usar o \assistant{}.
 
 
 \subsubsection{Registro de Ofertas}
 
-O propósito principal do \assistant para um servidor é o de
-autenticar a um barramento \openbus e ofertar os serviços no Registro de Ofertas.
+O propósito principal do \assistant{} para um servidor é o de
+autenticar a um barramento \openbus{} e ofertar os serviços no Registro de Ofertas.
 
 Um serviço pode ser ofertado no barramento através de uma lista de propriedades e de uma referência a um
- componente \scs. A lista de propriedades pode ser utilizada para adicionar características para
+ componente \scs{}. A lista de propriedades pode ser utilizada para adicionar características para
  o serviço, a fim de facilitar a identificação por parte dos clientes.
 
-A arquitetura do Openbus é baseada no modelo de componentes \scs. Os serviços
+A arquitetura do Openbus é baseada no modelo de componentes \scs{}. Os serviços
  são de fato representados por componentes, que podem apresentar distintas
  facetas (interfaces). Sendo assim, o primeiro passo para o registro de um
  serviço é criar um componente que represente esse serviço. Maiores informações
- sobre a criação de componentes \scs podem ser obtidas nos tutoriais desse
+ sobre a criação de componentes \scs{} podem ser obtidas nos tutoriais desse
  projeto. Um exemplo de criação de componente pode ser visto no Código~\ref{lst:component}.
 
-\begin{samplelisting}[language=CSharp]{component}{Exemplo de criação de um componente \scs}
+\begin{samplelisting}[language=Java]{component}{Exemplo de criação de um componente \scs{}}
 // Cria o componente que conterá as facetas do servidor
 ComponentContext component = new DefaultComponentContext(new ComponentId("hello", 1, 0, 0, ".net"));
 
-// Cria a faceta Hello para o componente. A classe HelloImpl deve ser implementada de acordo com a especificação do serviço Hello.
+// Cria a faceta Hello para o componente.
+// A classe HelloImpl deve ser implementada de acordo com a especificação do serviço Hello.
 component.AddFacet("Hello", Repository.GetRepositoryID(typeof (Hello)), new HelloImpl());
 \end{samplelisting}
 
 A lista de propriedades referentes ao serviço deve ser descrita numa lista de estruturas do tipo "ServiceProperty". Um
  exemplo de registro de uma oferta pode ser conferido no Código~\ref{lst:registering}.
 
-\begin{samplelisting}[language=CSharp]{registering}{Registro de uma Oferta de Serviço}
+\begin{samplelisting}[language=Java]{registering}{Registro de uma Oferta de Serviço}
 // Define propriedades para a oferta de serviço a ser registrada no barramento
 IComponent ic = component.GetIComponent();
 ServiceProperty[] properties = new[] { new ServiceProperty("offer.domain", "Demo Hello") };
@@ -369,7 +368,7 @@ assistant.RegisterService(ic, properties);
 Para finalizar a implementação do nosso servidor, falta apenas implementarmos o serviço "Hello" de fato, representado pela classe "HelloImpl" em nosso exemplo.
 Começaremos com uma implementação que apenas imprime localmente "Hello World!" para qualquer chamada recebida. O código pode ser visto no Código~\ref{lst:hello}.
 
-\begin{samplelisting}[language=CSharp]{hello}{Implementação da faceta Hello}
+\begin{samplelisting}[language=Java]{hello}{Implementação da faceta Hello}
   public class HelloImpl : MarshalByRefObject, Hello {
     public void sayHello() {
       Console.WriteLine("Hello World!");
@@ -378,23 +377,23 @@ Começaremos com uma implementação que apenas imprime localmente "Hello World!" p
 \end{samplelisting}
 
 É interessante (mas não obrigatório) que um \emph{ProcessExit} seja instalado
- para garantir o término correto das conexões do \orb. Um exemplo pode ser
+ para garantir o término correto das conexões do \orb{}. Um exemplo pode ser
  conferido nos Códigos ~\ref{lst:processExit} e ~\ref{lst:hookinstall}.
 
-\begin{samplelisting}[language=CSharp]{processExit}{Exemplo de um \emph{ProcessExit}}
+\begin{samplelisting}[language=Java]{processExit}{Exemplo de um \emph{ProcessExit}}
 static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
   // Nesse exemplo "assistant" deve ser considerada uma variável global
   assistant.Shutdown();
 }
 \end{samplelisting}
 
-\begin{samplelisting}[language=CSharp]{hookinstall}{Instalação de um \emph{EventHandler}}
+\begin{samplelisting}[language=Java]{hookinstall}{Instalação de um \emph{EventHandler}}
 AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
 \end{samplelisting}
 
 Um outro detalhe importante é que, devido à forma como objetos do tipo "MarshalByRefObject" podem definir sua política de "tempo de vida", os \emph{servants} podem ser coletados pelo coletor de lixo mesmo ainda estando ativos e aguardando por chamadas. Isso pode ocorrer, por exemplo, caso não haja chamadas por um tempo. Para evitar esse tipo de comportamento e manter os \emph{servants} ativos indefinidamente, é necessário sobrescrever o método "InitializeLifetimeService" que indica quando o objeto deve ser coletado, como descrito no Código~\ref{lst:lifetime}. Isso deve ser feito em cada \emph{servant} implementado.
 
-\begin{samplelisting}[language=CSharp]{lifetime}{Implementação da faceta Hello sobrescrevendo o método InitializeLifetimeService}
+\begin{samplelisting}[language=Java]{lifetime}{Implementação da faceta Hello sobrescrevendo o método InitializeLifetimeService}
   public class HelloImpl : MarshalByRefObject, Hello {
     ...
 
@@ -423,7 +422,7 @@ busca e, de posse da oferta, a utilizaremos.
 
 Vejamos novamente a autenticação, mas desta vez de nosso cliente, no Código~\ref{lst:clientauth}.
 
-\begin{samplelisting}[language=CSharp]{clientauth}{Autenticação da Aplicação Cliente}
+\begin{samplelisting}[language=Java]{clientauth}{Autenticação da Aplicação Cliente}
 string host = args[0];
 ushort port = Convert.ToUInt16(args[1]);
 string entity = args[2];
@@ -433,7 +432,7 @@ Assistant assistant = new AssistantImpl(host, port, new PasswordProperties(entit
 \end{samplelisting}
 
 Como vimos, a instanciação da classe "tecgraf.openbus.assistant.AssistantImpl"
-coloca o \assistant em responsabilidade por nos autenticar ao
+coloca o \assistant{} em responsabilidade por nos autenticar ao
 barramento de forma assíncrona. Agora, nos resta fazer uso do Registro
 de Ofertas através dele. Para fazermos uma busca no
 barramento por serviços, utilizamos o método "FindServices".
@@ -441,13 +440,13 @@ barramento por serviços, utilizamos o método "FindServices".
 Para podermos fazer a busca, precisamos saber o que
 buscar. Sabemos que nosso serviço possui uma faceta chamada "Hello", e
 que o mesmo se autenticou no barramento com um nome de entidade específico. De posse dessas
-informações, podemos usar um método utilitário do \assistant que
+informações, podemos usar um método utilitário do \assistant{} que
 constrói uma lista de propriedades com essas duas propriedades. O nome
 desse método é "CreateFacetAndEntityProperties", da classe estática "tecgraf.openbus.assistant.Utils". De posse dessa
 lista de propriedades, podemos realizar a busca. Um exemplo pode ser conferido no
  Código~\ref{lst:clientsearch}. Opcionalmente, o método utilitário FilterWorkingOffers pode ser utilizado para a remoção de ofertas inválidas no momento de sua chamada.
 
-\begin{samplelisting}[language=CSharp]{clientsearch}{Busca por Ofertas de Serviço}
+\begin{samplelisting}[language=Java]{clientsearch}{Busca por Ofertas de Serviço}
 ServiceProperty[] properties = assistant.CreateFacetAndEntityProperties(
   "<nome-da-entidade-do-servidor>", "Hello");
 ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(assistant.FindServices(properties, -1));
@@ -465,18 +464,18 @@ tentativas em caso de falhas. Caso o número de re-tentativas se esgote, a última
 exceção recebida será lançada.
 
 Como visto anteriormente, a oferta de serviço contém uma referência para um
- componente \scs ou, mais especificamente, para sua faceta "IComponent". Como esse
+ componente \scs{} ou, mais especificamente, para sua faceta "IComponent". Como esse
  componente pode apresentar diversas facetas, o usuário deve obter a faceta que
  deseja utilizar. No exemplo há somente uma faceta além das facetas básicas do
- modelo \scs, chamada "Hello". A faceta recebida na oferta, "IComponent", oferece os
+ modelo \scs{}, chamada "Hello". A faceta recebida na oferta, "IComponent", oferece os
  métodos (\emph{getFacet} e \emph{getFacetByName}) para que o usuário possa
- obter um objeto \corba que represente a faceta desejada. De posse do objeto
- \corba, o usuário deve efetuar um \emph{typecast} para mapeá-lo para a interface
+ obter um objeto \corba{} que represente a faceta desejada. De posse do objeto
+ \corba{}, o usuário deve efetuar um \emph{typecast} para mapeá-lo para a interface
  desejada e, daí em diante, o programador estará apto a utilizar essa
  faceta/serviço.
 
-É importante notar que, apesar do \assistant ajudar no tratamento de erros das funcionalidades mais comuns,
-a aplicação deve tratar por conta própria os erros que podem ocorrer ao realizar chamadas \corba diretamente
+É importante notar que, apesar do \assistant{} ajudar no tratamento de erros das funcionalidades mais comuns,
+a aplicação deve tratar por conta própria os erros que podem ocorrer ao realizar chamadas \corba{} diretamente
 a um objeto remoto. As chamadas "getFacet" (ou "getFacetByName") e "sayHello" se enquadram nesse caso, portanto
 precisam do tratamento adequado. Como a operação precisa
 coordenar programas diferentes, rodando em arquiteturas e localidades
@@ -486,92 +485,92 @@ desconectado. O serviço pode também não estar mais funcionando corretamente, ou 
 fechado.
 
 Portanto, toda chamada remota deve estar protegida, de
-algum modo, por tratamentos de erros. O tratamento de erro em \corba
+algum modo, por tratamentos de erros. O tratamento de erro em \corba{}
 é feito através de exceções. A exceção "CORBA::TRANSIENT" significa
 que o serviço não conseguiu se comunicar com o outro ponto;
 "CORBA::COMM\_FAILURE" significa a mesma coisa, mas a conexão não
 conseguiu ser iniciada por algum motivo; "CORBA::OBJECT\_NOT\_EXIST" 
 significa que o serviço que deveria prover
-esse objeto \corba não possui esse objeto em sua memória, e
+esse objeto \corba{} não possui esse objeto em sua memória, e
 a sua referência deve ser descartada. Outras exceções herdam de
 "CORBA::SystemException". Um exemplo do tratamento de erros adequado pode ser visto no Código~\ref{lst:clientfacet}.
 
-\begin{samplelisting}[language=CSharp]{clientfacet}{Acesso à Faceta Desejada}
-      string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
-      bool failed = true;
-      if (offers != null) {
-        if (offers.Length < 1) {
-          Console.WriteLine("O serviço não se encontra no barramento.");
+\begin{samplelisting}[language=Java]{clientfacet}{Acesso à Faceta Desejada}
+string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
+bool failed = true;
+if (offers != null) {
+  if (offers.Length < 1) {
+    Console.WriteLine("O serviço não se encontra no barramento.");
+  }
+  else {
+    if (offers.Length > 1) {
+      Console.WriteLine("Existe mais de um serviço no barramento. Tentaremos encontrar um funcional.");
+    }
+    foreach (ServiceOfferDesc serviceOfferDesc in offers) {
+      Console.WriteLine("Testando uma das ofertas recebidas...");
+      try {
+        MarshalByRefObject helloObj =
+          serviceOfferDesc.service_ref.getFacet(helloIDLType);
+        if (helloObj == null) {
+          Console.WriteLine("Não foi possível encontrar uma faceta da interface esperada na oferta.");
+          continue;
+        }
+        Hello hello = helloObj as Hello;
+        if (hello == null) {
+          Console.WriteLine("A faceta encontrada na oferta não implementa a interface esperada.");
+          continue;
+        }
+        Console.WriteLine("Foi encontrada uma oferta com um serviço funcional.");
+        // utiliza o serviço
+        hello.sayHello();
+        failed = false;
+        break;
+      }
+      catch (TRANSIENT) {
+        Console.WriteLine("O serviço está inacessível.");
+      }
+      catch (COMM_FAILURE) {
+        Console.WriteLine("Falha de comunicação ao acessar o serviço.");
+      }
+      catch (NO_PERMISSION e) {
+        bool found = false;
+        string message = String.Empty;
+        switch (e.Minor) {
+          case NoLoginCode.ConstVal:
+            message = "Não há um login válido no momento para a entidade utilizada.";
+            found = true;
+            break;
+          case UnknownBusCode.ConstVal:
+            message = "O serviço sendo utilizado não está mais autenticado no barramento.";
+            found = true;
+            break;
+          case UnverifiedLoginCode.ConstVal:
+            message = "O serviço sendo utilizado não foi capaz de validar a chamada.";
+            found = true;
+            break;
+          case InvalidRemoteCode.ConstVal:
+            message = "A integração do serviço sendo utilizado com o barramento está incorreta.";
+            found = true;
+            break;
+        }
+        if (found) {
+          Console.WriteLine(message);
         }
         else {
-          if (offers.Length > 1) {
-            Console.WriteLine("Existe mais de um serviço no barramento. Tentaremos encontrar um funcional.");
-          }
-          foreach (ServiceOfferDesc serviceOfferDesc in offers) {
-            Console.WriteLine("Testando uma das ofertas recebidas...");
-            try {
-              MarshalByRefObject helloObj =
-                serviceOfferDesc.service_ref.getFacet(helloIDLType);
-              if (helloObj == null) {
-                Console.WriteLine("Não foi possível encontrar uma faceta da interface esperada na oferta.");
-                continue;
-              }
-              Hello hello = helloObj as Hello;
-              if (hello == null) {
-                Console.WriteLine("A faceta encontrada na oferta não implementa a interface esperada.");
-                continue;
-              }
-              Console.WriteLine("Foi encontrada uma oferta com um serviço funcional.");
-              // utiliza o serviço
-              hello.sayHello();
-              failed = false;
-              break;
-            }
-            catch (TRANSIENT) {
-              Console.WriteLine("O serviço está inacessível.");
-            }
-            catch (COMM_FAILURE) {
-              Console.WriteLine("Falha de comunicação ao acessar o serviço.");
-            }
-            catch (NO_PERMISSION e) {
-              bool found = false;
-              string message = String.Empty;
-              switch (e.Minor) {
-                case NoLoginCode.ConstVal:
-                  message = "Não há um login válido no momento para a entidade utilizada.";
-                  found = true;
-                  break;
-                case UnknownBusCode.ConstVal:
-                  message = "O serviço sendo utilizado não está mais autenticado no barramento.";
-                  found = true;
-                  break;
-                case UnverifiedLoginCode.ConstVal:
-                  message = "O serviço sendo utilizado não foi capaz de validar a chamada.";
-                  found = true;
-                  break;
-                case InvalidRemoteCode.ConstVal:
-                  message = "A integração do serviço sendo utilizado com o barramento está incorreta.";
-                  found = true;
-                  break;
-              }
-              if (found) {
-                Console.WriteLine(message);
-              }
-              else {
-                throw;
-              }
-            }
-          }
-          if (failed) {
-            Console.WriteLine("Não foi encontrada uma oferta com um serviço funcional.");
-          }
+          throw;
         }
       }
+    }
+    if (failed) {
+      Console.WriteLine("Não foi encontrada uma oferta com um serviço funcional.");
+    }
+  }
+}
 \end{samplelisting}
 
-Por fim, podemos finalizar o \assistant para que seja feito o \emph{logout} no barramento, como exemplificado no Código~\ref{lst:logout}.
+Por fim, podemos finalizar o \assistant{} para que seja feito o \emph{logout} no barramento, como exemplificado no Código~\ref{lst:logout}.
 
-\begin{samplelisting}[language=CSharp]{logout}{Finalizando o \assistant}
+\begin{samplelisting}[language=Java]{logout}{Finalizando o \assistant{}}
 assistant.Shutdown();
 \end{samplelisting}
 
@@ -579,7 +578,7 @@ Nesse ponto, podemos executar o servidor e em seguida o cliente. Assim que o cli
 
 \subsubsection{Acessando a cadeia de chamadas para identificar o cliente}
 
-A maior evolução no barramento \openbus na versão 2.0 foi a
+A maior evolução no barramento \openbus{} na versão 2.0 foi a
 reformulação do sistema de segurança. Com este novo sistema, é possível para um serviço saber
 qual a entidade que fez a chamada, e também é possível para algum
 serviço intermediário passar para um serviço do qual ele é cliente a
@@ -602,12 +601,12 @@ Faremos uso do método acessor "CallerChain", que retorna a cadeia de chamadas re
 Como a implementação da classe "ConnectionContext" em C\# é um \emph{singleton}, podemos acessar sua instância facilmente,
 e fazer a chamada a "CallerChain" em "sayHello". Um exemplo pode ser visto no Código~\ref{lst:chain}
 
-\begin{samplelisting}[language=CSharp]{chain}{Acessando a cadeia relativa a uma chamada}
+\begin{samplelisting}[language=Java]{chain}{Acessando a cadeia relativa a uma chamada}
       Console.WriteLine(String.Format("Hello {0}!", ORBInitializer.Context.CallerChain.Caller.entity));
 \end{samplelisting}
 
 Desta forma implementamos um serviço que imprime o nome da entidade que
-fez a chamada remota para nosso serviço. O código completo pode ser conferido na demo Hello do \assistant.
+fez a chamada remota para nosso serviço. O código completo pode ser conferido na demo Hello do \assistant{}.
 
 
 \subsection{Configurações avançadas}
@@ -620,12 +619,12 @@ A API utiliza o log provido pela Apache (log4Net). A configuração do log4Net pod
 
 \subsubsection{Definindo as propriedades opcionais do Assistente}
 
-Ao instanciar o \assistant, como vimos anteriormente, devemos passar um objeto que implemente a interface "tecgraf.openbus.assistant.AssistantProperties".
-Essa interface fornece uma série de campos opcionais que podem ser modificados antes da instanciação do \assistant. São eles:
+Ao instanciar o \assistant{}, como vimos anteriormente, devemos passar um objeto que implemente a interface "tecgraf.openbus.assistant.AssistantProperties".
+Essa interface fornece uma série de campos opcionais que podem ser modificados antes da instanciação do \assistant{}. São eles:
 
 \begin{itemize}
-  \item Interval: Intervalo de tempo a ser utilizado entre as re-tentativas de chamadas feitas pelo \assistant, sincronamente ou assincronamente.
-  \item ORB: Acessor que funciona apenas como um \emph{getter}. Retorna a instância de \orb utilizada pelo \assistant, que é sempre a mesma, por ser um \emph{singleton}.
+  \item Interval: Intervalo de tempo a ser utilizado entre as re-tentativas de chamadas feitas pelo \assistant{}, sincronamente ou assincronamente.
+  \item ORB: Acessor que funciona apenas como um \emph{getter}. Retorna a instância de \orb{} utilizada pelo \assistant{}, que é sempre a mesma, por ser um \emph{singleton}.
   \item ConnectionProperties: Propriedades opcionais da conexão utilizada internamente. Para mais detalhes, consulte a documentação da API básica.
   \item Type: Acessor que funciona apenas como um \emph{getter}. Retorna o tipo (enum "LoginType") de autenticação utilizado, definido através da escolha da classe instanciada (exemplo: "PasswordProperties" definirá o tipo como "LoginType.Password").
   \item LoginFailureCallback: método do tipo \emph{delegate} a ser chamado em caso de erros no processo de \emph{login}. A cada tentativa mal-sucedida, esse método será chamado. Um exemplo de uso é para \emph{logs}.
