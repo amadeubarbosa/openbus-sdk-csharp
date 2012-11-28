@@ -58,7 +58,7 @@
 \newcommand{\orb}{\textsc{ORB}}
 \newcommand{\scs}{\textsc{SCS}}
 \newcommand{\assistant}{\textsc{Assistant}}
-\newcommand{\version}{2.0.0 }
+\newcommand{\version}{2.0.0}
 
 
 %\newif\ifpdf
@@ -211,7 +211,7 @@ O \openbus{} utiliza o mecanismo de interceptação de \corba{} no processo de con
  de acesso aos serviços. Após a chamada de requisição de \emph{login} no
  barramento, todas as chamadas seguintes devem estar com a credencial de acesso
  anexada. Sendo assim, faz-se necessário a habilitação dos interceptadores
- frente ao \orb{} que será utilizado. No SDK C\# a comunicação será feira
+ frente ao \orb{} que será utilizado. No SDK C\# a comunicação será feita
  utilizando o IIOP.NET, e o SDK se encarregará de registrar os interceptadores
  em sua inicialização, não sendo necessária nenhuma ação por parte do usuário
  nesse aspecto.
@@ -243,10 +243,10 @@ serviços no barramento.
 Em C\# instancia-se a classe "tecgraf.openbus.assistant.AssistantImpl" da interface "tecgraf.openbus.assistant.Assistant".
 Além dessa classe, a API do \assistant{} é composta pela classe utilitária e estática "tecgraf.openbus.assistant.Utils".
 
-No caso de aplicações do tipo servidor, que recebam chamadas, pode ser necessário o uso de mais uma classe: "tecgraf.openbus.ConnectionContext". 
+No caso de aplicações do tipo servidor, que recebam chamadas, pode ser necessário o uso de mais uma classe: "tecgraf.openbus.OpenBusContext". 
 Em C\# essa classe é um \emph{singleton} pois ela representa o escopo das chamadas de um \orb{}, e o IIOP.NET não permite mais do que uma instância de \orb{}.
-Através dela, será possível obter a identidade do cliente ou cadeia de clientes de uma chamada. Para obter a instância \emph{singleton} tanto do \orb{} como da classe "ConnectionContext",
-devemos utilizar a classe estática "tecgraf.openbus.ORBInitializer". Essa classe é responsável por instanciar e configurar o \orb{} e o "ConnectionContext". No futuro, caso o IIOP.NET suporte 
+Através dela, será possível obter a identidade do cliente ou cadeia de clientes de uma chamada. Para obter a instância \emph{singleton} tanto do \orb{} como da classe "OpenBusContext",
+devemos utilizar a classe estática "tecgraf.openbus.ORBInitializer". Essa classe é responsável por instanciar e configurar o \orb{} e o "OpenBusContext". No futuro, caso o IIOP.NET suporte 
 mais de uma instância de \orb{}, essa classe terá mais funcionalidades e será mais semelhante ao seus pares em outras linguagens suportadas pelo \openbus{}.
 
 Nas próximas seções veremos o uso dessas classes em mais detalhes.
@@ -448,7 +448,7 @@ lista de propriedades, podemos realizar a busca. Um exemplo pode ser conferido n
 
 \begin{samplelisting}[language=Java]{clientsearch}{Busca por Ofertas de Serviço}
 ServiceProperty[] properties = assistant.CreateFacetAndEntityProperties(
-  "<nome-da-entidade-do-servidor>", "Hello");
+  "nome-da-entidade-do-servidor", "Hello");
 ServiceOfferDesc[] offers = Utils.FilterWorkingOffers(assistant.FindServices(properties, -1));
 \end{samplelisting}
 
@@ -594,11 +594,11 @@ dados ou simplesmente recusar a operação para determinadas entidades.
 
 Relembrando, nosso \emph{servant} "Hello" foi implementado como descrito no Código~\ref{lst:hello}.
 
-Os métodos relativos a cadeias ficam na classe "ConnectionContext", como mencionado anteriormente. São eles:
+Os métodos relativos a cadeias ficam na classe "OpenBusContext", como mencionado anteriormente. São eles:
 "CallerChain", "JoinChain", "ExitChain" e "JoinedChain".
 
 Faremos uso do método acessor "CallerChain", que retorna a cadeia de chamadas relativa à chamada atual. 
-Como a implementação da classe "ConnectionContext" em C\# é um \emph{singleton}, podemos acessar sua instância facilmente,
+Como a implementação da classe "OpenBusContext" em C\# é um \emph{singleton}, podemos acessar sua instância facilmente,
 e fazer a chamada a "CallerChain" em "sayHello". Um exemplo pode ser visto no Código~\ref{lst:chain}
 
 \begin{samplelisting}[language=Java]{chain}{Acessando a cadeia relativa a uma chamada}
