@@ -808,7 +808,7 @@ namespace tecgraf.openbus {
       }
 
       CredentialReset requestReset = ReadCredentialReset(ri, exception);
-      string remoteLogin = requestReset.login;
+      string remoteLogin = requestReset.target;
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
       _profile2Login.TryAdd(profile, remoteLogin);
 
@@ -912,16 +912,15 @@ namespace tecgraf.openbus {
               // credencial valida
               // CheckChain pode lançar exceção com InvalidChainCode
               CallChain chain = CheckChain(credential.chain, credential.login,
-                                           myLogin.id, busKey);
+                                           myLogin.entity, busKey);
               // CheckTicket já faz o lock no ticket history da sessão
               if (session.CheckTicket(credential.ticket)) {
                 // insere a cadeia no slot para a getCallerChain usar
                 try {
-                  // já foi testado que o login é o mesmo que o target, portanto posso inserir meu login como target
+                  // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
                   ri.set_slot(_chainSlotId,
                               new CallerChainImpl(BusId, chain.caller,
-                                                  new LoginInfo(myLogin.id,
-                                                                myLogin.entity),
+                                                  myLogin.entity,
                                                   chain.originators,
                                                   anyCredential.Credential.chain));
                 }
@@ -1153,7 +1152,13 @@ namespace tecgraf.openbus {
         finally {
           _loginLock.ExitReadLock();
         }
-        signed = localAcs.signChainFor(remoteLogin);
+        try {
+          signed = localAcs.signChainFor(remoteLogin);
+        }
+        catch (AbstractCORBASystemException e) {
+          Logger.Error("Erro ao acessar o barramento " + BusId + ".", e);
+          throw new NO_PERMISSION(UnavailableBusCode.ConstVal, CompletionStatus.Completed_No);
+        }
         LoginInfo actualLogin =
           GetLoginOrThrowNoLogin(
             "Impossível gerar cadeia para a chamada, pois o login foi perdido.",
@@ -1210,7 +1215,7 @@ namespace tecgraf.openbus {
       finally {
         _loginLock.ExitReadLock();
       }
-      CredentialReset reset = new CredentialReset {login = loginId};
+      CredentialReset reset = new CredentialReset {target = loginId};
       byte[] challenge = new byte[SecretSize];
       Random rand = new Random();
       rand.NextBytes(challenge);
@@ -1281,11 +1286,11 @@ namespace tecgraf.openbus {
     }
 
     private CallChain CheckChain(SignedCallChain signed, string callerId,
-                                 string loginId, AsymmetricKeyParameter busKey) {
+                                 string entity, AsymmetricKeyParameter busKey) {
       CallChain chain = UnmarshalCallChain(signed);
-      if (!chain.target.Equals(loginId)) {
+      if (!chain.target.Equals(entity)) {
         Logger.Error(
-          "O login não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
+          "O entity não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
         throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }

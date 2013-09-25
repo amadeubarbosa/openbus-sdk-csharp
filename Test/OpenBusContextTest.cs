@@ -372,7 +372,7 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
         _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
-                                               conn.Login.Value,
+                                               conn.Login.Value.entity,
                                                new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         Assert.AreEqual("mock", _context.JoinedChain.BusId);
@@ -399,7 +399,7 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password);
         Assert.IsNotNull(conn.Login);
         _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
-                                               conn.Login.Value,
+                                               conn.Login.Value.entity,
                                                new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         _context.ExitChain();

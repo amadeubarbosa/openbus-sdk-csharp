@@ -19,9 +19,9 @@ namespace tecgraf.openbus {
     string BusId { get; }
 
     /// <summary>
-    /// Login para o qual a chamada estava destinada. Só é possível fazer chamadas
+    /// Entidade para a qual a chamada estava destinada. Só é possível fazer chamadas
     /// dentro dessa cadeia (através do método joinChain da interface 
-    /// OpenBusContext) se o login da conexão corrente for o mesmo do target.
+    /// OpenBusContext) se a entidade da conexão corrente for a mesma do target.
     ///
     /// No caso de conexões legadas, este campo será nulo e será possível fazer
     /// qualquer chamada como parte dessa cadeia. Contudo, todas as chamadas
@@ -30,7 +30,7 @@ namespace tecgraf.openbus {
     /// legadas) e portanto serão recusadas por serviços que não aceitem chamadas
     /// legadas (OpenBus 1.5).
     /// </summary>
-    LoginInfo? Target { get; }
+    string Target { get; }
 
     /// <summary>
     /// Lista de informações de login de todas as entidades que originaram as
