@@ -466,6 +466,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.BusId);
         Assert.IsNull(conn.Login);
+        Assert.IsFalse(conn.Logout());
         _context.OnCallDispatch = null;
         bool failed = false;
         try {
