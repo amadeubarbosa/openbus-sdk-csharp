@@ -5,13 +5,13 @@ using tecgraf.openbus.core.v2_0.credential;
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {
     internal CallerChainImpl(string busId, LoginInfo caller,
-                             LoginInfo? target, LoginInfo[] originators,
+                             string target, LoginInfo[] originators,
                              SignedCallChain signed)
       : this(busId, caller, target, originators) {
       Signed = signed;
     }
 
-    internal CallerChainImpl(string busId, LoginInfo caller, LoginInfo? target,
+    internal CallerChainImpl(string busId, LoginInfo caller, string target,
                              LoginInfo[] originators) {
       BusId = busId;
       Caller = caller;
@@ -26,7 +26,7 @@ namespace tecgraf.openbus {
 
     public string BusId { get; private set; }
 
-    public LoginInfo? Target { get; private set; }
+    public string Target { get; private set; }
 
     public LoginInfo[] Originators { get; private set; }
 
