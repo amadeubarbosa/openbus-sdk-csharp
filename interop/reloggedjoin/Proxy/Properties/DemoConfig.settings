@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="busHostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ubu</Value>
+      <Value Profile="(Default)">bombas</Value>
     </Setting>
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">20000</Value>
+      <Value Profile="(Default)">2089</Value>
     </Setting>
     <Setting Name="privateKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\admin\InteropReloggedJoin.key</Value>

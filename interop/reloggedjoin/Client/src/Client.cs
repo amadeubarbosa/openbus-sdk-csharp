@@ -9,8 +9,8 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.interop.relloggedjoin.Properties;
 using tecgraf.openbus.interop.simple;
-using tecgraf.openbus.interop.simple.Properties;
 
 namespace tecgraf.openbus.interop.relloggedjoin {
   /// <summary>

@@ -4,7 +4,6 @@ using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.relloggedjoin {
-
   public class HelloProxyImpl : MarshalByRefObject, Hello {
     private readonly OpenBusContext _context;
     private readonly string _entity;
@@ -30,13 +29,15 @@ namespace tecgraf.openbus.interop.relloggedjoin {
         string caller = chain.Caller.entity;
         Console.WriteLine("Chamada recebida de " + caller);
 
-        ServiceProperty[] properties = new[] { new ServiceProperty("reloggedjoin.role", "server") };
+        ServiceProperty[] properties = new[]
+        {new ServiceProperty("reloggedjoin.role", "server")};
 
         _context.JoinChain(chain);
 
-        Console.WriteLine("Buscando serviço Hello");
+        Console.WriteLine("Buscando servidor Hello relogged join");
         ServiceOfferDesc[] services =
-          Utils.FilterWorkingOffers(_context.OfferRegistry.findServices(properties));
+          Utils.FilterWorkingOffers(
+            _context.OfferRegistry.findServices(properties));
         foreach (ServiceOfferDesc desc in services) {
           string found = Utils.GetProperty(desc.properties,
                                            "openbus.offer.entity");
@@ -51,5 +52,4 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       return "Erro ao utilizar o serviço Hello!";
     }
   }
-
 }

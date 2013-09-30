@@ -37,6 +37,18 @@ namespace tecgraf.openbus.interop.relloggedjoin.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("..\\..\\..\\..\\..\\Resources\\Openbus.config")]
+        public string openbusLogFile {
+            get {
+                return ((string)(this["openbusLogFile"]));
+            }
+            set {
+                this["openbusLogFile"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2089")]
         public ushort busHostPort {
             get {
