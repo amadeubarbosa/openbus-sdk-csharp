@@ -543,12 +543,16 @@ namespace tecgraf.openbus {
 
     public bool Logout() {
       AccessControl localAcs;
+      string id;
+      string entity;
       _loginLock.EnterWriteLock();
       try {
         if (!_login.HasValue) {
           _invalidLogin = null;
           return false;
         }
+        id = _login.Value.id;
+        entity = _login.Value.entity;
         localAcs = Acs;
       }
       finally {
@@ -559,13 +563,12 @@ namespace tecgraf.openbus {
       try {
         localAcs.logout();
       }
-      catch (NO_PERMISSION e) {
-        // Não lança NoLoginCode com COMPLETED_NO, retorna falso
-        if ((e.Minor != NoLoginCode.ConstVal) ||
-            (!e.Status.Equals("COMPLETED_NO"))) {
-          throw;
-        }
-        // já fui deslogado do barramento
+      catch (AbstractCORBASystemException e) {
+        // Não lança exceções corba, retorna falso em caso de erro.
+        // serei deslogado do barramento após o próximo lease
+        Logger.Warn(String.Format(
+          "Erro durante chamada remota logout: busid {0} login {1} entidade {2}.\nExceção: {3}",
+          BusId, id, entity, e));
         return false;
       }
       finally {

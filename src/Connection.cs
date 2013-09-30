@@ -135,7 +135,8 @@ namespace tecgraf.openbus {
     /// validar a chamada pois a conexão está temporariamente desautenticada.
     /// </summary>
     /// <returns>Verdadeiro se o processo de logout for concluído com êxito e 
-    /// falso se a conexão já estiver desautenticada (login inválido).</returns>
+    /// falso se a conexão já estiver desautenticada (login inválido) ou se
+    /// houver uma falha durante o processo remoto de logout.</returns>
     bool Logout();
 
     /// <summary>
