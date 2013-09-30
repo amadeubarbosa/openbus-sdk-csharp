@@ -1,0 +1,44 @@
+Category {
+  id = "openbus_interops",
+  name = "Categoria para testes de interoperabilidade do OpenBus",
+}
+
+Entity {
+  id = "interop_reloggedjoin_csharp_server",
+  category = "openbus_interops",
+  name = "Teste de Interoperabilidade Relogged Join do SDK CSharp - server",
+}
+
+Entity {
+  id = "interop_reloggedjoin_csharp_proxy",
+  category = "openbus_interops",
+  name = "Teste de Interoperabilidade Relogged Join do SDK CSharp - proxy",
+}
+
+Certificate {
+  id = "interop_reloggedjoin_csharp_server",
+  certificate = "InteropReloggedJoin.crt",
+}
+
+Certificate {
+  id = "interop_reloggedjoin_csharp_proxy",
+  certificate = "InteropReloggedJoin.crt",
+}
+
+Interface {
+  id = "IDL:tecgraf/openbus/interop/simple/Hello:1.0",
+}
+
+Grant {
+  id = "interop_reloggedjoin_csharp_server",
+  interfaces = {
+	"IDL:tecgraf/openbus/interop/simple/Hello:1.0",
+  }
+}
+
+Grant {
+  id = "interop_reloggedjoin_csharp_proxy",
+  interfaces = {
+	"IDL:tecgraf/openbus/interop/simple/Hello:1.0",
+  }
+}
