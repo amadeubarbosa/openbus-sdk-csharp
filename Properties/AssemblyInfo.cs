@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyVersion("2.0.0.1")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Test, PublicKey=0024000004800000940000000602000000240000525341310004000001000100fbdca0c2e21da54964d502e77313458ed93ea633f9111105f1b72b41220cf0d4d83ef086ecd988bc3d7149b75481de78c659c49256e6d4011021cc0d51f81e9cd96760344f509ae6da367ede0fc5d7554bfab8e6ccb7498c37f1ca906f082b1bb0d4e9915eb12a8baef54a6c09a15a1ab1d534bee963b64b73b4e3c7cc5b5fc8")]
