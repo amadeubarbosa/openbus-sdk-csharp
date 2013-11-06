@@ -25,10 +25,12 @@ namespace Tecgraf.Openbus.Security
     /// Cabeçalho da chave privada.
     /// </summary>
     private const String pemHeader = "-----BEGIN PRIVATE KEY-----";
+
     /// <summary>
     /// Rodapé da chave privada.
     /// </summary>
     private const String pemFooter = "-----END PRIVATE KEY-----";
+
     /// <summary>
     /// Tamanho da chave privada.
     /// </summary>
@@ -111,7 +113,8 @@ namespace Tecgraf.Openbus.Security
       try {
         binaryKey = Convert.FromBase64String(key);
       }
-      catch (FormatException) {
+      catch (FormatException e) {
+        logger.Fatal(e);
         return null;
       }
       return binaryKey;
@@ -232,7 +235,10 @@ namespace Tecgraf.Openbus.Security
           return null;
 
         logger.Debug("Criando a instancia de RSACryptoServiceProvider e inicializando-a");
-        RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
+
+        // CspParameters para que funcione com servidores baseados em key store, como IIS
+        CspParameters cpsParameter = new CspParameters { Flags = CspProviderFlags.UseMachineKeyStore };
+        RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(2048, cpsParameter);
         RSAParameters RSAparams = new RSAParameters();
 
         int elems = GetDataSize(binFile);
@@ -262,7 +268,8 @@ namespace Tecgraf.Openbus.Security
         RSA.ImportParameters(RSAparams);
         return RSA;
       }
-      catch (System.Exception) {
+      catch (System.Exception e) {
+        logger.Fatal(e);
         return null;
       }
       finally {

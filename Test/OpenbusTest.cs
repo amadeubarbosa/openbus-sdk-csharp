@@ -1,4 +1,5 @@
-﻿using Tecgraf.Openbus;
+﻿using System.IO;
+using Tecgraf.Openbus;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using Tecgraf.Openbus.Exception;
@@ -168,6 +169,29 @@ namespace Test
 
       X509Certificate2 acsCertificate =
         Crypto.ReadCertificate(acsCertificateFileName);
+      Assert.IsNotNull(acsCertificate);
+
+      IRegistryService registryService =
+        openbus.Connect(entityName, privateKey, acsCertificate);
+
+      Assert.IsNotNull(registryService);
+      Assert.IsTrue(openbus.Disconnect());
+    }
+
+    /// <summary>
+    /// Testa o connect utilizando o certificado como fluxo.
+    /// </summary>
+    [TestMethod]
+    public void ConnectByCertificateStream() {
+      Openbus openbus = Openbus.GetInstance();
+      FileStream keyStream = new FileStream(testKeyFileName, FileMode.Open);
+      RSACryptoServiceProvider privateKey = Crypto.ReadPrivateKey(keyStream);
+      Assert.IsNotNull(privateKey);
+
+      FileStream certificateStream = new FileStream(acsCertificateFileName, FileMode.Open);
+
+      X509Certificate2 acsCertificate =
+        Crypto.ReadCertificate(certificateStream);
       Assert.IsNotNull(acsCertificate);
 
       IRegistryService registryService =
