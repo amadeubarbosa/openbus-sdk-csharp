@@ -1,0 +1,29 @@
+System {
+  id = "sdk_csharp",
+  description = "Os testes do SDK CSharp",
+}
+
+SystemDeployment {
+  id = "sdk_csharp_test",
+  system = "sdk_csharp",
+  description = "Os testes unitários do SDK CSharp",
+  certificate = "TesteBarramento.crt",
+}
+
+SystemDeployment {
+  id = "sdk_csharp_integration",
+  system = "sdk_csharp",
+  description = "Os testes de integração do SDK CSharp",
+  certificate = "TesteBarramento.crt",
+}
+
+Interface {
+  id = "IDL:demoidl/hello/IHello:1.0",
+}
+
+Grant {
+  id = "sdk_csharp_integration",
+  interfaces = {
+    "IDL:demoidl/hello/IHello:1.0",
+  }
+}

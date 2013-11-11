@@ -141,7 +141,7 @@ namespace Test
     public void ConnectByPassword_InvalidLogin() {
       Openbus openbus = Openbus.GetInstance();
       IRegistryService registryService = null;
-      registryService = openbus.Connect("null", "null");
+      registryService = openbus.Connect("null", "nullnull");
     }
 
     /// <summary>
