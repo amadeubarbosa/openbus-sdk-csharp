@@ -1,0 +1,12 @@
+--
+Copyright (C) 2006-2013 Tecgraf/PUC-Rio. All rights reserved.
+--
+The OpenBus software is a middleware to integrate applications written under
+different languages and compatible with many operating systems
+(POSIX-compliant, Windows, MacOSX and others).
+
+All these contents are licensed under the terms described in the LICENSE file
+present in this distribution.
+
+See the OpenBus official site for additional informations:
+http://www.tecgraf.puc-rio.br/openbus
