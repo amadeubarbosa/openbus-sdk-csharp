@@ -10,6 +10,13 @@ using tecgraf.openbus.interop.delegation.Properties;
 namespace tecgraf.openbus.interop.delegation {
   [TestClass]
   internal static class DelegationClient {
+    private enum ServerType {
+      Unknown,
+      Messenger,
+      Forwarder,
+      Broadcaster
+    }
+
     private static Messenger _messenger;
     private static Broadcaster _broadcaster;
     private static Forwarder _forwarder;
@@ -149,40 +156,60 @@ namespace tecgraf.openbus.interop.delegation {
       }
 
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
+        ServerType serverType = ServerType.Unknown;
         string repId = String.Empty;
         ServiceProperty[] props = serviceOfferDesc.properties;
         foreach (ServiceProperty serviceProperty in props) {
           if (serviceProperty.name.Equals("openbus.component.interface")) {
             repId = serviceProperty.value;
+            if (repId.Equals(Repository.GetRepositoryID(typeof (Messenger)))) {
+              serverType = ServerType.Messenger;
+              break;
+            }
+            if (repId.Equals(Repository.GetRepositoryID(typeof (Forwarder)))) {
+              serverType = ServerType.Forwarder;
+              break;
+            }
+            if (repId.Equals(Repository.GetRepositoryID(typeof (Broadcaster)))) {
+              serverType = ServerType.Broadcaster;
+              break;
+            }
           }
         }
+
+        if (serverType.Equals(ServerType.Unknown)) {
+          Console.WriteLine(
+            "Uma das ofertas encontradas não é Messenger, Forwarder nem Broadcaster!");
+          continue;
+        }
+
         MarshalByRefObject obj = serviceOfferDesc.service_ref.getFacet(repId);
         if (obj == null) {
           Console.WriteLine("Não foi possível encontrar a faceta do tipo " +
                             repId);
           return;
         }
-        Type type = Repository.GetTypeForId(repId);
-        if (type == typeof (Messenger)) {
-          _messenger = obj as Messenger;
-          continue;
-        }
-        if (type == typeof (Broadcaster)) {
-          _broadcaster = obj as Broadcaster;
-          foreach (ServiceProperty serviceProperty in props) {
-            if (serviceProperty.name.Equals("openbus.offer.entity")) {
-              _broadcasterName = serviceProperty.value;
+
+        switch (serverType) {
+          case ServerType.Messenger:
+            _messenger = obj as Messenger;
+            break;
+          case ServerType.Broadcaster:
+            _broadcaster = obj as Broadcaster;
+            foreach (ServiceProperty serviceProperty in props) {
+              if (serviceProperty.name.Equals("openbus.offer.entity")) {
+                _broadcasterName = serviceProperty.value;
+              }
             }
-          }
-          continue;
-        }
-        if (type == typeof (Forwarder)) {
-          _forwarder = obj as Forwarder;
-          foreach (ServiceProperty serviceProperty in props) {
-            if (serviceProperty.name.Equals("openbus.offer.entity")) {
-              _forwarderName = serviceProperty.value;
+            break;
+          case ServerType.Forwarder:
+            _forwarder = obj as Forwarder;
+            foreach (ServiceProperty serviceProperty in props) {
+              if (serviceProperty.name.Equals("openbus.offer.entity")) {
+                _forwarderName = serviceProperty.value;
+              }
             }
-          }
+            break;
         }
       }
     }
