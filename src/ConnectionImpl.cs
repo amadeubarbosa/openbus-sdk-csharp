@@ -988,7 +988,7 @@ namespace tecgraf.openbus {
                                                                 _delegate)
                                               };
           ri.set_slot(_chainSlotId,
-                      new CallerChainImpl(BusId, caller, null, originators));
+                      new CallerChainImpl(BusId, caller, myLogin.entity, originators));
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
