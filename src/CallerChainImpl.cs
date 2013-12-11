@@ -4,6 +4,8 @@ using tecgraf.openbus.core.v2_0.credential;
 
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {
+    internal static readonly SignedCallChain NullSignedCallChain = new SignedCallChain(new byte[256], new byte[0]);
+
     internal CallerChainImpl(string busId, LoginInfo caller,
                              string target, LoginInfo[] originators,
                              SignedCallChain signed)
@@ -17,6 +19,7 @@ namespace tecgraf.openbus {
       Caller = caller;
       Target = target;
       Originators = originators;
+      Signed = NullSignedCallChain;
       Joined = new LRUConcurrentDictionaryCache<string, SignedCallChain>();
     }
 
