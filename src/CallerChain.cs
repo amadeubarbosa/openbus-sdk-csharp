@@ -23,8 +23,8 @@ namespace tecgraf.openbus {
     /// dentro dessa cadeia (através do método joinChain da interface 
     /// OpenBusContext) se a entidade da conexão corrente for a mesma do target.
     ///
-    /// No caso de conexões legadas, este campo será nulo e será possível fazer
-    /// qualquer chamada como parte dessa cadeia. Contudo, todas as chamadas
+    /// No caso de conexões legadas, este campo conterá o nome da entidade da
+    /// conexão que atendeu (validou) a requisição. Todas as chamadas
     /// feitas como parte de uma cadeia de uma chamada legada serão feitas
     /// utilizando apenas o protocolo do OpenBus 1.5 (apenas com credenciais
     /// legadas) e portanto serão recusadas por serviços que não aceitem chamadas
