@@ -660,6 +660,38 @@ namespace tecgraf.openbus {
       }
 
       try {
+        if (Legacy) {
+          // Testa se tem cadeia para enviar
+          string lastCaller = String.Empty;
+          bool isLegacyOnly = false;
+          CallerChainImpl callerChain = Context.JoinedChain as CallerChainImpl;
+          if (callerChain != null) {
+            if (_delegateOriginator && (callerChain.Originators.Length > 0)) {
+              lastCaller = callerChain.Originators[0].entity;
+            }
+            else {
+              lastCaller = callerChain.Caller.entity;
+            }
+            if (callerChain.Signed.Equals(CallerChainImpl.NullSignedCallChain)) {
+              // é uma credencial somente 1.5
+              isLegacyOnly = true;
+            }
+          }
+          Credential legacyData = new Credential(login.id, login.entity,
+                                                  lastCaller);
+          ServiceContext legacyContext =
+            new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
+          ri.add_request_service_context(legacyContext, false);
+          if (isLegacyOnly) {
+            // não adiciona credencial 2.0
+            Logger.Info(
+              String.Format(
+                "Chamada à operação {0} no servidor de login {1} utilizando cadeia de SDK legado.",
+                operation, remoteLogin));
+            return;
+          }
+        }
+
         byte[] hash;
         SignedCallChain chain;
         if (sessionId >= 0) {
@@ -676,37 +708,6 @@ namespace tecgraf.openbus {
         else {
           // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
           sessionId = 0;
-          if (Legacy) {
-            // Testa se tem cadeia para enviar
-            string lastCaller = String.Empty;
-            bool isLegacyOnly = false;
-            CallerChainImpl callerChain = Context.JoinedChain as CallerChainImpl;
-            if (callerChain != null) {
-              if (_delegateOriginator && (callerChain.Originators.Length > 0)) {
-                lastCaller = callerChain.Originators[0].entity;
-              }
-              else {
-                lastCaller = callerChain.Caller.entity;
-              }
-              if (callerChain.Signed.signature.Length == 0) {
-                // é uma credencial somente 1.5
-                isLegacyOnly = true;
-              }
-            }
-            Credential legacyData = new Credential(login.id, login.entity,
-                                                   lastCaller);
-            ServiceContext legacyContext =
-              new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
-            ri.add_request_service_context(legacyContext, false);
-            if (isLegacyOnly) {
-              // não adiciona credencial 2.0
-              Logger.Info(
-                String.Format(
-                  "Chamada à operação {0} no servidor de login {1} que utiliza SDK legado.",
-                  operation, remoteLogin));
-              return;
-            }
-          }
           // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
           hash = CreateInvalidCredentialHash();
           chain = CreateInvalidCredentialSignedCallChain();
@@ -957,7 +958,7 @@ namespace tecgraf.openbus {
       else {
         Credential lCredential = anyCredential.LegacyCredential;
         try {
-          bool valid = false;
+          bool valid;
           if (!lCredential._delegate.Equals(string.Empty)) {
             // tem delegate, então precisa validar a credencial
             if (!clientLogin.AllowLegacyDelegate.HasValue) {
@@ -965,6 +966,9 @@ namespace tecgraf.openbus {
               clientLogin.AllowLegacyDelegate = valid;
               // atualiza entrada na cache
               _loginsCache.UpdateEntryAllowLegacyDelegate(clientLogin);
+            }
+            else {
+              valid = clientLogin.AllowLegacyDelegate.Value;
             }
           }
           else {
