@@ -20,6 +20,8 @@ namespace tecgraf.openbus.assistant {
     private readonly AssistantPropertiesImpl _properties;
     private readonly Connection _conn;
     private readonly Offeror _offeror;
+    private volatile bool _active;
+    private readonly Thread _connThread;
 
     #endregion
 
@@ -52,6 +54,7 @@ namespace tecgraf.openbus.assistant {
       _host = host;
       _port = port;
       _properties = properties as AssistantPropertiesImpl;
+      _active = true;
       _offeror = new Offeror(this);
       // cria conexão e seta como padrão
       _conn = ORBInitializer.Context.CreateConnection(_host, _port,
@@ -61,11 +64,10 @@ namespace tecgraf.openbus.assistant {
       // adiciona callback de login inválido
       _conn.OnInvalidLogin = InvalidLogin;
       // lança a thread que faz o login inicial
-      Thread t =
+      _connThread =
         new Thread(
-          () => _conn.OnInvalidLogin(_conn, new LoginInfo()))
-        {IsBackground = true};
-      t.Start();
+          () => _conn.OnInvalidLogin(_conn, new LoginInfo())) { Name = "AssistantLogin", IsBackground = true };
+      _connThread.Start();
     }
 
     #endregion
@@ -143,11 +145,17 @@ namespace tecgraf.openbus.assistant {
           retries--;
         }
         Thread.Sleep(Properties.IntervalMillis);
-      } while (true);
+      } while (_active);
+
+      Logger.Warn("O Assistente foi finalizado. Finalizando login por autenticação compartilhada.");
+      secret = null;
+      return null;
     }
 
     /// <inheritdoc/>
     public void Shutdown() {
+      _active = false;
+      _connThread.Interrupt();
       _offeror.Finish();
       _conn.Logout();
     }
@@ -205,7 +213,10 @@ namespace tecgraf.openbus.assistant {
           retries--;
         }
         Thread.Sleep(Properties.IntervalMillis);
-      } while (true);
+      } while (_active);
+
+      Logger.Warn("O Assistente foi finalizado. Finalizando busca.");
+      return null;
     }
 
     #endregion
@@ -213,65 +224,83 @@ namespace tecgraf.openbus.assistant {
     #region OnInvalidLogin
 
     private void InvalidLogin(Connection conn, LoginInfo login) {
-      bool succeeded = false;
-      while (!succeeded) {
-        // remove todas as ofertas locais
-        _offeror.ResetAllOffers();
-        Exception caught = null;
-        try {
-          switch (Properties.Type) {
-            case LoginType.Password:
-              PasswordProperties passwordProps = (PasswordProperties) Properties;
-              conn.LoginByPassword(passwordProps.Entity, passwordProps.Password);
-              break;
-            case LoginType.PrivateKey:
-              PrivateKeyProperties privKeyProps =
-                (PrivateKeyProperties) Properties;
-              conn.LoginByCertificate(privKeyProps.Entity,
-                                      privKeyProps.PrivateKey);
-              break;
-            case LoginType.SharedAuth:
-              SharedAuthProperties saProps = (SharedAuthProperties) Properties;
-              byte[] secret;
-              LoginProcess lp = saProps.Callback.Invoke(out secret);
-              conn.LoginBySharedAuth(lp, secret);
-              break;
+      try {
+        bool succeeded = false;
+        while (!succeeded)
+        {
+          // remove todas as ofertas locais
+          _offeror.ResetAllOffers();
+          Exception caught = null;
+          try
+          {
+            switch (Properties.Type)
+            {
+              case LoginType.Password:
+                PasswordProperties passwordProps = (PasswordProperties)Properties;
+                conn.LoginByPassword(passwordProps.Entity, passwordProps.Password);
+                break;
+              case LoginType.PrivateKey:
+                PrivateKeyProperties privKeyProps =
+                  (PrivateKeyProperties)Properties;
+                conn.LoginByCertificate(privKeyProps.Entity,
+                                        privKeyProps.PrivateKey);
+                break;
+              case LoginType.SharedAuth:
+                SharedAuthProperties saProps = (SharedAuthProperties)Properties;
+                byte[] secret;
+                LoginProcess lp = saProps.Callback.Invoke(out secret);
+                conn.LoginBySharedAuth(lp, secret);
+                break;
+            }
+            succeeded = true;
           }
-          succeeded = true;
-        }
-        catch (AlreadyLoggedInException e) {
-          caught = e;
-          succeeded = true;
-        }
-        catch (NO_PERMISSION e) {
-          if (e.Minor == NoLoginCode.ConstVal) {
+          catch (AlreadyLoggedInException e)
+          {
             caught = e;
+            succeeded = true;
           }
-          else {
-            // provavelmente é um buug, então deixa estourar
-            throw;
-          }
-        }
-        catch (Exception e) {
-          // passa qualquer erro para a aplicação, menos erros que pareçam bugs do SDK
-          caught = e;
-        }
-        if (succeeded) {
-          _offeror.Activate();
-        }
-        else {
-          try {
-            if (Properties.LoginFailureCallback != null) {
-              Properties.LoginFailureCallback(this, caught);
+          catch (NO_PERMISSION e)
+          {
+            if (e.Minor == NoLoginCode.ConstVal)
+            {
+              caught = e;
+            }
+            else
+            {
+              // provavelmente é um buug, então deixa estourar
+              throw;
             }
           }
-          catch (Exception e) {
-            Logger.Error(
-              "Erro ao executar a callback de falha de login fornecida pelo usuário.",
-              e);
+          catch (Exception e)
+          {
+            // passa qualquer erro para a aplicação, menos erros que pareçam bugs do SDK
+            caught = e;
           }
-          Thread.Sleep(Properties.IntervalMillis);
+          if (succeeded)
+          {
+            _offeror.Activate();
+          }
+          else
+          {
+            try
+            {
+              if (Properties.LoginFailureCallback != null)
+              {
+                Properties.LoginFailureCallback(this, caught);
+              }
+            }
+            catch (Exception e)
+            {
+              Logger.Error(
+                "Erro ao executar a callback de falha de login fornecida pelo usuário.",
+                e);
+            }
+            Thread.Sleep(Properties.IntervalMillis);
+          }
         }
+      }
+      catch (ThreadInterruptedException) {
+        Logger.Warn("O assistente foi finalizado.");
       }
     }
 
