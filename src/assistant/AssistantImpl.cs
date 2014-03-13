@@ -17,7 +17,7 @@ namespace tecgraf.openbus.assistant {
 
     private readonly string _host;
     private readonly ushort _port;
-    private readonly AssistantProperties _properties;
+    private readonly AssistantPropertiesImpl _properties;
     private readonly Connection _conn;
     private readonly Offeror _offeror;
 
@@ -51,7 +51,7 @@ namespace tecgraf.openbus.assistant {
       ORB = context.ORB;
       _host = host;
       _port = port;
-      _properties = properties;
+      _properties = properties as AssistantPropertiesImpl;
       _offeror = new Offeror(this);
       // cria conexão e seta como padrão
       _conn = ORBInitializer.Context.CreateConnection(_host, _port,
@@ -142,7 +142,7 @@ namespace tecgraf.openbus.assistant {
           Logger.Debug("Erro ao tentar iniciar uma autenticação compartilhada. Uma nova tentativa será realizada.");
           retries--;
         }
-        Thread.Sleep(Properties.Interval);
+        Thread.Sleep(Properties.IntervalMillis);
       } while (true);
     }
 
@@ -159,7 +159,7 @@ namespace tecgraf.openbus.assistant {
 
     #region Internal Methods
 
-    internal AssistantProperties Properties {
+    internal AssistantPropertiesImpl Properties {
       get { return _properties; }
     }
 
@@ -204,7 +204,7 @@ namespace tecgraf.openbus.assistant {
           Logger.Debug("Erro ao tentar encontrar serviços. Uma nova tentativa será realizada.");
           retries--;
         }
-        Thread.Sleep(Properties.Interval);
+        Thread.Sleep(Properties.IntervalMillis);
       } while (true);
     }
 
@@ -270,7 +270,7 @@ namespace tecgraf.openbus.assistant {
               "Erro ao executar a callback de falha de login fornecida pelo usuário.",
               e);
           }
-          Thread.Sleep(Properties.Interval);
+          Thread.Sleep(Properties.IntervalMillis);
         }
       }
     }

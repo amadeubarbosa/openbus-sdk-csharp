@@ -52,7 +52,7 @@ namespace tecgraf.openbus.assistant {
               }
             }
             if (tryAgain) {
-              Thread.Sleep(_assistant.Properties.Interval);
+              Thread.Sleep(_assistant.Properties.IntervalMillis);
             }
           } while (tryAgain);
         }
@@ -289,7 +289,7 @@ namespace tecgraf.openbus.assistant {
                 "Erro ao executar a callback de falha de registro fornecida pelo usuário.",
                 e);
             }
-            Thread.Sleep(_assistant.Properties.Interval);
+            Thread.Sleep(_assistant.Properties.IntervalMillis);
           }
         }
       }

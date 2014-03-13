@@ -118,7 +118,7 @@ namespace tecgraf.openbus.test {
       bool failed = false;
       PasswordProperties passProps = new PasswordProperties(_entity, _password);
       try {
-        passProps.Interval = -2;
+        passProps.Interval = 0.0001F;
       }
       catch (InvalidPropertyValueException e) {
         if (e.Property.Equals("interval")) {
@@ -127,7 +127,7 @@ namespace tecgraf.openbus.test {
       }
       if (!failed) {
         Assert.Fail(
-          "A instanciação do assistente funcionou com um tipo de realização de login inválido.");
+          "Um intervalo inválido foi aceito no assistente.");
       }
       //TODO valores válidos nas propriedades opcionais
     }
