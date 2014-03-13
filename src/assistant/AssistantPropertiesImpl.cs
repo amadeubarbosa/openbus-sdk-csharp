@@ -1,4 +1,5 @@
-﻿using omg.org.CORBA;
+﻿using System;
+using omg.org.CORBA;
 using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.assistant {
@@ -7,18 +8,22 @@ namespace tecgraf.openbus.assistant {
   /// para definir parâmetros de configuração do Assistente.
   /// </summary>
   public abstract class AssistantPropertiesImpl : AssistantProperties {
-    private int _interval = 1000;
+    private float _interval = 1;
     private readonly OrbServices _orb = OrbServices.GetSingleton();
 
     /// <inheritdoc/>
-    public int Interval {
+    internal int IntervalMillis { set; get; }
+
+      /// <inheritdoc/>
+    public float Interval {
       get { return _interval; }
       set {
-        if (value < -1) {
+        if (value < 0.001) {
           throw new InvalidPropertyValueException("interval",
-                                                  "O intervalo deve ser positivo, 0 ou -1.");
+                                                  "O intervalo deve ser maior que 0,001s.");
         }
         _interval = value;
+        IntervalMillis = (int) Math.Ceiling(value*1000);
       }
     }
 
