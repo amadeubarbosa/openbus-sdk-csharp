@@ -490,6 +490,23 @@ namespace tecgraf.openbus.Test {
           _context.SetCurrentConnection(null);
         }
         Assert.IsTrue(failed, "Uma busca sem login foi bem-sucedida.");
+
+        // testa se o logout usa a conexão correta (sem cadeia) pelo objeto no qual é chamado e não altera a conexão corrente nem a cadeia
+        try {
+          conn.LoginByPassword(_login, _password);
+          Connection conn2 = CreateConnection();
+          _context.SetCurrentConnection(conn2);
+          CallerChain dummyChain = new CallerChainImpl("", new LoginInfo(), "",
+                                                       new LoginInfo[0]);
+          _context.JoinChain(dummyChain);
+          Assert.IsTrue(conn.Logout());
+          Assert.AreEqual(dummyChain, _context.JoinedChain);
+          Assert.AreEqual(conn2, _context.GetCurrentConnection());
+        }
+        finally {
+          _context.ExitChain();
+          _context.SetCurrentConnection(null);
+        }
       }
     }
 
