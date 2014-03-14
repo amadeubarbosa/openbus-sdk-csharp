@@ -559,8 +559,10 @@ namespace tecgraf.openbus {
         _loginLock.ExitWriteLock();
       }
 
+      CallerChain prevChain = Context.JoinedChain;
       Connection prev = Context.SetCurrentConnection(this);
       try {
+        Context.ExitChain();
         localAcs.logout();
       }
       catch (AbstractCORBASystemException e) {
@@ -573,6 +575,7 @@ namespace tecgraf.openbus {
       }
       finally {
         Context.SetCurrentConnection(prev);
+        Context.JoinChain(prevChain);
         _loginLock.EnterWriteLock();
         try {
           LocalLogout();
