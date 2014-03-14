@@ -10,18 +10,19 @@ using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
 using scs.core;
+using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v1_05.access_control_service;
 using tecgraf.openbus.core.v2_0;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.caches;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
 using tecgraf.openbus.lease;
 using tecgraf.openbus.security;
 using Current = omg.org.PortableInterceptor.Current;
+using Encoding = System.Text.Encoding;
 using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus {
@@ -73,8 +74,8 @@ namespace tecgraf.openbus {
     private LoginCache _loginsCache;
 
     /// <summary>
-    /// Representam a identificação dos "service contexts" (contextos) utilizados
-    /// para transporte de credenciais em requisições de serviço.
+    ///   Representam a identificação dos "service contexts" (contextos) utilizados
+    ///   para transporte de credenciais em requisições de serviço.
     /// </summary>
     private const int ContextId = CredentialContextId.ConstVal;
 
@@ -279,9 +280,9 @@ namespace tecgraf.openbus {
       }
       catch (WrongEncoding) {
         throw new ServiceFailure {
-                                   message =
-                                     "Erro na codificação da chave pública do barramento."
-                                 };
+          message =
+            "Erro na codificação da chave pública do barramento."
+        };
       }
       catch (Exception e) {
         Logger.Error(e);
@@ -681,7 +682,7 @@ namespace tecgraf.openbus {
             }
           }
           Credential legacyData = new Credential(login.id, login.entity,
-                                                  lastCaller);
+                                                 lastCaller);
           ServiceContext legacyContext =
             new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
           ri.add_request_service_context(legacyContext, false);
@@ -990,12 +991,13 @@ namespace tecgraf.openbus {
           LoginInfo[] originators = lCredential._delegate.Equals(String.Empty)
                                       ? new LoginInfo[0]
                                       : new[] {
-                                                new LoginInfo("<unknown>",
-                                                              lCredential.
-                                                                _delegate)
-                                              };
+                                        new LoginInfo("<unknown>",
+                                                      lCredential.
+                                                        _delegate)
+                                      };
           ri.set_slot(_chainSlotId,
-                      new CallerChainImpl(BusId, caller, myLogin.entity, originators));
+                      new CallerChainImpl(BusId, caller, myLogin.entity,
+                                          originators));
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
@@ -1167,13 +1169,14 @@ namespace tecgraf.openbus {
         }
         catch (AbstractCORBASystemException e) {
           Logger.Error("Erro ao acessar o barramento " + BusId + ".", e);
-          throw new NO_PERMISSION(UnavailableBusCode.ConstVal, CompletionStatus.Completed_No);
+          throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
+                                  CompletionStatus.Completed_No);
         }
         LoginInfo actualLogin =
           GetLoginOrThrowNoLogin(
             "Impossível gerar cadeia para a chamada, pois o login foi perdido.",
             null);
-        CallChain newChain = UnmarshalCallChain(signed);
+        CallChain newChain = Context.UnmarshalCallChain(signed);
         if (actualLogin.id.Equals(newChain.caller.id)) {
           break;
         }
@@ -1287,17 +1290,9 @@ namespace tecgraf.openbus {
       return _codec.encode_value(reset);
     }
 
-    private CallChain UnmarshalCallChain(SignedCallChain signed) {
-      Type chainType = typeof (CallChain);
-      TypeCode chainTypeCode =
-        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
-      return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
-    }
-
     private CallChain CheckChain(SignedCallChain signed, string callerId,
                                  string entity, AsymmetricKeyParameter busKey) {
-      CallChain chain = UnmarshalCallChain(signed);
+      CallChain chain = Context.UnmarshalCallChain(signed);
       if (!chain.target.Equals(entity)) {
         Logger.Error(
           "O entity não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
@@ -1315,7 +1310,7 @@ namespace tecgraf.openbus {
 
     private byte[] CreateCredentialHash(string operation, int ticket,
                                         byte[] secret) {
-      System.Text.Encoding enc = Crypto.TextEncoding;
+      Encoding enc = Crypto.TextEncoding;
       // 2 bytes para versao, 16 para o segredo, 4 para o ticket em little endian e X para a operacao.
       int size = 2 + secret.Length + 4 + enc.GetByteCount(operation);
       byte[] hash = new byte[size];

@@ -2,14 +2,21 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Threading;
+using Ch.Elca.Iiop;
+using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
+using omg.org.IOP;
+using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
+using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
+using tecgraf.openbus.interceptors;
 using tecgraf.openbus.security;
 using Current = omg.org.PortableInterceptor.Current;
+using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus {
   internal class OpenBusContextImpl : OpenBusContext {
@@ -17,6 +24,11 @@ namespace tecgraf.openbus {
 
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (OpenBusContextImpl));
+
+    // Constante que define o tamanho em bytes da codificação do identificador da versão da cadeia de chamadas exportada.
+    private const int ChainHeaderSize = 8;
+
+    private readonly Codec _codec;
 
     // Mapa de conexões
     private readonly ConcurrentDictionary<Guid, Connection> _connections;
@@ -53,6 +65,7 @@ namespace tecgraf.openbus {
       _chainSlotId = chainSlotId;
       _orb = OrbServices.GetSingleton();
       _lock = new ReaderWriterLockSlim();
+      _codec = ServerInterceptor.Instance.Codec;
     }
 
     #endregion
@@ -120,22 +133,25 @@ namespace tecgraf.openbus {
         bool originator = false;
         PrivateKeyImpl accessKey = null;
         if (props != null) {
-          if (props.LegacyDisable != ConnectionPropertiesImpl.LegacyDisableDefault) {
+          if (props.LegacyDisable !=
+              ConnectionPropertiesImpl.LegacyDisableDefault) {
             legacyDisable = props.LegacyDisable;
             LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty,
-                               legacyDisable.ToString(CultureInfo.InvariantCulture));
+                               legacyDisable.ToString(
+                                 CultureInfo.InvariantCulture));
           }
           if (!legacyDisable) {
             if (
               props.LegacyDelegate.Equals(
                 ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
               originator = true;
-              LogPropertyChanged(ConnectionPropertiesImpl.LegacyDelegateProperty,
-                                 props.LegacyDelegate);
+              LogPropertyChanged(
+                ConnectionPropertiesImpl.LegacyDelegateProperty,
+                props.LegacyDelegate);
             }
           }
           if (props.AccessKey != null) {
-            accessKey = (PrivateKeyImpl)props.AccessKey;
+            accessKey = (PrivateKeyImpl) props.AccessKey;
             LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
                                "{AccessKey provida pelo usuário}");
           }
@@ -151,7 +167,9 @@ namespace tecgraf.openbus {
     public Connection GetCurrentConnection() {
       try {
         Guid? guid = GetPICurrent().get_slot(_connectionIdSlotId) as Guid?;
-        Connection current = guid.HasValue ? GetConnectionById(guid.Value) : null;
+        Connection current = guid.HasValue
+                               ? GetConnectionById(guid.Value)
+                               : null;
         return current ?? GetDefaultConnection();
       }
       catch (InvalidSlot e) {
@@ -218,6 +236,97 @@ namespace tecgraf.openbus {
         }
         return chain;
       }
+    }
+
+    public CallerChain MakeChainFor(string loginId) {
+      ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
+      String busid = conn.BusId;
+      SignedCallChain signedChain = conn.Acs.signChainFor(loginId);
+      try {
+        CallChain callChain = UnmarshalCallChain(signedChain);
+        return new CallerChainImpl(busid, callChain.caller, callChain.target,
+                                   callChain.originators, signedChain);
+      }
+      catch (GenericUserException e) {
+        const string message = "Falha inesperada ao criar uma nova cadeia.";
+        Logger.Error(message, e);
+        throw new OpenBusInternalException(message, e);
+      }
+    }
+
+    public byte[] EncodeChain(CallerChain chain) {
+      CallerChainImpl chainImpl = (CallerChainImpl) chain;
+      ExportedCallChain exportedChain = new ExportedCallChain(chain.BusId,
+                                                              chainImpl.Signed);
+      const int id = CredentialContextId.ConstVal;
+      byte[] encodedChain;
+      byte[] encodedId;
+      try {
+        encodedChain = _codec.encode_value(new Any(exportedChain));
+        encodedId = _codec.encode_value(new Any(id));
+      }
+      catch (InvalidTypeForEncoding e) {
+        const string message =
+          "Falha inesperada ao codificar uma cadeia para exportação";
+        Logger.Error(message, e);
+        throw new OpenBusInternalException(message, e);
+      }
+      byte[] fullEnconding = new byte[encodedChain.Length + encodedId.Length];
+      Buffer.BlockCopy(encodedId, 0, fullEnconding, 0, encodedId.Length);
+      Buffer.BlockCopy(encodedChain, 0, fullEnconding, encodedId.Length,
+                       encodedChain.Length);
+      return fullEnconding;
+    }
+
+    public CallerChain DecodeChain(byte[] encoded) {
+      if (encoded.Length <= ChainHeaderSize) {
+        const string msg =
+          "Stream de bytes não corresponde a uma cadeia de chamadas.";
+        throw new InvalidChainStreamException(msg);
+      }
+      ExportedCallChain importedChain;
+      CallChain callChain;
+
+      byte[] encodedId = new byte[ChainHeaderSize];
+      byte[] encodedChain = new byte[encoded.Length - ChainHeaderSize];
+      Buffer.BlockCopy(encoded, 0, encodedId, 0, encodedId.Length);
+      Buffer.BlockCopy(encoded, encodedId.Length, encodedChain, 0,
+                       encodedChain.Length);
+      try {
+        int id = (int) _codec.decode_value(encodedId, _orb.create_long_tc());
+        if (CredentialContextId.ConstVal != id) {
+          String msg =
+            String.Format(
+              "Formato da cadeia é de versão incompatível.\nFormato recebido = {0}\nFormato suportado = {1}",
+              id, CredentialContextId.ConstVal);
+          throw new InvalidChainStreamException(msg);
+        }
+        Type exportedChainType = typeof (ExportedCallChain);
+        TypeCode exportedChainTypeCode =
+          ORB.create_interface_tc(Repository.GetRepositoryID(exportedChainType),
+                                  exportedChainType.Name);
+        importedChain =
+          (ExportedCallChain)
+          _codec.decode_value(encodedChain, exportedChainTypeCode);
+        callChain = UnmarshalCallChain(importedChain.signedChain);
+      }
+      catch (GenericUserException e) {
+        const string message =
+          "Falha inesperada ao decodificar uma cadeia exportada.";
+        Logger.Error(message, e);
+        throw new OpenBusInternalException(message, e);
+      }
+      return new CallerChainImpl(importedChain.bus, callChain.caller,
+                                 callChain.target, callChain.originators,
+                                 importedChain.signedChain);
+    }
+
+    internal CallChain UnmarshalCallChain(SignedCallChain signed) {
+      Type chainType = typeof (CallChain);
+      TypeCode chainTypeCode =
+        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
+                                chainType.Name);
+      return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
     }
 
     public LoginRegistry LoginRegistry {

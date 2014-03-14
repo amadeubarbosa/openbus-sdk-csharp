@@ -1,7 +1,9 @@
 ﻿using System;
 using omg.org.CORBA;
+using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus {
   /// <summary>
@@ -185,6 +187,50 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <returns>Cadeia de chamadas associada ao contexto corrente ou 'null'.</returns>
     CallerChain JoinedChain { get; }
+
+    /// <summary>
+    /// Cria uma nova cadeia de chamadas para a entidade especificada, onde o dono
+    /// da cadeia é a conexão corrente ({@link #CurrentConnection}) e
+    /// utiliza-se a cadeia atual ({@link #JoinedChain}) como a cadeia que se
+    /// deseja dar seguimento ao encadeamento. O identificador de login
+    /// especificado deve ser um login atualmente válido para que a operação tenha
+    /// sucesso.
+    /// </summary>
+    /// <param name="loginId">Identificador de login da entidade para a qual deseja-se
+    ///        enviar a cadeia.</param>
+    /// <returns>A cadeia gerada para ser utilizada pela entidade com o login
+    ///         especificado.</returns>
+    /// 
+    /// <exception cref="InvalidLogins">Caso o login especificado seja inválido.</exception>
+    /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do barramento
+    ///         que impediu a criação da cadeia.</exception>
+    CallerChain MakeChainFor(String loginId);
+
+    /// <summary>
+    /// Codifica uma cadeia de chamadas em um stream de bytes para permitir a
+    /// persistência ou transferência da informação. A codificação é realizada em
+    /// CDR e possui um identificador de versão concatenado com as informações da
+    /// cadeia ({@link CredentialContextId} + {@link ExportedCallChain}). Sendo
+    /// assim, a stream só será decodificada com sucesso por alguém que entenda
+    /// esta mesma codificação.
+    /// </summary>
+    /// <param name="chain">A cadeia a ser codificada.</param>
+    /// <returns>A cadeia codificada em um stream de bytes.</returns>
+    byte[] EncodeChain(CallerChain chain);
+
+    /// <summary>
+    /// Decodifica um stream de bytes de uma cadeia para o formato
+    /// {@link CallerChain}. Espera-se que a stream de bytes esteja codificada em
+    /// CDR e seja formada por um identificador de versão concatenado com as
+    /// informações da cadeia ({@link CredentialContextId} +
+    /// {@link ExportedCallChain}).
+    /// </summary>
+    /// 
+    /// <param name="encoded">O stream de bytes que representa a cadeia.</param>
+    /// <returns>A cadeia de chamadas no formato {@link CallerChain}.</returns>
+    /// <exception cref="InvalidChainStreamException">Caso o stream de bytes não esteja no formato
+    ///        esperado.</exception>
+    CallerChain DecodeChain(byte[] encoded);
 
     /// <summary>
     /// Referência ao serviço núcleo de registro de logins do barramento
