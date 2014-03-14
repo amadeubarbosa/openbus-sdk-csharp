@@ -59,7 +59,7 @@ namespace tecgraf.openbus.assistant {
         Logger.Debug("Thread de registro de ofertas do assistente finalizada.");
       }
       catch (ThreadInterruptedException) {
-        Logger.Warn("Registro de ofertas do assistente interrompido");
+        Logger.Warn("Registro de ofertas do assistente interrompido.");
       }
     }
 
