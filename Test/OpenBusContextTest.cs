@@ -28,6 +28,7 @@ namespace tecgraf.openbus.Test {
     private static byte[] _password;
     private static PrivateKey _accessKey;
     private static OpenBusContext _context;
+    private static readonly Object Lock = new Object();
 
     private static readonly ConnectionProperties Props =
       new ConnectionPropertiesImpl();
@@ -56,6 +57,10 @@ namespace tecgraf.openbus.Test {
     //public static void MyClassCleanup() {
     //}
     //
+    // Use TestCleanup to run code after each test has run
+    //[TestCleanup]
+    //public void MyTestCleanup() {
+    //}
 
     #endregion
 
@@ -101,7 +106,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void ORBTest() {
-      lock (_context) {
+      lock (Lock) {
         Assert.IsNotNull(ORBInitializer.Context.ORB);
       }
     }
@@ -111,7 +116,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void CreateConnectionTest() {
-      lock (_context) {
+      lock (Lock) {
         // cria conexão válida
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, Props));
         // tenta criar conexão com hosts inválidos
@@ -182,7 +187,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void OnCallDispatchCallbackTest() {
-      lock (_context) {
+      lock (Lock) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         Assert.IsNull(_context.OnCallDispatch);
         CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
@@ -198,7 +203,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void DefaultConnectionTest() {
-      lock (_context) {
+      lock (Lock) {
         _context.SetDefaultConnection(null);
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
@@ -262,7 +267,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void CurrentConnectionTest() {
-      lock (_context) {
+      lock (Lock) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetCurrentConnection());
@@ -322,7 +327,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void CallerChainTest() {
-      lock (_context) {
+      lock (Lock) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         _context.SetDefaultConnection(conn);
         Assert.IsNull(_context.CallerChain);
@@ -360,7 +365,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void JoinChainTest() {
-      lock (_context) {
+      lock (Lock) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
@@ -390,7 +395,7 @@ namespace tecgraf.openbus.Test {
     ///</summary>
     [TestMethod]
     public void ExitChainTest() {
-      lock (_context) {
+      lock (Lock) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
@@ -407,23 +412,6 @@ namespace tecgraf.openbus.Test {
         Assert.IsTrue(conn.Logout());
         _context.SetCurrentConnection(null);
       }
-    }
-
-    //Use TestCleanup to run code after each test has run
-    [TestCleanup]
-    public void MyTestCleanup() {
-      // não gera erro em testes rodados automaticamente mas permite perceber ao rodar na mão
-      CheckConnectionsMapSize();
-    }
-
-    private void CheckConnectionsMapSize() {
-      int size;
-      lock (_context) {
-        size = ((OpenBusContextImpl) _context).GetConnectionsMapSize();
-      }
-      Assert.AreEqual(0, size,
-                      "Número de conexões no contexto ao final dos testes não é zero, é " +
-                      size + ".");
     }
   }
 }

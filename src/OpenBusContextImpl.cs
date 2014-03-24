@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
@@ -18,8 +18,9 @@ namespace tecgraf.openbus {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (OpenBusContextImpl));
 
-    // Mapa de conexões
-    private readonly ConcurrentDictionary<Guid, Connection> _connections;
+    // Mapa de conexões thread-safe. Associa uma referência fraca a uma conexão. Como as comparações de chave são feitas baseadas no endereço do objeto, o próprio endereço já serve como identificador.
+    // Remove automaticamente entradas não mais utilizadas para evitar memory leak das threads de recebimento de chamadas.
+    private readonly ConditionalWeakTable<Object, Connection> _connections;
 
     private readonly OrbServices _orb;
 
@@ -46,7 +47,7 @@ namespace tecgraf.openbus {
 
     public OpenBusContextImpl(int connectionIdSlotId, int ignoreThreadSlotId,
                               int joinedChainSlotId, int chainSlotId) {
-      _connections = new ConcurrentDictionary<Guid, Connection>();
+      _connections = new ConditionalWeakTable<Object, Connection>();
       _connectionIdSlotId = connectionIdSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
       _joinedChainSlotId = joinedChainSlotId;
@@ -150,8 +151,8 @@ namespace tecgraf.openbus {
 
     public Connection GetCurrentConnection() {
       try {
-        Guid? guid = GetPICurrent().get_slot(_connectionIdSlotId) as Guid?;
-        Connection current = guid.HasValue ? GetConnectionById(guid.Value) : null;
+        Object guid = GetPICurrent().get_slot(_connectionIdSlotId);
+        Connection current = guid != null ? GetConnectionById(guid) : null;
         return current ?? GetDefaultConnection();
       }
       catch (InvalidSlot e) {
@@ -162,7 +163,7 @@ namespace tecgraf.openbus {
 
     public Connection SetCurrentConnection(Connection conn) {
       // somente ignora o guid
-      Guid? guid;
+      Object guid;
       return SetCurrentConnection(conn, out guid);
     }
 
@@ -247,24 +248,24 @@ namespace tecgraf.openbus {
     #region Internal Members
 
     internal void SetCurrentConnection(Connection conn, ServerRequestInfo ri) {
-      Guid? guid;
+      Object guid;
       SetCurrentConnection(conn, out guid);
-      if (conn != null && guid.HasValue) {
+      if (conn != null && guid != null) {
         ri.set_slot(_connectionIdSlotId, guid);
       }
     }
 
-    private Connection SetCurrentConnection(Connection conn, out Guid? guid) {
+    private Connection SetCurrentConnection(Connection conn, out Object guid) {
       Connection previous = null;
       Current current = GetPICurrent();
       try {
         // tenta reaproveitar o guid
-        guid = current.get_slot(_connectionIdSlotId) as Guid?;
-        if (guid.HasValue) {
-          previous = GetConnectionById(guid.Value);
+        guid = current.get_slot(_connectionIdSlotId);
+        if (guid != null) {
+          previous = GetConnectionById(guid);
           if (conn == null) {
             current.set_slot(_connectionIdSlotId, null);
-            SetConnectionById(guid.Value, null);
+            SetConnectionById(guid, null);
             return previous;
           }
         }
@@ -272,10 +273,10 @@ namespace tecgraf.openbus {
           if (conn == null) {
             return null;
           }
-          guid = Guid.NewGuid();
+          guid = new Object();
           current.set_slot(_connectionIdSlotId, guid);
         }
-        SetConnectionById(guid.Value, conn);
+        SetConnectionById(guid, conn);
         return previous;
       }
       catch (InvalidSlot e) {
@@ -295,17 +296,16 @@ namespace tecgraf.openbus {
       return current;
     }
 
-    private void SetConnectionById(Guid connectionId, Connection conn) {
+    private void SetConnectionById(Object connectionId, Connection conn) {
       lock (_connections) {
-        Connection removed;
-        _connections.TryRemove(connectionId, out removed);
+        _connections.Remove(connectionId);
         if (conn != null) {
-          _connections.TryAdd(connectionId, conn);
+          _connections.Add(connectionId, conn);
         }
       }
     }
 
-    private Connection GetConnectionById(Guid connectionId) {
+    private Connection GetConnectionById(Object connectionId) {
       Connection conn;
       return _connections.TryGetValue(connectionId, out conn) ? conn : null;
     }
@@ -348,10 +348,6 @@ namespace tecgraf.openbus {
     private void LogPropertyChanged(string prop, string value) {
       Logger.Info(String.Format("Propriedade {0} alterada para o valor {1}.",
                                 prop, value));
-    }
-
-    internal int GetConnectionsMapSize() {
-      return _connections.Count;
     }
 
     #endregion
