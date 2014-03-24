@@ -59,6 +59,11 @@ namespace tecgraf.openbus.Test {
     //public static void MyClassCleanup() {
     //}
     //
+    // Use TestCleanup to run code after each test has run
+    //[TestCleanup]
+    //public void MyTestCleanup() {
+    //}
+
 
     #endregion
 
@@ -676,23 +681,6 @@ namespace tecgraf.openbus.Test {
         conn2.Logout();
         conn3.Logout();
       }
-    }
-
-    //Use TestCleanup to run code after each test has run
-    [TestCleanup]
-    public void MyTestCleanup() {
-      // não gera erro em testes rodados automaticamente mas permite perceber ao rodar na mão
-      CheckConnectionsMapSize();
-    }
-
-    private void CheckConnectionsMapSize() {
-      int size;
-      lock (Lock) {
-        size = ((OpenBusContextImpl) _context).GetConnectionsMapSize();
-      }
-      Assert.AreEqual(0, size,
-                      "Número de conexões no contexto ao final dos testes não é zero, é " +
-                      size + ".");
     }
 
     /// <summary>
