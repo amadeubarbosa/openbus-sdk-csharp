@@ -18,12 +18,6 @@ namespace tecgraf.openbus.interceptors {
 
     private readonly String _name = String.Empty;
 
-    /// <summary>
-    /// Fornece o objeto responsável pelo marshall/unmarshall de credenciais 
-    /// para transporte/obtenção de contextos de requisições de servico.
-    /// </summary>
-    internal Codec Codec { get; set; }
-
     internal OpenBusContextImpl Context;
 
     /// <summary>

@@ -248,7 +248,7 @@ namespace tecgraf.openbus.interceptors {
 
       byte[] data = serviceContext.context_data;
       return new AnyCredential(
-        (CredentialData) Codec.decode_value(data, credentialTypeCode));
+        (CredentialData) InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode));
     }
 
     private AnyCredential UnmarshalLegacyCredential(
@@ -261,7 +261,7 @@ namespace tecgraf.openbus.interceptors {
 
       byte[] data = serviceContext.context_data;
       Credential cred =
-        (Credential) Codec.decode_value(data, credentialTypeCode);
+        (Credential) InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode);
       return new AnyCredential(cred);
     }
 

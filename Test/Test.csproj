@@ -53,6 +53,9 @@
     <Reference Include="Openbus.Interop.Hello.Idl">
       <HintPath>..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="OpenBus.Test.Idl">
+      <HintPath>..\lib\OpenBus.Test.Idl.dll</HintPath>
+    </Reference>
     <Reference Include="Scs">
       <HintPath>..\lib\Scs.dll</HintPath>
     </Reference>
@@ -69,6 +72,7 @@
   <ItemGroup>
     <Compile Include="AssistantTest.cs" />
     <Compile Include="CallDispatchCallbackImpl.cs" />
+    <Compile Include="CallerChainInspectorImpl.cs" />
     <Compile Include="OpenBusContextTest.cs" />
     <Compile Include="ConnectionTest.cs" />
     <Compile Include="HelloMock.cs" />

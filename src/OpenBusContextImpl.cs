@@ -65,7 +65,7 @@ namespace tecgraf.openbus {
       _chainSlotId = chainSlotId;
       _orb = OrbServices.GetSingleton();
       _lock = new ReaderWriterLockSlim();
-      _codec = ServerInterceptor.Instance.Codec;
+      _codec = InterceptorsInitializer.Codec;
     }
 
     #endregion
@@ -262,8 +262,8 @@ namespace tecgraf.openbus {
       byte[] encodedChain;
       byte[] encodedId;
       try {
-        encodedChain = _codec.encode_value(new Any(exportedChain));
-        encodedId = _codec.encode_value(new Any(id));
+        encodedChain = _codec.encode_value(exportedChain);
+        encodedId = _codec.encode_value(id);
       }
       catch (InvalidTypeForEncoding e) {
         const string message =

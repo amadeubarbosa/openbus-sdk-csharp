@@ -13,7 +13,13 @@ namespace tecgraf.openbus.interceptors {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (InterceptorsInitializer));
 
-    public OpenBusContextImpl Context;
+    /// <summary>
+    /// Fornece o objeto responsável pelo marshall/unmarshall de credenciais 
+    /// para transporte/obtenção de contextos de requisições de servico.
+    /// </summary>
+    internal static Codec Codec;
+
+    internal OpenBusContextImpl Context;
 
     #endregion
 
@@ -27,16 +33,15 @@ namespace tecgraf.openbus.interceptors {
       int loginSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
-      Context = new OpenBusContextImpl(connectionIdSlotId, ignoreThreadSlotId,
-                                    joinedChainSlotId, chainSlotId);
 
-      Codec codec = info.codec_factory.create_codec(
+      Codec = info.codec_factory.create_codec(
         new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
-      ServerInterceptor.Instance.Codec = codec;
+      Context = new OpenBusContextImpl(connectionIdSlotId, ignoreThreadSlotId,
+                                joinedChainSlotId, chainSlotId);
+
       ServerInterceptor.Instance.ChainSlotId = chainSlotId;
       ServerInterceptor.Instance.ReceivingConnectionSlotId = receivingSlotId;
       ServerInterceptor.Instance.Context = Context;
-      ClientInterceptor.Instance.Codec = codec;
       ClientInterceptor.Instance.LoginSlotId = loginSlotId;
       ClientInterceptor.Instance.Context = Context;
 

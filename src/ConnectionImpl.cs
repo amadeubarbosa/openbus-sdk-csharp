@@ -114,7 +114,7 @@ namespace tecgraf.openbus {
       _originalLegacy = legacy;
       Legacy = legacy;
       _delegateOriginator = delegateOriginator;
-      _codec = ServerInterceptor.Instance.Codec;
+      _codec = InterceptorsInitializer.Codec;
       _chainSlotId = ServerInterceptor.Instance.ChainSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
 
