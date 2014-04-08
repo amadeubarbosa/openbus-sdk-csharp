@@ -31,9 +31,8 @@ namespace tecgraf.openbus.assistant {
     /// tentativa após uma falha na execução de uma tarefa. Por exemplo, depois 
     /// de uma falha na tentativa de um login ou registro de oferta, o 
     /// assistente espera pelo menos o tempo indicado por esse parâmetro antes 
-    /// de realizar uma nova tentativa. O valor mínimo é 0,001. Para valores 
-    /// maiores que o mínimo mas com mais de três casas decimais, é utilizada o
-    /// método Math.Ceiling().
+    /// de realizar uma nova tentativa. Se esse valor for menor que 1 a exceção 
+    /// InvalidPropertyValueException é lançada.
     /// </summary>
     float Interval { get; set; }
 
