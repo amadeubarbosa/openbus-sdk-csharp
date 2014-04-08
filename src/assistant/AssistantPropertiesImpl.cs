@@ -18,9 +18,9 @@ namespace tecgraf.openbus.assistant {
     public float Interval {
       get { return _interval; }
       set {
-        if (value < 0.001) {
+        if (value < 1) {
           throw new InvalidPropertyValueException("interval",
-                                                  "O intervalo deve ser maior que 0,001s.");
+                                                  "O intervalo de espera especificado é muito pequeno.");
         }
         _interval = value;
         IntervalMillis = (int) Math.Ceiling(value*1000);
