@@ -45,12 +45,15 @@ namespace tecgraf.openbus.Test {
 
     #endregion
 
+    //TODO incluir teste de InitORB passando propriedades SSL? Problema: para o teste rodar, o certificado deverá estar cadastrado no keystore do Windows.
+
     /// <summary>
     /// Teste da auto-propriedade Context
     ///</summary>
     [TestMethod]
     [DeploymentItem("Openbus.dll")]
     public void ContextTest() {
+      Assert.IsNotNull(ORBInitializer.InitORB());
       Assert.IsNotNull(ORBInitializer.Context);
     }
   }

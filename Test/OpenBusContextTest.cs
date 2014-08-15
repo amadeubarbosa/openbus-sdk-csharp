@@ -101,6 +101,7 @@ namespace tecgraf.openbus.Test {
       _accessKey = Crypto.ReadKeyFile(privateKey);
       Props.AccessKey = _accessKey;
 
+      ORBInitializer.InitORB();
       _context = ORBInitializer.Context;
     }
 

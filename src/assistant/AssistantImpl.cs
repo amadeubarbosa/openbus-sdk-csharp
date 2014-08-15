@@ -49,8 +49,8 @@ namespace tecgraf.openbus.assistant {
         throw new ArgumentException(
           "O parâmetro properties deve ser uma instância de PasswordProperties, PrivateKeyProperties ou SharedAuthProperties.");
       }
+      ORB = ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      ORB = context.ORB;
       _host = host;
       _port = port;
       _properties = properties as AssistantPropertiesImpl;

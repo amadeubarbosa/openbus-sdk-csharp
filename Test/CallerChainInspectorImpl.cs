@@ -16,6 +16,7 @@ namespace tecgraf.openbus.test {
    * @param context o contexto.
    */
   public CallerChainInspectorImpl() {
+    ORBInitializer.InitORB();
     _context = ORBInitializer.Context;
   }
 

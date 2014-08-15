@@ -81,6 +81,7 @@ namespace tecgraf.openbus.test {
       }
       _wrongKey = Crypto.ReadKeyFile(wrongKey);
 
+      ORBInitializer.InitORB();
       _context = ORBInitializer.Context;
     }
 

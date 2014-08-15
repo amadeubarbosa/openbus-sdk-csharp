@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Runtime.Remoting.Channels;
 using Ch.Elca.Iiop;
 using omg.org.CORBA;
+using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
 
 namespace tecgraf.openbus {
@@ -13,11 +15,6 @@ namespace tecgraf.openbus {
   /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
   /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
   /// também apenas uma instância de OpenBusContext.
-  /// 
-  /// O objetivo original dessa classe seria fornecer um método "InitORB". Como
-  /// o ORB é um singleton, ele é automaticamente inicializado durante a
-  /// primeira obtenção do OpenBusContext e assim o método "InitORB" não é
-  /// público.
   /// </summary>
   public static class ORBInitializer {
     #region Fields
@@ -32,7 +29,7 @@ namespace tecgraf.openbus {
     #region Public Members
 
     /// <summary>
-    /// Devolve o gerenciador de conexões.
+    /// Fornece o gerenciador de conexões.
     /// 
     /// Na versão atual do IIOP.Net a implementação do ORB é um singleton e,
     /// portanto, há sempre apenas uma instância de ORB. Por isso, há sempre
@@ -40,31 +37,36 @@ namespace tecgraf.openbus {
     /// </summary>
     public static OpenBusContext Context { 
       get {
-        if (!_initialized) {
-          InitORB();
+        if (_initialized) {
+          return _context;
         }
-        return _context;
+        throw new ORBNotInitializedException("O ORB deve ser inicializado para o OpenBus primeiro. Use o método InitORB.");
       } 
       private set {
         _context = value as OpenBusContextImpl;
       } 
     }
 
-    #endregion
-
-    private static OrbServices InitORB() {
+    /// <summary>
+    /// Inicializa o ORB, transformando-o em um ORB preparado para o OpenBus.
+    /// </summary>
+    /// <param name="properties">Conjunto opcional de propriedades a ser passada para o canal IIOP do servidor.</param>
+    /// <returns>O ORB.</returns>
+    public static OrbServices InitORB(IDictionary properties = null) {
       lock (Lock) {
         if (!_initialized) {
           // Adiciona interceptadores
           InterceptorsInitializer initializer = new InterceptorsInitializer();
           ORB.RegisterPortableInterceptorInitalizer(initializer);
           ORB.CompleteInterceptorRegistration();
-          ChannelServices.RegisterChannel(new IiopChannel(0), false);
+          ChannelServices.RegisterChannel(properties != null ? new IiopChannel(properties) : new IiopChannel(0), false);
           Context = initializer.Context;
           _initialized = true;
         }
       }
       return ORB;
     }
+
+    #endregion
   }
 }
