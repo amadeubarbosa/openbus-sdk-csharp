@@ -12,7 +12,11 @@ namespace tecgraf.openbus.assistant {
     private readonly OrbServices _orb = OrbServices.GetSingleton();
 
     /// <inheritdoc/>
-    internal int IntervalMillis { set; get; }
+    internal int IntervalMillis {
+      get {
+        return (int)Math.Ceiling(Interval * 1000);
+      }
+    }
 
       /// <inheritdoc/>
     public float Interval {
@@ -23,7 +27,6 @@ namespace tecgraf.openbus.assistant {
                                                   "O intervalo de espera especificado é muito pequeno.");
         }
         _interval = value;
-        IntervalMillis = (int) Math.Ceiling(value*1000);
       }
     }
 
