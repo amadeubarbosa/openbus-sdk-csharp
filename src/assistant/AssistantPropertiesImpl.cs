@@ -8,7 +8,7 @@ namespace tecgraf.openbus.assistant {
   /// para definir parâmetros de configuração do Assistente.
   /// </summary>
   public abstract class AssistantPropertiesImpl : AssistantProperties {
-    private float _interval = 1;
+    private float _interval = 5;
     private readonly OrbServices _orb = OrbServices.GetSingleton();
 
     /// <inheritdoc/>
