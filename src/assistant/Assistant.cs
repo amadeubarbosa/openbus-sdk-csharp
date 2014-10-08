@@ -78,7 +78,10 @@ namespace tecgraf.openbus.assistant {
     /// 
     /// Caso ocorram erros, a callback de tratamento de erro apropriada será
     /// chamada. Se o número de tentativas se esgotar e não houver sucesso, uma
-    /// sequência vazia será retornada.
+    /// sequência vazia será retornada. 
+    /// 
+    /// Caso o assistente tenha sido finalizado, uma sequência vazia será
+    /// retornada.
     /// </summary>
     /// <param name="properties">Propriedades que as ofertas de serviços 
     /// encontradas devem apresentar.</param>
@@ -123,8 +126,11 @@ namespace tecgraf.openbus.assistant {
     /// inválidas e não podem mais ser utilizadas para criar um login.
     ///
     /// Caso ocorram erros, a callback de tratamento de erro apropriada será
-    /// chamada. Se o número de tentativas se esgotar e não houver sucesso, os
-    /// dois valores retornados serão null.
+    /// chamada. Se o número de tentativas se esgotar e não houver sucesso, a
+    /// última exceção recebida será lançada como Exception.
+    /// 
+    /// Caso o assistente tenha sido finalizado, os dois valores de retorno
+    /// serão null.
     /// </summary>
     /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
     /// <param name="retries">Parâmetro opcional indicando o número de novas 
