@@ -116,8 +116,10 @@ namespace tecgraf.openbus.test {
 
     [TestMethod]
     public void CreateAssistantPropertiesTest() {
-      bool failed = false;
       PasswordProperties passProps = new PasswordProperties(_entity, _password);
+      Assert.AreEqual(passProps.Interval, 1);
+      Assert.AreEqual(passProps.IntervalMillis, 1000);
+      bool failed = false;
       try {
         passProps.Interval = 0.0001F;
       }
