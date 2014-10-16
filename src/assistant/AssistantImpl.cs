@@ -205,8 +205,8 @@ namespace tecgraf.openbus.assistant {
         }
         if (retries == 0) {
           Logger.Warn(
-            "Número de tentativas esgotado ao tentar encontrar serviços. A última exceção recebida será lançada.");
-          throw caught;
+            "Número de tentativas esgotado ao tentar encontrar serviços. Será retornada uma lista vazia.");
+          return new ServiceOfferDesc[0];
         }
         if (retries > 0) {
           Logger.Debug("Erro ao tentar encontrar serviços. Uma nova tentativa será realizada.");
@@ -216,7 +216,7 @@ namespace tecgraf.openbus.assistant {
       } while (_active);
 
       Logger.Warn("O Assistente foi finalizado. Finalizando busca.");
-      return null;
+      return new ServiceOfferDesc[0];
     }
 
     #endregion
