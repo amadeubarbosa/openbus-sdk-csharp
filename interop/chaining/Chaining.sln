@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{76762187-8158-4C55-B459-A527CE1EA061}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proxy", "Proxy\Proxy.csproj", "{B677271E-1FF0-4212-B94D-3AA69179134A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{5B1ADBC4-6BA0-4508-AF36-706197CC2A06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,6 +17,14 @@ Global
 		{76762187-8158-4C55-B459-A527CE1EA061}.Debug|x86.Build.0 = Debug|x86
 		{76762187-8158-4C55-B459-A527CE1EA061}.Release|x86.ActiveCfg = Release|x86
 		{76762187-8158-4C55-B459-A527CE1EA061}.Release|x86.Build.0 = Release|x86
+		{B677271E-1FF0-4212-B94D-3AA69179134A}.Debug|x86.ActiveCfg = Debug|x86
+		{B677271E-1FF0-4212-B94D-3AA69179134A}.Debug|x86.Build.0 = Debug|x86
+		{B677271E-1FF0-4212-B94D-3AA69179134A}.Release|x86.ActiveCfg = Release|x86
+		{B677271E-1FF0-4212-B94D-3AA69179134A}.Release|x86.Build.0 = Release|x86
+		{5B1ADBC4-6BA0-4508-AF36-706197CC2A06}.Debug|x86.ActiveCfg = Debug|x86
+		{5B1ADBC4-6BA0-4508-AF36-706197CC2A06}.Debug|x86.Build.0 = Debug|x86
+		{5B1ADBC4-6BA0-4508-AF36-706197CC2A06}.Release|x86.ActiveCfg = Release|x86
+		{5B1ADBC4-6BA0-4508-AF36-706197CC2A06}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -35,19 +35,35 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IIOPChannel">
+      <HintPath>..\..\..\lib\IIOPChannel.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\..\lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenBus">
+      <HintPath>..\..\..\lib\OpenBus.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenBus.Idl">
+      <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs">
+      <HintPath>..\..\..\lib\Scs.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs.Core">
+      <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
