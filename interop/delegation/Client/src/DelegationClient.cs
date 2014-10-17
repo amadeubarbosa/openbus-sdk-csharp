@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.delegation.Properties;
 
 namespace tecgraf.openbus.interop.delegation {

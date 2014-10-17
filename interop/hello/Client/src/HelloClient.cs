@@ -7,7 +7,7 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.simple.Properties;
 
 namespace tecgraf.openbus.interop.simple {

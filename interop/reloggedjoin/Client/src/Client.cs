@@ -8,7 +8,7 @@ using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.relloggedjoin.Properties;
 using tecgraf.openbus.interop.simple;
 
@@ -45,7 +45,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       ServiceProperty prop2 = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] { prop1, prop2 };
+      ServiceProperty[] properties = { prop1, prop2 };
       ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {

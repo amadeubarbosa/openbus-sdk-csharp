@@ -1,6 +1,6 @@
 ﻿using System;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.relloggedjoin {
