@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using demo.Properties;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 
 namespace demo {
   /// <summary>

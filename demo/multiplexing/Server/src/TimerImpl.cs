@@ -3,7 +3,7 @@ using System.Threading;
 using demo.Properties;
 using omg.org.CORBA;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_1.services.access_control;
 
 namespace demo {
   /// <summary>

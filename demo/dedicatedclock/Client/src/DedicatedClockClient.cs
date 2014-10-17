@@ -5,9 +5,9 @@ using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
 using tecgraf.openbus;
-using tecgraf.openbus.core.v2_0.services;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 
 namespace demo {
