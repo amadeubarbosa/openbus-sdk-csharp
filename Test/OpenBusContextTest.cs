@@ -6,8 +6,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
@@ -148,40 +148,6 @@ namespace tecgraf.openbus.Test {
         }
         finally {
           Assert.IsNull(invalid);
-        }
-        // cria conexão com propriedade legacy.delegate com valor inválido
-        // essa propriedade só funciona se legacy.disable for false, o que é o padrão
-        ConnectionProperties props = new ConnectionPropertiesImpl();
-        bool failed = false;
-        try {
-          props.LegacyDelegate = String.Empty;
-        }
-        catch (InvalidPropertyValueException e) {
-          Assert.AreEqual(e.Property, "legacy.delegate");
-          failed = true;
-        }
-        finally {
-          Assert.IsTrue(failed);
-        }
-        // cria conexão com propriedade legacy.delegate com valores válidos
-        props.LegacyDelegate = "caller";
-        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        props.LegacyDelegate = "originator";
-        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        failed = false;
-        try {
-          // cria conexão sem propriedades opcionais (inclui AccessKey nula)
-          Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, null));
-          // tenta setar propriedade access.key inválida
-          props.AccessKey = new PrivateKeyMock();
-        }
-        catch (InvalidPropertyValueException e) {
-          Assert.AreEqual(e.Property, "access.key");
-          failed = true;
-        }
-        finally {
-          Assert.IsTrue(failed);
-          props.AccessKey = _accessKey;
         }
       }
     }

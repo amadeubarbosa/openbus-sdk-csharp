@@ -1,8 +1,8 @@
 ﻿using System;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_0.services;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus {
@@ -84,18 +84,7 @@ namespace tecgraf.openbus {
     ///   geração de credenciais que identificam as chamadas através do
     ///   barramento. A chave deve ser uma chave privada RSA de 2048 bits
     ///   (256 bytes). Quando essa propriedade não é fornecida, uma chave
-    ///   de acesso é gerada automaticamente.
-    /// - legacy.disable: desabilita o suporte a chamadas usando protocolo
-    ///   OpenBus 1.5. Por padrão o suporte está habilitado.
-    /// - legacy.delegate: indica como é preenchido o campo 'delegate' das
-    ///   credenciais enviadas em chamadas usando protocolo OpenBus 1.5. Há
-    ///   duas formas possíveis (o padrão é 'caller'):
-    ///   - caller: o campo 'delegate' é preenchido sempre com a entidade
-    ///     do campo 'caller' da cadeia de chamadas.
-    ///   - originator: o campo 'delegate' é preenchido sempre com a
-    ///     entidade que originou a cadeia de chamadas, que é o primeiro
-    ///     login do campo 'originators' ou o campo 'caller' quando este
-    ///     é vazio.</param>
+    ///   de acesso é gerada automaticamente.</param>
     /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou a porta seja 0.</exception>
     /// <returns>Conexão criada.</returns>
     Connection CreateConnection(string host, ushort port,

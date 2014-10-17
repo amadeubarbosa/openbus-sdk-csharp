@@ -6,30 +6,6 @@ namespace tecgraf.openbus {
   /// </summary>
   public interface ConnectionProperties {
     /// <summary>
-    /// Define o valor da propriedade 'legacy.disable'.
-    /// 
-    /// Desabilita o suporte a chamadas usando protocolo OpenBus 1.5.
-    /// Por padrão o suporte está habilitado.
-    /// </summary>
-    bool LegacyDisable { get; set; }
-
-    /// <summary>
-    /// Define o valor da propriedade 'legacy.delegate'.
-    /// 
-    /// Indica como é preenchido o campo 'delegate' das
-    /// credenciais enviadas em chamadas usando protocolo OpenBus 1.5. Há
-    /// duas formas possíveis (o padrão é 'caller'):
-    ///   - caller: o campo 'delegate' é preenchido sempre com a entidade
-    ///     do campo 'caller' da cadeia de chamadas.
-    ///   - originator: o campo 'delegate' é preenchido sempre com a
-    ///     entidade que originou a cadeia de chamadas, que é o primeiro
-    ///     login do campo 'originators' ou o campo 'caller' quando este
-    ///     é vazio.
-    /// </summary>
-    /// <exception cref="InvalidPropertyValueException">O valor fornecido não é um dos valores esperados.</exception>
-    string LegacyDelegate { get; set; }
-
-    /// <summary>
     /// Define o valor da propriedade 'access.key'.
     /// 
     /// Chave de acesso a ser utiliza internamente para a geração de

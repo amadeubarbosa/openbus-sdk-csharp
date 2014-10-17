@@ -7,7 +7,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
-using tecgraf.openbus.core.v2_0;
+using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus.security {

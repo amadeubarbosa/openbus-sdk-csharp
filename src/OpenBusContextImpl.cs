@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Ch.Elca.Iiop;
@@ -9,9 +8,9 @@ using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v2_0.credential;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.credential;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
 using tecgraf.openbus.security;
@@ -58,7 +57,7 @@ namespace tecgraf.openbus {
     #region Constructors
 
     public OpenBusContextImpl(int connectionIdSlotId, int ignoreThreadSlotId,
-                              int joinedChainSlotId, int chainSlotId) {
+      int joinedChainSlotId, int chainSlotId) {
       _connections = new ConditionalWeakTable<Object, Connection>();
       _connectionIdSlotId = connectionIdSlotId;
       _ignoreThreadSlotId = ignoreThreadSlotId;
@@ -121,7 +120,7 @@ namespace tecgraf.openbus {
     }
 
     public Connection CreateConnection(string host, ushort port,
-                                       ConnectionProperties props) {
+      ConnectionProperties props) {
       if (host == null || host.Equals(string.Empty)) {
         throw new ArgumentException("Endereço inválido.");
       }
@@ -130,35 +129,15 @@ namespace tecgraf.openbus {
       }
       IgnoreCurrentThread();
       try {
-        bool legacyDisable = false;
-        bool originator = false;
         PrivateKeyImpl accessKey = null;
         if (props != null) {
-          if (props.LegacyDisable !=
-              ConnectionPropertiesImpl.LegacyDisableDefault) {
-            legacyDisable = props.LegacyDisable;
-            LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty,
-                               legacyDisable.ToString(
-                                 CultureInfo.InvariantCulture));
-          }
-          if (!legacyDisable) {
-            if (
-              props.LegacyDelegate.Equals(
-                ConnectionPropertiesImpl.LegacyDelegateOriginatorOption)) {
-              originator = true;
-              LogPropertyChanged(
-                ConnectionPropertiesImpl.LegacyDelegateProperty,
-                props.LegacyDelegate);
-            }
-          }
           if (props.AccessKey != null) {
             accessKey = (PrivateKeyImpl) props.AccessKey;
             LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
-                               "{AccessKey provida pelo usuário}");
+              "{AccessKey provida pelo usuário}");
           }
         }
-        return new ConnectionImpl(host, port, this, !legacyDisable, originator,
-                                  accessKey);
+        return new ConnectionImpl(host, port, this, accessKey);
       }
       finally {
         UnignoreCurrentThread();
@@ -240,11 +219,11 @@ namespace tecgraf.openbus {
     public CallerChain MakeChainFor(string loginId) {
       ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
       String busid = conn.BusId;
-      SignedCallChain signedChain = conn.Acs.signChainFor(loginId);
+      SignedData signedChain = conn.Acs.signChainFor(loginId);
       try {
         CallChain callChain = UnmarshalCallChain(signedChain);
         return new CallerChainImpl(busid, callChain.caller, callChain.target,
-                                   callChain.originators, signedChain);
+          callChain.originators, signedChain);
       }
       catch (GenericUserException e) {
         const string message = "Falha inesperada ao criar uma nova cadeia.";
@@ -256,7 +235,7 @@ namespace tecgraf.openbus {
     public byte[] EncodeChain(CallerChain chain) {
       CallerChainImpl chainImpl = (CallerChainImpl) chain;
       ExportedCallChain exportedChain = new ExportedCallChain(chain.BusId,
-                                                              chainImpl.Signed);
+        chainImpl.Signed);
       const int id = CredentialContextId.ConstVal;
       byte[] encodedChain;
       byte[] encodedId;
@@ -273,7 +252,7 @@ namespace tecgraf.openbus {
       byte[] fullEnconding = new byte[encodedChain.Length + encodedId.Length];
       Buffer.BlockCopy(encodedId, 0, fullEnconding, 0, encodedId.Length);
       Buffer.BlockCopy(encodedChain, 0, fullEnconding, encodedId.Length,
-                       encodedChain.Length);
+        encodedChain.Length);
       return fullEnconding;
     }
 
@@ -290,7 +269,7 @@ namespace tecgraf.openbus {
       byte[] encodedChain = new byte[encoded.Length - ChainHeaderSize];
       Buffer.BlockCopy(encoded, 0, encodedId, 0, encodedId.Length);
       Buffer.BlockCopy(encoded, encodedId.Length, encodedChain, 0,
-                       encodedChain.Length);
+        encodedChain.Length);
       try {
         int id = (int) _codec.decode_value(encodedId, _orb.create_long_tc());
         if (CredentialContextId.ConstVal != id) {
@@ -303,10 +282,10 @@ namespace tecgraf.openbus {
         Type exportedChainType = typeof (ExportedCallChain);
         TypeCode exportedChainTypeCode =
           ORB.create_interface_tc(Repository.GetRepositoryID(exportedChainType),
-                                  exportedChainType.Name);
+            exportedChainType.Name);
         importedChain =
           (ExportedCallChain)
-          _codec.decode_value(encodedChain, exportedChainTypeCode);
+            _codec.decode_value(encodedChain, exportedChainTypeCode);
         callChain = UnmarshalCallChain(importedChain.signedChain);
       }
       catch (GenericUserException e) {
@@ -316,15 +295,15 @@ namespace tecgraf.openbus {
         throw new OpenBusInternalException(message, e);
       }
       return new CallerChainImpl(importedChain.bus, callChain.caller,
-                                 callChain.target, callChain.originators,
-                                 importedChain.signedChain);
+        callChain.target, callChain.originators,
+        importedChain.signedChain);
     }
 
-    internal CallChain UnmarshalCallChain(SignedCallChain signed) {
+    internal CallChain UnmarshalCallChain(SignedData signed) {
       Type chainType = typeof (CallChain);
       TypeCode chainTypeCode =
         ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
+          chainType.Name);
       return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
     }
 
@@ -333,7 +312,7 @@ namespace tecgraf.openbus {
         ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn == null || !conn.Login.HasValue) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
+            CompletionStatus.Completed_No);
         }
         return conn.LoginRegistry;
       }
@@ -344,7 +323,7 @@ namespace tecgraf.openbus {
         ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
         if (conn == null || !conn.Login.HasValue) {
           throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                  CompletionStatus.Completed_No);
+            CompletionStatus.Completed_No);
         }
         return conn.Offers;
       }
@@ -454,7 +433,7 @@ namespace tecgraf.openbus {
 
     private void LogPropertyChanged(string prop, string value) {
       Logger.Info(String.Format("Propriedade {0} alterada para o valor {1}.",
-                                prop, value));
+        prop, value));
     }
 
     #endregion

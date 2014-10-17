@@ -1,6 +1,5 @@
 using System;
-using omg.org.IOP;
-using tecgraf.openbus.core.v2_0.credential;
+using tecgraf.openbus.core.v2_1.credential;
 
 namespace tecgraf.openbus.interceptors {
   /// <summary>
@@ -25,8 +24,6 @@ namespace tecgraf.openbus.interceptors {
     /// para transporte de credenciais em requisições de serviço.
     /// </summary>
     protected const int ContextId = CredentialContextId.ConstVal;
-
-    protected const int PrevContextId = 1234;
 
     #endregion
 

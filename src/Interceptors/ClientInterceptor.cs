@@ -1,15 +1,15 @@
 using log4net;
 using omg.org.CORBA;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_1.services.access_control;
 
 namespace tecgraf.openbus.interceptors {
   /// <summary>
-  /// Representa o interceptador cliente.
-  /// Implementa PortableInterceptor.ClientRequestInterceptor.
+  ///   Representa o interceptador cliente.
+  ///   Implementa PortableInterceptor.ClientRequestInterceptor.
   /// </summary>
   internal class ClientInterceptor : InterceptorImpl,
-                                     ClientRequestInterceptor {
+    ClientRequestInterceptor {
     #region Fields
 
     private static readonly ILog Logger =
@@ -24,7 +24,7 @@ namespace tecgraf.openbus.interceptors {
     #region Contructor
 
     /// <summary>
-    /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardClientInterceptor
+    ///   Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardClientInterceptor
     /// </summary>
     private ClientInterceptor()
       : base("ClientInterceptor") {
@@ -39,7 +39,7 @@ namespace tecgraf.openbus.interceptors {
     #region ClientRequestInterceptor Members
 
     /// <summary>
-    /// Intercepta o request para inserção de informação de contexto.
+    ///   Intercepta o request para inserção de informação de contexto.
     /// </summary>
     /// <remarks>Informação do cliente</remarks>
     public void send_request(ClientRequestInfo ri) {
@@ -52,7 +52,7 @@ namespace tecgraf.openbus.interceptors {
         Logger.Error(
           "Sem conexão ao barramento, impossível realizar a chamada remota.");
         throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
+          CompletionStatus.Completed_No);
       }
       Logger.Debug("O login está sendo ignorado para esta chamada.");
     }
@@ -97,7 +97,7 @@ namespace tecgraf.openbus.interceptors {
         Logger.Error(
           "Impossível retornar conexão corrente, pois não foi definida.");
         throw new NO_PERMISSION(NoLoginCode.ConstVal,
-                                CompletionStatus.Completed_No);
+          CompletionStatus.Completed_No);
       }
       return conn;
     }

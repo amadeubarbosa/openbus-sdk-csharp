@@ -60,9 +60,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\OpenBus.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="OpenBus.Legacy.Idl">
-      <HintPath>lib\OpenBus.Legacy.Idl.dll</HintPath>
-    </Reference>
     <Reference Include="Scs.Core">
       <HintPath>lib\Scs.Core.dll</HintPath>
     </Reference>
@@ -89,7 +86,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="src\AnyCredential.cs" />
     <Compile Include="src\caches\LoginCache.cs" />
     <Compile Include="src\caches\LRUConcurrentDictionaryCache.cs" />
     <Compile Include="src\CallerChain.cs" />

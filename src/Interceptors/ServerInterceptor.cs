@@ -6,14 +6,14 @@ using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v1_05.access_control_service;
-using tecgraf.openbus.core.v2_0.credential;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_1.credential;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using Encoding = System.Text.Encoding;
 using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus.interceptors {
   internal class ServerInterceptor : InterceptorImpl,
-                                     ServerRequestInterceptor {
+    ServerRequestInterceptor {
     #region Fields
 
     private static readonly ILog Logger =
@@ -29,7 +29,7 @@ namespace tecgraf.openbus.interceptors {
     #region Constructors
 
     /// <summary>
-    /// Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardServerInterceptor.   
+    ///   Inicializa uma nova instância de OpenbusAPI.Interceptors.StandardServerInterceptor.
     /// </summary>
     private ServerInterceptor()
       : base("ServerInterceptor") {
@@ -49,27 +49,23 @@ namespace tecgraf.openbus.interceptors {
       Logger.Info(String.Format(
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
-      bool legacyContext;
-      ServiceContext serviceContext = GetContextFromRequestInfo(ri, true,
-                                                                out
-                                                                  legacyContext);
-      AnyCredential anyCredential = UnmarshalCredential(serviceContext,
-                                                        legacyContext);
+      ServiceContext serviceContext = GetContextFromRequestInfo(ri);
+      CredentialData credential = UnmarshalCredential(serviceContext);
       Logger.Debug(
-        String.Format("A operação '{0}' possui credencial. É legada? {1}.",
-                      interceptedOperation, anyCredential.IsLegacy));
+        String.Format("A operação '{0}' possui credencial.",
+          interceptedOperation));
 
       ConnectionImpl conn = null;
       try {
-        conn = GetDispatcherForRequest(ri, anyCredential) as ConnectionImpl;
+        conn = GetDispatcherForRequest(ri, credential) as ConnectionImpl;
         if (conn == null) {
           Logger.Error(
             "Sem conexão ao barramento, impossível receber a chamada remota.");
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
-                                  CompletionStatus.Completed_No);
+            CompletionStatus.Completed_No);
         }
         Context.SetCurrentConnection(conn, ri);
-        conn.ReceiveRequest(ri, anyCredential);
+        conn.ReceiveRequest(ri, credential);
       }
       catch (InvalidSlot e) {
         Logger.Fatal("Falha ao inserir a credencial em seu slot.", e);
@@ -98,7 +94,7 @@ namespace tecgraf.openbus.interceptors {
         string reset = ri.get_slot(ChainSlotId) as string;
         if ((reset != null) && (reset.Equals("reset"))) {
           throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
-                                  CompletionStatus.Completed_No);
+            CompletionStatus.Completed_No);
         }
       }
       catch (InvalidSlot e) {
@@ -134,19 +130,17 @@ namespace tecgraf.openbus.interceptors {
             Logger.Error(
               "Sem conexão ao barramento, impossível enviar exceção à chamada remota.");
             throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
-                                    CompletionStatus.Completed_No);
+              CompletionStatus.Completed_No);
           }
-          bool legacyContext;
           ServiceContext serviceContext =
-            GetContextFromRequestInfo(ri, conn.Legacy, out legacyContext);
+            GetContextFromRequestInfo(ri);
           // credencial é inválida
-          AnyCredential anyCredential = UnmarshalCredential(serviceContext,
-                                                            legacyContext);
+          CredentialData credential = UnmarshalCredential(serviceContext);
           Logger.Debug(String.Format(
-            "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
-            interceptedOperation, anyCredential.IsLegacy));
+            "A operação '{0}' para a qual será lançada a exceção possui credencial.",
+            interceptedOperation));
 
-          conn.SendException(ri, anyCredential);
+          conn.SendException(ri, credential);
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
@@ -174,101 +168,52 @@ namespace tecgraf.openbus.interceptors {
     #endregion
 
     private Connection GetDispatcherForRequest(ServerRequestInfo request,
-                                               AnyCredential credential) {
+      CredentialData credential) {
       Connection dispatcher = null;
       if (Context.OnCallDispatch != null) {
-        string busId;
-        string loginId;
-        if (credential.IsLegacy) {
-          busId = null;
-          loginId = credential.LegacyCredential.identifier;
-        }
-        else {
-          busId = credential.Credential.bus;
-          loginId = credential.Credential.login;
-        }
+        string busId = credential.bus;
+        string loginId = credential.login;
         dispatcher = Context.OnCallDispatch(Context, busId, loginId,
-                                            GetObjectUriForObjectKey(
-                                              request.object_id),
-                                            request.operation);
+          GetObjectUriForObjectKey(
+            request.object_id),
+          request.operation);
       }
       return dispatcher ?? Context.GetDefaultConnection();
     }
 
-    private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,
-                                                     out bool legacyContext) {
-      legacyContext = false;
+    private ServiceContext GetContextFromRequestInfo(RequestInfo ri) {
       String interceptedOperation = ri.operation;
       ServiceContext serviceContext;
       try {
         serviceContext = ri.get_request_service_context(ContextId);
       }
       catch (BAD_PARAM) {
-        if (legacy) {
-          return GetLegacyContextFromRequestInfo(ri, out legacyContext);
-        }
         Logger.Error(String.Format(
           "A chamada à operação '{0}' não possui credencial.",
           interceptedOperation));
         throw new NO_PERMISSION(NoCredentialCode.ConstVal,
-                                CompletionStatus.Completed_No);
+          CompletionStatus.Completed_No);
       }
       return serviceContext;
     }
 
-    private ServiceContext GetLegacyContextFromRequestInfo(RequestInfo ri,
-                                                           out bool
-                                                             legacyContext) {
-      String interceptedOperation = ri.operation;
-      ServiceContext serviceContext;
-      try {
-        serviceContext = ri.get_request_service_context(PrevContextId);
-      }
-      catch (BAD_PARAM) {
-        Logger.Error(String.Format(
-          "A chamada à operação '{0}' não possui credencial.",
-          interceptedOperation));
-        throw new NO_PERMISSION(NoCredentialCode.ConstVal,
-                                CompletionStatus.Completed_No);
-      }
-      legacyContext = true;
-      return serviceContext;
-    }
-
-    private AnyCredential UnmarshalCredential(ServiceContext serviceContext,
-                                              bool legacyContext) {
+    private CredentialData UnmarshalCredential(ServiceContext serviceContext) {
       OrbServices orb = OrbServices.GetSingleton();
-      if (legacyContext) {
-        return UnmarshalLegacyCredential(serviceContext);
-      }
       Type credentialType = typeof (CredentialData);
       TypeCode credentialTypeCode =
         orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
+          credentialType.Name);
 
       byte[] data = serviceContext.context_data;
-      return new AnyCredential(
-        (CredentialData) InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode));
-    }
-
-    private AnyCredential UnmarshalLegacyCredential(
-      ServiceContext serviceContext) {
-      OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof (Credential);
-      TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
-
-      byte[] data = serviceContext.context_data;
-      Credential cred =
-        (Credential) InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode);
-      return new AnyCredential(cred);
+      return
+        (CredentialData)
+          InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode);
     }
 
     #region Métodos copiados do IIOP.NET
 
     private static string GetObjectUriForObjectKey(byte[] objectKey) {
-      string result = System.Text.Encoding.ASCII.GetString(objectKey);
+      string result = Encoding.ASCII.GetString(objectKey);
       return UnescapeNonAscii(result);
     }
 
@@ -278,18 +223,18 @@ namespace tecgraf.openbus.interceptors {
       for (int i = 0; i != uri.Length; ++i) {
         bool endOfSequence;
         if (IsPotentiallyEscapedCharacterRepresentation1(uri, i,
-                                                         i -
-                                                         escapeSequenceStartIndex,
-                                                         out endOfSequence)) {
+          i -
+          escapeSequenceStartIndex,
+          out endOfSequence)) {
           // either new escape sequence starting with \ or continue of a sequence
           if (endOfSequence) {
             // it's an escape char in form \uQRST
             if (result == null) {
               result = new StringBuilder(uri, 0, escapeSequenceStartIndex,
-                                         uri.Length);
+                uri.Length);
             }
             int charNr = StringConversions.Parse(uri,
-                                                 escapeSequenceStartIndex + 2, 4);
+              escapeSequenceStartIndex + 2, 4);
             result.Append(Convert.ToChar(charNr));
             escapeSequenceStartIndex = i;
           }
@@ -298,14 +243,14 @@ namespace tecgraf.openbus.interceptors {
           }
         }
         else if (IsPotentiallyEscapedCharacterRepresentation2(uri, i,
-                                                              i -
-                                                              escapeSequenceStartIndex,
-                                                              out endOfSequence)) {
+          i -
+          escapeSequenceStartIndex,
+          out endOfSequence)) {
           if (endOfSequence) {
             // it's an escape char in form \\u
             if (result == null) {
               result = new StringBuilder(uri, 0, escapeSequenceStartIndex,
-                                         uri.Length);
+                uri.Length);
             }
             result.Append(@"\u");
             escapeSequenceStartIndex = i;
@@ -318,7 +263,7 @@ namespace tecgraf.openbus.interceptors {
           // no escape sequence, add string directly to result
           if (result != null) {
             result.Append(uri, escapeSequenceStartIndex,
-                          i - escapeSequenceStartIndex + 1);
+              i - escapeSequenceStartIndex + 1);
           }
           escapeSequenceStartIndex = i;
         }
@@ -328,7 +273,7 @@ namespace tecgraf.openbus.interceptors {
     }
 
     /// <summary>
-    /// checks, if a given candidate sequence may represent an escaped character
+    ///   checks, if a given candidate sequence may represent an escaped character
     /// </summary>
     /// <returns>true, if possible, otherwise false</returns>
     private static bool IsPotentiallyEscapedCharacterRepresentation1(
@@ -371,5 +316,5 @@ namespace tecgraf.openbus.interceptors {
     }
 
     #endregion
-                                     }
+  }
 }

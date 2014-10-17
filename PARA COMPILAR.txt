@@ -1,11 +1,8 @@
-IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.0.0 -r Scs.Core.dll OpenBus.Idl access_control.idl core.idl credential.idl offer_registry.idl
+IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll OpenBus.Idl access_control.idl core.idl credential.idl offer_registry.idl
 
-IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.0.0 OpenBus.Demo.Hello.Idl hello.idl
+IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.1.0 OpenBus.Demo.Hello.Idl hello.idl
 
 IDLToCLSCompiler.exe -snk ScsKey.snk -asmVersion 1.2.1.0 Scs.Core scs.idl auxiliar.idl
-(atualmente versao-do-scs é 1.2.1.0)
-
-IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.0.0 -r Scs.Core.dll -vtSkel OpenBus.Legacy.Idl access_control_service.idl core.idl fault_tolerance.idl registry_service.idl session_service.idl
 
 
 #####################

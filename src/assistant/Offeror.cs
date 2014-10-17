@@ -6,8 +6,8 @@ using System.Threading;
 using log4net;
 using omg.org.CORBA;
 using scs.core;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.lease;
 
 namespace tecgraf.openbus.assistant {

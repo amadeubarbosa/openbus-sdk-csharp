@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using log4net;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_1.services.access_control;
 
 namespace tecgraf.openbus.lease {
   /// <summary>

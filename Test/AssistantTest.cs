@@ -3,7 +3,7 @@ using System.Configuration;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
 

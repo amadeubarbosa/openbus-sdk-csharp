@@ -1,14 +1,14 @@
 ﻿using tecgraf.openbus.caches;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.credential;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.credential;
 
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {
-    internal static readonly SignedCallChain NullSignedCallChain = new SignedCallChain(new byte[256], new byte[0]);
+    internal static readonly SignedData NullSignedCallChain = new SignedData(new byte[256], new byte[0]);
 
     internal CallerChainImpl(string busId, LoginInfo caller,
                              string target, LoginInfo[] originators,
-                             SignedCallChain signed)
+                             SignedData signed)
       : this(busId, caller, target, originators) {
       Signed = signed;
     }
@@ -20,12 +20,12 @@ namespace tecgraf.openbus {
       Target = target;
       Originators = originators;
       Signed = NullSignedCallChain;
-      Joined = new LRUConcurrentDictionaryCache<string, SignedCallChain>();
+      Joined = new LRUConcurrentDictionaryCache<string, SignedData>();
     }
 
-    internal LRUConcurrentDictionaryCache<string, SignedCallChain> Joined { get; private set; }
+    internal LRUConcurrentDictionaryCache<string, SignedData> Joined { get; private set; }
 
-    internal SignedCallChain Signed { get; private set; }
+    internal SignedData Signed { get; private set; }
 
     public string BusId { get; private set; }
 

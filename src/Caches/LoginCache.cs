@@ -2,11 +2,14 @@
 using System.Threading;
 using Org.BouncyCastle.Crypto;
 using log4net;
-using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_1.credential;
+using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.caches {
   internal class LoginCache {
+    private readonly ConnectionImpl _conn;
+
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (LoginCache));
 
@@ -15,12 +18,13 @@ namespace tecgraf.openbus.caches {
 
     private readonly LoginRegistry _lr;
 
-    public LoginCache(LoginRegistry lr,
+    public LoginCache(ConnectionImpl conn,
                       int maxSize =
                         LRUConcurrentDictionaryCache<string, LoginEntry>.
                         DefaultSize) {
+      _conn = conn;
       _logins = new LRUConcurrentDictionaryCache<string, LoginEntry>(maxSize);
-      _lr = lr;
+      _lr = conn.LoginRegistry;
     }
 
     public LoginEntry GetLoginEntry(string loginId) {
@@ -34,7 +38,14 @@ namespace tecgraf.openbus.caches {
         byte[] pubKey;
         LoginInfo info;
         try {
-          info = _lr.getLoginInfo(loginId, out pubKey);
+          SignedData signed;
+          info = _lr.getLoginInfo(loginId, out signed);
+          if (!Crypto.VerifySignature(_conn.BusKey, signed.encoded, signed.signature)) {
+            throw new InvalidPublicKey {
+              message = "Hash signature doesn't match."
+            };
+          }
+          pubKey = signed.encoded;
         }
         catch (InvalidLogins) {
           return null;
@@ -108,19 +119,6 @@ namespace tecgraf.openbus.caches {
       }
     }
 
-    internal void UpdateEntryAllowLegacyDelegate(LoginEntry entry) {
-      _lock.EnterWriteLock();
-      try {
-        LoginEntry cacheEntry;
-        if (_logins.TryGetValue(entry.LoginId, out cacheEntry)) {
-          cacheEntry.UpdateAllowLegacyDelegate(entry.AllowLegacyDelegate);
-        }
-      }
-      finally {
-        _lock.ExitWriteLock();
-      }
-    }
-
     internal class LoginEntry {
       public String LoginId;
       public String Entity;
@@ -128,7 +126,6 @@ namespace tecgraf.openbus.caches {
       public long DeadLine;
       public AsymmetricKeyParameter Publickey;
       public byte[] EncodedKey;
-      public bool? AllowLegacyDelegate;
 
       public LoginEntry Clone() {
         LoginEntry ret = new LoginEntry();
@@ -140,9 +137,6 @@ namespace tecgraf.openbus.caches {
           ret.EncodedKey = new byte[EncodedKey.Length];
           Array.Copy(EncodedKey, ret.EncodedKey, EncodedKey.Length);
           ret.Publickey = Crypto.CreatePublicKeyFromBytes(EncodedKey);
-          if (AllowLegacyDelegate.HasValue) {
-            ret.AllowLegacyDelegate = AllowLegacyDelegate.Value;
-          }
         }
         return ret;
       }
@@ -156,20 +150,6 @@ namespace tecgraf.openbus.caches {
           EncodedKey = new byte[another.EncodedKey.Length];
           Array.Copy(another.EncodedKey, EncodedKey, another.EncodedKey.Length);
           Publickey = Crypto.CreatePublicKeyFromBytes(another.EncodedKey);
-          if (another.AllowLegacyDelegate.HasValue) {
-            AllowLegacyDelegate = another.AllowLegacyDelegate.Value;
-          }
-        }
-      }
-
-      public void UpdateAllowLegacyDelegate(bool? allow) {
-        lock (this) {
-          if (allow.HasValue) {
-            AllowLegacyDelegate = allow.Value;
-          }
-          else {
-            AllowLegacyDelegate = null;
-          }
         }
       }
     }
