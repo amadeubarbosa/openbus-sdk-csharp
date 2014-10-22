@@ -47,6 +47,9 @@
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="OpenBus.Interop.Chaining.Idl">
+      <HintPath>..\..\..\lib\OpenBus.Interop.Chaining.Idl.dll</HintPath>
+    </Reference>
     <Reference Include="Scs">
       <HintPath>..\..\..\lib\Scs.dll</HintPath>
     </Reference>

@@ -1,7 +1,8 @@
 using System;
 using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.interop.simple;
 
-namespace tecgraf.openbus.interop.simple {
+namespace tecgraf.openbus.interop.chaining {
   /// <summary>
   /// Implementação do servant Hello.
   /// </summary>  

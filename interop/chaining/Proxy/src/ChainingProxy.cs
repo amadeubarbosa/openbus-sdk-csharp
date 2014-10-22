@@ -9,15 +9,14 @@ using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.chaining.Properties;
-using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.chaining {
   /// <summary>
-  /// Servidor do teste de interoperabilidade chaining.
+  /// Proxy do teste de interoperabilidade chaining.
   /// </summary>
-  internal static class ChainingServer {
-    private const string Entity = "interop_chaining_csharp_server";
+  internal static class ChainingProxy {
+    private const string Entity = "interop_chaining_csharp_proxy";
     private static Connection _conn;
     private static PrivateKey _privateKey;
     private static IComponent _ic;
@@ -40,9 +39,9 @@ namespace tecgraf.openbus.interop.chaining {
       context.SetDefaultConnection(_conn);
 
       ComponentContext component =
-        new DefaultComponentContext(new ComponentId("RestrictedHello", 1, 0, 0, ".net"));
-      component.AddFacet("Hello", Repository.GetRepositoryID(typeof(Hello)),
-                         new HelloImpl());
+        new DefaultComponentContext(new ComponentId("HelloProxy", 1, 0, 0, ".net"));
+      component.AddFacet("HelloProxy", Repository.GetRepositoryID(typeof(HelloProxy)),
+                         new ProxyImpl());
 
       _conn.LoginByCertificate(Entity, _privateKey);
 

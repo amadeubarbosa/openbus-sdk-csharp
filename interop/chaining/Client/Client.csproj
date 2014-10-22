@@ -8,7 +8,7 @@
     <ProjectGuid>{5B1ADBC4-6BA0-4508-AF36-706197CC2A06}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Client</RootNamespace>
+    <RootNamespace>tecgraf.openbus.interop.chaining</RootNamespace>
     <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
@@ -38,27 +38,42 @@
     <Reference Include="IIOPChannel">
       <HintPath>..\..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\..\lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="OpenBus">
       <HintPath>..\..\..\lib\OpenBus.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Scs">
-      <HintPath>..\..\..\lib\Scs.dll</HintPath>
+    <Reference Include="OpenBus.Interop.Chaining.Idl">
+      <HintPath>..\..\..\lib\OpenBus.Interop.Chaining.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs.Core">
+      <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\DemoConfig.Designer.cs">
+      <DependentUpon>DemoConfig.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="src\ProxyClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Properties\DemoConfig.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>DemoConfig.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="src\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
