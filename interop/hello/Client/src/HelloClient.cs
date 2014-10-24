@@ -28,6 +28,7 @@ namespace tecgraf.openbus.interop.simple {
       BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(conn);

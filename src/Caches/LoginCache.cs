@@ -16,15 +16,12 @@ namespace tecgraf.openbus.caches {
     private readonly LRUConcurrentDictionaryCache<string, LoginEntry> _logins;
     private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
-    private readonly LoginRegistry _lr;
-
     public LoginCache(ConnectionImpl conn,
                       int maxSize =
                         LRUConcurrentDictionaryCache<string, LoginEntry>.
                         DefaultSize) {
       _conn = conn;
       _logins = new LRUConcurrentDictionaryCache<string, LoginEntry>(maxSize);
-      _lr = conn.LoginRegistry;
     }
 
     public LoginEntry GetLoginEntry(string loginId) {
@@ -39,7 +36,7 @@ namespace tecgraf.openbus.caches {
         LoginInfo info;
         try {
           SignedData signed;
-          info = _lr.getLoginInfo(loginId, out signed);
+          info = _conn.LoginRegistry.getLoginInfo(loginId, out signed);
           if (!Crypto.VerifySignature(_conn.BusKey, signed.encoded, signed.signature)) {
             throw new InvalidPublicKey {
               message = "Hash signature doesn't match."
@@ -88,7 +85,7 @@ namespace tecgraf.openbus.caches {
         _lock.ExitReadLock();
       }
       if (deadline < DateTime.Now.Ticks) {
-        int validity = _lr.getLoginValidity(loginId);
+          int validity = _conn.LoginRegistry.getLoginValidity(loginId);
         if (validity <= 0) {
           // login inválido
           Logger.Debug(String.Format("Login {0} é inválido.", loginId));
