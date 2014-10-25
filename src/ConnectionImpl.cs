@@ -58,10 +58,10 @@ namespace tecgraf.openbus {
 
     // client caches
     private readonly LRUConcurrentDictionaryCache<EffectiveProfile, string>
-      _profile2Login;
+      _profile2Entity;
 
     private readonly LRUConcurrentDictionaryCache<string, ClientSideSession>
-      _outgoingLogin2Session;
+      _outgoingEntity2Session;
 
     // server caches
     private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
@@ -83,6 +83,9 @@ namespace tecgraf.openbus {
 
     private readonly int _chainSlotId;
     private readonly int _loginSlotId;
+
+    private byte[] _nullHash = new byte[HashValueSize.ConstVal];
+    private SignedData _invalidSignedData = new SignedData(new byte[EncryptedBlockSize.ConstVal], new byte[0]);
 
     private const string BusPubKeyError =
       "Erro ao encriptar as informações de login com a chave pública do barramento.";
@@ -112,9 +115,9 @@ namespace tecgraf.openbus {
 
       _sessionId2Session =
         new LRUConcurrentDictionaryCache<int, ServerSideSession>();
-      _profile2Login =
+      _profile2Entity =
         new LRUConcurrentDictionaryCache<EffectiveProfile, string>();
-      _outgoingLogin2Session =
+      _outgoingEntity2Session =
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
 
       _login = null;
@@ -268,8 +271,8 @@ namespace tecgraf.openbus {
       _offers = null;
       _busId = null;
       BusKey = null;
-      _outgoingLogin2Session.Clear();
-      _profile2Login.Clear();
+      _outgoingEntity2Session.Clear();
+      _profile2Entity.Clear();
       _sessionId2Session.Clear();
     }
 
@@ -589,12 +592,12 @@ namespace tecgraf.openbus {
 
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
       string remoteLogin;
-      if (!_profile2Login.TryGetValue(profile, out remoteLogin)) {
+      if (!_profile2Entity.TryGetValue(profile, out remoteLogin)) {
         remoteLogin = String.Empty;
       }
 
       ClientSideSession session;
-      if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
+      if (_outgoingEntity2Session.TryGetValue(remoteLogin, out session)) {
         lock (session) {
           sessionId = session.Id;
           ticket = session.Ticket;
@@ -624,8 +627,8 @@ namespace tecgraf.openbus {
           // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
           sessionId = 0;
           // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
-          hash = CreateInvalidCredentialHash();
-          chain = CreateInvalidCredentialSignedCallChain();
+          hash = _nullHash;
+          chain = _invalidSignedData;
           Logger.Debug(
             String.Format(
               "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
@@ -727,9 +730,9 @@ namespace tecgraf.openbus {
       }
 
       CredentialReset requestReset = ReadCredentialReset(ri, exception);
-      string remoteLogin = requestReset.target;
+      string remoteTarget = requestReset.target;
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
-      _profile2Login.TryAdd(profile, remoteLogin);
+      _profile2Entity.TryAdd(profile, remoteTarget);
 
       int sessionId = requestReset.session;
       byte[] secret;
@@ -739,13 +742,13 @@ namespace tecgraf.openbus {
       catch (Exception) {
         throw new ServiceFailure {message = InternalPrivKeyError};
       }
-      _outgoingLogin2Session.TryAdd(remoteLogin,
+      _outgoingEntity2Session.TryAdd(remoteTarget,
         new ClientSideSession(sessionId, secret,
-          remoteLogin));
+          remoteTarget));
       Logger.Debug(
         String.Format(
-          "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-          sessionId, operation, remoteLogin));
+          "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao alvo {2}.",
+          sessionId, operation, remoteTarget));
       // pede que a chamada original seja relançada
       throw new ForwardRequest(ri.target);
     }
@@ -967,10 +970,6 @@ namespace tecgraf.openbus {
       return login.Value;
     }
 
-    private byte[] CreateInvalidCredentialHash() {
-      return new byte[HashValueSize.ConstVal];
-    }
-
     private SignedData CreateCredentialSignedCallChain(string remoteLogin) {
       SignedData signed;
       CallerChainImpl chain = Context.JoinedChain as CallerChainImpl;
@@ -999,7 +998,7 @@ namespace tecgraf.openbus {
       else {
         // requisição para o barramento
         if (chain == null) {
-          return CreateInvalidCredentialSignedCallChain();
+          return _invalidSignedData;
         }
         signed = chain.Signed;
       }
@@ -1034,11 +1033,6 @@ namespace tecgraf.openbus {
           break;
         }
       }
-    }
-
-    private SignedData CreateInvalidCredentialSignedCallChain() {
-      return new SignedData(new byte[EncryptedBlockSize.ConstVal],
-        new byte[0]);
     }
 
     private CredentialReset ReadCredentialReset(ClientRequestInfo ri,
