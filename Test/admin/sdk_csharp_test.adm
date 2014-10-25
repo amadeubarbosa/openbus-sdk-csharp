@@ -19,3 +19,14 @@ Entity {
   category = "openbus_sdk_tests",
   name = "Entidade sem certificado para testes unitários do SDK CSharp",
 }
+
+Interface {
+  id = "IDL:test/CallerChainInspector:1.0",
+}
+
+Grant {
+  id = "sdk_unit_tests_csharp",
+  interfaces = {
+	"IDL:test/CallerChainInspector:1.0",
+  }
+}
