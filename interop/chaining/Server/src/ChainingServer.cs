@@ -35,6 +35,7 @@ namespace tecgraf.openbus.interop.chaining {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       _conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);

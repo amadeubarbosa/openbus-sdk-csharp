@@ -1,18 +1,18 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Server.Properties" GeneratedClassName="DemoConfig">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.chaining.Properties" GeneratedClassName="DemoConfig">
   <Profiles />
   <Settings>
     <Setting Name="busHostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">bombas</Value>
+      <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="openbusLogFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">2089</Value>
+      <Value Profile="(Default)">21000</Value>
     </Setting>
     <Setting Name="privateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">..\..\..\admin\InteropReloggedJoin.key</Value>
+      <Value Profile="(Default)">..\..\..\admin\InteropChaining.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>
