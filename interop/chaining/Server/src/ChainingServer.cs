@@ -5,8 +5,8 @@ using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using log4net.Config;
 using scs.core;
-using tecgraf.openbus.core.v2_1.services.access_control;
-using tecgraf.openbus.core.v2_1.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.access_control;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.chaining.Properties;
 using tecgraf.openbus.interop.simple;
@@ -35,7 +35,6 @@ namespace tecgraf.openbus.interop.chaining {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       _conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);

@@ -8,7 +8,7 @@ using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_1.services.offer_registry;
+using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.chaining.Properties;
 
 namespace tecgraf.openbus.interop.chaining {
@@ -29,7 +29,6 @@ namespace tecgraf.openbus.interop.chaining {
       BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
