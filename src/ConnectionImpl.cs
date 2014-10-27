@@ -35,7 +35,7 @@ namespace tecgraf.openbus {
     private readonly string _host;
     private readonly ushort _port;
     private readonly string _corbaloc;
-    internal AccessControl Acs;
+    private AccessControl _acs;
     private string _busId;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
@@ -157,10 +157,10 @@ namespace tecgraf.openbus {
         AccessControl localAcs;
         _loginLock.EnterWriteLock();
         try {
-          localAcs = Acs = acsObjRef as AccessControl;
+          localAcs = _acs = acsObjRef as AccessControl;
           _loginRegistry = lrObjRef as LoginRegistry;
           _offers = orObjRef as OfferRegistry;
-          if ((Acs == null) || (_loginRegistry == null) || (_offers == null)) {
+          if ((_acs == null) || (_loginRegistry == null) || (_offers == null)) {
             const string msg =
               "As facetas de controle de acesso, registro de logins e/ou registro de ofertas não foram encontradas.";
             throw new ServiceFailure {message = msg};
@@ -319,7 +319,7 @@ namespace tecgraf.openbus {
       }
       _login = null;
       _loginsCache = null;
-      Acs = null;
+      _acs = null;
       _loginRegistry = null;
       _offers = null;
       _legacyAccess = null;
@@ -347,6 +347,30 @@ namespace tecgraf.openbus {
         _loginLock.EnterReadLock();
         try {
           return _loginRegistry;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    internal AccessControl Acs {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _acs;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    internal AsymmetricKeyParameter BusKey {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _busKey;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -404,7 +428,7 @@ namespace tecgraf.openbus {
             throw new AlreadyLoggedInException();
           }
           busKey = _busKey;
-          localAcs = Acs;
+          localAcs = _acs;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -462,7 +486,7 @@ namespace tecgraf.openbus {
           if (_login.HasValue) {
             throw new AlreadyLoggedInException();
           }
-          localAcs = Acs;
+          localAcs = _acs;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -499,7 +523,7 @@ namespace tecgraf.openbus {
       AccessControl localAcs;
       _loginLock.EnterReadLock();
       try {
-        localAcs = Acs;
+        localAcs = _acs;
       }
       finally {
         _loginLock.ExitReadLock();
@@ -554,7 +578,7 @@ namespace tecgraf.openbus {
         }
         id = _login.Value.id;
         entity = _login.Value.entity;
-        localAcs = Acs;
+        localAcs = _acs;
       }
       finally {
         _loginLock.ExitWriteLock();
@@ -1159,7 +1183,7 @@ namespace tecgraf.openbus {
         AccessControl localAcs;
         _loginLock.EnterReadLock();
         try {
-          localAcs = Acs;
+          localAcs = _acs;
         }
         finally {
           _loginLock.ExitReadLock();

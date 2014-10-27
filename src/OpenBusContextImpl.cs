@@ -239,8 +239,13 @@ namespace tecgraf.openbus {
 
     public CallerChain MakeChainFor(string loginId) {
       ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
+      if (conn == null) {
+        Logger.Error("Não há login para executar a chamada MakeChainFor.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      AccessControl acs = conn.Acs;
       String busid = conn.BusId;
-      SignedCallChain signedChain = conn.Acs.signChainFor(loginId);
+      SignedCallChain signedChain = acs.signChainFor(loginId);
       try {
         CallChain callChain = UnmarshalCallChain(signedChain);
         return new CallerChainImpl(busid, callChain.caller, callChain.target,
