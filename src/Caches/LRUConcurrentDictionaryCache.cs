@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using log4net;
 
@@ -88,7 +89,71 @@ namespace tecgraf.openbus.caches {
     }
 
     /// <summary>
-    /// Remove a entrada mais antiga da cache.
+    /// Remove todas as entradas com chave pertencente a um conjunto de chaves.
+    /// </summary>
+    /// <param name="keys">Chaves das entradas a serem removidas.</param>
+    public void RemoveEntriesWithKeys(IEnumerable<TKey> keys) {
+      _lock.EnterWriteLock();
+      try {
+        foreach (TKey key in keys) {
+          _list.Remove(key);
+          TValue temp;
+          _dictionary.TryRemove(key, out temp);
+        }
+      }
+      finally {
+        _lock.ExitWriteLock();
+      }
+    }
+
+    /// <summary>
+    /// Remove todas as entradas com valor pertencente a um conjunto de valores.
+    /// </summary>
+    /// <param name="values">Valores das entradas a serem removidas.</param>
+    /// <returns>Lista com as chaves removidas.</returns>
+    public IEnumerable<TKey> RemoveEntriesWithValues(IEnumerable<TValue> values) {
+      IEnumerable<TKey> keys = new List<TKey>();
+      _lock.EnterWriteLock();
+      try {
+        foreach (TValue value in values) {
+          keys = keys.Union(RemoveEntriesWithValue(value));
+        }
+      }
+      finally {
+        _lock.ExitWriteLock();
+      }
+      return keys;
+    }
+
+    // NÃO É THREAD-SAFE!! Se mudar para public no futuro tem que tornar!
+    private IEnumerable<TKey> RemoveEntriesWithValue(TValue value) {
+      IEnumerable<TKey> removableKeys =
+        _dictionary.Where(item => item.Value.Equals(value))
+          .Select(item => item.Key).ToList();
+      foreach (TKey key in removableKeys) {
+        _list.Remove(key);
+        TValue temp;
+        _dictionary.TryRemove(key, out temp);
+      }
+      return removableKeys;
+    }
+
+    /// <summary>
+    /// Informa o tamanho atual da cache.
+    /// </summary>
+    /// <returns>O tamanho atual da cache.</returns>
+    public int GetSize() {
+      _lock.EnterReadLock();
+      try {
+        return _list.Count;
+      }
+      finally {
+        _lock.ExitReadLock();
+      }
+    }
+
+    /// <summary>
+    ///   Remove a entrada mais antiga da cache.
     /// </summary>
     /// <returns></returns>
     private bool TryRemoveOldest(out TValue value) {
