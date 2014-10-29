@@ -1,10 +1,13 @@
-﻿using System.Configuration;
+﻿using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using scs.core;
+using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_0;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
@@ -567,6 +570,37 @@ namespace tecgraf.openbus.Test {
           _context.SetDefaultConnection(null);
         }
       }
+    }
+
+    /// <summary>
+    /// Testes de remoção de itens da cache LRU
+    ///</summary>
+    [TestMethod]
+    public void LRUCacheRemoveTest() {
+      LRUConcurrentDictionaryCache<Object, string> cache = new LRUConcurrentDictionaryCache<object, string>();
+      Object obj1 = new object();
+      Object obj12 = new object();
+      Object obj13 = new object();
+      Object obj2 = new object();
+      Object obj22 = new object();
+      Object obj3 = new object();
+      Object obj4 = new object();
+      cache.TryAdd(obj1, "1");
+      cache.TryAdd(obj12, "1");
+      cache.TryAdd(obj13, "1");
+      cache.TryAdd(obj2, "2");
+      cache.TryAdd(obj22, "2");
+      cache.TryAdd(obj3, "3");
+      cache.TryAdd(obj4, "4");
+      IEnumerable<Object> keys = cache.RemoveEntriesWithValues(new[] { "1", "2", "5" });
+      string temp;
+      int size = cache.GetSize();
+      Assert.IsTrue((!cache.TryGetValue(obj1, out temp)) &&
+                    (!cache.TryGetValue(obj2, out temp)) && (size == 2) &&
+                    (keys.Count() == 5));
+      cache.RemoveEntriesWithKeys(new[] { obj3, obj4 });
+      size = cache.GetSize();
+      Assert.IsTrue(size == 0);
     }
 
     private void InvalidLogin(Connection conn, LoginInfo login) {
