@@ -1197,9 +1197,8 @@ namespace tecgraf.openbus {
             CompletionStatus.Completed_No);
         }
         catch (InvalidLogins e) {
-          // remove entradas inválidas das caches
+          // remove entradas inválidas da cache
           _profile2Login.RemoveEntriesWithValues(e.loginIds);
-          _outgoingLogin2Session.RemoveEntriesWithKeys(e.loginIds);
           Logger.Error("Chamada a um serviço com um login inválido.", e);
           throw new NO_PERMISSION(InvalidTargetCode.ConstVal,
             CompletionStatus.Completed_No);
