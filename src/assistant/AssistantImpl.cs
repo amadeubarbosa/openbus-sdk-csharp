@@ -57,9 +57,7 @@ namespace tecgraf.openbus.assistant {
       _active = true;
       _offeror = new Offeror(this);
       // cria conexão e seta como padrão
-      _conn = ORBInitializer.Context.CreateConnection(_host, _port,
-                                                      properties.
-                                                        ConnectionProperties);
+      _conn = ORBInitializer.Context.ConnectByAddress(_host, _port, properties.ConnectionProperties);
       context.SetDefaultConnection(_conn);
       // adiciona callback de login inválido
       _conn.OnInvalidLogin = InvalidLogin;

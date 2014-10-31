@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
@@ -8,6 +9,8 @@ using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
+using scs.core;
+using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
@@ -119,29 +122,45 @@ namespace tecgraf.openbus {
       }
     }
 
-    public Connection CreateConnection(string host, ushort port,
+    public Connection ConnectByAddress(string host, ushort port,
       ConnectionProperties props) {
       if (host == null || host.Equals(string.Empty)) {
         throw new ArgumentException("Endereço inválido.");
       }
-      if (port == 0) {
+      if (port <= 0) {
         throw new ArgumentException("Porta inválida.");
       }
       IgnoreCurrentThread();
       try {
-        PrivateKeyImpl accessKey = null;
-        if (props != null) {
-          if (props.AccessKey != null) {
-            accessKey = (PrivateKeyImpl) props.AccessKey;
-            LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
-              "{AccessKey provida pelo usuário}");
-          }
-        }
-        return new ConnectionImpl(host, port, this, accessKey);
+        String corbaloc = "corbaloc::1.0@" + host + ":" + port + "/" +
+                    BusObjectKey.ConstVal;
+        // RemotingServices.Connect não faz nenhuma chamada remota.
+        IComponent busIC =
+          (IComponent)RemotingServices.Connect(typeof(IComponent), corbaloc);
+        return new ConnectionImpl(busIC, this, GetPrivateKeyFromProps(props));
       }
       finally {
         UnignoreCurrentThread();
       }
+    }
+
+    public Connection ConnectByReference(IComponent reference,
+      ConnectionProperties props) {
+      if (reference == null) {
+        throw new ArgumentException("Referência para o barramento inválida.");
+      }
+      IgnoreCurrentThread();
+      try {
+        return new ConnectionImpl(reference, this, GetPrivateKeyFromProps(props));
+      }
+      finally {
+        UnignoreCurrentThread();
+      }
+    }
+
+    public Connection CreateConnection(string host, ushort port,
+      ConnectionProperties props) {
+      return ConnectByAddress(host, port, props);
     }
 
     public Connection GetCurrentConnection() {
@@ -218,8 +237,13 @@ namespace tecgraf.openbus {
 
     public CallerChain MakeChainFor(string loginId) {
       ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
+      if (conn == null) {
+        Logger.Error("Não há login para executar a chamada MakeChainFor.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      AccessControl acs = conn.Acs;
       String busid = conn.BusId;
-      SignedData signedChain = conn.Acs.signChainFor(loginId);
+      SignedData signedChain = acs.signChainFor(loginId);
       try {
         CallChain callChain = UnmarshalCallChain(signedChain);
         return new CallerChainImpl(busid, callChain.caller, callChain.target,
@@ -299,14 +323,6 @@ namespace tecgraf.openbus {
         importedChain.signedChain);
     }
 
-    internal CallChain UnmarshalCallChain(SignedData signed) {
-      Type chainType = typeof (CallChain);
-      TypeCode chainTypeCode =
-        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
-          chainType.Name);
-      return (CallChain) _codec.decode_value(signed.encoded, chainTypeCode);
-    }
-
     public LoginRegistry LoginRegistry {
       get {
         ConnectionImpl conn = GetCurrentConnection() as ConnectionImpl;
@@ -332,6 +348,26 @@ namespace tecgraf.openbus {
     #endregion
 
     #region Internal Members
+
+    private PrivateKeyImpl GetPrivateKeyFromProps(ConnectionProperties props) {
+      PrivateKeyImpl accessKey = null;
+      if (props != null) {
+        if (props.AccessKey != null) {
+          accessKey = (PrivateKeyImpl)props.AccessKey;
+          LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
+            "{AccessKey provida pelo usuário}");
+        }
+      }
+      return accessKey;
+    }
+
+    internal CallChain UnmarshalCallChain(SignedData signed) {
+      Type chainType = typeof(CallChain);
+      TypeCode chainTypeCode =
+        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
+          chainType.Name);
+      return (CallChain)_codec.decode_value(signed.encoded, chainTypeCode);
+    }
 
     internal void SetCurrentConnection(Connection conn, ServerRequestInfo ri) {
       Object guid;

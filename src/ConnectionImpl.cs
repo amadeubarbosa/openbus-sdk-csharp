@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Runtime.Remoting;
 using System.Security.Cryptography;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -31,12 +30,10 @@ namespace tecgraf.openbus {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (ConnectionImpl));
 
-    private readonly string _host;
-    private readonly ushort _port;
-    private readonly string _corbaloc;
-    internal AccessControl Acs;
+    private readonly IComponent _busIC;
+    private AccessControl _acs;
     private string _busId;
-    internal AsymmetricKeyParameter BusKey;
+    private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
 
     internal readonly OpenBusContextImpl Context;
@@ -84,8 +81,8 @@ namespace tecgraf.openbus {
     private readonly int _chainSlotId;
     private readonly int _loginSlotId;
 
-    private byte[] _nullHash = new byte[HashValueSize.ConstVal];
-    private SignedData _invalidSignedData = new SignedData(new byte[EncryptedBlockSize.ConstVal], new byte[0]);
+    private readonly byte[] _nullHash = new byte[HashValueSize.ConstVal];
+    private readonly SignedData _invalidSignedData = new SignedData(new byte[EncryptedBlockSize.ConstVal], new byte[0]);
 
     private const string BusPubKeyError =
       "Erro ao encriptar as informações de login com a chave pública do barramento.";
@@ -97,12 +94,9 @@ namespace tecgraf.openbus {
 
     #region Constructors
 
-    internal ConnectionImpl(string host, ushort port, OpenBusContextImpl context,
+    internal ConnectionImpl(IComponent iComponent, OpenBusContextImpl context,
       PrivateKeyImpl accessKey) {
-      _host = host;
-      _port = port;
-      _corbaloc = "corbaloc::1.0@" + _host + ":" + _port + "/" +
-                  BusObjectKey.ConstVal;
+      _busIC = iComponent;
       ORB = OrbServices.GetSingleton();
       Context = context;
       _codec = InterceptorsInitializer.Codec;
@@ -132,23 +126,21 @@ namespace tecgraf.openbus {
       const string connErrorMessage =
         "Não foi possível conectar ao barramento com o host e porta fornecidos.";
       try {
-        IComponent busIC =
-          (IComponent) RemotingServices.Connect(typeof (IComponent), _corbaloc);
         string acsId = Repository.GetRepositoryID(typeof (AccessControl));
         string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
         string orId = Repository.GetRepositoryID(typeof (OfferRegistry));
 
-        MarshalByRefObject acsObjRef = busIC.getFacet(acsId);
-        MarshalByRefObject lrObjRef = busIC.getFacet(lrId);
-        MarshalByRefObject orObjRef = busIC.getFacet(orId);
+        MarshalByRefObject acsObjRef = _busIC.getFacet(acsId);
+        MarshalByRefObject lrObjRef = _busIC.getFacet(lrId);
+        MarshalByRefObject orObjRef = _busIC.getFacet(orId);
 
         AccessControl localAcs;
         _loginLock.EnterWriteLock();
         try {
-          localAcs = Acs = acsObjRef as AccessControl;
+          localAcs = _acs = acsObjRef as AccessControl;
           _loginRegistry = lrObjRef as LoginRegistry;
           _offers = orObjRef as OfferRegistry;
-          if ((Acs == null) || (_loginRegistry == null) || (_offers == null)) {
+          if ((_acs == null) || (_loginRegistry == null) || (_offers == null)) {
             const string msg =
               "As facetas de controle de acesso, registro de logins e/ou registro de ofertas não foram encontradas.";
             throw new ServiceFailure {message = msg};
@@ -163,7 +155,7 @@ namespace tecgraf.openbus {
         _loginLock.EnterWriteLock();
         try {
           _busId = busId;
-          BusKey = busKey;
+          _busKey = busKey;
         }
         finally {
           _loginLock.ExitWriteLock();
@@ -187,7 +179,7 @@ namespace tecgraf.openbus {
       _loginLock.EnterReadLock();
       try {
         loggedIn = _login.HasValue;
-        busKey = BusKey;
+        busKey = _busKey;
       }
       finally {
         _loginLock.ExitReadLock();
@@ -266,11 +258,11 @@ namespace tecgraf.openbus {
       }
       _login = null;
       _loginsCache = null;
-      Acs = null;
+      _acs = null;
       _loginRegistry = null;
       _offers = null;
       _busId = null;
-      BusKey = null;
+      _busKey = null;
       _outgoingEntity2Session.Clear();
       _profile2Entity.Clear();
       _sessionId2Session.Clear();
@@ -293,6 +285,30 @@ namespace tecgraf.openbus {
         _loginLock.EnterReadLock();
         try {
           return _loginRegistry;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    internal AccessControl Acs {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _acs;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    internal AsymmetricKeyParameter BusKey {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _busKey;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -349,8 +365,8 @@ namespace tecgraf.openbus {
           if (_login.HasValue) {
             throw new AlreadyLoggedInException();
           }
-          busKey = BusKey;
-          localAcs = Acs;
+          busKey = _busKey;
+          localAcs = _acs;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -408,7 +424,7 @@ namespace tecgraf.openbus {
           if (_login.HasValue) {
             throw new AlreadyLoggedInException();
           }
-          localAcs = Acs;
+          localAcs = _acs;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -445,7 +461,7 @@ namespace tecgraf.openbus {
       AccessControl localAcs;
       _loginLock.EnterReadLock();
       try {
-        localAcs = Acs;
+        localAcs = _acs;
       }
       finally {
         _loginLock.ExitReadLock();
@@ -500,7 +516,7 @@ namespace tecgraf.openbus {
         }
         id = _login.Value.id;
         entity = _login.Value.entity;
-        localAcs = Acs;
+        localAcs = _acs;
       }
       finally {
         _loginLock.ExitWriteLock();
@@ -766,7 +782,7 @@ namespace tecgraf.openbus {
             CompletionStatus.Completed_No);
         }
         myLogin = new LoginInfo(_login.Value.id, _login.Value.entity);
-        busKey = BusKey;
+        busKey = _busKey;
       }
       finally {
         _loginLock.ExitReadLock();
@@ -1011,7 +1027,7 @@ namespace tecgraf.openbus {
         AccessControl localAcs;
         _loginLock.EnterReadLock();
         try {
-          localAcs = Acs;
+          localAcs = _acs;
         }
         finally {
           _loginLock.ExitReadLock();

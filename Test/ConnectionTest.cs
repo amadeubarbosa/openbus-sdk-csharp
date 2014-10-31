@@ -7,6 +7,7 @@ using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using scs.core;
+using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
@@ -116,7 +117,7 @@ namespace tecgraf.openbus.Test {
     }
 
     private static Connection CreateConnection() {
-      Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+      Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
       return conn;
     }
 

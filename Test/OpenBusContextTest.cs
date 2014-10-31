@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Configuration;
 using System.Reflection;
+using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
+using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
-using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
 using tecgraf.openbus.test;
@@ -122,11 +123,17 @@ namespace tecgraf.openbus.Test {
     public void CreateConnectionTest() {
       lock (Lock) {
         // cria conexão válida
-        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, Props));
+        Assert.IsNotNull(_context.ConnectByAddress(_hostName, _hostPort, Props));
+        // cria conexão válida por referência
+        String corbaloc = "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
+                    BusObjectKey.ConstVal;
+        IComponent reference =
+          (IComponent)RemotingServices.Connect(typeof(IComponent), corbaloc);
+        Assert.IsNotNull(_context.ConnectByReference(reference, Props));
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
         try {
-          invalid = _context.CreateConnection(null, _hostPort, Props);
+          invalid = _context.ConnectByAddress(null, _hostPort, Props);
         }
         catch (ArgumentException) {
         }
@@ -134,7 +141,7 @@ namespace tecgraf.openbus.Test {
           Assert.IsNull(invalid);
         }
         try {
-          invalid = _context.CreateConnection("", _hostPort, Props);
+          invalid = _context.ConnectByAddress("", _hostPort, Props);
         }
         catch (ArgumentException) {
         }
@@ -142,7 +149,7 @@ namespace tecgraf.openbus.Test {
           Assert.IsNull(invalid);
         }
         try {
-          invalid = _context.CreateConnection(_hostName, 0, Props);
+          invalid = _context.ConnectByAddress(_hostName, 0, Props);
         }
         catch (ArgumentException) {
         }
@@ -158,7 +165,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void OnCallDispatchCallbackTest() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
         Assert.IsNull(_context.OnCallDispatch);
         CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
         _context.OnCallDispatch = callback.Dispatch;
@@ -175,7 +182,7 @@ namespace tecgraf.openbus.Test {
     public void DefaultConnectionTest() {
       lock (Lock) {
         _context.SetDefaultConnection(null);
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetDefaultConnection());
         _context.SetCurrentConnection(conn);
@@ -198,7 +205,7 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(_context.GetDefaultConnection());
         Assert.IsNull(_context.GetCurrentConnection());
         bool failed = false;
-        ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
+        ServiceProperty[] props = {new ServiceProperty("a", "b")};
         try {
           _context.OfferRegistry.findServices(props);
         }
@@ -238,7 +245,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void CurrentConnectionTest() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetCurrentConnection());
         _context.SetDefaultConnection(conn);
@@ -258,7 +265,7 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password);
         Assert.IsNull(_context.GetCurrentConnection());
         bool failed = false;
-        ServiceProperty[] props = new[] {new ServiceProperty("a", "b")};
+        ServiceProperty[] props = {new ServiceProperty("a", "b")};
         try {
           _context.OfferRegistry.findServices(props);
         }
@@ -298,7 +305,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void CallerChainTest() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
         _context.SetDefaultConnection(conn);
         Assert.IsNull(_context.CallerChain);
         //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário comentar o catch genérico abaixo.
@@ -336,7 +343,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void JoinChainTest() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
         // adiciona a chain da getCallerChain
@@ -366,7 +373,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ExitChainTest() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, Props);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
         _context.ExitChain();
@@ -390,18 +397,18 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForTest() {
       lock (Lock) {
-        Connection conn1 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
 
         _context.SetCurrentConnection(conn1);
-        CallerChain chain1to2 = _context.MakeChainFor(conn2.Login.Value.id);
-        Assert.AreEqual(actor2, chain1to2.Target);
-        Assert.AreEqual(actor1, chain1to2.Caller.entity);
-        Assert.AreEqual(conn1.Login.Value.id, chain1to2.Caller.id);
+        CallerChain chain1To2 = _context.MakeChainFor(conn2.Login.Value.id);
+        Assert.AreEqual(actor2, chain1To2.Target);
+        Assert.AreEqual(actor1, chain1To2.Caller.entity);
+        Assert.AreEqual(conn1.Login.Value.id, chain1To2.Caller.id);
 
         _context.SetCurrentConnection(null);
         conn1.Logout();
@@ -415,29 +422,29 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForJoinedTest() {
       lock (Lock) {
-        Connection conn1 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
-        Connection conn3 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
 
         _context.SetCurrentConnection(conn1);
-        CallerChain chain1to2 = _context.MakeChainFor(conn2.Login.Value.id);
-        Assert.AreEqual(actor2, chain1to2.Target);
-        Assert.AreEqual(actor1, chain1to2.Caller.entity);
-        Assert.AreEqual(conn1.Login.Value.id, chain1to2.Caller.id);
+        CallerChain chain1To2 = _context.MakeChainFor(conn2.Login.Value.id);
+        Assert.AreEqual(actor2, chain1To2.Target);
+        Assert.AreEqual(actor1, chain1To2.Caller.entity);
+        Assert.AreEqual(conn1.Login.Value.id, chain1To2.Caller.id);
 
         _context.SetCurrentConnection(conn2);
-        _context.JoinChain(chain1to2);
-        CallerChain chain1_2to3 = _context.MakeChainFor(conn3.Login.Value.id);
-        Assert.AreEqual(actor3, chain1_2to3.Target);
-        Assert.AreEqual(actor2, chain1_2to3.Caller.entity);
-        Assert.AreEqual(conn2.Login.Value.id, chain1_2to3.Caller.id);
-        LoginInfo[] originators = chain1_2to3.Originators;
+        _context.JoinChain(chain1To2);
+        CallerChain chain1_2To3 = _context.MakeChainFor(conn3.Login.Value.id);
+        Assert.AreEqual(actor3, chain1_2To3.Target);
+        Assert.AreEqual(actor2, chain1_2To3.Caller.entity);
+        Assert.AreEqual(conn2.Login.Value.id, chain1_2To3.Caller.id);
+        LoginInfo[] originators = chain1_2To3.Originators;
         Assert.IsTrue(originators.Length > 0);
         LoginInfo info1 = originators[0];
         Assert.AreEqual(actor1, info1.entity);
@@ -457,7 +464,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForInvalidLoginTest() {
       lock (Lock) {
-        Connection conn1 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
 
@@ -483,7 +490,7 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed);
 
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
         String oldLogin2 = conn2.Login.Value.id;
@@ -511,20 +518,20 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void SimulateCallTest() {
       lock (Lock) {
-        Connection conn1 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
         String login1 = conn1.Login.Value.id;
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
         String login2 = conn2.Login.Value.id;
-        Connection conn3 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
         String login3 = conn3.Login.Value.id;
 
-        Connection conn = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, null);
         conn.LoginByCertificate(_entity, _accessKey);
 
         _context.OnCallDispatch = (context, busid, loginId, uri, operation) => conn;
@@ -599,15 +606,15 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void EncodeAndDecodeChain() {
       lock (Lock) {
-        Connection conn1 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
         String login1 = conn1.Login.Value.id;
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
         String login2 = conn2.Login.Value.id;
-        Connection conn3 = _context.CreateConnection(_hostName, _hostPort, null);
+        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, null);
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
         String login3 = conn3.Login.Value.id;

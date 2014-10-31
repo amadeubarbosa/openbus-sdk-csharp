@@ -1,5 +1,6 @@
 ﻿using System;
 using omg.org.CORBA;
+using scs.core;
 using tecgraf.openbus.core.v2_1.services;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
@@ -85,8 +86,62 @@ namespace tecgraf.openbus {
     ///   barramento. A chave deve ser uma chave privada RSA de 2048 bits
     ///   (256 bytes). Quando essa propriedade não é fornecida, uma chave
     ///   de acesso é gerada automaticamente.</param>
-    /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou a porta seja 0.</exception>
+    /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou
+    /// a porta seja menor ou igual a 0.</exception>
     /// <returns>Conexão criada.</returns>
+    Connection ConnectByAddress(String host, ushort port,
+                                ConnectionProperties props);
+
+    /// <summary>
+    /// Cria uma conexão para um barramento.
+    /// 
+    /// Cria uma conexão para um barramento. O barramento é indicado por uma
+    /// referência CORBA a um componente SCS que representa os serviços núcleo
+    /// do barramento. Esse método deve ser utilizado ao invés do 
+    /// <see cref="M:tecgraf.openbus.OpenBusContext.ConnectByAddress"/> para 
+    /// permitir o uso de SSL nas comunicações com o núcleo do barramento.
+    /// </summary>
+    /// <param name="reference"> Referência CORBA a um componente SCS que
+    /// representa os serviços núcleo do barramento.</param>
+    /// <param name="props">Lista opcional de propriedades que definem algumas
+    /// configurações sobre a forma que as chamadas realizadas ou validadas
+    /// com essa conexão são feitas. A seguir são listadas as propriedades
+    /// válidas:
+    /// - access.key: chave de acesso a ser utiliza internamente para a
+    ///   geração de credenciais que identificam as chamadas através do
+    ///   barramento. A chave deve ser uma chave privada RSA de 2048 bits
+    ///   (256 bytes). Quando essa propriedade não é fornecida, uma chave
+    ///   de acesso é gerada automaticamente.</param>
+    /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou
+    /// a porta seja 0.</exception>
+    /// <returns>Conexão criada.</returns>
+    Connection ConnectByReference(IComponent reference,
+                                  ConnectionProperties props);
+
+    /// <summary>
+    /// Cria uma conexão para um barramento.
+    /// 
+    /// Cria uma conexão para um barramento. O barramento é indicado por um nome
+    /// ou endereço de rede e um número de porta, onde os serviços núcleo daquele
+    /// barramento estão executando.
+    /// </summary>
+    /// <param name="host"> Endereço ou nome de rede onde os serviços núcleo do
+    /// barramento estão executando.</param>
+    /// <param name="port"> Porta onde os serviços núcleo do barramento estão
+    /// executando.</param>
+    /// <param name="props">Lista opcional de propriedades que definem algumas
+    /// configurações sobre a forma que as chamadas realizadas ou validadas
+    /// com essa conexão são feitas. A seguir são listadas as propriedades
+    /// válidas:
+    /// - access.key: chave de acesso a ser utiliza internamente para a
+    ///   geração de credenciais que identificam as chamadas através do
+    ///   barramento. A chave deve ser uma chave privada RSA de 2048 bits
+    ///   (256 bytes). Quando essa propriedade não é fornecida, uma chave
+    ///   de acesso é gerada automaticamente.</param>
+    /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou
+    /// a porta seja 0.</exception>
+    /// <returns>Conexão criada.</returns>
+    [Obsolete("A partir da versão 2.1.0.0, deve-se utilizar os métodos ConnectByAddress ou ConnectByReference.")]
     Connection CreateConnection(string host, ushort port,
                                 ConnectionProperties props);
 
