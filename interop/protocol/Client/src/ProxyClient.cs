@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +14,7 @@ using tecgraf.openbus.core.v2_0;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
-using tecgraf.openbus.interop.chaining.Properties;
+using tecgraf.openbus.interop.protocol.Properties;
 
 namespace tecgraf.openbus.interop.protocol {
   /// <summary>
@@ -24,6 +26,9 @@ namespace tecgraf.openbus.interop.protocol {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
 
+      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
+      XmlConfigurator.ConfigureAndWatch(logFileInfo);
+
       ConsoleAppender appender = new ConsoleAppender {
         Threshold = Level.Fatal,
         Layout =
@@ -33,9 +38,9 @@ namespace tecgraf.openbus.interop.protocol {
 
       // credential reset tests
       CredentialResetTest[] resetCases = new CredentialResetTest[2];
-      CredentialReset tempReset = new CredentialReset {target = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", session = 2 ^ 32 - 1 };
+      CredentialReset tempReset = new CredentialReset {target = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", session = 2^32 - 1 };
       resetCases[0] = new CredentialResetTest {Reset = tempReset, Secret = CreateSecret(16), Expected = InvalidTargetCode.ConstVal };
-      tempReset = new CredentialReset { session = 2 ^ 32 - 1, challenge = CreateSecret(EncryptedBlockSize.ConstVal) };
+      tempReset = new CredentialReset { session = 2^32 - 1, challenge = CreateSecret(EncryptedBlockSize.ConstVal) };
       resetCases[1] = new CredentialResetTest { Reset = tempReset, Expected = InvalidRemoteCode.ConstVal };
 
       // no permission tests
@@ -66,11 +71,10 @@ namespace tecgraf.openbus.interop.protocol {
       // propriedades geradas automaticamente
       ServiceProperty prop1 = new ServiceProperty("openbus.component.interface", Repository.GetRepositoryID(typeof(Server)));
       // propriedade definida pelo servidor protocol
-//      ServiceProperty prop2 = new ServiceProperty("offer.domain",
-//                                                 "Interoperability Tests");
+      ServiceProperty prop2 = new ServiceProperty("offer.domain",
+                                                  "Interoperability Tests");
 
-//      ServiceProperty[] properties = { prop1, prop2 };
-      ServiceProperty[] properties = { prop1 };
+      ServiceProperty[] properties = { prop1, prop2 };
       ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {
@@ -106,16 +110,26 @@ namespace tecgraf.openbus.interop.protocol {
             bool error = false;
             try {
               if (test.Reset.challenge == null) {
-                serverProxy.ResetCredential(test.Reset.target, test.Reset.session, test.Secret);
+                serverProxy.ResetCredential(test.Reset.target,
+                  test.Reset.session, test.Secret);
               }
               else {
-                serverProxy.ResetCredentialWithChallenge(test.Reset.session, test.Reset.challenge);
+                serverProxy.ResetCredentialWithChallenge(test.Reset.session,
+                  test.Reset.challenge);
               }
             }
             catch (NO_PERMISSION e) {
               error = true;
               Assert.AreEqual(e.Minor, test.Expected);
               Assert.AreEqual(e.Status, CompletionStatus.Completed_No);
+            }
+            catch (TargetInvocationException e) {
+              NO_PERMISSION ex = e.InnerException as NO_PERMISSION;
+              if (ex != null) {
+                error = true;
+                Assert.AreEqual(ex.Minor, test.Expected);
+                Assert.AreEqual(ex.Status, CompletionStatus.Completed_No);
+              }
             }
             Assert.IsTrue(error);
           }
@@ -129,6 +143,14 @@ namespace tecgraf.openbus.interop.protocol {
               error = true;
               Assert.AreEqual(e.Minor, test.Expected);
               Assert.AreEqual(e.Status, CompletionStatus.Completed_No);
+            }
+            catch (TargetInvocationException e) {
+              NO_PERMISSION ex = e.InnerException as NO_PERMISSION;
+              if (ex != null) {
+                error = true;
+                Assert.AreEqual(ex.Minor, test.Expected);
+                Assert.AreEqual(ex.Status, CompletionStatus.Completed_No);
+              }
             }
             Assert.IsTrue(error);
           }
