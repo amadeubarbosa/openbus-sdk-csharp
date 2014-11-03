@@ -683,13 +683,6 @@ namespace tecgraf.openbus {
       }
 
       if (exception.Minor != InvalidCredentialCode.ConstVal) {
-        if (exception.Minor == NoCredentialCode.ConstVal) {
-          Logger.Error(String.Format(
-            "Servidor remoto alega falta de credencial para a chamada {0}, portanto deve ser um servidor incompatível ou com erro.",
-            operation));
-          throw new NO_PERMISSION(InvalidRemoteCode.ConstVal,
-            CompletionStatus.Completed_No);
-        }
         if (exception.Minor == InvalidLoginCode.ConstVal) {
           LoginInfo originalLogin;
           Current current = Context.GetPICurrent();
@@ -756,7 +749,7 @@ namespace tecgraf.openbus {
         secret = Crypto.Decrypt(_internalKeyPair.Private, requestReset.challenge);
       }
       catch (Exception) {
-        throw new ServiceFailure {message = InternalPrivKeyError};
+        throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
       }
       _outgoingEntity2Session.TryAdd(remoteTarget,
         new ClientSideSession(sessionId, secret,
