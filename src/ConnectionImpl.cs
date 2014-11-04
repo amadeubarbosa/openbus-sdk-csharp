@@ -55,10 +55,10 @@ namespace tecgraf.openbus {
 
     // client caches
     private readonly LRUConcurrentDictionaryCache<EffectiveProfile, string>
-      _profile2Entity;
+      _profile2Login;
 
     private readonly LRUConcurrentDictionaryCache<string, ClientSideSession>
-      _outgoingEntity2Session;
+      _outgoingLogin2Session;
 
     // server caches
     private readonly LRUConcurrentDictionaryCache<int, ServerSideSession>
@@ -109,9 +109,9 @@ namespace tecgraf.openbus {
 
       _sessionId2Session =
         new LRUConcurrentDictionaryCache<int, ServerSideSession>();
-      _profile2Entity =
+      _profile2Login =
         new LRUConcurrentDictionaryCache<EffectiveProfile, string>();
-      _outgoingEntity2Session =
+      _outgoingLogin2Session =
         new LRUConcurrentDictionaryCache<String, ClientSideSession>();
 
       _login = null;
@@ -263,8 +263,8 @@ namespace tecgraf.openbus {
       _offers = null;
       _busId = null;
       _busKey = null;
-      _outgoingEntity2Session.Clear();
-      _profile2Entity.Clear();
+      _outgoingLogin2Session.Clear();
+      _profile2Login.Clear();
       _sessionId2Session.Clear();
     }
 
@@ -608,12 +608,12 @@ namespace tecgraf.openbus {
 
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
       string remoteLogin;
-      if (!_profile2Entity.TryGetValue(profile, out remoteLogin)) {
+      if (!_profile2Login.TryGetValue(profile, out remoteLogin)) {
         remoteLogin = String.Empty;
       }
 
       ClientSideSession session;
-      if (_outgoingEntity2Session.TryGetValue(remoteLogin, out session)) {
+      if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
         lock (session) {
           sessionId = session.Id;
           ticket = session.Ticket;
@@ -964,7 +964,7 @@ namespace tecgraf.openbus {
       CredentialReset requestReset = ReadCredentialReset(ri, exception);
       string remoteLogin = requestReset.target;
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
-      _profile2Entity.TryAdd(profile, remoteLogin);
+      _profile2Login.TryAdd(profile, remoteLogin);
 
       int sessionId = requestReset.session;
       byte[] secret;
@@ -974,7 +974,7 @@ namespace tecgraf.openbus {
       catch (Exception) {
         throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
       }
-      _outgoingEntity2Session.TryAdd(remoteLogin,
+      _outgoingLogin2Session.TryAdd(remoteLogin,
                                     new ClientSideSession(sessionId, secret,
                                                           remoteLogin));
       Logger.Debug(
