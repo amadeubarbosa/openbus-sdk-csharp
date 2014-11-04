@@ -1033,6 +1033,11 @@ namespace tecgraf.openbus {
           throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
             CompletionStatus.Completed_No);
         }
+        catch (InvalidLogins e) {
+          Logger.Error("Chamada a um serviço com um login inválido.", e);
+          throw new NO_PERMISSION(InvalidTargetCode.ConstVal,
+            CompletionStatus.Completed_No);
+        }
         LoginInfo actualLogin =
           GetLoginOrThrowNoLogin(
             "Impossível gerar cadeia para a chamada, pois o login foi perdido.",
