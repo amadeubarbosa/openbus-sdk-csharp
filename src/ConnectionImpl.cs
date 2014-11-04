@@ -776,84 +776,22 @@ namespace tecgraf.openbus {
         return;
       }
 
-      if (exception.Minor != InvalidCredentialCode.ConstVal) {
-        if (exception.Minor == InvalidLoginCode.ConstVal) {
-          LoginInfo originalLogin;
-          Current current = Context.GetPICurrent();
-          try {
-            originalLogin = (LoginInfo) current.get_slot(_loginSlotId);
-          }
-          catch (InvalidSlot e) {
-            Logger.Fatal(
-              "Falha inesperada ao acessar o slot do login corrente", e);
-            throw;
-          }
-
+      switch (exception.Minor){
+        case NoLoginCode.ConstVal:
+        case UnavailableBusCode.ConstVal:
+        case InvalidTargetCode.ConstVal:
+        case InvalidRemoteCode.ConstVal:
           Logger.Error(
             String.Format(
-              "Exceção de login inválido recebida ao tentar realizar a operação {0} com o login {1} da entidade {2}.",
-              operation, originalLogin.id, originalLogin.entity));
-          Logger.Debug(
-            String.Format(
-              "O login recuperado do PICurrent tem entidade {0} e id {1}.",
-              originalLogin.entity, originalLogin.id));
-
-          _loginLock.EnterWriteLock();
-          try {
-            if (_login.HasValue &&
-                originalLogin.id.Equals(_login.Value.id)) {
-              //TODO colocar aqui o teste da issue OPENBUS-1958
-              Logger.Debug(
-                "Login inválido ainda é o mesmo que tentou realizar a operação.");
-              LocalLogout();
-              _invalidLogin = originalLogin;
-            }
-            else {
-              Logger.Debug(
-                "Login inválido é diferente do que tentou realizar a operação.");
-            }
-          }
-          finally {
-            _loginLock.ExitWriteLock();
-          }
-          LoginInfo? login =
-            GetLoginOrThrowNoLogin(
-              String.Format(
-                "Login não foi reestabelecido, impossível realizar a operação {0}.",
-                operation), originalLogin);
-          // tenta refazer o request
-          Logger.Debug("Login reestabelecido.");
-          Logger.Info(
-            String.Format(
-              "Tentativa de refazer a operação {0} com o login {1} da entidade {2}.",
-              operation, login.Value.id, login.Value.entity));
-          throw new ForwardRequest(ri.target);
-        }
-        return;
+              "Servidor chamado repassou uma exceção NO_PERMISSION local: minor = {0}.", exception.Minor));
+          throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
+        case InvalidLoginCode.ConstVal:
+          HandleInvalidLogin(ri);
+          break;
+        case InvalidCredentialCode.ConstVal:
+          HandleInvalidCredential(ri, exception);
+          break;
       }
-
-      CredentialReset requestReset = ReadCredentialReset(ri, exception);
-      string remoteLogin = requestReset.target;
-      EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
-      _profile2Login.TryAdd(profile, remoteLogin);
-
-      int sessionId = requestReset.session;
-      byte[] secret;
-      try {
-        secret = Crypto.Decrypt(_internalKeyPair.Private, requestReset.challenge);
-      }
-      catch (Exception) {
-        throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
-      }
-      _outgoingLogin2Session.TryAdd(remoteLogin,
-                                    new ClientSideSession(sessionId, secret,
-                                                          remoteLogin));
-      Logger.Debug(
-        String.Format(
-          "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
-          sessionId, operation, remoteLogin));
-      // pede que a chamada original seja relançada
-      throw new ForwardRequest(ri.target);
     }
 
     internal void ReceiveRequest(ServerRequestInfo ri,
@@ -1118,6 +1056,85 @@ namespace tecgraf.openbus {
       finally {
         _loginLock.ExitReadLock();
       }
+    }
+
+    private void HandleInvalidLogin(ClientRequestInfo ri){
+      String operation = ri.operation;
+      LoginInfo originalLogin;
+      Current current = Context.GetPICurrent();
+      try {
+        originalLogin = (LoginInfo)current.get_slot(_loginSlotId);
+      }
+      catch (InvalidSlot e) {
+        Logger.Fatal(
+          "Falha inesperada ao acessar o slot do login corrente", e);
+        throw;
+      }
+
+      Logger.Error(
+        String.Format(
+          "Exceção de login inválido recebida ao tentar realizar a operação {0} com o login {1} da entidade {2}.",
+          operation, originalLogin.id, originalLogin.entity));
+      Logger.Debug(
+        String.Format(
+          "O login recuperado do PICurrent tem entidade {0} e id {1}.",
+          originalLogin.entity, originalLogin.id));
+
+      _loginLock.EnterWriteLock();
+      try {
+        if (_login.HasValue &&
+            originalLogin.id.Equals(_login.Value.id)) {
+          //TODO colocar aqui o teste da issue OPENBUS-1958
+          Logger.Debug(
+            "Login inválido ainda é o mesmo que tentou realizar a operação.");
+          LocalLogout();
+          _invalidLogin = originalLogin;
+        }
+        else {
+          Logger.Debug(
+            "Login inválido é diferente do que tentou realizar a operação.");
+        }
+      }
+      finally {
+        _loginLock.ExitWriteLock();
+      }
+      LoginInfo? login =
+        GetLoginOrThrowNoLogin(
+          String.Format(
+            "Login não foi reestabelecido, impossível realizar a operação {0}.",
+            operation), originalLogin);
+      // tenta refazer o request
+      Logger.Debug("Login reestabelecido.");
+      Logger.Info(
+        String.Format(
+          "Tentativa de refazer a operação {0} com o login {1} da entidade {2}.",
+          operation, login.Value.id, login.Value.entity));
+      throw new ForwardRequest(ri.target);
+    }
+
+    private void HandleInvalidCredential(ClientRequestInfo ri, NO_PERMISSION exception) {
+      CredentialReset requestReset = ReadCredentialReset(ri, exception);
+      string remoteLogin = requestReset.target;
+      EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
+      _profile2Login.TryAdd(profile, remoteLogin);
+
+      int sessionId = requestReset.session;
+      byte[] secret;
+      try {
+        secret = Crypto.Decrypt(_internalKeyPair.Private, requestReset.challenge);
+      }
+      catch (Exception) {
+        throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      _outgoingLogin2Session.TryAdd(remoteLogin,
+                                    new ClientSideSession(sessionId, secret,
+                                                          remoteLogin));
+      Logger.Debug(
+        String.Format(
+          "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
+          sessionId, ri.operation, remoteLogin));
+      // pede que a chamada original seja relançada
+      throw new ForwardRequest(ri.target);
     }
 
     private LoginInfo GetLoginOrThrowNoLogin(string errorMsg,
