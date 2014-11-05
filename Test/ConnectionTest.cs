@@ -475,6 +475,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNull(conn.BusId);
         Assert.IsNull(conn.Login);
         Assert.IsFalse(conn.Logout());
+        Assert.IsNull(conn.BusId);
+        Assert.IsNull(conn.Login);
         _context.OnCallDispatch = null;
         bool failed = false;
         try {
@@ -508,11 +510,26 @@ namespace tecgraf.openbus.Test {
                                                        new LoginInfo[0]);
           _context.JoinChain(dummyChain);
           Assert.IsTrue(conn.Logout());
+          Assert.IsNull(conn.BusId);
+          Assert.IsNull(conn.Login);
           Assert.AreEqual(dummyChain, _context.JoinedChain);
           Assert.AreEqual(conn2, _context.GetCurrentConnection());
         }
         finally {
           _context.ExitChain();
+          _context.SetCurrentConnection(null);
+        }
+
+        // testa se o logout retorna true para uma conexão invalidada
+        try {
+          conn.LoginByPassword(_login, _password);
+          _context.SetCurrentConnection(conn);
+          InvalidateLogin(conn);
+          Assert.IsTrue(conn.Logout());
+          Assert.IsNull(conn.BusId);
+          Assert.IsNull(conn.Login);
+        }
+        finally {
           _context.SetCurrentConnection(null);
         }
       }
@@ -546,16 +563,7 @@ namespace tecgraf.openbus.Test {
                                              conn.Login.Value.entity);
         conn.OnInvalidLogin = InvalidLogin;
         _context.SetDefaultConnection(conn);
-        IComponent busIC = RemotingServices.Connect(
-          typeof (IComponent),
-          "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
-          BusObjectKey.ConstVal)
-                           as IComponent;
-        Assert.IsNotNull(busIC);
-        string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
-        LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;
-        Assert.IsNotNull(lr);
-        lr.invalidateLogin(conn.Login.Value.id);
+        InvalidateLogin(conn);
         // faz uma chamada qualquer para refazer o login
         try {
           _context.OfferRegistry.getAllServices();
@@ -606,6 +614,19 @@ namespace tecgraf.openbus.Test {
     private void InvalidLogin(Connection conn, LoginInfo login) {
       CallbackCalled = true;
       conn.LoginByPassword(_login, _password);
+    }
+
+    private void InvalidateLogin(Connection conn) {
+      IComponent busIC = RemotingServices.Connect(
+        typeof(IComponent),
+        "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
+        BusObjectKey.ConstVal)
+                         as IComponent;
+      Assert.IsNotNull(busIC);
+      string lrId = Repository.GetRepositoryID(typeof(LoginRegistry));
+      LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;
+      Assert.IsNotNull(lr);
+      lr.invalidateLogin(conn.Login.Value.id);
     }
   }
 }

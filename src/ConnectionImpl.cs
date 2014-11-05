@@ -89,6 +89,7 @@ namespace tecgraf.openbus {
 
     private readonly int _chainSlotId;
     private readonly int _loginSlotId;
+    private readonly int _invalidLoginSlotId;
 
     private readonly bool _delegateOriginator;
 
@@ -117,6 +118,7 @@ namespace tecgraf.openbus {
       _codec = InterceptorsInitializer.Codec;
       _chainSlotId = ServerInterceptor.Instance.ChainSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
+      _invalidLoginSlotId = ClientInterceptor.Instance.InvalidLoginSlotId;
 
       _internalKeyPair = accessKey != null
                            ? accessKey.Pair
@@ -588,9 +590,26 @@ namespace tecgraf.openbus {
       Connection prev = Context.SetCurrentConnection(this);
       try {
         Context.ExitChain();
+        // armazena informação no PICurrent de que essa chamada não deve chamar a callback de login inválido
+        Current current = Context.GetPICurrent();
+        current.set_slot(_invalidLoginSlotId, true);
         localAcs.logout();
+        current.set_slot(_invalidLoginSlotId, null);
+      }
+      catch (InvalidSlot e) {
+        Logger.Fatal("Falha inesperada ao acessar o slot de login inválido", e);
+        throw;
       }
       catch (AbstractCORBASystemException e) {
+        // ignora invalidlogin
+        NO_PERMISSION ex = e as NO_PERMISSION;
+        if ((ex != null) && (ex.Minor == InvalidLoginCode.ConstVal)) {
+          // caso receba um invalidlogin, o logout no barramento não é necessário, logo deve retornar true.
+          Logger.Debug(String.Format(
+            "A chamada remota logout resultou em um login inválido e portanto apenas o logout local será realizado. busid {0} login {1} entidade {2}.",
+            BusId, id, entity));
+          return true;
+        }
         // Não lança exceções corba, retorna falso em caso de erro.
         // serei deslogado do barramento após o próximo lease
         Logger.Warn(String.Format(
@@ -786,7 +805,19 @@ namespace tecgraf.openbus {
               "Servidor chamado repassou uma exceção NO_PERMISSION local: minor = {0}.", exception.Minor));
           throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
         case InvalidLoginCode.ConstVal:
-          HandleInvalidLogin(ri);
+          Current current = Context.GetPICurrent();
+          bool? invalidLogin;
+          try {
+            invalidLogin = (bool?)current.get_slot(_invalidLoginSlotId);
+          }
+          catch (InvalidSlot e) {
+            Logger.Fatal(
+              "Falha inesperada ao acessar o slot de login inválido", e);
+            throw;
+          }
+          if ((invalidLogin == null) || (!invalidLogin.Value)) {
+            HandleInvalidLogin(ri);
+          }
           break;
         case InvalidCredentialCode.ConstVal:
           HandleInvalidCredential(ri, exception);
