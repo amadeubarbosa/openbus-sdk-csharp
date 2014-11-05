@@ -31,7 +31,7 @@ namespace tecgraf.openbus.interceptors {
       int chainSlotId = info.allocate_slot_id();
       int receivingSlotId = info.allocate_slot_id();
       int loginSlotId = info.allocate_slot_id();
-      int invalidLoginSlotId = info.allocate_slot_id();
+      int noInvalidLoginHandlingSlotId = info.allocate_slot_id();
       int ignoreThreadSlotId = info.allocate_slot_id();
       int joinedChainSlotId = info.allocate_slot_id();
 
@@ -44,7 +44,7 @@ namespace tecgraf.openbus.interceptors {
       ServerInterceptor.Instance.ReceivingConnectionSlotId = receivingSlotId;
       ServerInterceptor.Instance.Context = Context;
       ClientInterceptor.Instance.LoginSlotId = loginSlotId;
-      ClientInterceptor.Instance.InvalidLoginSlotId = invalidLoginSlotId;
+      ClientInterceptor.Instance.NoInvalidLoginHandlingSlotId = noInvalidLoginHandlingSlotId;
       ClientInterceptor.Instance.Context = Context;
 
       info.add_server_request_interceptor(ServerInterceptor.Instance);
