@@ -368,18 +368,6 @@ namespace tecgraf.openbus {
       }
     }
 
-    internal AsymmetricKeyParameter BusKey {
-      get {
-        _loginLock.EnterReadLock();
-        try {
-          return _busKey;
-        }
-        finally {
-          _loginLock.ExitReadLock();
-        }
-      }
-    }
-
     #endregion
 
     #region Connection Members
@@ -806,9 +794,9 @@ namespace tecgraf.openbus {
           throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
         case InvalidLoginCode.ConstVal:
           Current current = Context.GetPICurrent();
-          bool? invalidLogin;
+          bool? noInvalidLoginHandling;
           try {
-            invalidLogin = (bool?)current.get_slot(_noInvalidLoginHandlingSlotId);
+            noInvalidLoginHandling = (bool?)current.get_slot(_noInvalidLoginHandlingSlotId);
           }
           catch (InvalidSlot e) {
             Logger.Fatal(
@@ -816,7 +804,7 @@ namespace tecgraf.openbus {
             throw;
           }
           // verifica se esta chamada deve tratar InvalidLogin
-          if ((invalidLogin == null) || (!invalidLogin.Value)) {
+          if ((noInvalidLoginHandling == null) || (!noInvalidLoginHandling.Value)) {
             HandleInvalidLogin(ri);
           }
           break;
@@ -1111,55 +1099,77 @@ namespace tecgraf.openbus {
           "O login recuperado do PICurrent tem entidade {0} e id {1}.",
           originalLogin.entity, originalLogin.id));
 
-      // verifica se o login está realmente inválido
+      // se o login eh o mesmo que o anterior, verifica se esta realmente invalido
+      LoginRegistry lr;
+      LoginInfo? actualLogin;
       _loginLock.EnterReadLock();
-      LoginRegistry lr = LoginRegistry;
-      try {
-        bool? previousSlotValue = (bool?)current.get_slot(_noInvalidLoginHandlingSlotId);
-        current.set_slot(_noInvalidLoginHandlingSlotId, true);
-        // para a chamada getLoginValidity não queremos tratar um eventual
-        // InvalidLogin com relogin, queremos só receber a exceção.
+      try{
+        lr = _loginRegistry;
+        actualLogin = _login;
+      }
+      finally{
+        _loginLock.ExitReadLock();
+      }
+      if (actualLogin.HasValue &&
+          originalLogin.id.Equals(actualLogin.Value.id)) {
+        // verifica se o login está realmente inválido
         try {
-          if (lr.getLoginValidity(originalLogin.id) > 0) {
-            Logger.Error(
-              String.Format(
-                "Servidor remoto indicou uma condição InvalidLogin falsa. Login:{0}. Entidade:{1}.",
-                originalLogin.id, originalLogin.entity));
-            throw new NO_PERMISSION(InvalidRemoteCode.ConstVal,
-              CompletionStatus.Completed_No);
-          }
-          // login está realmente inválido
-          CheckLoginAndTryRelogin(ri, originalLogin);
-        }
-        catch (Exception e) {
-          NO_PERMISSION ex = e as NO_PERMISSION;
-          if (ex != null) {
-            if (ex.Minor == InvalidLoginCode.ConstVal) {
-              // significa que meu login está realmente inválido já que foi uma chamada ao barramento
-              CheckLoginAndTryRelogin(ri, originalLogin);
+          bool? previousSlotValue = (bool?)current.get_slot(_noInvalidLoginHandlingSlotId);
+          current.set_slot(_noInvalidLoginHandlingSlotId, true);
+          // para a chamada getLoginValidity não queremos tratar um eventual
+          // InvalidLogin com relogin, queremos só receber a exceção.
+          try {
+            if (lr.getLoginValidity(originalLogin.id) > 0) {
+              Logger.Error(
+                String.Format(
+                  "Servidor remoto indicou uma condição InvalidLogin falsa. Login:{0}. Entidade:{1}.",
+                  originalLogin.id, originalLogin.entity));
+              throw new NO_PERMISSION(InvalidRemoteCode.ConstVal,
+                CompletionStatus.Completed_No);
             }
-            //TODO continuar
+            // login anterior era inválido mas login atual é válido pois não gerou exceção
+            // vai retentar a operação e fazer logout se necessário
           }
-          //TODO continuar
+          catch (NO_PERMISSION e) {
+            // como a chamada getLoginValidity é feita sem handling de InvalidLogin, caso o erro ocorra chegará aqui
+            if (e.Minor != InvalidLoginCode.ConstVal) {
+              Logger.Error(
+                String.Format(
+                  "Não foi possível verificar a validade do login. Login:{0}. Entidade:{1}.",
+                  originalLogin.id, originalLogin.entity));
+              throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
+                CompletionStatus.Completed_No);
+            }
+            // significa que meu login está realmente inválido já que foi uma chamada ao barramento
+            // vai retentar a operação e fazer logout se necessário
+          }
+          finally {
+            current.set_slot(_noInvalidLoginHandlingSlotId, previousSlotValue);
+          }
         }
-        finally {
-          current.set_slot(_noInvalidLoginHandlingSlotId, previousSlotValue);
+        catch (InvalidSlot e) {
+          Logger.Fatal(
+            "Falha inesperada ao acessar o slot de tratamento de login inválido", e);
+          throw;
         }
       }
-      catch (InvalidSlot e) {
-        Logger.Fatal(
-          "Falha inesperada ao acessar o slot de tratamento de login inválido", e);
-        throw;
+      else {
+        // senao, tenta reobter o login e possivelmente refazer a operacao
+        string loginId = actualLogin.HasValue ? actualLogin.Value.id : "null";
+        Logger.Debug(String.Format(
+          "Login inválido é diferente do que tentou realizar a operação. Uma nova tentativa será feita. Login anterior: {0}. Login atual: {1}.", originalLogin.id, loginId));
       }
+      // verifica se é necessário o logout e refaz a operação
+      CheckLoginAndTryRelogin(ri, originalLogin);
     }
 
     private void CheckLoginAndTryRelogin(ClientRequestInfo ri, LoginInfo originalLogin) {
       String operation = ri.operation;
       _loginLock.EnterWriteLock();
       try {
+        // se login mudou no meio tempo, tenta novamente sem fazer logout
         if (_login.HasValue &&
             originalLogin.id.Equals(_login.Value.id)) {
-          //TODO colocar aqui o teste da issue OPENBUS-1958
           Logger.Debug(
             "Login inválido ainda é o mesmo que tentou realizar a operação.");
           LocalLogout();
