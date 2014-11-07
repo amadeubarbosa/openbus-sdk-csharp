@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="tecgraf.openbus.interop.protocol.Properties" GeneratedClassName="DemoConfig">
+  <Profiles />
+  <Settings>
+    <Setting Name="busHostName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">localhost</Value>
+    </Setting>
+    <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
+      <Value Profile="(Default)">20000</Value>
+    </Setting>
+    <Setting Name="openbusLogFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
