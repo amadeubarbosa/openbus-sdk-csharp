@@ -56,7 +56,7 @@ namespace tecgraf.openbus.interop.protocol {
       noPermissionCases[8] = new NoPermissionTest { Raised = InvalidRemoteCode.ConstVal, Expected = InvalidRemoteCode.ConstVal };
       noPermissionCases[9] = new NoPermissionTest { Raised = UnavailableBusCode.ConstVal, Expected = InvalidRemoteCode.ConstVal };
       noPermissionCases[10] = new NoPermissionTest { Raised = InvalidTargetCode.ConstVal, Expected = InvalidRemoteCode.ConstVal };
-      noPermissionCases[11] = new NoPermissionTest { Raised = InvalidLoginCode.ConstVal, Expected = NoLoginCode.ConstVal };
+      noPermissionCases[11] = new NoPermissionTest { Raised = InvalidLoginCode.ConstVal, Expected = InvalidRemoteCode.ConstVal };
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
@@ -120,15 +120,15 @@ namespace tecgraf.openbus.interop.protocol {
             }
             catch (NO_PERMISSION e) {
               error = true;
-              Assert.AreEqual(e.Minor, test.Expected);
-              Assert.AreEqual(e.Status, CompletionStatus.Completed_No);
+              Assert.AreEqual(test.Expected, e.Minor);
+              Assert.AreEqual(CompletionStatus.Completed_No, e.Status);
             }
             catch (TargetInvocationException e) {
               NO_PERMISSION ex = e.InnerException as NO_PERMISSION;
               if (ex != null) {
                 error = true;
-                Assert.AreEqual(ex.Minor, test.Expected);
-                Assert.AreEqual(ex.Status, CompletionStatus.Completed_No);
+                Assert.AreEqual(test.Expected, ex.Minor);
+                Assert.AreEqual(CompletionStatus.Completed_No, ex.Status);
               }
             }
             Assert.IsTrue(error);
@@ -141,15 +141,15 @@ namespace tecgraf.openbus.interop.protocol {
             }
             catch (NO_PERMISSION e) {
               error = true;
-              Assert.AreEqual(e.Minor, test.Expected);
-              Assert.AreEqual(e.Status, CompletionStatus.Completed_No);
+              Assert.AreEqual(test.Expected, e.Minor);
+              Assert.AreEqual(CompletionStatus.Completed_No, e.Status);
             }
             catch (TargetInvocationException e) {
               NO_PERMISSION ex = e.InnerException as NO_PERMISSION;
               if (ex != null) {
                 error = true;
-                Assert.AreEqual(ex.Minor, test.Expected);
-                Assert.AreEqual(ex.Status, CompletionStatus.Completed_No);
+                Assert.AreEqual(test.Expected, ex.Minor);
+                Assert.AreEqual(CompletionStatus.Completed_No, ex.Status);
               }
             }
             Assert.IsTrue(error);
