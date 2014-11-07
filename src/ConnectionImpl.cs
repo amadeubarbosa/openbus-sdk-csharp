@@ -1132,16 +1132,21 @@ namespace tecgraf.openbus {
           }
           catch (NO_PERMISSION e) {
             // como a chamada getLoginValidity é feita sem handling de InvalidLogin, caso o erro ocorra chegará aqui
-            if (e.Minor != InvalidLoginCode.ConstVal) {
-              Logger.Error(
-                String.Format(
-                  "Não foi possível verificar a validade do login. Login:{0}. Entidade:{1}.",
-                  originalLogin.id, originalLogin.entity));
-              throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
-                CompletionStatus.Completed_No);
+            switch (e.Minor) {
+              case InvalidRemoteCode.ConstVal:
+                throw;
+              case InvalidLoginCode.ConstVal:
+                // significa que meu login está realmente inválido já que foi uma chamada ao barramento
+                // vai retentar a operação e fazer logout se necessário
+                break;
+              default:
+                Logger.Error(
+                  String.Format(
+                    "Não foi possível verificar a validade do login. Login:{0}. Entidade:{1}.",
+                    originalLogin.id, originalLogin.entity));
+                throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
+                  CompletionStatus.Completed_No);
             }
-            // significa que meu login está realmente inválido já que foi uma chamada ao barramento
-            // vai retentar a operação e fazer logout se necessário
           }
           finally {
             current.set_slot(_noInvalidLoginHandlingSlotId, previousSlotValue);
