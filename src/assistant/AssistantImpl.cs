@@ -106,11 +106,11 @@ namespace tecgraf.openbus.assistant {
     }
 
     /// <inheritdoc/>
-    public LoginProcess StartSharedAuth(out byte[] secret, int retries) {
+    public SharedAuthSecret StartSharedAuth(int retries) {
       do {
         Exception caught;
         try {
-          return _conn.StartSharedAuth(out secret);
+          return _conn.StartSharedAuth();
         }
         catch (NO_PERMISSION e) {
           if (e.Minor == NoLoginCode.ConstVal) {
@@ -148,7 +148,6 @@ namespace tecgraf.openbus.assistant {
       } while (_active);
 
       Logger.Warn("O Assistente foi finalizado. Finalizando login por autenticação compartilhada.");
-      secret = null;
       return null;
     }
 
@@ -247,9 +246,8 @@ namespace tecgraf.openbus.assistant {
                 break;
               case LoginType.SharedAuth:
                 SharedAuthProperties saProps = (SharedAuthProperties)Properties;
-                byte[] secret;
-                LoginProcess lp = saProps.Callback.Invoke(out secret);
-                conn.LoginBySharedAuth(lp, secret);
+                SharedAuthSecret secret = saProps.Callback.Invoke();
+                conn.LoginBySharedAuth(secret);
                 break;
             }
             succeeded = true;

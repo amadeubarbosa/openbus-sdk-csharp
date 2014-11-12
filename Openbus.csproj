@@ -98,7 +98,7 @@
     <Compile Include="src\ConnectionImpl.cs" />
     <Compile Include="src\ConnectionProperties.cs" />
     <Compile Include="src\ConnectionPropertiesImpl.cs" />
-    <Compile Include="src\exceptions\InvalidChainStream.cs" />
+    <Compile Include="src\exceptions\InvalidEncodedStream.cs" />
     <Compile Include="src\OpenBusContext.cs" />
     <Compile Include="src\OpenBusContextImpl.cs" />
     <Compile Include="src\exceptions\AlreadyLoggedInException.cs" />
@@ -121,6 +121,8 @@
     <Compile Include="src\PrivateKey.cs" />
     <Compile Include="src\security\Crypto.cs" />
     <Compile Include="src\security\PrivateKeyImpl.cs" />
+    <Compile Include="src\SharedAuthSecret.cs" />
+    <Compile Include="src\SharedAuthSecretImpl.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

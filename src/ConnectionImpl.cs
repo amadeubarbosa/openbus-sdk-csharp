@@ -507,13 +507,16 @@ namespace tecgraf.openbus {
       }
     }
 
-    public LoginProcess StartSharedAuth(out byte[] secret) {
+    public SharedAuthSecret StartSharedAuth() {
       LoginProcess login = null;
+      byte[] secret;
       Connection prev = Context.SetCurrentConnection(this);
       AccessControl localAcs;
+      string busId;
       _loginLock.EnterReadLock();
       try {
         localAcs = _acs;
+        busId = _busId;
       }
       finally {
         _loginLock.ExitReadLock();
@@ -528,7 +531,7 @@ namespace tecgraf.openbus {
           login.cancel();
         }
         Logger.Error(InternalPrivKeyError);
-        throw new ServiceFailure {message = InternalPrivKeyError};
+        throw new OpenBusInternalException(InternalPrivKeyError);
       }
       catch (Exception) {
         if (login != null) {
@@ -539,17 +542,19 @@ namespace tecgraf.openbus {
       finally {
         Context.SetCurrentConnection(prev);
       }
-      return login;
+      return new SharedAuthSecretImpl(busId, login, secret);
     }
 
-    public void LoginBySharedAuth(LoginProcess login, byte[] secret) {
-      if (login == null || secret == null) {
-        throw new ArgumentException("O login e o segredo não podem ser nulos.");
+    public void LoginBySharedAuth(SharedAuthSecret secret) {
+      SharedAuthSecretImpl sharedAuth = secret as SharedAuthSecretImpl;
+      if (sharedAuth == null || sharedAuth.Attempt == null || sharedAuth.Secret == null) {
+        throw new ArgumentException("O segredo fornecido é inválido.");
       }
+
       Context.IgnoreCurrentThread();
       try {
         GetBusFacets();
-        LoginByObject(login, secret);
+        LoginByObject(sharedAuth.Attempt, sharedAuth.Secret);
       }
       finally {
         Context.UnignoreCurrentThread();
