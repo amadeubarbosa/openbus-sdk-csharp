@@ -12,6 +12,7 @@ using omg.org.PortableInterceptor;
 using scs.core;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
+using tecgraf.openbus.core.v2_1.data_export;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
@@ -242,11 +243,10 @@ namespace tecgraf.openbus {
         throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
       }
       AccessControl acs = conn.Acs;
-      String busid = conn.BusId;
       SignedData signedChain = acs.signChainFor(loginId);
       try {
         CallChain callChain = UnmarshalCallChain(signedChain);
-        return new CallerChainImpl(busid, callChain.caller, callChain.target,
+        return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
           callChain.originators, signedChain);
       }
       catch (GenericUserException e) {

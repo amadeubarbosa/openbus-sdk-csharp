@@ -510,6 +510,7 @@ namespace tecgraf.openbus {
       AccessControl localAcs;
       string id;
       string entity;
+      string busId;
       _loginLock.EnterWriteLock();
       try {
         if (!_login.HasValue) {
@@ -519,6 +520,7 @@ namespace tecgraf.openbus {
         id = _login.Value.id;
         entity = _login.Value.entity;
         localAcs = _acs;
+        busId = _busId;
       }
       finally {
         _loginLock.ExitWriteLock();
@@ -545,14 +547,14 @@ namespace tecgraf.openbus {
           // caso receba um invalidlogin, o logout no barramento não é necessário, logo deve retornar true.
           Logger.Debug(String.Format(
             "A chamada remota logout resultou em um login inválido e portanto apenas o logout local será realizado. busid {0} login {1} entidade {2}.",
-            BusId, id, entity));
+            busId, id, entity));
           return true;
         }
         // Não lança exceções corba, retorna falso em caso de erro.
         // serei deslogado do barramento após o próximo lease
         Logger.Warn(String.Format(
           "Erro durante chamada remota logout: busid {0} login {1} entidade {2}.\nExceção: {3}",
-          BusId, id, entity, e));
+          busId, id, entity, e));
         return false;
       }
       finally {
@@ -737,6 +739,7 @@ namespace tecgraf.openbus {
       string interceptedOperation = ri.operation;
       LoginInfo myLogin;
       AsymmetricKeyParameter busKey;
+      String busId;
       _loginLock.EnterReadLock();
       try {
         if (!_login.HasValue) {
@@ -746,14 +749,15 @@ namespace tecgraf.openbus {
         }
         myLogin = new LoginInfo(_login.Value.id, _login.Value.entity);
         busKey = _busKey;
+        busId = _busId;
       }
       finally {
         _loginLock.ExitReadLock();
       }
-      if (!credential.bus.Equals(BusId)) {
+      if (!credential.bus.Equals(busId)) {
         Logger.Error(String.Format(
           "A identificação do barramento está errada. O valor recebido foi '{0}' e o esperado era '{1}'.",
-          BusId, credential.bus));
+          credential.bus, busId));
         throw new NO_PERMISSION(UnknownBusCode.ConstVal,
           CompletionStatus.Completed_No);
       }
@@ -805,14 +809,14 @@ namespace tecgraf.openbus {
             // credencial valida
             // CheckChain pode lançar exceção com InvalidChainCode
             CallChain chain = CheckChain(credential.chain, credential.login,
-              myLogin.entity, busKey);
+              myLogin.entity, busId, busKey);
             // CheckTicket já faz o lock no ticket history da sessão
             if (session.CheckTicket(credential.ticket)) {
               // insere a cadeia no slot para a getCallerChain usar
               try {
                 // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
                 ri.set_slot(_chainSlotId,
-                  new CallerChainImpl(BusId, chain.caller,
+                  new CallerChainImpl(chain.bus, chain.caller,
                     myLogin.entity,
                     chain.originators,
                     credential.chain));
@@ -1137,9 +1141,11 @@ namespace tecgraf.openbus {
       // se o login mudar, tem que assinar de novo
       while (true) {
         AccessControl localAcs;
+        string busId;
         _loginLock.EnterReadLock();
         try {
           localAcs = _acs;
+          busId = _busId;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -1148,7 +1154,7 @@ namespace tecgraf.openbus {
           signed = localAcs.signChainFor(remoteLogin);
         }
         catch (AbstractCORBASystemException e) {
-          Logger.Error("Erro ao acessar o barramento " + BusId + ".", e);
+          Logger.Error("Erro ao acessar o barramento " + busId + ".", e);
           throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
             CompletionStatus.Completed_No);
         }
@@ -1271,7 +1277,7 @@ namespace tecgraf.openbus {
     }
 
     private CallChain CheckChain(SignedData signed, string callerId,
-      string entity, AsymmetricKeyParameter busKey) {
+      string entity, string busId, AsymmetricKeyParameter busKey) {
       CallChain chain = Context.UnmarshalCallChain(signed);
       if (!chain.target.Equals(entity)) {
         Logger.Error(
@@ -1279,7 +1285,7 @@ namespace tecgraf.openbus {
         throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
           CompletionStatus.Completed_No);
       }
-      if (!chain.caller.id.Equals(callerId) ||
+      if (!chain.caller.id.Equals(callerId) || (!chain.bus.Equals(busId)) ||
           (!Crypto.VerifySignature(busKey, signed.encoded, signed.signature))) {
         Logger.Error("Cadeia de credencial inválida.");
         throw new NO_PERMISSION(InvalidChainCode.ConstVal,
