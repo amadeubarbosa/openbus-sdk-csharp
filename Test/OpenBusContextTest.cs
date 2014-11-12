@@ -10,6 +10,7 @@ using scs.core;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
+using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.security;
 using tecgraf.openbus.test;
@@ -397,10 +398,10 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
 
@@ -422,13 +423,13 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForJoinedTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
 
@@ -464,7 +465,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForInvalidLoginTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
 
@@ -490,7 +491,7 @@ namespace tecgraf.openbus.Test {
         }
         Assert.IsTrue(failed);
 
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
         String oldLogin2 = conn2.Login.Value.id;
@@ -518,20 +519,20 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void SimulateCallTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
         String login1 = conn1.Login.Value.id;
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
         String login2 = conn2.Login.Value.id;
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
         String login3 = conn3.Login.Value.id;
 
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
         conn.LoginByCertificate(_entity, _accessKey);
 
         _context.OnCallDispatch = (context, busid, loginId, uri, operation) => conn;
@@ -557,8 +558,8 @@ namespace tecgraf.openbus.Test {
             Repository.GetRepositoryID(typeof (CallerChainInspector)));
 
         _context.JoinChain(chain1For3);
-        String[] callers1_3 = new[] {actor1, actor3};
-        String[] logins1_3 = new[] {login1, login3};
+        String[] callers1_3 = {actor1, actor3};
+        String[] logins1_3 = {login1, login3};
 
         String[] callers = inspector.listCallers();
         Assert.AreEqual(callers1_3.Length, callers.Length);
@@ -577,8 +578,8 @@ namespace tecgraf.openbus.Test {
         conn2.Logout();
 
         _context.JoinChain(chain1_2For3);
-        String[] callers1_2_3 = new[] {actor1, actor2, actor3};
-        String[] logins1_2_3 = new[] {login1, login2, login3};
+        String[] callers1_2_3 = {actor1, actor2, actor3};
+        String[] logins1_2_3 = {login1, login2, login3};
 
         callers = inspector.listCallers();
         Assert.AreEqual(callers1_2_3.Length, callers.Length);
@@ -606,15 +607,15 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void EncodeAndDecodeChain() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
         String login1 = conn1.Login.Value.id;
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
         String login2 = conn2.Login.Value.id;
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, null);
+        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
         String login3 = conn3.Login.Value.id;
@@ -654,6 +655,76 @@ namespace tecgraf.openbus.Test {
         conn1.Logout();
         conn2.Logout();
         conn3.Logout();
+      }
+    }
+
+    /// <summary>
+    ///   Testes dos métodos EncodeSharedAuthSecret e DecodeSharedAuthSecret
+    /// </summary>
+    [TestMethod]
+    public void EncodeAndDecodeSharedAuth() {
+      lock (Lock) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort);
+        conn.LoginByPassword(_login, _password);
+        try {
+          _context.SetCurrentConnection(conn);
+          SharedAuthSecret secret = conn.StartSharedAuth();
+          byte[] data = _context.EncodeSharedAuthSecret(secret);
+          Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
+          SharedAuthSecret secret2 = _context.DecodeSharedAuthSecret(data);
+          conn2.LoginBySharedAuth(secret2);
+          Assert.IsNotNull(conn2.Login);
+          Assert.IsFalse(conn.Login.Value.id.Equals(conn2.Login.Value.id));
+          Assert.AreEqual(conn.Login.Value.entity, conn2.Login.Value.entity);
+        }
+        finally {
+          _context.SetCurrentConnection(null);
+        }
+      }
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(InvalidEncodedStreamException))]
+    public void DecodeSharedAuthAsChain() {
+      lock (Lock) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort);
+        conn.LoginByPassword(_login, _password);
+        _context.SetCurrentConnection(conn);
+        SharedAuthSecret secret = conn.StartSharedAuth();
+        try {
+          byte[] data = _context.EncodeSharedAuthSecret(secret);
+          _context.DecodeChain(data);
+        }
+        finally {
+          secret.Cancel();
+          conn.Logout();
+          _context.SetCurrentConnection(null);
+        }
+      }
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(InvalidEncodedStreamException))]
+    public void DecodeChainAsSharedAuth() {
+      lock (Lock) {
+        Connection conn1 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor1 = "actor-1";
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
+        Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor2 = "actor-2";
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
+        String login2 = conn2.Login.Value.id;
+        try {
+          _context.SetCurrentConnection(conn1);
+          CallerChain chain1For2 = _context.MakeChainFor(login2);
+          byte[] data = _context.EncodeChain(chain1For2);
+          _context.DecodeSharedAuthSecret(data);
+        }
+        finally {
+          _context.SetCurrentConnection(null);
+          conn1.Logout();
+          conn2.Logout();
+        }
       }
     }
 

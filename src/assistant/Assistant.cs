@@ -120,19 +120,18 @@ namespace tecgraf.openbus.assistant {
     /// A autenticação compartilhada permite criar um novo login compartilhando a
     /// mesma autenticação do login atual da conexão. As informações
     /// fornecidas por essa operação devem ser passadas para a operação
-    /// 'loginBySharedAuth' para conclusão do processo de login por autenticação
-    /// compartilhada. Isso deve ser feito dentro do tempo de lease definido pelo
-    /// administrador do barramento. Caso contrário essas informações se tornam
-    /// inválidas e não podem mais ser utilizadas para criar um login.
+    /// <see cref="M:tecgraf.openbus.Connection.LoginBySharedAuth"/> para 
+    /// conclusão do processo de login por autenticação compartilhada. Isso 
+    /// deve ser feito dentro do tempo de lease definido pelo administrador do
+    /// barramento. Caso contrário essas informações se tornam inválidas e não 
+    /// podem mais ser utilizadas para criar um login.
     ///
     /// Caso ocorram erros, a callback de tratamento de erro apropriada será
     /// chamada. Se o número de tentativas se esgotar e não houver sucesso, a
     /// última exceção recebida será lançada como Exception.
     /// 
-    /// Caso o assistente tenha sido finalizado, os dois valores de retorno
-    /// serão null.
+    /// Caso o assistente tenha sido finalizado, o valor de retorno será null.
     /// </summary>
-    /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
     /// <param name="retries">Parâmetro opcional indicando o número de novas 
     /// tentativas de busca de ofertas em caso de falhas, como o barramento 
     /// estar indisponível ou não ser possível estabelecer um login até o 
@@ -141,8 +140,8 @@ namespace tecgraf.openbus.assistant {
     /// valor de 'retries' deve ser -1. Entre cada tentativa é feita uma pausa 
     /// dada pelo parâmetro 'interval' fornecido na criação do assistente (veja
     /// a interface 'AssistantProperties').</param>
-    /// <returns> Objeto que representa o processo de login iniciado.</returns>
-    LoginProcess StartSharedAuth(out Byte[] secret, int retries = 0);
+    /// <returns>Segredo a ser fornecido na conclusão do processo de login.</returns>
+    SharedAuthSecret StartSharedAuth(int retries = 0);
 
     /// <summary>
     /// Encerra o funcionamento do assistente liberando todos os recursos

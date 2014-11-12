@@ -387,11 +387,11 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password);
         // segredo errado
         bool failed = false;
-        byte[] secret;
-        LoginProcess login;
+        SharedAuthSecretImpl secret;
         try {
-          login = conn.StartSharedAuth(out secret);
-          conn2.LoginBySharedAuth(login, new byte[0]);
+          secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
+          secret.Secret = new byte[0];
+          conn2.LoginBySharedAuth(secret);
         }
         catch (AccessDenied) {
           failed = true;
@@ -404,8 +404,9 @@ namespace tecgraf.openbus.Test {
         // login nulo
         failed = false;
         try {
-          conn.StartSharedAuth(out secret);
-          conn2.LoginBySharedAuth(null, secret);
+          secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
+          secret.Attempt = null;
+          conn2.LoginBySharedAuth(secret);
         }
         catch (ArgumentException) {
           failed = true;
@@ -418,8 +419,9 @@ namespace tecgraf.openbus.Test {
         // segredo nulo
         failed = false;
         try {
-          login = conn.StartSharedAuth(out secret);
-          conn2.LoginBySharedAuth(login, null);
+          secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
+          secret.Secret = null;
+          conn2.LoginBySharedAuth(secret);
         }
         catch (ArgumentException) {
           failed = true;
@@ -431,18 +433,18 @@ namespace tecgraf.openbus.Test {
         Assert.IsTrue(failed, "O login com segredo nulo foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn2.Login);
-        login = conn.StartSharedAuth(out secret);
-        conn2.LoginBySharedAuth(login, secret);
+        secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
+        conn2.LoginBySharedAuth(secret);
         Assert.IsNotNull(conn2.Login);
         conn2.Logout();
         Assert.IsNull(conn2.Login);
         // login repetido
         failed = false;
         try {
-          login = conn.StartSharedAuth(out secret);
-          conn2.LoginBySharedAuth(login, secret);
+          secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
+          conn2.LoginBySharedAuth(secret);
           Assert.IsNotNull(conn2.Login);
-          conn2.LoginBySharedAuth(login, secret);
+          conn2.LoginBySharedAuth(secret);
         }
         catch (AlreadyLoggedInException) {
           failed = true;

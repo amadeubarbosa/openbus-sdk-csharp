@@ -90,7 +90,7 @@ namespace tecgraf.openbus {
     /// a porta seja menor ou igual a 0.</exception>
     /// <returns>Conexão criada.</returns>
     Connection ConnectByAddress(String host, ushort port,
-                                ConnectionProperties props);
+                                ConnectionProperties props = null);
 
     /// <summary>
     /// Cria uma conexão para um barramento.
@@ -116,7 +116,7 @@ namespace tecgraf.openbus {
     /// a porta seja 0.</exception>
     /// <returns>Conexão criada.</returns>
     Connection ConnectByReference(IComponent reference,
-                                  ConnectionProperties props);
+                                  ConnectionProperties props = null);
 
     /// <summary>
     /// Cria uma conexão para um barramento.
@@ -143,7 +143,7 @@ namespace tecgraf.openbus {
     /// <returns>Conexão criada.</returns>
     [Obsolete("A partir da versão 2.1.0.0, deve-se utilizar os métodos ConnectByAddress ou ConnectByReference.")]
     Connection CreateConnection(string host, ushort port,
-                                ConnectionProperties props);
+                                ConnectionProperties props = null);
 
     /// <summary>
     /// Define uma conexão a ser utilizada em chamadas sempre que não houver uma
@@ -252,11 +252,7 @@ namespace tecgraf.openbus {
 
     /// <summary>
     /// Codifica uma cadeia de chamadas em um stream de bytes para permitir a
-    /// persistência ou transferência da informação. A codificação é realizada em
-    /// CDR e possui um identificador de versão concatenado com as informações da
-    /// cadeia ({@link CredentialContextId} + {@link ExportedCallChain}). Sendo
-    /// assim, a stream só será decodificada com sucesso por alguém que entenda
-    /// esta mesma codificação.
+    /// persistência ou transferência da informação.
     /// </summary>
     /// <param name="chain">A cadeia a ser codificada.</param>
     /// <returns>A cadeia codificada em um stream de bytes.</returns>
@@ -264,17 +260,33 @@ namespace tecgraf.openbus {
 
     /// <summary>
     /// Decodifica um stream de bytes de uma cadeia para o formato
-    /// {@link CallerChain}. Espera-se que a stream de bytes esteja codificada em
-    /// CDR e seja formada por um identificador de versão concatenado com as
-    /// informações da cadeia ({@link CredentialContextId} +
-    /// {@link ExportedCallChain}).
+    /// <see cref="T:tecgraf.openbus.CallerChain"/>.
     /// </summary>
     /// 
     /// <param name="encoded">O stream de bytes que representa a cadeia.</param>
-    /// <returns>A cadeia de chamadas no formato {@link CallerChain}.</returns>
-    /// <exception cref="InvalidChainStreamException">Caso o stream de bytes não esteja no formato
+    /// <returns>A cadeia de chamadas no formato <see cref="T:tecgraf.openbus.CallerChain"/>.</returns>
+    /// <exception cref="InvalidEncodedStreamException">Caso o stream de bytes não esteja no formato
     ///        esperado.</exception>
     CallerChain DecodeChain(byte[] encoded);
+
+    /// <summary>
+    /// Codifica um segredo de autenticação compartilhada(<see cref="T:tecgraf.openbus.SharedAuthSecret"/>)
+    /// em um stream de bytes para permitir a persistência ou transferência da
+    /// informação.
+    /// </summary>
+    /// <param name="secret">Segredo de autenticação compartilhada a ser codificado.</param>
+    /// <returns>Cadeia codificada em um stream de bytes.</returns>
+    byte[] EncodeSharedAuthSecret(SharedAuthSecret secret);
+
+    /// <summary>
+    /// Decodifica um segredo de autenticação compartilhada(<see cref="T:tecgraf.openbus.SharedAuthSecret"/>)
+    /// a partir de um stream de bytes.
+    /// </summary>
+    /// <param name="encoded">Stream de bytes contendo a codificação do segredo.</param>
+    /// <returns>Segredo de autenticação compartilhada decodificado.</returns>
+    /// <exception cref="InvalidEncodedStreamException">Caso a stream de bytes não seja do formato
+    ///        esperado.</exception>
+    SharedAuthSecret DecodeSharedAuthSecret(byte[] encoded);
 
     /// <summary>
     /// Referência ao serviço núcleo de registro de logins do barramento

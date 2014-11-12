@@ -9,9 +9,8 @@ namespace tecgraf.openbus.assistant {
   /// necessário que a aplicação proveja uma forma de obtê-los quando 
   /// necessário.
   /// </summary>
-  /// <param name="secret">Segredo a ser fornecido na conclusão do processo de login.</param>
-  /// <returns>Objeto que represeta o processo de login iniciado.</returns>
-  public delegate LoginProcess SharedAuthHandler(out byte[] secret);
+  /// <returns>Segredo a ser fornecido na conclusão do processo de login.</returns>
+  public delegate SharedAuthSecret SharedAuthHandler();
 
   /// <summary>
   /// Define que o assistente deve efetuar login no barramento utilizando

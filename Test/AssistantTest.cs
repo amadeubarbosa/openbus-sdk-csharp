@@ -107,8 +107,8 @@ namespace tecgraf.openbus.test {
     //
     #endregion
 
-    private static LoginProcess StartSharedAuth(out byte[] secret) {
-      return ORBInitializer.Context.GetCurrentConnection().StartSharedAuth(out secret);
+    private static SharedAuthSecret StartSharedAuth() {
+      return ORBInitializer.Context.GetCurrentConnection().StartSharedAuth();
     }
 
     private class AssistantPropertiesMock : AssistantPropertiesImpl {

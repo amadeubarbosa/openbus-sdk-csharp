@@ -1,4 +1,4 @@
-IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll OpenBus.Idl access_control.idl core.idl credential.idl offer_registry.idl
+IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll OpenBus.Idl access_control.idl core.idl credential.idl offer_registry.idl data_export.idl
 
 IDLToCLSCompiler.exe -snk Openbus.snk -asmVersion 2.1.0 OpenBus.Demo.Hello.Idl hello.idl
 

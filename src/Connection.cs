@@ -95,34 +95,35 @@ namespace tecgraf.openbus {
     /// pode ser chamada enquanto a conexão estiver autenticada, caso contrário a
     /// exceção de sistema CORBA::NO_PERMISSION{NoLogin} é lançada. As informações
     /// fornecidas por essa operação devem ser passadas para a operação
-    /// 'loginBySharedAuth' para conclusão do processo de login por autenticação
-    /// compartilhada. Isso deve ser feito dentro do tempo de lease definido pelo
-    /// administrador do barramento. Caso contrário essas informações se tornam
-    /// inválidas e não podem mais ser utilizadas para criar um login.
+    /// <see cref="M:tecgraf.openbus.Connection.LoginBySharedAuth"/> para
+    /// conclusão do processo de login por autenticação compartilhada. Isso 
+    /// deve ser feito dentro do tempo de lease definido pelo administrador do
+    /// barramento. Caso contrário essas informações se tornam inválidas e não 
+    /// podem mais ser utilizadas para criar um login.
     /// </summary>
-    /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
-    /// <returns> Objeto que representa o processo de login iniciado.</returns>
+    /// <returns> Segredo a ser fornecido na conclusão do processo de login.</returns>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a obtenção do objeto de login e segredo.</exception>
-    LoginProcess StartSharedAuth(out Byte[] secret);
+    SharedAuthSecret StartSharedAuth();
 
     /// <summary>
     /// Efetua login de uma entidade usando autenticação compartilhada.
     /// 
-    /// A autenticação compartilhada é feita a partir de informações obtidas a
-    /// através da operação 'StartSharedAuth' de uma conexão autenticada.
+    /// A autenticação compartilhada é feita a partir de um segredo obtido
+    /// através da operação <see cref="M:tecgraf.openbus.Connection.StartSharedAuth"/>
+    /// de uma conexão autenticada.
     /// </summary>
-    /// <param name="login"> Objeto que represeta o processo de login iniciado.</param>
     /// <param name="secret"> Segredo a ser fornecido na conclusão do processo de login.</param>
     /// <exception cref="ArgumentException">Caso o login ou o segredo sejam nulos.</exception>
     /// <exception cref="AccessDenied"> O segredo fornecido não corresponde ao esperado
     /// pelo barramento.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>
-    /// <exception cref="InvalidLoginProcessException"> O LoginProcess informado é inválido, por
-    /// exemplo depois de ser cancelado ou ter expirado.</exception>
+    /// <exception cref="InvalidLoginProcessException"> A tentativa de login 
+    /// associada ao segredo informado é inválida, por exemplo depois do 
+    /// segredo ser cancelado, ter expirado ou já ter sido utilizado.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a autenticação da conexão.</exception>
-    void LoginBySharedAuth(LoginProcess login, Byte[] secret);
+    void LoginBySharedAuth(SharedAuthSecret secret);
 
     /// <summary>
     /// Efetua logout da conexão, tornando o login atual inválido.

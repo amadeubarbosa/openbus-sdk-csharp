@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting;
 using System.Threading;
@@ -32,6 +34,10 @@ namespace tecgraf.openbus {
     private const int ChainHeaderSize = 8;
 
     private readonly Codec _codec;
+
+    private const int MagicTagSize = 4;
+    private readonly byte[] _magicTagCallChain = { (byte)'B', (byte)'U', (byte)'S', 0x01 };
+    private readonly byte[] _magicTagSharedAuth = { (byte)'B', (byte)'U', (byte)'S', 0x02 };
 
     // Mapa de conexões thread-safe. Associa uma referência fraca a uma conexão. Como as comparações de chave são feitas baseadas no endereço do objeto, o próprio endereço já serve como identificador.
     // Remove automaticamente entradas não mais utilizadas para evitar memory leak das threads de recebimento de chamadas.
@@ -257,15 +263,13 @@ namespace tecgraf.openbus {
     }
 
     public byte[] EncodeChain(CallerChain chain) {
-      CallerChainImpl chainImpl = (CallerChainImpl) chain;
-      ExportedCallChain exportedChain = new ExportedCallChain(chain.BusId,
-        chainImpl.Signed);
-      const int id = CredentialContextId.ConstVal;
-      byte[] encodedChain;
-      byte[] encodedId;
       try {
-        encodedChain = _codec.encode_value(exportedChain);
-        encodedId = _codec.encode_value(id);
+        CallerChainImpl chainImpl = (CallerChainImpl)chain;
+        ExportedCallChain exportedChain = new ExportedCallChain(chain.BusId,
+                                                                chainImpl.Signed);
+        byte[] encodedChain = _codec.encode_value(exportedChain);
+        ExportedVersion[] versions = { new ExportedVersion(CurrentVersion.ConstVal, encodedChain) };
+        return EncodeExportedVersions(versions, _magicTagCallChain);
       }
       catch (InvalidTypeForEncoding e) {
         const string message =
@@ -273,44 +277,27 @@ namespace tecgraf.openbus {
         Logger.Error(message, e);
         throw new OpenBusInternalException(message, e);
       }
-      byte[] fullEnconding = new byte[encodedChain.Length + encodedId.Length];
-      Buffer.BlockCopy(encodedId, 0, fullEnconding, 0, encodedId.Length);
-      Buffer.BlockCopy(encodedChain, 0, fullEnconding, encodedId.Length,
-        encodedChain.Length);
-      return fullEnconding;
     }
 
     public CallerChain DecodeChain(byte[] encoded) {
-      if (encoded.Length <= ChainHeaderSize) {
-        const string msg =
-          "Stream de bytes não corresponde a uma cadeia de chamadas.";
-        throw new InvalidChainStreamException(msg);
-      }
-      ExportedCallChain importedChain;
-      CallChain callChain;
-
-      byte[] encodedId = new byte[ChainHeaderSize];
-      byte[] encodedChain = new byte[encoded.Length - ChainHeaderSize];
-      Buffer.BlockCopy(encoded, 0, encodedId, 0, encodedId.Length);
-      Buffer.BlockCopy(encoded, encodedId.Length, encodedChain, 0,
-        encodedChain.Length);
       try {
-        int id = (int) _codec.decode_value(encodedId, _orb.create_long_tc());
-        if (CredentialContextId.ConstVal != id) {
-          String msg =
-            String.Format(
-              "Formato da cadeia é de versão incompatível.\nFormato recebido = {0}\nFormato suportado = {1}",
-              id, CredentialContextId.ConstVal);
-          throw new InvalidChainStreamException(msg);
+        IEnumerable<ExportedVersion> versions = DecodeExportedVersions(encoded,
+          _magicTagCallChain);
+        foreach (ExportedVersion version in versions) {
+          if (version.version == CurrentVersion.ConstVal) {
+            Type exportedCallChainType = typeof(ExportedCallChain);
+            TypeCode exportedCallChainTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
+                exportedCallChainType.Name);
+            ExportedCallChain exportedChain =
+              (ExportedCallChain)
+                _codec.decode_value(version.encoded, exportedCallChainTypeCode);
+            CallChain chain = UnmarshalCallChain(exportedChain.signedChain);
+            return new CallerChainImpl(exportedChain.bus, chain.caller,
+              chain.target, chain.originators, exportedChain.signedChain);
+          }
         }
-        Type exportedChainType = typeof (ExportedCallChain);
-        TypeCode exportedChainTypeCode =
-          ORB.create_interface_tc(Repository.GetRepositoryID(exportedChainType),
-            exportedChainType.Name);
-        importedChain =
-          (ExportedCallChain)
-            _codec.decode_value(encodedChain, exportedChainTypeCode);
-        callChain = UnmarshalCallChain(importedChain.signedChain);
+        throw new InvalidEncodedStreamException("Versão de cadeia incompatível.");
       }
       catch (GenericUserException e) {
         const string message =
@@ -318,9 +305,48 @@ namespace tecgraf.openbus {
         Logger.Error(message, e);
         throw new OpenBusInternalException(message, e);
       }
-      return new CallerChainImpl(importedChain.bus, callChain.caller,
-        callChain.target, callChain.originators,
-        importedChain.signedChain);
+    }
+
+    public byte[] EncodeSharedAuthSecret(SharedAuthSecret secret) {
+      try {
+        SharedAuthSecretImpl sharedAuth = (SharedAuthSecretImpl)secret;
+        ExportedSharedAuth exportedAuth = new ExportedSharedAuth(sharedAuth.BusId, sharedAuth.Attempt, sharedAuth.Secret);
+        byte[] encodedAuth = _codec.encode_value(exportedAuth);
+        ExportedVersion[] versions = { new ExportedVersion(CurrentVersion.ConstVal, encodedAuth) };
+        return EncodeExportedVersions(versions, _magicTagSharedAuth);
+      }
+      catch (InvalidTypeForEncoding e) {
+        const string message =
+          "Falha inesperada ao codificar um segredo de autenticação compartilhada para exportação";
+        Logger.Error(message, e);
+        throw new OpenBusInternalException(message, e);
+      }
+    }
+
+    public SharedAuthSecret DecodeSharedAuthSecret(byte[] encoded) {
+      try {
+        IEnumerable<ExportedVersion> versions = DecodeExportedVersions(encoded,
+          _magicTagSharedAuth);
+        foreach (ExportedVersion version in versions) {
+          if (version.version == CurrentVersion.ConstVal) {
+            Type exportedSharedAuthType = typeof(ExportedSharedAuth);
+            TypeCode exportedSharedAuthTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedSharedAuthType),
+                exportedSharedAuthType.Name);
+            ExportedSharedAuth secret =
+              (ExportedSharedAuth)
+                _codec.decode_value(version.encoded, exportedSharedAuthTypeCode);
+            return new SharedAuthSecretImpl(secret.bus, secret.attempt, secret.secret);
+          }
+        }
+        throw new InvalidEncodedStreamException("Versão de autenticação compartilhada incompatível.");
+      }
+      catch (GenericUserException e) {
+        const string message =
+          "Falha inesperada ao decodificar uma autenticação compartilhada exportada.";
+        Logger.Error(message, e);
+        throw new OpenBusInternalException(message, e);
+      }
     }
 
     public LoginRegistry LoginRegistry {
@@ -349,6 +375,36 @@ namespace tecgraf.openbus {
 
     #region Internal Members
 
+    private byte[] EncodeExportedVersions(ExportedVersion[] exports, byte[] tag) {
+      byte[] encodedVersions = _codec.encode_value(exports);
+      byte[] fullEnconding = new byte[encodedVersions.Length + MagicTagSize];
+      Buffer.BlockCopy(tag, 0, fullEnconding, 0, MagicTagSize);
+      Buffer.BlockCopy(encodedVersions, 0, fullEnconding, MagicTagSize, encodedVersions.Length);
+      return fullEnconding;
+    }
+
+    private ExportedVersion[] DecodeExportedVersions(byte[] encoded, byte[] tag) {
+      const string msg =
+        "Stream de bytes não corresponde ao tipo de dado esperado.";
+      if (encoded.Length <= ChainHeaderSize) {
+        throw new InvalidEncodedStreamException(msg);
+      }
+
+      byte[] magicTag = new byte[MagicTagSize];
+      byte[] encodedVersions = new byte[encoded.Length - MagicTagSize];
+      Buffer.BlockCopy(encoded, 0, magicTag, 0, MagicTagSize);
+      Buffer.BlockCopy(encoded, MagicTagSize, encodedVersions, 0,
+                       encodedVersions.Length);
+      if (tag.SequenceEqual(magicTag)) {
+        Type exportedVersionType = typeof(ExportedVersion[]);
+        TypeCode exportedVersionTypeCode =
+          ORB.create_interface_tc(Repository.GetRepositoryID(exportedVersionType),
+            exportedVersionType.Name);
+        return (ExportedVersion[])_codec.decode_value(encodedVersions, exportedVersionTypeCode);
+      }
+      throw new InvalidEncodedStreamException(msg);
+    }
+
     private PrivateKeyImpl GetPrivateKeyFromProps(ConnectionProperties props) {
       PrivateKeyImpl accessKey = null;
       if (props != null) {
@@ -365,7 +421,7 @@ namespace tecgraf.openbus {
       Type chainType = typeof(CallChain);
       TypeCode chainTypeCode =
         ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
-          chainType.Name);
+                                chainType.Name);
       return (CallChain)_codec.decode_value(signed.encoded, chainTypeCode);
     }
 
