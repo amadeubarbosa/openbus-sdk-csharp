@@ -250,8 +250,27 @@ namespace tecgraf.openbus {
         Logger.Error("Não há login para executar a chamada MakeChainFor.");
         throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
       }
+      LoginInfo? myLogin = conn.Login;
+      if (!myLogin.HasValue) {
+        Logger.Error("Não há login para executar a chamada MakeChainFor.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+
       AccessControl acs = conn.Acs;
       String busid = conn.BusId;
+      CallerChainImpl joined = (CallerChainImpl) JoinedChain;
+      // se estiver joined em uma cadeia 1.5 não deve fazer signChainFor
+      if (IsJoinedToLegacyChain()) {
+        string originator;
+        if ((joined.Originators.Length > 0) && conn.DelegateOriginator) {
+          originator = joined.Originators[0].entity;
+        }
+        else{
+          originator = joined.Caller.entity;
+        }
+        //TODO o target deveria ser o entity desse login (validado no barramento) ou descartado?
+        return new CallerChainImpl(busid, myLogin.Value, loginId, new []{new LoginInfo(ConnectionImpl.LegacyOriginatorId, originator) });
+      }
       SignedCallChain signedChain = acs.signChainFor(loginId);
       try {
         CallChain callChain = UnmarshalCallChain(signedChain);
@@ -452,6 +471,11 @@ namespace tecgraf.openbus {
         Logger.Fatal(ConnectionIdErrorMsg, e);
         throw;
       }
+    }
+
+    internal bool IsJoinedToLegacyChain() {
+      CallerChainImpl joined = (CallerChainImpl) JoinedChain;
+      return ((joined != null) && (joined.Signed.Equals(CallerChainImpl.NullSignedCallChain)));
     }
 
     internal Current GetPICurrent() {

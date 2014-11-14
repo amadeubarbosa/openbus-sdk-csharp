@@ -91,13 +91,15 @@ namespace tecgraf.openbus {
     private readonly int _loginSlotId;
     private readonly int _noInvalidLoginHandlingSlotId;
 
-    private readonly bool _delegateOriginator;
+    internal readonly bool DelegateOriginator;
 
     private const string BusPubKeyError =
       "Erro ao encriptar as informações de login com a chave pública do barramento.";
 
     private const string InternalPrivKeyError =
       "Erro ao decriptar as informações de login com a chave privada interna.";
+
+    internal const string LegacyOriginatorId = "<unknown>";
 
     #endregion
 
@@ -114,7 +116,7 @@ namespace tecgraf.openbus {
       Context = context;
       _originalLegacy = legacy;
       Legacy = legacy;
-      _delegateOriginator = delegateOriginator;
+      DelegateOriginator = delegateOriginator;
       _codec = InterceptorsInitializer.Codec;
       _chainSlotId = ServerInterceptor.Instance.ChainSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
@@ -390,7 +392,10 @@ namespace tecgraf.openbus {
       get {
         _loginLock.EnterReadLock();
         try {
-          return _login;
+          if (_login.HasValue) {
+            return new LoginInfo(_login.Value.id, _login.Value.entity);
+          }
+          return null;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -699,30 +704,31 @@ namespace tecgraf.openbus {
         }
       }
 
+      bool joinedToLegacy = Context.IsJoinedToLegacyChain();
       try {
-        if (Legacy) {
+        if (Legacy){
           // Testa se tem cadeia para enviar
           string lastCaller = String.Empty;
           bool isLegacyOnly = false;
           CallerChainImpl callerChain = Context.JoinedChain as CallerChainImpl;
-          if (callerChain != null) {
-            if (_delegateOriginator && (callerChain.Originators.Length > 0)) {
+          if (callerChain != null){
+            if (DelegateOriginator && (callerChain.Originators.Length > 0)){
               lastCaller = callerChain.Originators[0].entity;
             }
-            else {
+            else{
               lastCaller = callerChain.Caller.entity;
             }
-            if (callerChain.Signed.Equals(CallerChainImpl.NullSignedCallChain)) {
+            if (callerChain.Signed.Equals(CallerChainImpl.NullSignedCallChain)){
               // é uma credencial somente 1.5
               isLegacyOnly = true;
             }
           }
           Credential legacyData = new Credential(login.id, login.entity,
-                                                 lastCaller);
+            lastCaller);
           ServiceContext legacyContext =
             new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
           ri.add_request_service_context(legacyContext, false);
-          if (isLegacyOnly) {
+          if (isLegacyOnly){
             // não adiciona credencial 2.0
             Logger.Info(
               String.Format(
@@ -731,40 +737,51 @@ namespace tecgraf.openbus {
             return;
           }
         }
-
-        byte[] hash;
-        SignedCallChain chain;
-        if (sessionId >= 0) {
-          Logger.Debug(
-            String.Format(
-              "Criando hash com operação {0}, ticket {1} e segredo {2}",
-              operation, ticket, BitConverter.ToString(secret)));
-          hash = CreateCredentialHash(operation, ticket, secret);
-          Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
-          // CreateCredentialSignedCallChain pode mudar o login
-          chain = CreateCredentialSignedCallChain(remoteLogin);
-          login = GetLoginOrThrowNoLogin(errMsg, null);
-        }
         else {
-          // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
-          sessionId = 0;
-          // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
-          hash = CreateInvalidCredentialHash();
-          chain = CreateInvalidCredentialSignedCallChain();
-          Logger.Debug(
-            String.Format(
-              "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
-              operation, remoteLogin));
+          // se o legacy está desabilitado, não posso estar joined em uma cadeia legacy
+          if (joinedToLegacy) {
+            const string message = "Impossível construir credencial: joined em cadeia 1.5 e sem suporte a legacy.";
+            Logger.Error(message);
+            throw new NO_PERMISSION(InvalidChainCode.ConstVal, CompletionStatus.Completed_No);
+          }
         }
 
-        CredentialData data = new CredentialData(BusId, login.id, sessionId,
-                                                 ticket, hash, chain);
-        ServiceContext serviceContext =
-          new ServiceContext(ContextId, _codec.encode_value(data));
-        ri.add_request_service_context(serviceContext, false);
-        Logger.Info(
-          String.Format("Chamada à operação {0} no servidor de login {1}.",
-                        operation, remoteLogin));
+        // se estiver joined em uma cadeia legacy, o nível de segurança deve ser apenas 1.5, ou seja, sem credencial 2.0
+        if (!joinedToLegacy) {
+          byte[] hash;
+          SignedCallChain chain;
+          if (sessionId >= 0) {
+            Logger.Debug(
+              String.Format(
+                "Criando hash com operação {0}, ticket {1} e segredo {2}",
+                operation, ticket, BitConverter.ToString(secret)));
+            hash = CreateCredentialHash(operation, ticket, secret);
+            Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
+            // CreateCredentialSignedCallChain pode mudar o login
+            chain = CreateCredentialSignedCallChain(remoteLogin);
+            login = GetLoginOrThrowNoLogin(errMsg, null);
+          }
+          else {
+            // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
+            sessionId = 0;
+            // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
+            hash = CreateInvalidCredentialHash();
+            chain = CreateInvalidCredentialSignedCallChain();
+            Logger.Debug(
+              String.Format(
+                "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
+                operation, remoteLogin));
+          }
+
+          CredentialData data = new CredentialData(BusId, login.id, sessionId,
+                                                   ticket, hash, chain);
+          ServiceContext serviceContext =
+            new ServiceContext(ContextId, _codec.encode_value(data));
+          ri.add_request_service_context(serviceContext, false);
+          Logger.Info(
+            String.Format("Chamada à operação {0} no servidor de login {1}.",
+                          operation, remoteLogin));
+        }
       }
       catch (Exception) {
         Logger.Error(String.Format("Erro ao tentar enviar a requisição {0}.",
@@ -971,7 +988,7 @@ namespace tecgraf.openbus {
           LoginInfo[] originators = lCredential._delegate.Equals(String.Empty)
                                       ? new LoginInfo[0]
                                       : new[] {
-                                        new LoginInfo("<unknown>",
+                                        new LoginInfo(LegacyOriginatorId,
                                                       lCredential.
                                                         _delegate)
                                       };
