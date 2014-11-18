@@ -694,9 +694,9 @@ namespace tecgraf.openbus.Test {
         try {
           _context.SetCurrentConnection(conn);
           SharedAuthSecret secret = conn.StartSharedAuth();
-          byte[] data = _context.EncodeSharedAuthSecret(secret);
+          byte[] data = _context.EncodeSharedAuth(secret);
           Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
-          SharedAuthSecret secret2 = _context.DecodeSharedAuthSecret(data);
+          SharedAuthSecret secret2 = _context.DecodeSharedAuth(data);
           conn2.LoginBySharedAuth(secret2);
           Assert.IsNotNull(conn2.Login);
           Assert.IsFalse(conn.Login.Value.id.Equals(conn2.Login.Value.id));
@@ -717,7 +717,7 @@ namespace tecgraf.openbus.Test {
         _context.SetCurrentConnection(conn);
         SharedAuthSecret secret = conn.StartSharedAuth();
         try {
-          byte[] data = _context.EncodeSharedAuthSecret(secret);
+          byte[] data = _context.EncodeSharedAuth(secret);
           _context.DecodeChain(data);
         }
         finally {
@@ -743,7 +743,7 @@ namespace tecgraf.openbus.Test {
           _context.SetCurrentConnection(conn1);
           CallerChain chain1For2 = _context.MakeChainFor(login2);
           byte[] data = _context.EncodeChain(chain1For2);
-          _context.DecodeSharedAuthSecret(data);
+          _context.DecodeSharedAuth(data);
         }
         finally {
           _context.SetCurrentConnection(null);

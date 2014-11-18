@@ -329,7 +329,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public byte[] EncodeSharedAuthSecret(SharedAuthSecret secret) {
+    public byte[] EncodeSharedAuth(SharedAuthSecret secret) {
       try {
         SharedAuthSecretImpl sharedAuth = (SharedAuthSecretImpl)secret;
         ExportedSharedAuth exportedAuth = new ExportedSharedAuth(sharedAuth.BusId, sharedAuth.Attempt, sharedAuth.Secret);
@@ -345,7 +345,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public SharedAuthSecret DecodeSharedAuthSecret(byte[] encoded) {
+    public SharedAuthSecret DecodeSharedAuth(byte[] encoded) {
       try {
         IEnumerable<ExportedVersion> versions = DecodeExportedVersions(encoded,
           _magicTagSharedAuth);
