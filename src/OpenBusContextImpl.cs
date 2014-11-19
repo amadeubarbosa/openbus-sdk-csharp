@@ -298,6 +298,7 @@ namespace tecgraf.openbus {
           versions = new ExportedVersion[1];
         }
         else {
+          // A ordem das versões exportadas IMPORTA. A 2.0 deve vir antes da 1.5.
           versions = new ExportedVersion[2];
           ExportedCallChain exported = new ExportedCallChain(chain.BusId,
                                                                   chainImpl.Signed);
@@ -324,29 +325,30 @@ namespace tecgraf.openbus {
 
     public CallerChain DecodeChain(byte[] encoded) {
       try {
-        IEnumerable<ExportedVersion> versions = DecodeExportedVersions(encoded,
+        ExportedVersion[] versions = DecodeExportedVersions(encoded,
           _magicTagCallChain);
-        foreach (ExportedVersion version in versions) {
-          if (version.version == CurrentVersion.ConstVal) {
+        for (int i = 0; i < versions.Length; i++) {
+          // Se houver duas versões, a versão atual virá antes da versão legacy.
+          if (versions[i].version == CurrentVersion.ConstVal) {
             Type exportedCallChainType = typeof(ExportedCallChain);
             TypeCode exportedCallChainTypeCode =
               ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
                 exportedCallChainType.Name);
             ExportedCallChain exportedChain =
               (ExportedCallChain)
-                _codec.decode_value(version.encoded, exportedCallChainTypeCode);
+                _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
             CallChain chain = UnmarshalCallChain(exportedChain.signedChain);
             return new CallerChainImpl(exportedChain.bus, chain.caller,
               chain.target, chain.originators, exportedChain.signedChain);
           }
-          if (version.version == LegacyVersion.ConstVal) {
+          if (versions[i].version == LegacyVersion.ConstVal) {
             Type exportedCallChainType = typeof(LegacyExportedCallChain);
             TypeCode exportedCallChainTypeCode =
               ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
                 exportedCallChainType.Name);
             LegacyExportedCallChain exportedChain =
               (LegacyExportedCallChain)
-                _codec.decode_value(version.encoded, exportedCallChainTypeCode);
+                _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
             LoginInfo[] originators;
             if (!exportedChain._delegate.Equals("")) {
               originators = new LoginInfo[1];
