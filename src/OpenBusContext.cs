@@ -276,7 +276,7 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="secret">Segredo de autenticação compartilhada a ser codificado.</param>
     /// <returns>Cadeia codificada em um stream de bytes.</returns>
-    byte[] EncodeSharedAuthSecret(SharedAuthSecret secret);
+    byte[] EncodeSharedAuth(SharedAuthSecret secret);
 
     /// <summary>
     /// Decodifica um segredo de autenticação compartilhada(<see cref="T:tecgraf.openbus.SharedAuthSecret"/>)
@@ -286,7 +286,7 @@ namespace tecgraf.openbus {
     /// <returns>Segredo de autenticação compartilhada decodificado.</returns>
     /// <exception cref="InvalidEncodedStreamException">Caso a stream de bytes não seja do formato
     ///        esperado.</exception>
-    SharedAuthSecret DecodeSharedAuthSecret(byte[] encoded);
+    SharedAuthSecret DecodeSharedAuth(byte[] encoded);
 
     /// <summary>
     /// Referência ao serviço núcleo de registro de logins do barramento
