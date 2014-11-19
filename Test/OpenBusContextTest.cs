@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
+using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
@@ -485,6 +486,80 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
+    ///   Testes com join em cadeia legada do método MakeChainFor
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(NO_PERMISSION))]
+    public void MakeChainForJoinedLegacyTest() {
+      lock (Lock) {
+        Connection conn1 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor1 = "actor-1";
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
+        Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor2 = "actor-2";
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2));
+        Connection conn3 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor3 = "actor-3";
+        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
+
+        try {
+          const string deleg = "";
+          CallerChain legacyChain =
+            BuildFakeLegacyCallChain(conn1.BusId, conn1.Login.Value, actor2, deleg);
+          _context.SetCurrentConnection(conn2);
+          _context.JoinChain(legacyChain);
+          CallerChain joined2To3 = _context.MakeChainFor(conn3.Login.Value.id);
+        }
+        finally {
+          _context.ExitChain();
+          conn1.Logout();
+          conn2.Logout();
+          conn3.Logout();
+        }
+      }
+    }
+
+    /// <summary>
+    ///   Testes com join em cadeia legada com delegate do método MakeChainFor
+    /// </summary>
+    [TestMethod]
+    public void MakeChainForJoinedLegacyWithDelegateTest() {
+      lock (Lock) {
+        Connection conn1 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor1 = "actor-1";
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1));
+        Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
+        conn2.LoginByCertificate(_entity, _accessKey);
+        Connection conn3 = _context.CreateConnection(_hostName, _hostPort);
+        const string actor3 = "actor-3";
+        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3));
+
+        try {
+          string deleg = "user1";
+          CallerChain legacyChain =
+            BuildFakeLegacyCallChain(conn1.BusId, conn1.Login.Value, _entity,
+              deleg);
+          _context.SetCurrentConnection(conn2);
+          _context.JoinChain(legacyChain);
+          CallerChain joined2To3 = _context.MakeChainFor(conn3.Login.Value.id);
+          Assert.AreEqual(conn2.BusId, joined2To3.BusId);
+          Assert.AreEqual(actor3, joined2To3.Target);
+          Assert.AreEqual(_entity, joined2To3.Caller.entity);
+          Assert.AreEqual(conn2.Login.Value.id, joined2To3.Caller.id);
+          Assert.IsTrue(joined2To3.Originators.Length > 0);
+          Assert.AreEqual(actor1, joined2To3.Originators[0].entity);
+          Assert.AreEqual(ConnectionImpl.LegacyOriginatorId, joined2To3.Originators[0].id);
+        }
+        finally {
+          _context.ExitChain();
+          conn1.Logout();
+          conn2.Logout();
+          conn3.Logout();
+        }
+      }
+    }
+
+    /// <summary>
     ///   Testes do método MakeChainFor com login inválido
     /// </summary>
     [TestMethod]
@@ -684,7 +759,45 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
-    ///   Testes dos métodos EncodeSharedAuthSecret e DecodeSharedAuthSecret
+    ///   Testes dos métodos EncodeChain e DecodeChain com cadeia legada
+    /// </summary>
+    [TestMethod]
+    public void EncodeAndDecodeLegacyChain() {
+      lock (Lock) {
+        Connection conn = _context.CreateConnection(_hostName, _hostPort);
+        conn.LoginByPassword(_login, _password);
+        LoginInfo login = conn.Login.Value;
+        string busid = conn.BusId;
+        conn.Logout();
+        string deleg = "";
+        const string target = "anyone";
+        CallerChain legacyChain =
+          BuildFakeLegacyCallChain(busid, login, target, deleg);
+        byte[] encodeChain = _context.EncodeChain(legacyChain);
+        CallerChain decodedChain = _context.DecodeChain(encodeChain);
+        Assert.AreEqual(busid, decodedChain.BusId);
+        Assert.AreEqual(target, decodedChain.Target);
+        Assert.AreEqual(login.entity, decodedChain.Caller.entity);
+        Assert.AreEqual(login.id, decodedChain.Caller.id);
+        Assert.AreEqual(0, decodedChain.Originators.Length);
+
+        deleg = "user-origin";
+        legacyChain = BuildFakeLegacyCallChain(busid, login, target, deleg);
+        byte[] encodedChainDelegated = _context.EncodeChain(legacyChain);
+        CallerChain delegatedChain = _context.DecodeChain(encodedChainDelegated);
+        Assert.AreEqual(busid, delegatedChain.BusId);
+        Assert.AreEqual(target, delegatedChain.Target);
+        Assert.AreEqual(login.entity, delegatedChain.Caller.entity);
+        Assert.AreEqual(login.id, delegatedChain.Caller.id);
+        Assert.AreEqual(1, delegatedChain.Originators.Length);
+        Assert.AreEqual(deleg, delegatedChain.Originators[0].entity);
+        Assert.AreEqual(ConnectionImpl.LegacyOriginatorId,
+          delegatedChain.Originators[0].id);
+      }
+    }
+
+    /// <summary>
+    ///   Testes dos métodos EncodeSharedAuth e DecodeSharedAuth
     /// </summary>
     [TestMethod]
     public void EncodeAndDecodeSharedAuth() {
@@ -708,6 +821,9 @@ namespace tecgraf.openbus.Test {
       }
     }
 
+    /// <summary>
+    ///   Teste de decodificação de uma SharedAuth como uma cadeia
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(InvalidEncodedStreamException))]
     public void DecodeSharedAuthAsChain() {
@@ -728,6 +844,9 @@ namespace tecgraf.openbus.Test {
       }
     }
 
+    /// <summary>
+    ///   Teste de decodificação de uma cadeia como uma SharedAuth
+    /// </summary>
     [TestMethod]
     [ExpectedException(typeof(InvalidEncodedStreamException))]
     public void DecodeChainAsSharedAuth() {
@@ -764,6 +883,23 @@ namespace tecgraf.openbus.Test {
                            typeof(CallerChainInspector)),
                          new CallerChainInspectorImpl());
       return component;
+    }
+
+    /// <summary>
+    ///   Constrói uma cadeia legacy simulada.
+    /// </summary>
+    private static CallerChain BuildFakeLegacyCallChain(string busId, LoginInfo caller,
+      string target, string deleg) {
+      LoginInfo[] originators;
+      if (deleg != null) {
+        originators = new LoginInfo[1];
+        originators[0] = new LoginInfo(ConnectionImpl.LegacyOriginatorId, deleg);
+      }
+      else {
+        originators = new LoginInfo[0];
+      }
+      CallChain callChain = new CallChain(target, originators, caller);
+      return new CallerChainImpl(busId, callChain.caller, callChain.target, callChain.originators);
     }
   }
 }

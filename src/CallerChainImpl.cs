@@ -34,5 +34,9 @@ namespace tecgraf.openbus {
     public LoginInfo[] Originators { get; private set; }
 
     public LoginInfo Caller { get; private set; }
+
+    public bool IsLegacyChain() {
+      return Signed.Equals(NullSignedCallChain);
+    }
   }
 }

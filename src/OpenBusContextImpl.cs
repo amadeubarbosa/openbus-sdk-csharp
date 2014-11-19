@@ -11,6 +11,7 @@ using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
+using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.data_export;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -258,18 +259,22 @@ namespace tecgraf.openbus {
 
       AccessControl acs = conn.Acs;
       String busid = conn.BusId;
-      CallerChainImpl joined = (CallerChainImpl) JoinedChain;
-      // se estiver joined em uma cadeia 1.5 não deve fazer signChainFor
+      // se estiver joined em uma cadeia 1.5 não deve fazer signChainFor. Deve criar uma cadeia simulada 1.5.
       if (IsJoinedToLegacyChain()) {
+        CallerChainImpl joined = (CallerChainImpl)JoinedChain;
         string originator;
-        if ((joined.Originators.Length > 0) && conn.DelegateOriginator) {
+        if ((joined.Originators != null) && (joined.Originators.Length > 0) && conn.DelegateOriginator) {
           originator = joined.Originators[0].entity;
         }
         else{
           originator = joined.Caller.entity;
         }
-        //TODO o target deveria ser o entity desse login (validado no barramento) ou descartado?
-        return new CallerChainImpl(busid, myLogin.Value, loginId, new []{new LoginInfo(ConnectionImpl.LegacyOriginatorId, originator) });
+        LoginCache.LoginEntry cacheEntry = conn.GetLoginEntryFromCache(loginId);
+        if (cacheEntry == null) {
+          Logger.Error("O login alvo da cadeia não é válido.");
+          throw new InvalidLogins();
+        }
+        return new CallerChainImpl(busid, myLogin.Value, cacheEntry.Entity, new[] { new LoginInfo(ConnectionImpl.LegacyOriginatorId, originator) });
       }
       SignedCallChain signedChain = acs.signChainFor(loginId);
       try {
@@ -287,10 +292,26 @@ namespace tecgraf.openbus {
     public byte[] EncodeChain(CallerChain chain) {
       try {
         CallerChainImpl chainImpl = (CallerChainImpl)chain;
-        ExportedCallChain exportedChain = new ExportedCallChain(chain.BusId,
-                                                                chainImpl.Signed);
-        byte[] encodedChain = _codec.encode_value(exportedChain);
-        ExportedVersion[] versions = { new ExportedVersion(CurrentVersion.ConstVal, encodedChain) };
+        int i = 0;
+        ExportedVersion[] versions;
+        if (chain.IsLegacyChain()) {
+          versions = new ExportedVersion[1];
+        }
+        else {
+          versions = new ExportedVersion[2];
+          ExportedCallChain exported = new ExportedCallChain(chain.BusId,
+                                                                  chainImpl.Signed);
+          byte[] encoded = _codec.encode_value(exported);
+          versions[i] = new ExportedVersion(CurrentVersion.ConstVal, encoded);
+          i++;
+        }
+        string deleg = "";
+        if (chain.Originators.Length > 0) {
+          deleg = chain.Originators[0].entity;
+        }
+        LegacyExportedCallChain legacyExported = new LegacyExportedCallChain(chain.BusId, chain.Target, chain.Caller, deleg);
+        byte[] legacyEncoded = _codec.encode_value(legacyExported);
+        versions[i] = new ExportedVersion(LegacyVersion.ConstVal, legacyEncoded);
         return EncodeExportedVersions(versions, _magicTagCallChain);
       }
       catch (InvalidTypeForEncoding e) {
@@ -318,6 +339,26 @@ namespace tecgraf.openbus {
             return new CallerChainImpl(exportedChain.bus, chain.caller,
               chain.target, chain.originators, exportedChain.signedChain);
           }
+          if (version.version == LegacyVersion.ConstVal) {
+            Type exportedCallChainType = typeof(LegacyExportedCallChain);
+            TypeCode exportedCallChainTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
+                exportedCallChainType.Name);
+            LegacyExportedCallChain exportedChain =
+              (LegacyExportedCallChain)
+                _codec.decode_value(version.encoded, exportedCallChainTypeCode);
+            LoginInfo[] originators;
+            if (!exportedChain._delegate.Equals("")) {
+              originators = new LoginInfo[1];
+              originators[0] = new LoginInfo(ConnectionImpl.LegacyOriginatorId, exportedChain._delegate);
+            }
+            else {
+              originators = new LoginInfo[0];
+            }
+            CallChain chain = new CallChain(exportedChain.target, originators, exportedChain.caller);
+            return new CallerChainImpl(exportedChain.bus, chain.caller,
+              chain.target, chain.originators);
+          }
         }
         throw new InvalidEncodedStreamException("Versão de cadeia incompatível.");
       }
@@ -325,7 +366,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao decodificar uma cadeia exportada.";
         Logger.Error(message, e);
-        throw new OpenBusInternalException(message, e);
+        throw new InvalidEncodedStreamException(message, e);
       }
     }
 
@@ -475,7 +516,7 @@ namespace tecgraf.openbus {
 
     internal bool IsJoinedToLegacyChain() {
       CallerChainImpl joined = (CallerChainImpl) JoinedChain;
-      return ((joined != null) && (joined.Signed.Equals(CallerChainImpl.NullSignedCallChain)));
+      return ((joined != null) && (joined.IsLegacyChain()));
     }
 
     internal Current GetPICurrent() {

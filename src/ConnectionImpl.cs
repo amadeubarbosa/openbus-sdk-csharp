@@ -334,6 +334,18 @@ namespace tecgraf.openbus {
       _sessionId2Session.Clear();
     }
 
+    internal LoginCache.LoginEntry GetLoginEntryFromCache(string loginId) {
+      LoginCache cache;
+      _loginLock.EnterReadLock();
+      try {
+        cache = _loginsCache;
+      }
+      finally {
+        _loginLock.ExitReadLock();
+      }
+      return cache.GetLoginEntry(loginId);
+    }
+
     internal OfferRegistry Offers {
       get {
         _loginLock.EnterReadLock();
