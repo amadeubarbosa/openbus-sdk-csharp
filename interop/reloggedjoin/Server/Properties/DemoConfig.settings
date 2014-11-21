@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="busHostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">bombas</Value>
+      <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="openbusLogFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>

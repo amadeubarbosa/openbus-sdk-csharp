@@ -9,7 +9,7 @@
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">21000</Value>
+      <Value Profile="(Default)">2089</Value>
     </Setting>
     <Setting Name="privateKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\admin\InteropChaining.key</Value>

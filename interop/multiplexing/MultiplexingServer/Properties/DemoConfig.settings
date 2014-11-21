@@ -3,16 +3,16 @@
   <Profiles />
   <Settings>
     <Setting Name="busHostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ubu</Value>
+      <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">9000</Value>
+      <Value Profile="(Default)">2089</Value>
     </Setting>
     <Setting Name="bus2HostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">11000</Value>
+      <Value Profile="(Default)">2090</Value>
     </Setting>
     <Setting Name="privateKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">..\..\..\InteropMultiplexing.key</Value>
+      <Value Profile="(Default)">..\..\..\admin\InteropMultiplexing.key</Value>
     </Setting>
   </Settings>
 </SettingsFile>

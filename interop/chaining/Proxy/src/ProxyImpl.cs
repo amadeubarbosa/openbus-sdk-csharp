@@ -19,7 +19,7 @@ namespace tecgraf.openbus.interop.chaining {
       try {
         chain = context.DecodeChain(encodedChain);
       }
-      catch (InvalidChainStreamException e) {
+      catch (InvalidEncodedStreamException e) {
         Console.WriteLine(e);
         throw new ArgumentException("Cadeia em formato inválido.", e);
       }

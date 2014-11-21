@@ -7,12 +7,10 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
-using omg.org.IOP;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.simple;
-using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus.interop.sharedauth {
   /// <summary>
@@ -32,31 +30,14 @@ namespace tecgraf.openbus.interop.sharedauth {
                                                      };
       BasicConfigurator.Configure(appender);
 
-      CodecFactory factory =
-        OrbServices.GetSingleton().resolve_initial_references("CodecFactory") as
-        CodecFactory;
-      if (factory == null) {
-        Assert.Fail("Impossível criar o codificador CDR.");
-      }
-      Codec codec =
-        factory.create_codec(
-          new Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
-
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.CreateConnection(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
-      byte[] encodedLogin = File.ReadAllBytes(loginFile);
-      Type saType = typeof (EncodedSharedAuth);
-      TypeCode saTypeCode =
-        OrbServices.GetSingleton().create_interface_tc(
-          Repository.GetRepositoryID(saType), saType.Name);
-      EncodedSharedAuth sharedAuth =
-        (EncodedSharedAuth) codec.decode_value(encodedLogin, saTypeCode);
-
-      LoginProcess login = sharedAuth.attempt as LoginProcess;
-      conn.LoginBySharedAuth(login, sharedAuth.secret);
+      byte[] encoded = File.ReadAllBytes(loginFile);
+      SharedAuthSecret secret = context.DecodeSharedAuth(encoded);
+      conn.LoginBySharedAuth(secret);
 
       Console.WriteLine(
         "Login por autenticação compartilhada concluído, procurando faceta Hello.");
@@ -69,7 +50,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {autoProp, prop};
+      ServiceProperty[] properties = {autoProp, prop};
       ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {

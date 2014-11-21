@@ -31,16 +31,6 @@ namespace tecgraf.openbus.interop.sharedauth {
                                                      };
       BasicConfigurator.Configure(appender);
 
-      CodecFactory factory =
-        OrbServices.GetSingleton().resolve_initial_references("CodecFactory") as
-        CodecFactory;
-      if (factory == null) {
-        Assert.Fail("Impossível criar o codificador CDR.");
-      }
-      Codec codec =
-        factory.create_codec(
-          new omg.org.IOP.Encoding(ENCODING_CDR_ENCAPS.ConstVal, 1, 2));
-
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.CreateConnection(hostName, hostPort, props);
@@ -51,15 +41,9 @@ namespace tecgraf.openbus.interop.sharedauth {
       string loginFile = DemoConfig.Default.loginFile;
 
       conn.LoginByPassword(userLogin, userPassword);
-      byte[] secret;
-      LoginProcess login = conn.StartSharedAuth(out secret);
-      EncodedSharedAuth sharedAuth = new EncodedSharedAuth {
-                                                             secret = secret,
-                                                             attempt =
-                                                               login as
-                                                               MarshalByRefObject
-                                                           };
-      File.WriteAllBytes(loginFile, codec.encode_value(sharedAuth));
+      SharedAuthSecret secret = conn.StartSharedAuth();
+      byte[] sharedAuth = context.EncodeSharedAuth(secret);
+      File.WriteAllBytes(loginFile, sharedAuth);
 
       Console.WriteLine("Chamando a faceta Hello por este cliente.");
       // propriedades geradas automaticamente
@@ -70,7 +54,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {autoProp, prop};
+      ServiceProperty[] properties = {autoProp, prop};
       ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {

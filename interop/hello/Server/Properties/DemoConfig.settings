@@ -3,13 +3,13 @@
   <Profiles />
   <Settings>
     <Setting Name="busHostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">ubu</Value>
+      <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="openbusLogFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">9000</Value>
+      <Value Profile="(Default)">2089</Value>
     </Setting>
     <Setting Name="privateKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\admin\InteropHello.key</Value>
