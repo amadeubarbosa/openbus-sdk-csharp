@@ -12,6 +12,7 @@ using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
 using scs.core;
+using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.data_export;
@@ -265,10 +266,22 @@ namespace tecgraf.openbus {
     public byte[] EncodeChain(CallerChain chain) {
       try {
         CallerChainImpl chainImpl = (CallerChainImpl)chain;
-        ExportedCallChain exportedChain = new ExportedCallChain(chain.BusId,
-                                                                chainImpl.Signed);
-        byte[] encodedChain = _codec.encode_value(exportedChain);
-        ExportedVersion[] versions = { new ExportedVersion(CurrentVersion.ConstVal, encodedChain) };
+        int i = 0;
+        ExportedVersion[] versions;
+        if (chain.IsLegacyChain()) {
+          versions = new ExportedVersion[1];
+        }
+        else {
+          // A ordem das versões exportadas IMPORTA. A 2.1 deve vir antes da 2.0.
+          versions = new ExportedVersion[2];
+          ExportedCallChain exported = new ExportedCallChain(chain.BusId,
+                                                                  chainImpl.Signed);
+          byte[] encoded = _codec.encode_value(exported);
+          versions[i] = new ExportedVersion(CurrentVersion.ConstVal, encoded);
+          i++;
+        }
+        //TODO implementar. Incluir versão anterior da cadeia.
+        throw new NotImplementedException();
         return EncodeExportedVersions(versions, _magicTagCallChain);
       }
       catch (InvalidTypeForEncoding e) {
@@ -281,20 +294,43 @@ namespace tecgraf.openbus {
 
     public CallerChain DecodeChain(byte[] encoded) {
       try {
-        IEnumerable<ExportedVersion> versions = DecodeExportedVersions(encoded,
+        ExportedVersion[] versions = DecodeExportedVersions(encoded,
           _magicTagCallChain);
-        foreach (ExportedVersion version in versions) {
-          if (version.version == CurrentVersion.ConstVal) {
+        for (int i = 0; i < versions.Length; i++) {
+          // Se houver duas versões, a versão atual virá antes da versão legacy.
+          if (versions[i].version == CurrentVersion.ConstVal) {
             Type exportedCallChainType = typeof(ExportedCallChain);
             TypeCode exportedCallChainTypeCode =
               ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
                 exportedCallChainType.Name);
             ExportedCallChain exportedChain =
               (ExportedCallChain)
-                _codec.decode_value(version.encoded, exportedCallChainTypeCode);
+                _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
             CallChain chain = UnmarshalCallChain(exportedChain.signedChain);
             return new CallerChainImpl(exportedChain.bus, chain.caller,
               chain.target, chain.originators, exportedChain.signedChain);
+          }
+          //TODO implementar. Decodificar cadeia legada.
+          throw new NotImplementedException();
+          if (versions[i].version == LegacyVersion.ConstVal) {
+            Type exportedCallChainType = typeof(LegacyExportedCallChain);
+            TypeCode exportedCallChainTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
+                exportedCallChainType.Name);
+            LegacyExportedCallChain exportedChain =
+              (LegacyExportedCallChain)
+                _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
+            LoginInfo[] originators;
+            if (!exportedChain._delegate.Equals("")) {
+              originators = new LoginInfo[1];
+              originators[0] = new LoginInfo(ConnectionImpl.LegacyOriginatorId, exportedChain._delegate);
+            }
+            else {
+              originators = new LoginInfo[0];
+            }
+            CallChain chain = new CallChain(exportedChain.target, originators, exportedChain.caller);
+            return new CallerChainImpl(exportedChain.bus, chain.caller,
+              chain.target, chain.originators);
           }
         }
         throw new InvalidEncodedStreamException("Versão de cadeia incompatível.");
@@ -303,7 +339,7 @@ namespace tecgraf.openbus {
         const string message =
           "Falha inesperada ao decodificar uma cadeia exportada.";
         Logger.Error(message, e);
-        throw new OpenBusInternalException(message, e);
+        throw new InvalidEncodedStreamException(message, e);
       }
     }
 

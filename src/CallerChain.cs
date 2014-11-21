@@ -43,5 +43,11 @@ namespace tecgraf.openbus {
 	  /// Informação de login da entidade que realizou a última chamada da cadeia.
     /// </summary>
     LoginInfo Caller { get; }
+
+    /// <summary>
+    /// Informa se a cadeia é uma cadeia legada.
+    /// </summary>
+    /// <returns>True se for uma cadeia legada, false se for uma cadeia da versão atual.</returns>
+    bool IsLegacyChain();
   }
 }
