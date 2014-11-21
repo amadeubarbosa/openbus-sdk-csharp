@@ -17,7 +17,7 @@ namespace tecgraf.openbus.interop.multiplexing {
     private static IComponent _ic;
 
     private static readonly ServiceProperty[] ServiceProperties =
-      new[] {new ServiceProperty("offer.domain", "Interoperability Tests")};
+      {new ServiceProperty("offer.domain", "Interoperability Tests")};
 
     private static Connection _conn1AtBus1;
     private static Connection _connAtBus2;

@@ -48,11 +48,8 @@
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Interop.Hello.Idl">
-      <HintPath>..\..\..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
-    </Reference>
-    <Reference Include="Openbus.Interop.SharedAuth.Idl">
-      <HintPath>..\..\..\lib\Openbus.Interop.SharedAuth.Idl.dll</HintPath>
+    <Reference Include="OpenBus.Interop.Hello.Idl">
+      <HintPath>..\..\..\lib\OpenBus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
       <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
