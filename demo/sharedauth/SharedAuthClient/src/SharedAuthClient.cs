@@ -17,27 +17,26 @@ namespace demo {
       ushort port = Convert.ToUInt16(args[1]);
       string loginFile = args[2];
 
-      // Lê o arquivo com o login process e o segredo (talvez seja mais 
-      // interessante para a aplicação trocar esses dados de outra forma.
-      // No mínimo, essas informações deveriam estar encriptadas. Além disso, o
-      // cliente Hello escreve apenas uma vez esses dados, que têm validade 
-      // igual ao lease do login dele, portanto uma outra forma mais dinâmica
-      // seria mais eficaz. No entanto, isso foge ao escopo dessa demo)
       OpenBusContext context = ORBInitializer.Context;
-      string[] data = File.ReadAllLines(loginFile);
-      byte[] secret = Convert.FromBase64String(data[0]);
-      LoginProcess login = (LoginProcess)context.ORB.string_to_object(data[1]);
+
+      // Lê o arquivo com o segredo. Talvez seja interessante para a aplicação
+      // trocar esses dados de outra forma (encriptados por exemplo).
+      // Além disso, o cliente Hello escreve apenas uma vez esses dados, que têm
+      // validade igual ao lease do login dele, portanto uma outra forma mais
+      // dinâmica seria mais eficaz. No entanto, isso foge ao escopo dessa demo.
+      byte[] encoded = File.ReadAllBytes(loginFile);
+      SharedAuthSecret secret = context.DecodeSharedAuth(encoded);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      Connection conn = context.CreateConnection(host, port, null);
+      Connection conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
       ServiceOfferDesc[] offers = null;
       try {
         // Faz o login por autenticação compartilhada
-        conn.LoginBySharedAuth(login, secret);
+        conn.LoginBySharedAuth(secret);
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
         // propriedade gerada automaticamente
         ServiceProperty autoProp =
@@ -45,7 +44,7 @@ namespace demo {
         // propriedade definida pelo serviço hello
         ServiceProperty prop = new ServiceProperty("offer.domain",
                                                    "Demo SharedAuth");
-        ServiceProperty[] properties = new[] { prop, autoProp };
+        ServiceProperty[] properties = { prop, autoProp };
         offers = context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {

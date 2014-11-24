@@ -9,9 +9,7 @@ namespace demo {
     #region Hello Members
 
     public void sayHello() {
-      Console.WriteLine(String.Format("Hello {0}!",
-                                      ORBInitializer.Context.CallerChain.Caller.
-                                        entity));
+      Console.WriteLine("Hello {0}!", ORBInitializer.Context.CallerChain.Caller.entity);
     }
 
     #endregion

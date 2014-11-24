@@ -45,12 +45,12 @@ namespace demo {
                                                   "Demo CallChain");
       ServiceProperty prop2 = new ServiceProperty("offer.role",
                                                   "mensageiro proxy");
-      ServiceProperty[] properties = new[] {prop1, prop2};
+      ServiceProperty[] properties = {prop1, prop2};
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port, null);
+      _conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(_conn);
 
       bool failed = true;
@@ -62,7 +62,7 @@ namespace demo {
         ServiceProperty autoProp =
           new ServiceProperty("openbus.component.interface", messengerIDLType);
         ServiceProperty findProp = new ServiceProperty("offer.role", "mensageiro real");
-        ServiceProperty[] findProps = new[] {autoProp, findProp, prop1};
+        ServiceProperty[] findProps = {autoProp, findProp, prop1};
         Offers = offerRegistry.findServices(findProps);
         // Registra a própria oferta no barramento
         _offer = offerRegistry.registerService(ic, properties);

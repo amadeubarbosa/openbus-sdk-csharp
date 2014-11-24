@@ -25,7 +25,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, null);
+      Connection conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
@@ -35,17 +35,16 @@ namespace demo {
         conn.LoginByPassword(entity, password);
 
         // Obtém os dados para uma autenticação compartilhada
-        byte[] secret;
-        string loginIOR = context.ORB.object_to_string(conn.StartSharedAuth(out secret));
+        SharedAuthSecret secret = conn.StartSharedAuth();
 
-        // Escreve os dados da autenticação compartilhada em um arquivo (talvez
-        // seja mais interessante para a aplicação trocar esses dados de outra
-        // forma. No mínimo, essas informações deveriam ser encriptadas. Além 
+        // Escreve o segredo da autenticação compartilhada em um arquivo. Talvez
+        // seja importante para a aplicação encriptar esses dados. Além 
         // disso, escreveremos apenas uma vez esses dados, que têm validade igual
         // ao lease do login atual. Caso o cliente demore a executar, esses dados
         // não funcionarão, portanto uma outra forma mais dinâmica seria mais
         // eficaz. No entanto, isso foge ao escopo dessa demo)
-        File.WriteAllLines(loginFile, new[] { Convert.ToBase64String(secret), loginIOR });
+        byte[] encoded = context.EncodeSharedAuth(secret);
+        File.WriteAllBytes(loginFile, encoded);
 
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
         // propriedade gerada automaticamente
@@ -53,7 +52,7 @@ namespace demo {
           new ServiceProperty("openbus.component.interface", helloIDLType);
         // propriedade definida pelo serviço hello
         ServiceProperty prop = new ServiceProperty("offer.domain", "Demo SharedAuth");
-        ServiceProperty[] properties = new[] {prop, autoProp};
+        ServiceProperty[] properties = {prop, autoProp};
         offers = context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {

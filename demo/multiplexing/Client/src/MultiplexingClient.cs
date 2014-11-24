@@ -44,7 +44,7 @@ namespace demo {
         // propriedade definida pelo serviço timer
         ServiceProperty prop = new ServiceProperty("offer.domain",
                                                    "Demo Multiplexing");
-        ServiceProperty[] properties = new[] {prop, autoProp};
+        ServiceProperty[] properties = {prop, autoProp};
         offers = context.OfferRegistry.findServices(properties);
       }
       catch (ServiceFailure e) {
@@ -67,7 +67,9 @@ namespace demo {
       }
       if (offers != null) {
         for (int i = 0; i < offers.Length; i++) {
-          StartTheThread(i, offers[i], Thread.CurrentThread);
+          // garante espera de no mínimo 5s para que dê tempo do cliente executar
+          // todas as chamadas e aumentar o número de notificações esperadas
+          StartTheThread(i+5, offers[i], Thread.CurrentThread);
         }
       }
 
@@ -98,8 +100,7 @@ namespace demo {
     }
 
     private static Connection NewLogin() {
-      Connection conn = ORBInitializer.Context.CreateConnection(_host, _port,
-                                                                null);
+      Connection conn = ORBInitializer.Context.CreateConnection(_host, _port);
       try {
         // Faz o login
         conn.LoginByPassword(_entity, _password);
@@ -128,13 +129,13 @@ namespace demo {
       return conn;
     }
 
-    private static void StartTheThread(int timeout, ServiceOfferDesc desc,
+    private static void StartTheThread(double timeout, ServiceOfferDesc desc,
                                        Thread wThread) {
-      var t = new Thread(() => UseOffer(timeout, desc, wThread));
+      Thread t = new Thread(() => UseOffer(timeout, desc, wThread));
       t.Start();
     }
 
-    private static void UseOffer(int timeout, ServiceOfferDesc desc,
+    private static void UseOffer(double timeout, ServiceOfferDesc desc,
                                  Thread wThread) {
       Connection conn = NewLogin();
       if (!conn.Login.HasValue) {
