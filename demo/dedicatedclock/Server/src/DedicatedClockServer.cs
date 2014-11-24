@@ -45,14 +45,14 @@ namespace demo {
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "Demo Dedicated Clock")
-                                           };
+      ServiceProperty[] properties = {
+                                       new ServiceProperty("offer.domain",
+                                                           "Demo Dedicated Clock")
+                                     };
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port, null);
+      _conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(_conn);
 
       // Cria registrador e adiciona a callback de login inválido

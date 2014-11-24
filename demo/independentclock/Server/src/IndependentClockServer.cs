@@ -64,14 +64,14 @@ namespace demo {
     private static void ConnectToOpenBus() {
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = _component.GetIComponent();
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "Demo Independent Clock")
-                                           };
+      ServiceProperty[] properties = {
+                                       new ServiceProperty("offer.domain",
+                                                           "Demo Independent Clock")
+                                     };
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(_host, _port, null);
+      _conn = context.CreateConnection(_host, _port);
       context.SetDefaultConnection(_conn);
 
       // Cria registrador e adiciona a callback de login inválido

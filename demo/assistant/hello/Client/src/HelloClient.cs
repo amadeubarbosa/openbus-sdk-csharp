@@ -12,6 +12,13 @@ namespace demo {
   /// Cliente da demo hello.
   /// </summary>
   internal static class HelloClient {
+    private static void OnLoginFailure(Assistant assistant, Exception e) {
+      Console.WriteLine("Falha no login: " + e);
+      Console.WriteLine("Vai fazer shutdown no assistant.");
+      assistant.Shutdown();
+      Console.WriteLine("Fez shutdown no assistant.");
+    }
+
     private static void Main(String[] args) {
       //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
@@ -22,9 +29,10 @@ namespace demo {
         new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      Assistant assistant = new AssistantImpl(host, port,
-                                              new PasswordProperties(entity,
-                                                                     password));
+      PasswordProperties props = new PasswordProperties(entity, password) {
+        LoginFailureCallback = OnLoginFailure
+      };
+      Assistant assistant = new AssistantImpl(host, port, props);
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       // propriedade gerada automaticamente

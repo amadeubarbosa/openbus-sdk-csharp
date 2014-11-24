@@ -40,18 +40,17 @@ namespace demo {
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "Demo CallChain")
-                                             ,
-                                             new ServiceProperty("offer.role",
-                                                                 "mensageiro real")
-                                           };
+      ServiceProperty[] properties = {
+                                       new ServiceProperty("offer.domain",
+                                                           "Demo CallChain"),
+                                       new ServiceProperty("offer.role",
+                                                           "mensageiro real")
+                                     };
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port, null);
+      _conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(_conn);
 
       bool failed = true;

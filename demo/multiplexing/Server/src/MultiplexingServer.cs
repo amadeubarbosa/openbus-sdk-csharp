@@ -51,14 +51,14 @@ namespace demo {
 
         // Define propriedades para a oferta de serviço a ser registrada no barramento
         IComponent ic = component.GetIComponent();
-        ServiceProperty[] properties = new[] {
-                                               new ServiceProperty(
-                                                 "offer.domain",
-                                                 "Demo Multiplexing")
-                                             };
+        ServiceProperty[] properties = {
+                                         new ServiceProperty(
+                                           "offer.domain",
+                                           "Demo Multiplexing")
+                                       };
 
         // Cria a conexão e a define como conexão corrente
-        Connection conn = context.CreateConnection(host, port, null);
+        Connection conn = context.CreateConnection(host, port);
         context.SetCurrentConnection(conn);
 
         // Associa a conexão à URI do servant para que a callback possa escolher

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using demo.Properties;
 using tecgraf.openbus;
@@ -13,7 +13,7 @@ namespace demo {
     #region Fields
 
     private readonly string _loginId;
-    private readonly Dictionary<string, string> _timerOfferProperties;
+    private readonly string _timerId;
     private readonly Thread _waitingThread;
 
     #endregion
@@ -23,9 +23,12 @@ namespace demo {
     public CallbackImpl(string loginId, ServiceOfferDesc timerOffer, Thread waitingThread) {
       _loginId = loginId;
       _waitingThread = waitingThread;
-      _timerOfferProperties = new Dictionary<string, string>();
-      foreach (ServiceProperty serviceProperty in timerOffer.properties) {
-        _timerOfferProperties.Add(serviceProperty.name, serviceProperty.value);
+      foreach (ServiceProperty serviceProperty in timerOffer.properties.Where(serviceProperty => serviceProperty.name.Equals("openbus.offer.login"))) {
+        _timerId = serviceProperty.value;
+        break;
+      }
+      if (_timerId == null) {
+        throw new ArgumentException();
       }
     }
 
@@ -36,8 +39,7 @@ namespace demo {
     public void notifyTrigger() {
       OpenBusContext context = ORBInitializer.Context;
       CallerChain chain = context.CallerChain;
-      string timerId = _timerOfferProperties["openbus.offer.login"];
-      if (timerId.Equals(chain.Caller.id)) {
+      if (_timerId.Equals(chain.Caller.id)) {
         Console.WriteLine(Resources.MultiplexingTimerNotificationReceived);
         if (chain.Originators.Length != 1 ||
             !chain.Originators[0].id.Equals(_loginId)) {
@@ -50,7 +52,7 @@ namespace demo {
         Console.WriteLine(Resources.MultiplexingUnexpectedNotificationFrom +
                           chain.Caller.id);
         Console.WriteLine(
-          Resources.MultiplexingUnexpectedNotificationShouldBeFrom + timerId);
+          Resources.MultiplexingUnexpectedNotificationShouldBeFrom + _timerId);
       }
       --MultiplexingClient.Pending;
       if (MultiplexingClient.Pending == 0) {

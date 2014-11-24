@@ -16,7 +16,7 @@ namespace demo {
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.GetCurrentConnection();
       CallerChain chain = context.CallerChain;
-      // Inicia thread para realizar a chamada remota na callback 
+      // Inicia thread para realizar a chamada remota na callback
       new Thread(() => NotifyTrigger(conn, chain, timeout, cb)).Start();
     }
 

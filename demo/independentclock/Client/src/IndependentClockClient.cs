@@ -40,7 +40,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port, null);
+      _conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(_conn);
 
       // Define a callback de login inválido e faz o login
@@ -101,8 +101,7 @@ namespace demo {
         }
         if (failed) {
           _finder.Activate();
-          Console.WriteLine(String.Format("Hora local: {0:HH:mm:ss}",
-                                          DateTime.Now));
+          Console.WriteLine("Hora local: {0:HH:mm:ss}", DateTime.Now);
         }
         Thread.Sleep(_interval);
       }

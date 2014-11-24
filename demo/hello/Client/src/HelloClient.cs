@@ -23,7 +23,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, null);
+      Connection conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
@@ -37,7 +37,7 @@ namespace demo {
           new ServiceProperty("openbus.component.interface", helloIDLType);
         // propriedade definida pelo serviço hello
         ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Hello");
-        ServiceProperty[] properties = new[] {prop, autoProp};
+        ServiceProperty[] properties = {prop, autoProp};
         offers = context.OfferRegistry.findServices(properties);
       }
       catch (AccessDenied) {

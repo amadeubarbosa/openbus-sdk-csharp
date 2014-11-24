@@ -32,7 +32,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port, null);
+      Connection conn = context.CreateConnection(host, port);
       context.SetDefaultConnection(conn);
 
       // Define a callback de login inválido e faz o login
@@ -46,7 +46,7 @@ namespace demo {
         new ServiceProperty("openbus.component.interface", clockIDLType);
       // propriedade definida pelo serviço dedicated clock
       ServiceProperty prop = new ServiceProperty("offer.domain", "Demo Dedicated Clock");
-      ServiceProperty[] properties = new[] { prop, autoProp };
+      ServiceProperty[] properties = { prop, autoProp };
       ServiceOfferDesc[] offers = null;
       bool failed = true;
       do {
@@ -98,8 +98,7 @@ namespace demo {
                 // utiliza o serviço
                 long ticks = clock.getTimeInTicks();
                 DateTime serverTime = new DateTime(ticks);
-                Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
-                                                serverTime));
+                Console.WriteLine("Hora do servidor: {0:HH:mm:ss}", serverTime);
                 failed = false;
                 break;
               }
@@ -165,7 +164,7 @@ namespace demo {
       Console.ReadKey();
     }
 
-    internal static bool Retry() {
+    private static bool Retry() {
       if (_retries > 0) {
         _retries--;
         Thread.Sleep(_interval);
