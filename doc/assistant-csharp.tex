@@ -486,14 +486,16 @@ fechado.
 
 Portanto, toda chamada remota deve estar protegida, de
 algum modo, por tratamentos de erros. O tratamento de erro em \corba{}
-é feito através de exceções. A exceção "CORBA::TRANSIENT" significa
-que o serviço não conseguiu se comunicar com o outro ponto;
-"CORBA::COMM\_FAILURE" significa a mesma coisa, mas a conexão não
-conseguiu ser iniciada por algum motivo; "CORBA::OBJECT\_NOT\_EXIST" 
+é feito através de exceções. A exceção "omg.org.CORBA.TRANSIENT" significa
+que o serviço não conseguiu se comunicar com o outro ponto; esse erro não indica uma falha definitiva. 
+"omg.org.CORBA.COMM\_FAILURE" significa que a comunicação chegou ao outro lado mas, por algum motivo,
+foi interrompida; por exemplo, uma falta de recurso. Já "omg.org.CORBA.OBJECT\_NOT\_EXIST" 
 significa que o serviço que deveria prover
 esse objeto \corba{} não possui esse objeto em sua memória, e
-a sua referência deve ser descartada. Outras exceções herdam de
-"CORBA::SystemException". Um exemplo do tratamento de erros adequado pode ser visto no Código~\ref{lst:clientfacet}.
+a sua referência deve ser descartada. Outras exceções de CORBA existem e todas herdam de
+"omg.org.CORBA.AbstractCORBASystemException". Já exceções definidas pelo usuário em IDL herdam de  "Ch.Elca.Iiop.AbstractUserException".
+Devido a detalhes da implementação do IIOP.NET, relacionados ao uso de reflexão no .NET, algumas exceções geradas pelo SDK OpenBus podem ser encapsuladas na exceção "System.Reflection.TargetInvocationException". Portanto, esse caso também deve ser tratado. No futuro, pretendemos alterar o IIOP.NET para que isso não seja mais necessário.
+Um exemplo do tratamento de erros adequado pode ser visto no Código~\ref{lst:clientfacet}.
 
 \begin{samplelisting}[language=Java]{clientfacet}{Acesso à Faceta Desejada}
 string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
@@ -532,10 +534,20 @@ if (offers != null) {
       catch (COMM_FAILURE) {
         Console.WriteLine("Falha de comunicação ao acessar o serviço.");
       }
-      catch (NO_PERMISSION e) {
+      catch (Exception e) {
+        NO_PERMISSION npe = null;
+        if (e is TargetInvocationException){
+          // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+          npe = e.InnerException as NO_PERMISSION;
+        }
+        if ((npe == null) && (!(e is NO_PERMISSION))){
+          // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+          throw;
+        }
+        npe = npe ?? e as NO_PERMISSION;
         bool found = false;
         string message = String.Empty;
-        switch (e.Minor) {
+        switch (npe.Minor) {
           case NoLoginCode.ConstVal:
             message = "Não há um login válido no momento para a entidade utilizada.";
             found = true;
