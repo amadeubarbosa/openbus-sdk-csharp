@@ -196,15 +196,6 @@ namespace demo.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Erro ao realizar uma busca: .
-        /// </summary>
-        internal static string FindFailureCallback {
-            get {
-                return ResourceManager.GetString("FindFailureCallback", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Erro ao ler a entrada do teclado..
         /// </summary>
         internal static string GreetingsLanguageReadErrorMsg {
@@ -336,6 +327,15 @@ namespace demo.Properties {
         internal static string PressAnyKeyToExit {
             get {
                 return ResourceManager.GetString("PressAnyKeyToExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro ao realizar o registro da oferta: .
+        /// </summary>
+        internal static string RegisterFailureCallback {
+            get {
+                return ResourceManager.GetString("RegisterFailureCallback", resourceCulture);
             }
         }
         
