@@ -383,10 +383,30 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Connection conn2 = CreateConnection();
-        conn.LoginByPassword(_login, _password);
-        // segredo errado
         bool failed = false;
         SharedAuthSecretImpl secret;
+        // sem login
+        try {
+          conn.StartSharedAuth();
+        }
+        catch (NO_PERMISSION e) {
+          if (e.Minor.Equals(NoLoginCode.ConstVal)) {
+            failed = true;
+          }
+          else {
+            Assert.Fail(
+              "A exceção deveria ser NO_PERMISSION{NoLogin}. Exceção recebida: " + e);
+          }
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser NO_PERMISSION{NoLogin}. Exceção recebida: " + e);
+        }
+        Assert.IsTrue(failed, "A autenticação compartilhada sem login foi bem sucedida.");
+        failed = false;
+
+        // segredo errado
+        conn.LoginByPassword(_login, _password);
         try {
           secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
           secret.Secret = new byte[0];
