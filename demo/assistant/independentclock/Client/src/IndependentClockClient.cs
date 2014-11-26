@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -14,7 +15,6 @@ namespace demo {
   /// </summary>
   internal static class IndependentClockClient {
     private static void Main(String[] args) {
-      //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
@@ -23,9 +23,12 @@ namespace demo {
       int interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      PasswordProperties assistantProps = new PasswordProperties(entity,
-                                                                 password) { Interval = interval };
-      Assistant assistant = new AssistantImpl(host, port, assistantProps);
+      AssistantProperties props = new PasswordProperties(entity, password) {
+        Interval = interval,
+        LoginFailureCallback = LoginFailureCallback,
+        FindFailureCallback = FindFailureCallback
+      };
+      Assistant assistant = new AssistantImpl(host, port, props);
 
       // Cria o finder que será responsável por encontrar o servidor no barramento
       Finder finder = new Finder(assistant, interval);
@@ -38,8 +41,8 @@ namespace demo {
           try {
             // utiliza o serviço
             long ticks = clock.getTimeInTicks();
-            Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
-                                            new DateTime(ticks)));
+            Console.WriteLine("Hora do servidor: {0:HH:mm:ss}",
+              new DateTime(ticks));
             failed = false;
           }
           catch (TRANSIENT) {
@@ -48,10 +51,20 @@ namespace demo {
           catch (COMM_FAILURE) {
             Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
           }
-          catch (NO_PERMISSION e) {
+          catch (Exception e) {
+            NO_PERMISSION npe = null;
+            if (e is TargetInvocationException) {
+              // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+              npe = e.InnerException as NO_PERMISSION;
+            }
+            if ((npe == null) && (!(e is NO_PERMISSION))) {
+              // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+              throw;
+            }
+            npe = npe ?? e as NO_PERMISSION;
             bool found = false;
             string message = String.Empty;
-            switch (e.Minor) {
+            switch (npe.Minor) {
               case NoLoginCode.ConstVal:
                 message = Resources.NoLoginCodeErrorMsg;
                 found = true;
@@ -83,11 +96,18 @@ namespace demo {
         }
         if (failed) {
           finder.Activate();
-          Console.WriteLine(String.Format("Hora local: {0:HH:mm:ss}",
-                                          DateTime.Now));
+          Console.WriteLine("Hora local: {0:HH:mm:ss}", DateTime.Now);
         }
-        Thread.Sleep(interval);
+        Thread.Sleep(interval * 1000);
       }
+    }
+
+    private static void FindFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.FindFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
   }
 
@@ -189,10 +209,20 @@ namespace demo {
                 catch (COMM_FAILURE) {
                   Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
                 }
-                catch (NO_PERMISSION e) {
+                catch (Exception e) {
+                  NO_PERMISSION npe = null;
+                  if (e is TargetInvocationException) {
+                    // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+                    npe = e.InnerException as NO_PERMISSION;
+                  }
+                  if ((npe == null) && (!(e is NO_PERMISSION))) {
+                    // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+                    throw;
+                  }
+                  npe = npe ?? e as NO_PERMISSION;
                   bool found = false;
                   string message = String.Empty;
-                  switch (e.Minor) {
+                  switch (npe.Minor) {
                     case NoLoginCode.ConstVal:
                       message = Resources.NoLoginCodeErrorMsg;
                       found = true;
@@ -224,7 +254,7 @@ namespace demo {
               Console.WriteLine(Resources.OfferFunctionalNotFound);
             }
           }
-          Thread.Sleep(_interval);
+          Thread.Sleep(_interval * 1000);
         }
       }
       catch (ThreadInterruptedException) {

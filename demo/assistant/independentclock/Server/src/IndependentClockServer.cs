@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using demo.Properties;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus;
@@ -37,22 +38,33 @@ namespace demo {
                          clock);
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "Demo Independent Clock")
-                                           };
+      ServiceProperty[] properties = {
+                                       new ServiceProperty("offer.domain",
+                                                           "Demo Independent Clock")
+                                     };
 
       // Usa o assistente do OpenBus para se conectar ao barramento, realizar a autenticação e se registrar.
-      _assistant = new AssistantImpl(host, port,
-                                     new PrivateKeyProperties(entity, privateKey));
+      AssistantProperties props = new PrivateKeyProperties(entity, privateKey) {
+        LoginFailureCallback = LoginFailureCallback,
+        RegisterFailureCallback = RegisterFailureCallback
+      };
+      _assistant = new AssistantImpl(host, port, props);
       _assistant.RegisterService(component.GetIComponent(), properties);
 
       // Realiza trabalho independente do OpenBus
       while (true) {
         clock.getTimeInTicks();
-        //        Console.WriteLine(String.Format("Hora atual: {0:HH:mm:ss}", DateTime.Now));
+        //Console.WriteLine("Hora atual: {0:HH:mm:ss}", DateTime.Now);
         Thread.Sleep(interval);
       }
+    }
+
+    private static void RegisterFailureCallback(Assistant assistant, IComponent component, ServiceProperty[] props, Exception e) {
+      Console.WriteLine(Resources.RegisterFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {

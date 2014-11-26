@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
@@ -19,8 +20,11 @@ namespace demo {
       _loginFile = args[2];
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      Assistant assistant = new AssistantImpl(host, port,
-                                              new SharedAuthProperties(SharedAuthObtainer));
+      AssistantProperties props = new SharedAuthProperties(SharedAuthObtainer) {
+        LoginFailureCallback = LoginFailureCallback,
+        FindFailureCallback = FindFailureCallback
+      };
+      Assistant assistant = new AssistantImpl(host, port, props);
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       string helloIDLType = Repository.GetRepositoryID(typeof(Hello));
@@ -70,10 +74,20 @@ namespace demo {
             catch (COMM_FAILURE) {
               Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
             }
-            catch (NO_PERMISSION e) {
+            catch (Exception e) {
+              NO_PERMISSION npe = null;
+              if (e is TargetInvocationException) {
+                // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+                npe = e.InnerException as NO_PERMISSION;
+              }
+              if ((npe == null) && (!(e is NO_PERMISSION))) {
+                // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+                throw;
+              }
+              npe = npe ?? e as NO_PERMISSION;
               bool found = false;
               string message = String.Empty;
-              switch (e.Minor) {
+              switch (npe.Minor) {
                 case NoLoginCode.ConstVal:
                   message = Resources.NoLoginCodeErrorMsg;
                   found = true;
@@ -110,17 +124,23 @@ namespace demo {
       Console.ReadKey();
     }
 
-    private static LoginProcess SharedAuthObtainer(out byte[] secret) {
-      // Lê o arquivo com o login process e o segredo (talvez seja mais 
-      // interessante para a aplicação trocar esses dados de outra forma.
-      // No mínimo, essas informações deveriam estar encriptadas. Além disso, o
-      // cliente Hello escreve apenas uma vez esses dados, que têm validade 
-      // igual ao lease do login dele, portanto uma outra forma mais dinâmica
-      // seria mais eficaz. No entanto, isso foge ao escopo dessa demo)
+    private static SharedAuthSecret SharedAuthObtainer() {
+      // Lê o arquivo com o segredo. Talvez seja interessante para a aplicação
+      // trocar esses dados de outra forma (encriptados por exemplo).
+      // Além disso, o cliente escreve apenas uma vez esses dados, que têm
+      // validade igual ao lease do login dele, portanto uma outra forma mais
+      // dinâmica seria mais eficaz. No entanto, isso foge ao escopo dessa demo.
       OpenBusContext context = ORBInitializer.Context;
-      string[] data = File.ReadAllLines(_loginFile);
-      secret = Convert.FromBase64String(data[0]);
-      return (LoginProcess)context.ORB.string_to_object(data[1]);
+      byte[] encoded = File.ReadAllBytes(_loginFile);
+      return context.DecodeSharedAuth(encoded);
+    }
+
+    private static void FindFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.FindFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
   }
 }

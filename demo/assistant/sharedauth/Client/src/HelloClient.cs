@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
+using tecgraf.openbus;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
@@ -22,22 +24,25 @@ namespace demo {
       byte[] password = new ASCIIEncoding().GetBytes(args.Length > 4 ? args[4] : entity);
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      Assistant assistant = new AssistantImpl(host, port,
-                                              new PasswordProperties(entity,
-                                                                     password));
+      AssistantProperties props = new PasswordProperties(entity, password) {
+        LoginFailureCallback = LoginFailureCallback,
+        FindFailureCallback = FindFailureCallback,
+        StartSharedAuthFailureCallback = StartSharedAuthFailureCallback
+      };
+      Assistant assistant = new AssistantImpl(host, port, props);
 
-      // inicia o processo de autenticação compartilhada e serializa os dados
-      byte[] secret;
-      string loginIOR = assistant.ORB.object_to_string(assistant.StartSharedAuth(out secret, -1));
+      // Inicia o processo de autenticação compartilhada e serializa os dados
+      OpenBusContext context = ORBInitializer.Context;
+      SharedAuthSecret secret = assistant.StartSharedAuth(-1);
+      byte[] encoded = context.EncodeSharedAuth(secret);
 
-      // Escreve os dados da autenticação compartilhada em um arquivo (talvez
-      // seja mais interessante para a aplicação trocar esses dados de outra
-      // forma. No mínimo, essas informações deveriam ser encriptadas. Além 
+      // Escreve o segredo da autenticação compartilhada em um arquivo. Talvez
+      // seja importante para a aplicação encriptar esses dados. Além 
       // disso, escreveremos apenas uma vez esses dados, que têm validade igual
       // ao lease do login atual. Caso o cliente demore a executar, esses dados
       // não funcionarão, portanto uma outra forma mais dinâmica seria mais
-      // eficaz. No entanto, isso foge ao escopo dessa demo)
-      File.WriteAllLines(loginFile, new[] { Convert.ToBase64String(secret), loginIOR });
+      // eficaz. No entanto, isso foge ao escopo dessa demo.
+      File.WriteAllBytes(loginFile, encoded);
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
       string helloIDLType = Repository.GetRepositoryID(typeof(Hello));
@@ -86,10 +91,20 @@ namespace demo {
             catch (COMM_FAILURE) {
               Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
             }
-            catch (NO_PERMISSION e) {
+            catch (Exception e) {
+              NO_PERMISSION npe = null;
+              if (e is TargetInvocationException) {
+                // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+                npe = e.InnerException as NO_PERMISSION;
+              }
+              if ((npe == null) && (!(e is NO_PERMISSION))) {
+                // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+                throw;
+              }
+              npe = npe ?? e as NO_PERMISSION;
               bool found = false;
               string message = String.Empty;
-              switch (e.Minor) {
+              switch (npe.Minor) {
                 case NoLoginCode.ConstVal:
                   message = Resources.NoLoginCodeErrorMsg;
                   found = true;
@@ -124,6 +139,18 @@ namespace demo {
       assistant.Shutdown();
       Console.WriteLine(Resources.ClientOK);
       Console.ReadKey();
+    }
+
+    private static void StartSharedAuthFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.StartSharedAuthFailureCallback + e);
+    }
+
+    private static void FindFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.FindFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
   }
 }

@@ -38,21 +38,31 @@ namespace demo {
 
       // Define propriedades para a oferta de serviço a ser registrada no barramento
       IComponent ic = component.GetIComponent();
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "Demo Dedicated Clock")
-                                           };
+      ServiceProperty[] properties = {
+                                       new ServiceProperty("offer.domain",
+                                                           "Demo Dedicated Clock")
+                                     };
 
       // Usa o assistente do OpenBus para se conectar ao barramento, realizar a autenticação e se registrar.
-      AssistantProperties assistantProps = new PrivateKeyProperties(entity,
-                                                                    privateKey)
-                                           {Interval = interval};
-      _assistant = new AssistantImpl(host, port, assistantProps);
+      AssistantProperties props = new PrivateKeyProperties(entity, privateKey) {
+        Interval = interval,
+        LoginFailureCallback = LoginFailureCallback,
+        RegisterFailureCallback = RegisterFailureCallback
+      };
+      _assistant = new AssistantImpl(host, port, props);
       _assistant.RegisterService(ic, properties);
 
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine(Resources.ServerOK);
       Thread.Sleep(Timeout.Infinite);
+    }
+
+    private static void RegisterFailureCallback(Assistant assistant, IComponent component, ServiceProperty[] props, Exception e) {
+      Console.WriteLine(Resources.RegisterFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {

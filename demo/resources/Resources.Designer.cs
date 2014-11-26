@@ -196,6 +196,15 @@ namespace demo.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Erro ao realizar uma busca: .
+        /// </summary>
+        internal static string FindFailureCallback {
+            get {
+                return ResourceManager.GetString("FindFailureCallback", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Erro ao ler a entrada do teclado..
         /// </summary>
         internal static string GreetingsLanguageReadErrorMsg {
@@ -444,6 +453,15 @@ namespace demo.Properties {
         internal static string SharedAuthInvalidLoginProcessErrorMsg {
             get {
                 return ResourceManager.GetString("SharedAuthInvalidLoginProcessErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Erro ao tentar iniciar uma autenticação compartilhada: .
+        /// </summary>
+        internal static string StartSharedAuthFailureCallback {
+            get {
+                return ResourceManager.GetString("StartSharedAuthFailureCallback", resourceCulture);
             }
         }
         

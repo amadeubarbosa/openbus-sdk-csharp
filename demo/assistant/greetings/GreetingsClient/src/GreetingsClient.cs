@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
@@ -13,7 +14,6 @@ namespace demo {
   /// </summary>
   internal static class GreetingsClient {
     private static void Main(String[] args) {
-      //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
@@ -22,9 +22,11 @@ namespace demo {
         new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      Assistant assistant = new AssistantImpl(host, port,
-                                              new PasswordProperties(entity,
-                                                                     password));
+      AssistantProperties props = new PasswordProperties(entity, password) {
+        LoginFailureCallback = LoginFailureCallback,
+        FindFailureCallback = FindFailureCallback
+      };
+      Assistant assistant = new AssistantImpl(host, port, props);
 
       // Pergunta ao usuário qual língua deseja utilizar
       Console.WriteLine(Resources.GreetingsWhichLanguage);
@@ -94,10 +96,20 @@ namespace demo {
             catch (COMM_FAILURE) {
               Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
             }
-            catch (NO_PERMISSION e) {
+            catch (Exception e) {
+              NO_PERMISSION npe = null;
+              if (e is TargetInvocationException) {
+                // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+                npe = e.InnerException as NO_PERMISSION;
+              }
+              if ((npe == null) && (!(e is NO_PERMISSION))) {
+                // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+                throw;
+              }
+              npe = npe ?? e as NO_PERMISSION;
               bool found = false;
               string message = String.Empty;
-              switch (e.Minor) {
+              switch (npe.Minor) {
                 case NoLoginCode.ConstVal:
                   message = Resources.NoLoginCodeErrorMsg;
                   found = true;
@@ -129,6 +141,14 @@ namespace demo {
       assistant.Shutdown();
       Console.WriteLine(Resources.ClientOK);
       Console.ReadKey();
+    }
+
+    private static void FindFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.FindFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
   }
 }

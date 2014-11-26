@@ -252,10 +252,16 @@
   <data name="CallChainProxyOK" xml:space="preserve">
     <value>Proxy no ar.</value>
   </data>
+  <data name="FindFailureCallback" xml:space="preserve">
+    <value>Erro ao realizar uma busca: </value>
+  </data>
   <data name="LoginFailureCallback" xml:space="preserve">
     <value>Erro ao realizar o login: </value>
   </data>
   <data name="RegisterFailureCallback" xml:space="preserve">
     <value>Erro ao realizar o registro da oferta: </value>
+  </data>
+  <data name="StartSharedAuthFailureCallback" xml:space="preserve">
+    <value>Erro ao tentar iniciar uma autenticação compartilhada: </value>
   </data>
 </root>
