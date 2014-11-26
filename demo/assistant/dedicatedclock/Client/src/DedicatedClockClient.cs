@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
@@ -13,7 +14,6 @@ namespace demo {
   /// </summary>
   internal static class DedicatedClockClient {
     private static void Main(String[] args) {
-      //TODO incluir callbacks de tratamento de erro
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
@@ -24,10 +24,12 @@ namespace demo {
       int retries = Convert.ToInt32(args.Length > 5 ? args[5] : "-1");
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação, respeitando um intervalo a cada tentativa.
-      AssistantProperties assistantProps = new PasswordProperties(entity,
-                                                                  password)
-                                           {Interval = interval};
-      Assistant assistant = new AssistantImpl(host, port, assistantProps);
+      AssistantProperties props = new PasswordProperties(entity, password) {
+        Interval = interval,
+        LoginFailureCallback = LoginFailureCallback,
+        FindFailureCallback = FindFailureCallback
+      };
+      Assistant assistant = new AssistantImpl(host, port, props);
 
       // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico.
       string clockIDLType = Repository.GetRepositoryID(typeof (Clock));
@@ -69,8 +71,7 @@ namespace demo {
               // utiliza o serviço
               long ticks = clock.getTimeInTicks();
               DateTime serverTime = new DateTime(ticks);
-              Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
-                                              serverTime));
+              Console.WriteLine("Hora do servidor: {0:HH:mm:ss}", serverTime);
               failed = false;
               break;
             }
@@ -80,10 +81,20 @@ namespace demo {
             catch (COMM_FAILURE) {
               Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
             }
-            catch (NO_PERMISSION e) {
+            catch (Exception e) {
+              NO_PERMISSION npe = null;
+              if (e is TargetInvocationException) {
+                // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+                npe = e.InnerException as NO_PERMISSION;
+              }
+              if ((npe == null) && (!(e is NO_PERMISSION))) {
+                // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+                throw;
+              }
+              npe = npe ?? e as NO_PERMISSION;
               bool found = false;
               string message = String.Empty;
-              switch (e.Minor) {
+              switch (npe.Minor) {
                 case NoLoginCode.ConstVal:
                   message = Resources.NoLoginCodeErrorMsg;
                   found = true;
@@ -118,6 +129,14 @@ namespace demo {
       assistant.Shutdown();
       Console.WriteLine(Resources.ClientOK);
       Console.ReadKey();
+    }
+
+    private static void FindFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.FindFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
   }
 }

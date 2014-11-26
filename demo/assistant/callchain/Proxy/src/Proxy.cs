@@ -42,11 +42,15 @@ namespace demo {
                                                   "Demo CallChain");
       ServiceProperty prop2 = new ServiceProperty("offer.role",
                                                   "mensageiro proxy");
-      ServiceProperty[] properties = new[] {prop1, prop2};
+      ServiceProperty[] properties = {prop1, prop2};
 
       // Usa o assistente do OpenBus para se conectar ao barramento e realizar a autenticação.
-      _assistant = new AssistantImpl(host, port,
-                                     new PrivateKeyProperties(entity, privateKey));
+      AssistantProperties props = new PrivateKeyProperties(entity, privateKey) {
+        LoginFailureCallback = LoginFailureCallback,
+        FindFailureCallback = FindFailureCallback,
+        RegisterFailureCallback = RegisterFailureCallback
+      };
+      _assistant = new AssistantImpl(host, port, props);
 
       // Busca o Messenger real
       ServiceProperty autoProp =
@@ -63,6 +67,18 @@ namespace demo {
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine(Resources.CallChainProxyOK);
       Thread.Sleep(Timeout.Infinite);
+    }
+
+    private static void RegisterFailureCallback(Assistant assistant, IComponent component, ServiceProperty[] props, Exception e) {
+      Console.WriteLine(Resources.RegisterFailureCallback + e);
+    }
+
+    private static void FindFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.FindFailureCallback + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {

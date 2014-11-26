@@ -76,14 +76,17 @@ namespace demo {
                                             GreetingsImpl.Period.Night));
 
       // Define propriedade para as ofertas de serviço a serem registradas no barramento
-      ServiceProperty[] properties = new[] {
-                                             new ServiceProperty("offer.domain",
-                                                                 "Demo Greetings")
-                                           };
+      ServiceProperty[] properties = {
+                                       new ServiceProperty("offer.domain",
+                                                           "Demo Greetings")
+                                     };
 
       // Usa o assistente do OpenBus para se conectar ao barramento, realizar a autenticação e registrar todos os componentes.
-      _assistant = new AssistantImpl(host, port,
-                                     new PrivateKeyProperties(entity, privateKey));
+      AssistantProperties props = new PrivateKeyProperties(entity, privateKey) {
+        LoginFailureCallback = LoginFailureCallback,
+        RegisterFailureCallback = RegisterFailureCallback
+      };
+      _assistant = new AssistantImpl(host, port, props);
       _assistant.RegisterService(english.GetIComponent(), properties);
       _assistant.RegisterService(spanish.GetIComponent(), properties);
       _assistant.RegisterService(portuguese.GetIComponent(), properties);
@@ -91,6 +94,14 @@ namespace demo {
       // Mantém a thread ativa para aguardar requisições
       Console.WriteLine(Resources.ServerOK);
       Thread.Sleep(Timeout.Infinite);
+    }
+
+    private static void RegisterFailureCallback(Assistant assistant, IComponent component, ServiceProperty[] props, Exception e) {
+      Console.WriteLine(Resources.RegisterFailureCallback + Utils.GetProperty(props, "openbus.component.name") + ": " + e);
+    }
+
+    private static void LoginFailureCallback(Assistant assistant, Exception e) {
+      Console.WriteLine(Resources.LoginFailureCallback + e);
     }
 
     private static void CurrentDomainProcessExit(object sender, EventArgs e) {
