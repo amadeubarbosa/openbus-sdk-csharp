@@ -118,18 +118,18 @@ namespace tecgraf.openbus.interop.protocol {
                   test.Reset.challenge);
               }
             }
-            catch (NO_PERMISSION e) {
-              error = true;
-              Assert.AreEqual(test.Expected, e.Minor);
-              Assert.AreEqual(CompletionStatus.Completed_No, e.Status);
-            }
-            catch (TargetInvocationException e) {
-              NO_PERMISSION ex = e.InnerException as NO_PERMISSION;
-              if (ex != null) {
-                error = true;
-                Assert.AreEqual(test.Expected, ex.Minor);
-                Assert.AreEqual(CompletionStatus.Completed_No, ex.Status);
+            catch (Exception e) {
+              NO_PERMISSION npe = null;
+              if (e is TargetInvocationException) {
+                npe = e.InnerException as NO_PERMISSION;
               }
+              if ((npe == null) && (!(e is NO_PERMISSION))) {
+                throw;
+              }
+              npe = npe ?? e as NO_PERMISSION;
+              error = true;
+              Assert.AreEqual(test.Expected, npe.Minor);
+              Assert.AreEqual(CompletionStatus.Completed_No, npe.Status);
             }
             Assert.IsTrue(error);
           }
@@ -139,18 +139,18 @@ namespace tecgraf.openbus.interop.protocol {
             try {
               serverProxy.RaiseNoPermission(test.Raised);
             }
-            catch (NO_PERMISSION e) {
-              error = true;
-              Assert.AreEqual(test.Expected, e.Minor);
-              Assert.AreEqual(CompletionStatus.Completed_No, e.Status);
-            }
-            catch (TargetInvocationException e) {
-              NO_PERMISSION ex = e.InnerException as NO_PERMISSION;
-              if (ex != null) {
-                error = true;
-                Assert.AreEqual(test.Expected, ex.Minor);
-                Assert.AreEqual(CompletionStatus.Completed_No, ex.Status);
+            catch (Exception e) {
+              NO_PERMISSION npe = null;
+              if (e is TargetInvocationException) {
+                npe = e.InnerException as NO_PERMISSION;
               }
+              if ((npe == null) && (!(e is NO_PERMISSION))) {
+                throw;
+              }
+              npe = npe ?? e as NO_PERMISSION;
+              error = true;
+              Assert.AreEqual(test.Expected, npe.Minor);
+              Assert.AreEqual(CompletionStatus.Completed_No, npe.Status);
             }
             Assert.IsTrue(error);
           }
