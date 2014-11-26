@@ -477,6 +477,9 @@ namespace tecgraf.openbus {
       string busId;
       _loginLock.EnterReadLock();
       try {
+        if (!_login.HasValue) {
+          throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+        }
         localAcs = _acs;
         busId = _busId;
       }
