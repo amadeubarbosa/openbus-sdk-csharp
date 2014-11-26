@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -56,8 +57,8 @@ namespace demo {
           try {
             // utiliza o serviço
             long ticks = clock.getTimeInTicks();
-            Console.WriteLine(String.Format("Hora do servidor: {0:HH:mm:ss}",
-                                            new DateTime(ticks)));
+            Console.WriteLine("Hora do servidor: {0:HH:mm:ss}",
+              new DateTime(ticks));
             failed = false;
           }
           catch (TRANSIENT) {
@@ -66,10 +67,20 @@ namespace demo {
           catch (COMM_FAILURE) {
             Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
           }
-          catch (NO_PERMISSION e) {
+          catch (Exception e) {
+            NO_PERMISSION npe = null;
+            if (e is TargetInvocationException) {
+              // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+              npe = e.InnerException as NO_PERMISSION;
+            }
+            if ((npe == null) && (!(e is NO_PERMISSION))) {
+              // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+              throw;
+            }
+            npe = npe ?? e as NO_PERMISSION;
             bool found = false;
             string message = String.Empty;
-            switch (e.Minor) {
+            switch (npe.Minor) {
               case NoLoginCode.ConstVal:
                 message = Resources.NoLoginCodeErrorMsg;
                 found = true;
@@ -137,8 +148,18 @@ namespace demo {
         catch (COMM_FAILURE) {
           Console.WriteLine(Resources.BusCommFailureErrorMsg);
         }
-        catch (NO_PERMISSION e) {
-          if (e.Minor == NoLoginCode.ConstVal) {
+        catch (Exception e) {
+          NO_PERMISSION npe = null;
+          if (e is TargetInvocationException) {
+            // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+            npe = e.InnerException as NO_PERMISSION;
+          }
+          if ((npe == null) && (!(e is NO_PERMISSION))) {
+            // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+            throw;
+          }
+          npe = npe ?? e as NO_PERMISSION;
+          if (npe.Minor == NoLoginCode.ConstVal) {
             Console.WriteLine(Resources.NoLoginCodeErrorMsg);
           }
           else {
@@ -220,8 +241,18 @@ namespace demo {
           catch (COMM_FAILURE) {
             Console.WriteLine(Resources.BusCommFailureErrorMsg);
           }
-          catch (NO_PERMISSION e) {
-            if (e.Minor == NoLoginCode.ConstVal) {
+          catch (Exception e) {
+            NO_PERMISSION npe = null;
+            if (e is TargetInvocationException) {
+              // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+              npe = e.InnerException as NO_PERMISSION;
+            }
+            if ((npe == null) && (!(e is NO_PERMISSION))) {
+              // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+              throw;
+            }
+            npe = npe ?? e as NO_PERMISSION;
+            if (npe.Minor == NoLoginCode.ConstVal) {
               Console.WriteLine(Resources.NoLoginCodeErrorMsg);
             }
             else {
@@ -268,10 +299,20 @@ namespace demo {
                 catch (COMM_FAILURE) {
                   Console.WriteLine(Resources.ServiceCommFailureErrorMsg);
                 }
-                catch (NO_PERMISSION e) {
+                catch (Exception e) {
+                  NO_PERMISSION npe = null;
+                  if (e is TargetInvocationException) {
+                    // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+                    npe = e.InnerException as NO_PERMISSION;
+                  }
+                  if ((npe == null) && (!(e is NO_PERMISSION))) {
+                    // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
+                    throw;
+                  }
+                  npe = npe ?? e as NO_PERMISSION;
                   bool found = false;
                   string message = String.Empty;
-                  switch (e.Minor) {
+                  switch (npe.Minor) {
                     case NoLoginCode.ConstVal:
                       message = Resources.NoLoginCodeErrorMsg;
                       found = true;
