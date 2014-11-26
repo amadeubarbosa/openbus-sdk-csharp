@@ -241,7 +241,7 @@ namespace demo.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Erro ao realizar o login:.
+        ///   Looks up a localized string similar to Erro ao realizar o login: .
         /// </summary>
         internal static string LoginFailureCallback {
             get {
@@ -340,7 +340,7 @@ namespace demo.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Erro ao realizar o registro da oferta:.
+        ///   Looks up a localized string similar to Erro ao realizar o registro da oferta: .
         /// </summary>
         internal static string RegisterFailureCallback {
             get {
