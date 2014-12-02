@@ -12,7 +12,6 @@ using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
 using scs.core;
-using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.data_export;
@@ -311,7 +310,7 @@ namespace tecgraf.openbus {
               chain.target, chain.originators, exportedChain.signedChain);
           }
           //TODO implementar. Decodificar cadeia legada.
-          throw new NotImplementedException();
+          /*
           if (versions[i].version == LegacyVersion.ConstVal) {
             Type exportedCallChainType = typeof(LegacyExportedCallChain);
             TypeCode exportedCallChainTypeCode =
@@ -332,6 +331,7 @@ namespace tecgraf.openbus {
             return new CallerChainImpl(exportedChain.bus, chain.caller,
               chain.target, chain.originators);
           }
+          */
         }
         throw new InvalidEncodedStreamException("Versão de cadeia incompatível.");
       }

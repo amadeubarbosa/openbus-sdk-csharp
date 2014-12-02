@@ -3,7 +3,6 @@ using System.Configuration;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
 
@@ -22,6 +21,7 @@ namespace tecgraf.openbus.test {
     private static String _entityNoCert;
     private static string _login;
     private static byte[] _password;
+    private static string _domain;
     private static PrivateKey _privKey;
     private static PrivateKey _wrongKey;
     private static OpenBusContext _context;
@@ -67,6 +67,11 @@ namespace tecgraf.openbus.test {
         throw new ArgumentNullException("userPassword");
       }
       _password = Crypto.TextEncoding.GetBytes(password);
+
+      _domain = ConfigurationManager.AppSettings["userDomain"];
+      if (String.IsNullOrEmpty(_domain)) {
+        throw new ArgumentNullException("userDomain");
+      }
 
       string privateKey = ConfigurationManager.AppSettings["testKeyFileName"];
       if (String.IsNullOrEmpty(password)) {
@@ -116,7 +121,7 @@ namespace tecgraf.openbus.test {
 
     [TestMethod]
     public void CreateAssistantPropertiesTest() {
-      PasswordProperties passProps = new PasswordProperties(_entity, _password);
+      PasswordProperties passProps = new PasswordProperties(_entity, _password, _domain);
       Assert.AreEqual(passProps.Interval, 5);
       Assert.AreEqual(passProps.IntervalMillis, 5000);
       bool failed = false;
@@ -140,7 +145,7 @@ namespace tecgraf.openbus.test {
       lock (_context) {
         bool failed = false;
         // cria com senha
-        Assistant a1 = new AssistantImpl(_hostName, _hostPort, new PasswordProperties(_entity, _password));
+        Assistant a1 = new AssistantImpl(_hostName, _hostPort, new PasswordProperties(_entity, _password, _domain));
         a1.Shutdown();
         // dá tempo do shutdown terminar
         Thread.Sleep(1000);

@@ -30,6 +30,7 @@ namespace tecgraf.openbus.Test {
     private static String _entityNoCert;
     private static string _login;
     private static byte[] _password;
+    private static string _domain;
     private static PrivateKey _privKey;
     private static PrivateKey _wrongKey;
     private static OpenBusContext _context;
@@ -99,6 +100,11 @@ namespace tecgraf.openbus.Test {
       }
       _password = Crypto.TextEncoding.GetBytes(password);
 
+      _domain = ConfigurationManager.AppSettings["userDomain"];
+      if (String.IsNullOrEmpty(_domain)) {
+        throw new ArgumentNullException("userDomain");
+      }
+
       string privateKey = ConfigurationManager.AppSettings["testKeyFileName"];
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("testKeyFileName");
@@ -164,7 +170,7 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.BusId);
-        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.BusId);
         Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.BusId);
@@ -179,7 +185,7 @@ namespace tecgraf.openbus.Test {
       lock (this) {
         Connection conn = CreateConnection();
         Assert.IsNull(conn.Login);
-        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         conn.Logout();
         Assert.IsNull(conn.Login);
@@ -196,7 +202,7 @@ namespace tecgraf.openbus.Test {
         bool failed = false;
         // login nulo
         try {
-          conn.LoginByPassword(null, _password);
+          conn.LoginByPassword(null, _password, _domain);
         }
         catch (ArgumentException) {
           failed = true;
@@ -209,7 +215,7 @@ namespace tecgraf.openbus.Test {
         // senha nula
         failed = false;
         try {
-          conn.LoginByPassword(_login, null);
+          conn.LoginByPassword(_login, null, _domain);
         }
         catch (ArgumentException) {
           failed = true;
@@ -222,7 +228,7 @@ namespace tecgraf.openbus.Test {
         // entidade errada
         failed = false;
         try {
-          conn.LoginByPassword("", _password);
+          conn.LoginByPassword("", _password, _domain);
         }
         catch (AccessDenied) {
           failed = true;
@@ -235,7 +241,7 @@ namespace tecgraf.openbus.Test {
         // senha errada
         failed = false;
         try {
-          conn.LoginByPassword(_login, new byte[0]);
+          conn.LoginByPassword(_login, new byte[0], _domain);
         }
         catch (AccessDenied) {
           failed = true;
@@ -245,17 +251,30 @@ namespace tecgraf.openbus.Test {
                       e);
         }
         Assert.IsTrue(failed, "O login com senha vazia foi bem-sucedido.");
+        // domínio errado
+        failed = false;
+        try {
+          conn.LoginByPassword(_login, _password, "UnknownDomain");
+        }
+        catch (UnknownDomain) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail("A exceção deveria ser UnknownDomain. Exceção recebida: " +
+                      e);
+        }
+        Assert.IsTrue(failed, "O login com domínio desconhecido foi bem-sucedido.");
         // login válido
         Assert.IsNull(conn.Login);
-        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         conn.Logout();
         Assert.IsNull(conn.Login);
         // login repetido
         failed = false;
         try {
-          conn.LoginByPassword(_login, _password);
-          conn.LoginByPassword(_login, _password);
+          conn.LoginByPassword(_login, _password, _domain);
+          conn.LoginByPassword(_login, _password, _domain);
         }
         catch (AlreadyLoggedInException) {
           failed = true;
@@ -407,7 +426,7 @@ namespace tecgraf.openbus.Test {
         failed = false;
 
         // segredo errado
-        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password, _domain);
         try {
           secret = (SharedAuthSecretImpl) conn.StartSharedAuth();
           secret.Secret = new byte[0];
@@ -492,7 +511,7 @@ namespace tecgraf.openbus.Test {
         Connection conn = CreateConnection();
         CallDispatchCallbackImpl dispatchCallback = new CallDispatchCallbackImpl(conn);
         Assert.IsFalse(conn.Logout());
-        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password, _domain);
         _context.OnCallDispatch = dispatchCallback.Dispatch;
         Assert.IsTrue(conn.Logout());
         Assert.IsNull(conn.BusId);
@@ -526,7 +545,7 @@ namespace tecgraf.openbus.Test {
 
         // testa se o logout usa a conexão correta (sem cadeia) pelo objeto no qual é chamado e não altera a conexão corrente nem a cadeia
         try {
-          conn.LoginByPassword(_login, _password);
+          conn.LoginByPassword(_login, _password, _domain);
           Connection conn2 = CreateConnection();
           _context.SetCurrentConnection(conn2);
           CallerChain dummyChain = new CallerChainImpl("", new LoginInfo(), "",
@@ -545,7 +564,7 @@ namespace tecgraf.openbus.Test {
 
         // testa se o logout retorna true para uma conexão invalidada
         try {
-          conn.LoginByPassword(_login, _password);
+          conn.LoginByPassword(_login, _password, _domain);
           _context.SetCurrentConnection(conn);
           InvalidateLogin(conn);
           Assert.IsTrue(conn.Logout());
@@ -580,7 +599,7 @@ namespace tecgraf.openbus.Test {
     public void LoginRemovedAndCallbackTest() {
       lock (this) {
         Connection conn = CreateConnection();
-        conn.LoginByPassword(_login, _password);
+        conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         LoginInfo firstLogin = new LoginInfo(conn.Login.Value.id,
                                              conn.Login.Value.entity);
@@ -636,7 +655,7 @@ namespace tecgraf.openbus.Test {
 
     private void InvalidLogin(Connection conn, LoginInfo login) {
       CallbackCalled = true;
-      conn.LoginByPassword(_login, _password);
+      conn.LoginByPassword(_login, _password, _domain);
     }
 
     private void InvalidateLogin(Connection conn) {

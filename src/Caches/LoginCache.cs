@@ -2,9 +2,7 @@
 using System.Threading;
 using Org.BouncyCastle.Crypto;
 using log4net;
-using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
-using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.caches {
   internal class LoginCache {
@@ -32,17 +30,12 @@ namespace tecgraf.openbus.caches {
             "Login {0} não foi encontrado na cache, obtendo informações.",
             loginId));
         // chamada remota, tem que ficar fora de qualquer lock
-        byte[] pubKey;
+        byte[] certificate;
+        AsymmetricKeyParameter pubKey;
         LoginInfo info;
         try {
-          SignedData signed;
-          info = _conn.LoginRegistry.getLoginInfo(loginId, out signed);
-          if (!Crypto.VerifySignature(_conn.BusKey, signed.encoded, signed.signature)) {
-            throw new InvalidPublicKey {
-              message = "Hash signature doesn't match."
-            };
-          }
-          pubKey = signed.encoded;
+          info = _conn.LoginRegistry.getLoginInfo(loginId, out certificate);
+          pubKey = ConnectionImpl.GetBusPubKeyFromCertificateBytes(certificate);
         }
         catch (InvalidLogins) {
           return null;
@@ -55,9 +48,8 @@ namespace tecgraf.openbus.caches {
           // mais acurado do que o que seria gerado agora.
           if (!_logins.TryGetValue(loginId, out entry)) {
             entry = new LoginEntry {
-                                     Publickey =
-                                       Crypto.CreatePublicKeyFromBytes(pubKey),
-                                     EncodedKey = pubKey,
+                                     Publickey = pubKey,
+                                     Certificate = certificate,
                                      LoginId = info.id,
                                      Entity = info.entity,
                                      DeadLine = DateTime.Now.Ticks
@@ -122,7 +114,7 @@ namespace tecgraf.openbus.caches {
       public int Validity;
       public long DeadLine;
       public AsymmetricKeyParameter Publickey;
-      public byte[] EncodedKey;
+      public byte[] Certificate;
 
       public LoginEntry Clone() {
         LoginEntry ret = new LoginEntry();
@@ -131,9 +123,9 @@ namespace tecgraf.openbus.caches {
           ret.Entity = string.Copy(Entity);
           ret.Validity = Validity;
           ret.DeadLine = DeadLine;
-          ret.EncodedKey = new byte[EncodedKey.Length];
-          Array.Copy(EncodedKey, ret.EncodedKey, EncodedKey.Length);
-          ret.Publickey = Crypto.CreatePublicKeyFromBytes(EncodedKey);
+          ret.Certificate = new byte[Certificate.Length];
+          Array.Copy(Certificate, ret.Certificate, Certificate.Length);
+          ret.Publickey = ConnectionImpl.GetBusPubKeyFromCertificateBytes(Certificate);
         }
         return ret;
       }
@@ -144,9 +136,9 @@ namespace tecgraf.openbus.caches {
           Entity = string.Copy(another.Entity);
           Validity = another.Validity;
           DeadLine = another.DeadLine;
-          EncodedKey = new byte[another.EncodedKey.Length];
-          Array.Copy(another.EncodedKey, EncodedKey, another.EncodedKey.Length);
-          Publickey = Crypto.CreatePublicKeyFromBytes(another.EncodedKey);
+          Certificate = new byte[another.Certificate.Length];
+          Array.Copy(another.Certificate, Certificate, another.Certificate.Length);
+          Publickey = ConnectionImpl.GetBusPubKeyFromCertificateBytes(another.Certificate);
         }
       }
     }

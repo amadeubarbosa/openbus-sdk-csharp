@@ -60,15 +60,17 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="entity">Identificador da entidade a ser autenticada.</param>
     /// <param name="password">Senha de autenticação da entidade no barramento.</param>
+    /// <param name="domain">Identificador do domínio de autenticação.</param>
     /// <exception cref="ArgumentException">Caso a entidade ou a senha sejam nulas.</exception>
     /// <exception cref="AccessDenied"> A senha fornecida para autenticação da 
     /// entidade não foi validada pelo barramento.</exception>
     /// <exception cref="AlreadyLoggedInException">A conexão já está autenticada.</exception>
     /// <exception cref="TooManyAttempts">A autenticação foi recusada por um número
     /// excessivo de tentativas inválidas de login por senha.</exception>
+    /// <exception cref="UnknownDomain">O domínio de autenticação não é conhecido.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do
     /// barramento que impediu a autenticação da conexão.</exception>
-    void LoginByPassword(String entity, Byte[] password);
+    void LoginByPassword(String entity, Byte[] password, String domain);
 
     /// <summary>
     /// Efetua login de uma entidade usando autenticação por certificado.

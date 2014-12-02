@@ -234,7 +234,7 @@ namespace tecgraf.openbus.assistant {
             {
               case LoginType.Password:
                 PasswordProperties passwordProps = (PasswordProperties)Properties;
-                conn.LoginByPassword(passwordProps.Entity, passwordProps.Password);
+                conn.LoginByPassword(passwordProps.Entity, passwordProps.Password, passwordProps.Domain);
                 break;
               case LoginType.PrivateKey:
                 PrivateKeyProperties privKeyProps =

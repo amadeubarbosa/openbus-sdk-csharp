@@ -171,8 +171,17 @@ namespace tecgraf.openbus {
 
     private string GetBusIdAndKey(AccessControl acs,
       out AsymmetricKeyParameter key) {
-      key = Crypto.CreatePublicKeyFromBytes(acs.buskey);
+      key = GetBusPubKeyFromCertificateBytes(acs.certificate);
       return acs.busid;
+    }
+
+    internal static AsymmetricKeyParameter GetBusPubKeyFromCertificateBytes(byte[] certificate) {
+      try {
+        return Crypto.CreatePublicKeyFromCertificateBytes(certificate);
+      }
+      catch (Exception) {
+        throw new ServiceFailure { message = "O certificado do barramento é inválido." };
+      }
     }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
@@ -318,18 +327,6 @@ namespace tecgraf.openbus {
       }
     }
 
-    internal AsymmetricKeyParameter BusKey {
-      get {
-        _loginLock.EnterReadLock();
-        try {
-          return _busKey;
-        }
-        finally {
-          _loginLock.ExitReadLock();
-        }
-      }
-    }
-
     #endregion
 
     #region Connection Members
@@ -360,7 +357,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void LoginByPassword(string entity, byte[] password) {
+    public void LoginByPassword(string entity, byte[] password, string domain) {
       if (entity == null || password == null) {
         throw new ArgumentException("A entidade e a senha não podem ser nulas.");
       }
@@ -402,7 +399,7 @@ namespace tecgraf.openbus {
         }
 
         int lease;
-        LoginInfo l = localAcs.loginByPassword(entity, pubBytes, encrypted,
+        LoginInfo l = localAcs.loginByPassword(entity, domain, pubBytes, encrypted,
           out lease);
         _loginLock.EnterWriteLock();
         try {

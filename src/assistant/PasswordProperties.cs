@@ -14,9 +14,11 @@
     /// </summary>
     /// <param name="entity">Identificador da entidade a ser autenticada.</param>
     /// <param name="password">Senha de autenticação no barramento da entidade.</param>
-    public PasswordProperties(string entity, byte[] password) {
+    /// <param name="domain">Identificador do domínio de autenticação.</param>
+    public PasswordProperties(string entity, byte[] password, string domain) {
       Entity = entity;
       Password = password;
+      Domain = domain;
       Type = LoginType.Password;
     }
 
@@ -29,5 +31,10 @@
     /// Identificador da entidade a ser autenticada.
     /// </summary>
     public string Entity { get; private set; }
+
+    /// <summary>
+    /// Domínio de autenticação.
+    /// </summary>
+    public string Domain { get; private set; }
   }
 }
