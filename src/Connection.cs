@@ -64,6 +64,8 @@ namespace tecgraf.openbus {
     /// <exception cref="AccessDenied"> A senha fornecida para autenticação da 
     /// entidade não foi validada pelo barramento.</exception>
     /// <exception cref="AlreadyLoggedInException">A conexão já está autenticada.</exception>
+    /// <exception cref="TooManyAttempts">A autenticação foi recusada por um número
+    /// excessivo de tentativas inválidas de login por senha.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do
     /// barramento que impediu a autenticação da conexão.</exception>
     void LoginByPassword(String entity, Byte[] password);
