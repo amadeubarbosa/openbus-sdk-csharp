@@ -240,15 +240,14 @@ namespace tecgraf.openbus {
     /// especificado deve ser um login atualmente válido para que a operação tenha
     /// sucesso.
     /// </summary>
-    /// <param name="loginId">Identificador de login da entidade para a qual deseja-se
+    /// <param name="entity">Identificador da entidade para a qual deseja-se
     ///        enviar a cadeia.</param>
     /// <returns>A cadeia gerada para ser utilizada pela entidade com o login
     ///         especificado.</returns>
     /// 
-    /// <exception cref="InvalidLogins">Caso o login especificado seja inválido.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do barramento
     ///         que impediu a criação da cadeia.</exception>
-    CallerChain MakeChainFor(String loginId);
+    CallerChain MakeChainFor(String entity);
 
     /// <summary>
     /// Codifica uma cadeia de chamadas em um stream de bytes para permitir a

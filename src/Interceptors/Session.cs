@@ -35,11 +35,13 @@
   }
 
   internal class ClientSideSession : Session {
-    public ClientSideSession(int id, byte[] secret, string remoteLogin)
-      : base(id, secret, remoteLogin) {
+    public ClientSideSession(int id, byte[] secret, string remoteLogin, string entity)
+      : base(id, secret, remoteLogin){
+      Entity = entity;
       Ticket = 0;
     }
 
+    public string Entity { get; set; }
     public int Ticket { get; set; }
   }
 }

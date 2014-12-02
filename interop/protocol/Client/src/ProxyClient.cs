@@ -10,10 +10,10 @@ using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_0;
-using tecgraf.openbus.core.v2_0.credential;
-using tecgraf.openbus.core.v2_0.services.access_control;
-using tecgraf.openbus.core.v2_0.services.offer_registry;
+using tecgraf.openbus.core.v2_1;
+using tecgraf.openbus.core.v2_1.credential;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.protocol.Properties;
 
 namespace tecgraf.openbus.interop.protocol {
@@ -37,11 +37,9 @@ namespace tecgraf.openbus.interop.protocol {
       BasicConfigurator.Configure(appender);
 
       // credential reset tests
-      CredentialResetTest[] resetCases = new CredentialResetTest[2];
-      CredentialReset tempReset = new CredentialReset {target = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", session = 2^32 - 1 };
-      resetCases[0] = new CredentialResetTest {Reset = tempReset, Secret = CreateSecret(16), Expected = InvalidTargetCode.ConstVal };
-      tempReset = new CredentialReset { session = 2^32 - 1, challenge = CreateSecret(EncryptedBlockSize.ConstVal) };
-      resetCases[1] = new CredentialResetTest { Reset = tempReset, Expected = InvalidRemoteCode.ConstVal };
+      CredentialResetTest[] resetCases = new CredentialResetTest[1];
+      CredentialReset tempReset = new CredentialReset { session = 2^32 - 1, challenge = CreateSecret(EncryptedBlockSize.ConstVal) };
+      resetCases[0] = new CredentialResetTest { Reset = tempReset, Expected = InvalidRemoteCode.ConstVal };
 
       // no permission tests
       NoPermissionTest[] noPermissionCases = new NoPermissionTest[12];
@@ -109,14 +107,8 @@ namespace tecgraf.openbus.interop.protocol {
           foreach (CredentialResetTest test in resetCases) {
             bool error = false;
             try {
-              if (test.Reset.challenge == null) {
-                serverProxy.ResetCredential(test.Reset.target,
-                  test.Reset.session, test.Secret);
-              }
-              else {
-                serverProxy.ResetCredentialWithChallenge(test.Reset.session,
-                  test.Reset.challenge);
-              }
+              serverProxy.ResetCredentialWithChallenge(test.Reset.session,
+                test.Reset.challenge);
             }
             catch (Exception e) {
               NO_PERMISSION npe = null;
@@ -176,7 +168,6 @@ namespace tecgraf.openbus.interop.protocol {
 
   class CredentialResetTest{
     public CredentialReset Reset;
-    public byte[] Secret;
     public int Expected;
   }
 

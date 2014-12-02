@@ -674,7 +674,7 @@ namespace tecgraf.openbus {
           hash = CreateCredentialHash(operation, ticket, secret);
           Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           // CreateCredentialSignedCallChain pode mudar o login
-          chain = CreateCredentialSignedCallChain(remoteLogin);
+          chain = CreateCredentialSignedCallChain(session.Entity);
           login = GetLoginOrThrowNoLogin(errMsg, null);
         }
         else {
@@ -1099,7 +1099,7 @@ namespace tecgraf.openbus {
       }
       _outgoingLogin2Session.TryAdd(remoteLogin,
                                     new ClientSideSession(sessionId, secret,
-                                                          remoteLogin));
+                                                          remoteLogin, requestReset.entity));
       Logger.Debug(
         String.Format(
           "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
@@ -1119,27 +1119,27 @@ namespace tecgraf.openbus {
       return login.Value;
     }
 
-    private SignedData CreateCredentialSignedCallChain(string remoteLogin) {
+    private SignedData CreateCredentialSignedCallChain(string remoteEntity) {
       SignedData signed;
       CallerChainImpl chain = Context.JoinedChain as CallerChainImpl;
       Logger.Debug(
-        string.Format("Requisição para o login {0} tem joined chain? {1}.",
-          remoteLogin, chain != null));
-      if (!remoteLogin.Equals(BusLogin.ConstVal)) {
+        string.Format("Requisição para a entidade {0} tem joined chain? {1}.",
+          remoteEntity, chain != null));
+      if (!remoteEntity.Equals(BusEntity.ConstVal)) {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
           // na chamada a signChainFor vai criar uma nova chain e assinar
-          SignCallChain(remoteLogin, out signed);
+          SignCallChain(remoteEntity, out signed);
         }
         else {
           bool cacheHit;
           lock (chain) {
-            cacheHit = chain.Joined.TryGetValue(remoteLogin, out signed);
+            cacheHit = chain.Joined.TryGetValue(remoteEntity, out signed);
           }
           if (!cacheHit) {
-            SignCallChain(remoteLogin, out signed);
+            SignCallChain(remoteEntity, out signed);
             lock (chain) {
-              chain.Joined.TryAdd(remoteLogin, signed);
+              chain.Joined.TryAdd(remoteEntity, signed);
             }
           }
         }
@@ -1154,7 +1154,7 @@ namespace tecgraf.openbus {
       return signed;
     }
 
-    private void SignCallChain(string remoteLogin, out SignedData signed) {
+    private void SignCallChain(string remoteEntity, out SignedData signed) {
       // se o login mudar, tem que assinar de novo
       while (true) {
         AccessControl localAcs;
@@ -1168,21 +1168,16 @@ namespace tecgraf.openbus {
           _loginLock.ExitReadLock();
         }
         try {
-          signed = localAcs.signChainFor(remoteLogin);
+          signed = localAcs.signChainFor(remoteEntity);
         }
         catch (AbstractCORBASystemException e) {
-          Logger.Error("Erro ao acessar o barramento " + busId + ".", e);
+          Logger.Error("Erro ao acessar o barramento " + busId + " para assinar uma cadeia.", e);
           throw new NO_PERMISSION(UnavailableBusCode.ConstVal,
-            CompletionStatus.Completed_No);
-        }
-        catch (InvalidLogins e) {
-          Logger.Error("Chamada a um serviço com um login inválido.", e);
-          throw new NO_PERMISSION(InvalidTargetCode.ConstVal,
             CompletionStatus.Completed_No);
         }
         LoginInfo actualLogin =
           GetLoginOrThrowNoLogin(
-            "Impossível gerar cadeia para a chamada, pois o login foi perdido.",
+            "Impossível assinar cadeia para a chamada, pois o login foi perdido.",
             null);
         CallChain newChain = Context.UnmarshalCallChain(signed);
         if (actualLogin.id.Equals(newChain.caller.id)) {
@@ -1217,6 +1212,7 @@ namespace tecgraf.openbus {
 
     private byte[] CreateCredentialReset(string remoteLogin) {
       string loginId;
+      string entity;
       _loginLock.EnterReadLock();
       try {
         if (!_login.HasValue) {
@@ -1227,11 +1223,12 @@ namespace tecgraf.openbus {
             CompletionStatus.Completed_No);
         }
         loginId = _login.Value.id;
+        entity = _login.Value.entity;
       }
       finally {
         _loginLock.ExitReadLock();
       }
-      CredentialReset reset = new CredentialReset {target = loginId};
+      CredentialReset reset = new CredentialReset { target = loginId, entity = entity };
       byte[] challenge = new byte[SecretSize];
       Random rand = new Random();
       rand.NextBytes(challenge);
