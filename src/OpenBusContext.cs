@@ -250,6 +250,23 @@ namespace tecgraf.openbus {
     CallerChain MakeChainFor(String entity);
 
     /// <summary>
+    /// Cria uma cadeia de chamadas assinada pelo barramento com
+    /// informações de uma autenticação externa ao barramento.
+    ///
+    /// A cadeia criada pode ser usada pela entidade do login que faz a chamada.
+    /// O conteúdo da cadeia é dado pelas informações obtidas através do token
+    /// indicado.
+    /// </summary>
+    /// <param name="token">Valor opaco que representa uma informação de autenticação externa.</param>
+    /// <param name="domain">Identificador do domínio de autenticação.</param>
+    /// <returns>A nova cadeia de chamadas assinada.</returns>
+    /// <exception cref="InvalidToken">O token fornecido não foi reconhecido.</exception>
+    /// <exception cref="UnknownDomain">O domínio de autenticação não é conhecido.</exception>
+    /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do barramento
+    ///         que impediu a criação da cadeia.</exception>
+    CallerChain ImportChain(byte[] token, string domain);
+
+    /// <summary>
     /// Codifica uma cadeia de chamadas em um stream de bytes para permitir a
     /// persistência ou transferência da informação.
     /// </summary>

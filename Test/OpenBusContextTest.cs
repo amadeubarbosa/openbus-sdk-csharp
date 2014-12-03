@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Configuration;
-using System.Reflection;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Scs.Core;
 using omg.org.CORBA;
+using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -34,6 +33,8 @@ namespace tecgraf.openbus.Test {
     private static PrivateKey _accessKey;
     private static OpenBusContext _context;
     private static readonly Object Lock = new Object();
+    private const string FakeEntity = "Fake Entity";
+    private const string Unknown = "<unknown>";
 
     private static readonly ConnectionProperties Props =
       new ConnectionPropertiesImpl();
@@ -66,7 +67,6 @@ namespace tecgraf.openbus.Test {
     //[TestCleanup]
     //public void MyTestCleanup() {
     //}
-
 
     #endregion
 
@@ -133,9 +133,9 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(_context.ConnectByAddress(_hostName, _hostPort, Props));
         // cria conexão válida por referência
         String corbaloc = "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
-                    BusObjectKey.ConstVal;
+                          BusObjectKey.ConstVal;
         IComponent reference =
-          (IComponent)RemotingServices.Connect(typeof(IComponent), corbaloc);
+          (IComponent) RemotingServices.Connect(typeof (IComponent), corbaloc);
         Assert.IsNotNull(_context.ConnectByReference(reference, Props));
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
@@ -241,7 +241,9 @@ namespace tecgraf.openbus.Test {
             "A chamada com default connection setado deveria ser bem-sucedida. Exceção recebida: " +
             e);
         }
-        previous = _context.SetDefaultConnection(null);
+        finally {
+          previous = _context.SetDefaultConnection(null);
+        }
         Assert.AreEqual(previous, conn);
       }
     }
@@ -301,7 +303,9 @@ namespace tecgraf.openbus.Test {
             "A chamada com current connection setado deveria ser bem-sucedida. Exceção recebida: " +
             e);
         }
-        previous = _context.SetCurrentConnection(null);
+        finally {
+          previous = _context.SetCurrentConnection(null);
+        }
         Assert.AreEqual(previous, conn);
       }
     }
@@ -322,8 +326,8 @@ namespace tecgraf.openbus.Test {
           ComponentContext component =
             new DefaultComponentContext(new ComponentId());
           component.AddFacet(facetName,
-                             Repository.GetRepositoryID(typeof (Hello)),
-                             new HelloMock());
+            Repository.GetRepositoryID(typeof (Hello)),
+            new HelloMock());
           Hello hello = component.GetFacetByName(facetName).Reference as Hello;
           Assert.IsNotNull(hello);
           hello.sayHello();
@@ -361,8 +365,8 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
-                                               conn.Login.Value.entity,
-                                               new LoginInfo[0]));
+          conn.Login.Value.entity,
+          new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         Assert.AreEqual("mock", _context.JoinedChain.BusId);
         Assert.AreEqual("a", _context.JoinedChain.Caller.id);
@@ -388,8 +392,8 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
-                                               conn.Login.Value.entity,
-                                               new LoginInfo[0]));
+          conn.Login.Value.entity,
+          new LoginInfo[0]));
         Assert.IsNotNull(_context.JoinedChain);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
@@ -406,10 +410,12 @@ namespace tecgraf.openbus.Test {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
-        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
+          _domain);
         Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
-        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2), _domain);
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
+          _domain);
 
         _context.SetCurrentConnection(conn1);
         CallerChain chain1To2 = _context.MakeChainFor(conn2.Login.Value.entity);
@@ -431,13 +437,16 @@ namespace tecgraf.openbus.Test {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
-        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
+          _domain);
         Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
-        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2), _domain);
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
+          _domain);
         Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor3 = "actor-3";
-        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3), _domain);
+        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
+          _domain);
 
         _context.SetCurrentConnection(conn1);
         CallerChain chain1To2 = _context.MakeChainFor(conn2.Login.Value.entity);
@@ -469,7 +478,7 @@ namespace tecgraf.openbus.Test {
     ///   Testes com join em cadeia legada do método MakeChainFor
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(NO_PERMISSION))]
+    [ExpectedException(typeof (NO_PERMISSION))]
     public void MakeChainForJoinedLegacyTest() {
       //TODO corrigir para legacy 2.0
       throw new NotImplementedException();
@@ -556,18 +565,180 @@ namespace tecgraf.openbus.Test {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
-        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
+          _domain);
 
         _context.SetCurrentConnection(conn1);
-        const string fakeEntity = "Fake Entity";
-        CallerChain chain = _context.MakeChainFor(fakeEntity);
+        CallerChain chain = _context.MakeChainFor(FakeEntity);
         Assert.AreEqual(chain.BusId, conn1.BusId);
-        Assert.AreEqual(chain.Target, fakeEntity);
+        Assert.AreEqual(chain.Target, FakeEntity);
         Assert.AreEqual(chain.Caller.id, conn1.Login.Value.id);
         Assert.AreEqual(chain.Caller.entity, actor1);
         Assert.AreEqual(chain.Originators.Length, 0);
         conn1.Logout();
         _context.SetCurrentConnection(null);
+      }
+    }
+
+    /// <summary>
+    ///   Testes do método ImportChain
+    /// </summary>
+    [TestMethod]
+    public void ImportChainTest() {
+      lock (Lock) {
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
+        conn.LoginByPassword(_login, _password, _domain);
+        string busid = conn.BusId;
+        string login = conn.Login.Value.id;
+        string entity = _login;
+        const string extOrig = "ExternalOriginator";
+        const string extCaller = "ExternalCaller";
+
+        _context.SetCurrentConnection(conn);
+        string token = entity + "@" + login + ": " + extOrig + ", " + extCaller;
+        byte[] bytes = Crypto.TextEncoding.GetBytes(token);
+        CallerChain imported = _context.ImportChain(bytes, _domain);
+        Assert.AreEqual(imported.BusId, busid);
+        Assert.AreEqual(imported.Target, entity);
+        Assert.AreEqual(imported.Caller.id, Unknown);
+        Assert.AreEqual(imported.Caller.entity, extCaller);
+        Assert.AreEqual(imported.Originators[0].id, Unknown);
+        Assert.AreEqual(imported.Originators[0].entity, extOrig);
+        Assert.AreEqual(imported.Originators.Length, 1);
+
+        // faz chamada joined na cadeia importada
+        _context.JoinChain(imported);
+        CallerChain joined = _context.MakeChainFor(FakeEntity);
+        _context.ExitChain();
+
+        Assert.AreEqual(joined.BusId, busid);
+        Assert.AreEqual(joined.Target, FakeEntity);
+        Assert.AreEqual(joined.Caller.id, login);
+        Assert.AreEqual(joined.Caller.entity, entity);
+        Assert.AreEqual(joined.Originators[1].id, Unknown);
+        Assert.AreEqual(joined.Originators[1].entity, extCaller);
+        Assert.AreEqual(joined.Originators[0].id, Unknown);
+        Assert.AreEqual(joined.Originators[0].entity, extOrig);
+        Assert.AreEqual(joined.Originators.Length, 2);
+
+        _context.SetCurrentConnection(null);
+        conn.Logout();
+      }
+    }
+
+    /// <summary>
+    ///   Testes do método ImportChain com domínio desconhecido
+    /// </summary>
+    [TestMethod]
+    public void ImportChainUnknownDomainTest() {
+      lock (Lock) {
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
+        conn.LoginByPassword(_login, _password, _domain);
+        _context.SetCurrentConnection(conn);
+        string login = conn.Login.Value.id;
+        string entity = _login;
+        const string extOrig = "ExternalOriginator";
+        const string extCaller = "ExternalCaller";
+
+        string token = entity + "@" + login + ": " + extOrig + ", " + extCaller;
+        byte[] bytes = Crypto.TextEncoding.GetBytes(token);
+        bool failed = false;
+        try {
+          _context.ImportChain(bytes, "UnknownDomain");
+        }
+        catch (UnknownDomain e) {
+          failed = true;
+          Assert.AreEqual(e.domain, "UnknownDomain");
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser UnknownDomain. Exceção recebida: " + e);
+        }
+        finally {
+          _context.SetCurrentConnection(null);
+          conn.Logout();
+        }
+        Assert.IsTrue(failed);
+      }
+    }
+
+    /// <summary>
+    ///   Testes do método ImportChain com token inválido
+    /// </summary>
+    [TestMethod]
+    public void ImportChainInvalidTokenTest() {
+      lock (Lock) {
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
+        conn.LoginByPassword(_login, _password, _domain);
+        _context.SetCurrentConnection(conn);
+        byte[] bytes = Crypto.TextEncoding.GetBytes("InvalidToken");
+        bool failed = false;
+        try {
+          _context.ImportChain(bytes, _domain);
+        }
+        catch (InvalidToken) {
+          failed = true;
+        }
+        catch (Exception e) {
+          Assert.Fail(
+            "A exceção deveria ser InvalidToken. Exceção recebida: " + e);
+        }
+        finally {
+          _context.SetCurrentConnection(null);
+          conn.Logout();
+        }
+        Assert.IsTrue(failed);
+      }
+    }
+
+    /// <summary>
+    ///   Testes com join do método ImportChain
+    /// </summary>
+    [TestMethod]
+    public void ImportChainJoinedTest() {
+      lock (Lock) {
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
+        const string service = "service";
+        const string user1 = "external_1";
+        const string user2 = "external_2";
+        string userChain = user1 + ", " + user2;
+        _context.SetCurrentConnection(conn2);
+        conn2.LoginByCertificate(_entity, _accessKey);
+
+        // registra serviço 2
+        _context.OnCallDispatch =
+          (context, busid, loginId, uri, operation) => conn2;
+        ComponentContext component = BuildTestCallerChainInspectorComponent();
+        ServiceOffer offer =
+          _context.OfferRegistry.registerService(component.GetIComponent(),
+            new ServiceProperty[0]);
+
+        // busca com serviço 1
+        _context.SetCurrentConnection(conn);
+        conn.LoginByPassword(service, Crypto.TextEncoding.GetBytes(service),
+          _domain);
+        CallerChainInspector inspector =
+          (CallerChainInspector)
+            offer.service_ref.getFacet(
+              Repository.GetRepositoryID(typeof (CallerChainInspector)));
+
+        // realiza chamada utilizando a cadeia com usuarios externos
+        userChain = conn.Login.Value.entity + "@" + conn.Login.Value.id + ": " + userChain;
+        CallerChain chainUsertoService =
+          _context.ImportChain(Crypto.TextEncoding.GetBytes(userChain));
+        _context.JoinChain(chainUsertoService);
+        String[] callers1_2 = {user1, user2, conn.Login.Value.entity};
+        String[] callers = inspector.listCallers();
+        Assert.AreEqual(callers1_2.Length, callers.Length);
+        for (int i = 0; i < callers.Length; i++) {
+          Assert.AreEqual(callers1_2[i], callers[i]);
+        }
+
+        _context.ExitChain();
+        _context.SetCurrentConnection(null);
+        conn.Logout();
+        conn2.Logout();
       }
     }
 
@@ -579,21 +750,25 @@ namespace tecgraf.openbus.Test {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
-        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
+          _domain);
         String login1 = conn1.Login.Value.id;
         Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
-        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2), _domain);
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
+          _domain);
         String login2 = conn2.Login.Value.id;
         Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor3 = "actor-3";
-        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3), _domain);
+        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
+          _domain);
         String login3 = conn3.Login.Value.id;
 
         Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
         conn.LoginByCertificate(_entity, _accessKey);
 
-        _context.OnCallDispatch = (context, busid, loginId, uri, operation) => conn;
+        _context.OnCallDispatch =
+          (context, busid, loginId, uri, operation) => conn;
 
         _context.SetCurrentConnection(conn1);
         CallerChain chain1For2 = _context.MakeChainFor(conn2.Login.Value.id);
@@ -607,13 +782,13 @@ namespace tecgraf.openbus.Test {
         ComponentContext component = BuildTestCallerChainInspectorComponent();
         ServiceOffer offer =
           _context.OfferRegistry.registerService(component.GetIComponent(),
-                                                 new ServiceProperty[0]);
+            new ServiceProperty[0]);
 
         _context.SetCurrentConnection(conn3);
         CallerChainInspector inspector =
           (CallerChainInspector)
-          offer.service_ref.getFacet(
-            Repository.GetRepositoryID(typeof (CallerChainInspector)));
+            offer.service_ref.getFacet(
+              Repository.GetRepositoryID(typeof (CallerChainInspector)));
 
         _context.JoinChain(chain1For3);
         String[] callers1_3 = {actor1, actor3};
@@ -667,15 +842,18 @@ namespace tecgraf.openbus.Test {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
-        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
+          _domain);
         String login1 = conn1.Login.Value.id;
         Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
-        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2), _domain);
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
+          _domain);
         String login2 = conn2.Login.Value.id;
         Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor3 = "actor-3";
-        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3), _domain);
+        conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
+          _domain);
         String login3 = conn3.Login.Value.id;
 
         _context.SetCurrentConnection(conn1);
@@ -787,7 +965,7 @@ namespace tecgraf.openbus.Test {
     ///   Teste de decodificação de uma SharedAuth como uma cadeia
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidEncodedStreamException))]
+    [ExpectedException(typeof (InvalidEncodedStreamException))]
     public void DecodeSharedAuthAsChain() {
       lock (Lock) {
         Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
@@ -810,15 +988,17 @@ namespace tecgraf.openbus.Test {
     ///   Teste de decodificação de uma cadeia como uma SharedAuth
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidEncodedStreamException))]
+    [ExpectedException(typeof (InvalidEncodedStreamException))]
     public void DecodeChainAsSharedAuth() {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
-        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
+        conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
+          _domain);
         Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
-        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2), _domain);
+        conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
+          _domain);
         String login2 = conn2.Login.Value.id;
         try {
           _context.SetCurrentConnection(conn1);
@@ -841,16 +1021,17 @@ namespace tecgraf.openbus.Test {
       ComponentId id = new ComponentId("TestComponent", 1, 0, 0, "java");
       ComponentContext component = new DefaultComponentContext(id);
       component.AddFacet("CallerChainInspector",
-                         Repository.GetRepositoryID(
-                           typeof(CallerChainInspector)),
-                         new CallerChainInspectorImpl());
+        Repository.GetRepositoryID(
+          typeof (CallerChainInspector)),
+        new CallerChainInspectorImpl());
       return component;
     }
 
     /// <summary>
     ///   Constrói uma cadeia legacy simulada.
     /// </summary>
-    private static CallerChain BuildFakeLegacyCallChain(string busId, LoginInfo caller,
+    private static CallerChain BuildFakeLegacyCallChain(string busId,
+      LoginInfo caller,
       string target, string deleg) {
       //TODO provavelmente não será necessário para legacy 2.0
       throw new NotImplementedException();

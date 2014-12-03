@@ -11,6 +11,7 @@ using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
@@ -257,6 +258,30 @@ namespace tecgraf.openbus {
       }
       catch (GenericUserException e) {
         const string message = "Falha inesperada ao criar uma nova cadeia.";
+        Logger.Error(message, e);
+        throw new OpenBusInternalException(message, e);
+      }
+    }
+
+    public CallerChain ImportChain(byte[] token, string domain) {
+      ConnectionImpl conn = (ConnectionImpl)GetCurrentConnection();
+      if (conn == null) {
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      AccessControl acs = conn.Acs;
+      AsymmetricKeyParameter busKey = conn.BusKey;
+      if (busKey == null) {
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      byte[] encryptedToken = Crypto.Encrypt(busKey, token);
+      SignedData signedChain = acs.signChainByToken(encryptedToken, domain);
+      try {
+        CallChain callChain = UnmarshalCallChain(signedChain);
+        return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
+                                   callChain.originators, signedChain);
+      }
+      catch (GenericUserException e) {
+        const string message = "Falha inesperada ao importar uma nova cadeia.";
         Logger.Error(message, e);
         throw new OpenBusInternalException(message, e);
       }

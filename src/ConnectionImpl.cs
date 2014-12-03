@@ -171,17 +171,13 @@ namespace tecgraf.openbus {
 
     private string GetBusIdAndKey(AccessControl acs,
       out AsymmetricKeyParameter key) {
-      key = GetBusPubKeyFromCertificateBytes(acs.certificate);
-      return acs.busid;
-    }
-
-    internal static AsymmetricKeyParameter GetBusPubKeyFromCertificateBytes(byte[] certificate) {
       try {
-        return Crypto.CreatePublicKeyFromCertificateBytes(certificate);
+        key = Crypto.CreatePublicKeyFromCertificateBytes(acs.certificate);
       }
       catch (Exception) {
         throw new ServiceFailure { message = "O certificado do barramento é inválido." };
       }
+      return acs.busid;
     }
 
     private void LoginByObject(LoginProcess login, byte[] secret) {
@@ -350,6 +346,18 @@ namespace tecgraf.openbus {
         _loginLock.EnterReadLock();
         try {
           return _login;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    public AsymmetricKeyParameter BusKey {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _busKey;
         }
         finally {
           _loginLock.ExitReadLock();
