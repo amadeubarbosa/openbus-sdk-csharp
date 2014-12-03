@@ -176,23 +176,33 @@ namespace tecgraf.openbus.interceptors {
     private Connection GetDispatcherForRequest(ServerRequestInfo request,
                                                AnyCredential credential) {
       Connection dispatcher = null;
+      string busId;
+      string loginId;
+      if (credential.IsLegacy) {
+        busId = null;
+        loginId = credential.LegacyCredential.identifier;
+      }
+      else {
+        busId = credential.Credential.bus;
+        loginId = credential.Credential.login;
+      }
       if (Context.OnCallDispatch != null) {
-        string busId;
-        string loginId;
-        if (credential.IsLegacy) {
-          busId = null;
-          loginId = credential.LegacyCredential.identifier;
-        }
-        else {
-          busId = credential.Credential.bus;
-          loginId = credential.Credential.login;
-        }
         dispatcher = Context.OnCallDispatch(Context, busId, loginId,
                                             GetObjectUriForObjectKey(
                                               request.object_id),
                                             request.operation);
       }
-      return dispatcher ?? Context.GetDefaultConnection();
+      if (dispatcher == null) {
+        dispatcher = Context.GetDefaultConnection();
+      }
+      if ((busId != null) && (dispatcher != null) && (!busId.Equals(dispatcher.BusId))) {
+        // se a conexão retornada não pertence ao barramento esperado
+        Logger.Error(
+          String.Format(
+            "A conexão retornada pela callback OnCallDispatch não pertence ao barramento da requisição sendo atendida."));
+        throw new NO_PERMISSION(UnknownBusCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      return dispatcher;
     }
 
     private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,
