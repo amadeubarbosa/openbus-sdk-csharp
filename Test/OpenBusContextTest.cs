@@ -473,6 +473,7 @@ namespace tecgraf.openbus.Test {
     public void MakeChainForJoinedLegacyTest() {
       //TODO corrigir para legacy 2.0
       throw new NotImplementedException();
+      /*
       lock (Lock) {
         Connection conn1 = _context.CreateConnection(_hostName, _hostPort);
         const string actor1 = "actor-1";
@@ -499,6 +500,7 @@ namespace tecgraf.openbus.Test {
           conn3.Logout();
         }
       }
+       */
     }
 
     /// <summary>
@@ -508,6 +510,7 @@ namespace tecgraf.openbus.Test {
     public void MakeChainForJoinedLegacyWithDelegateTest() {
       //TODO corrigir para legacy 2.0
       throw new NotImplementedException();
+      /*
       lock (Lock) {
         Connection conn1 = _context.CreateConnection(_hostName, _hostPort);
         const string actor1 = "actor-1";
@@ -541,6 +544,7 @@ namespace tecgraf.openbus.Test {
           conn3.Logout();
         }
       }
+       */
     }
 
     /// <summary>
@@ -719,6 +723,7 @@ namespace tecgraf.openbus.Test {
     public void EncodeAndDecodeLegacyChain() {
       //TODO corrigir para legacy 2.0
       throw new NotImplementedException();
+      /*
       lock (Lock) {
         Connection conn = _context.CreateConnection(_hostName, _hostPort);
         conn.LoginByPassword(_login, _password, _domain);
@@ -750,6 +755,7 @@ namespace tecgraf.openbus.Test {
         Assert.AreEqual(ConnectionImpl.LegacyOriginatorId,
           delegatedChain.Originators[0].id);
       }
+       */
     }
 
     /// <summary>
@@ -758,13 +764,13 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void EncodeAndDecodeSharedAuth() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
         conn.LoginByPassword(_login, _password, _domain);
         try {
           _context.SetCurrentConnection(conn);
           SharedAuthSecret secret = conn.StartSharedAuth();
           byte[] data = _context.EncodeSharedAuth(secret);
-          Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
+          Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
           SharedAuthSecret secret2 = _context.DecodeSharedAuth(data);
           conn2.LoginBySharedAuth(secret2);
           Assert.IsNotNull(conn2.Login);
@@ -784,7 +790,7 @@ namespace tecgraf.openbus.Test {
     [ExpectedException(typeof(InvalidEncodedStreamException))]
     public void DecodeSharedAuthAsChain() {
       lock (Lock) {
-        Connection conn = _context.CreateConnection(_hostName, _hostPort);
+        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
         conn.LoginByPassword(_login, _password, _domain);
         _context.SetCurrentConnection(conn);
         SharedAuthSecret secret = conn.StartSharedAuth();
@@ -807,10 +813,10 @@ namespace tecgraf.openbus.Test {
     [ExpectedException(typeof(InvalidEncodedStreamException))]
     public void DecodeChainAsSharedAuth() {
       lock (Lock) {
-        Connection conn1 = _context.CreateConnection(_hostName, _hostPort);
+        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
-        Connection conn2 = _context.CreateConnection(_hostName, _hostPort);
+        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2), _domain);
         String login2 = conn2.Login.Value.id;
@@ -848,6 +854,7 @@ namespace tecgraf.openbus.Test {
       string target, string deleg) {
       //TODO provavelmente não será necessário para legacy 2.0
       throw new NotImplementedException();
+      /*
       LoginInfo[] originators;
       if (deleg != null) {
         originators = new LoginInfo[1];
@@ -858,6 +865,7 @@ namespace tecgraf.openbus.Test {
       }
       CallChain callChain = new CallChain(target, originators, caller);
       return new CallerChainImpl(busId, callChain.caller, callChain.target, callChain.originators);
+       */
     }
   }
 }

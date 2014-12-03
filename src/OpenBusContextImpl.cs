@@ -273,15 +273,13 @@ namespace tecgraf.openbus {
         else {
           // A ordem das versões exportadas IMPORTA. A 2.1 deve vir antes da 2.0.
           versions = new ExportedVersion[2];
-          ExportedCallChain exported = new ExportedCallChain(chain.BusId,
-                                                                  chainImpl.Signed);
-          byte[] encoded = _codec.encode_value(exported);
+          byte[] encoded = _codec.encode_value(chainImpl.Signed);
           versions[i] = new ExportedVersion(CurrentVersion.ConstVal, encoded);
           i++;
         }
         //TODO implementar. Incluir versão anterior da cadeia.
         throw new NotImplementedException();
-        return EncodeExportedVersions(versions, _magicTagCallChain);
+        //return EncodeExportedVersions(versions, _magicTagCallChain);
       }
       catch (InvalidTypeForEncoding e) {
         const string message =
@@ -298,16 +296,17 @@ namespace tecgraf.openbus {
         for (int i = 0; i < versions.Length; i++) {
           // Se houver duas versões, a versão atual virá antes da versão legacy.
           if (versions[i].version == CurrentVersion.ConstVal) {
-            Type exportedCallChainType = typeof(ExportedCallChain);
-            TypeCode exportedCallChainTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
-                exportedCallChainType.Name);
-            ExportedCallChain exportedChain =
-              (ExportedCallChain)
-                _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
-            CallChain chain = UnmarshalCallChain(exportedChain.signedChain);
-            return new CallerChainImpl(exportedChain.bus, chain.caller,
-              chain.target, chain.originators, exportedChain.signedChain);
+            Type signedDataType = typeof(SignedData);
+            TypeCode signedDataTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(signedDataType),
+                signedDataType.Name);
+            SignedData exportedChain =
+              (SignedData)
+                _codec.decode_value(versions[i].encoded, signedDataTypeCode);
+            //TODO vale a pena verificar assinatura???
+            CallChain chain = UnmarshalCallChain(exportedChain);
+            return new CallerChainImpl(chain.bus, chain.caller,
+              chain.target, chain.originators, exportedChain);
           }
           //TODO implementar. Decodificar cadeia legada.
           /*
