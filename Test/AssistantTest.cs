@@ -3,7 +3,6 @@ using System.Configuration;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using tecgraf.openbus.assistant;
-using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
 
@@ -115,9 +114,10 @@ namespace tecgraf.openbus.test {
 
     [TestMethod]
     public void CreateAssistantPropertiesTest() {
-      PasswordProperties passProps = new PasswordProperties(_entity, _password);
+      PasswordProperties passProps = new PasswordProperties(_entity, _password) { ConnectionProperties = Props };
       Assert.AreEqual(passProps.Interval, 5);
       Assert.AreEqual(passProps.IntervalMillis, 5000);
+      Assert.AreEqual(passProps.ConnectionProperties, Props);
       bool failed = false;
       try {
         passProps.Interval = 0.0001F;
@@ -139,17 +139,17 @@ namespace tecgraf.openbus.test {
       lock (_context) {
         bool failed = false;
         // cria com senha
-        Assistant a1 = new AssistantImpl(_hostName, _hostPort, new PasswordProperties(_entity, _password));
+        Assistant a1 = new AssistantImpl(_hostName, _hostPort, new PasswordProperties(_entity, _password) { ConnectionProperties = Props });
         a1.Shutdown();
         // dá tempo do shutdown terminar
         Thread.Sleep(1000);
         // cria com chave privada
-        a1 = new AssistantImpl(_hostName, _hostPort, new PrivateKeyProperties(_entity, _privKey));
+        a1 = new AssistantImpl(_hostName, _hostPort, new PrivateKeyProperties(_entity, _privKey) { ConnectionProperties = Props });
         a1.Shutdown();
         // dá tempo do shutdown terminar
         Thread.Sleep(1000);
         // cria com autenticação compartilhada
-        a1 = new AssistantImpl(_hostName, _hostPort, new SharedAuthProperties(StartSharedAuth));
+        a1 = new AssistantImpl(_hostName, _hostPort, new SharedAuthProperties(StartSharedAuth) { ConnectionProperties = Props });
         a1.Shutdown();
         // dá tempo do shutdown terminar
         Thread.Sleep(1000);
