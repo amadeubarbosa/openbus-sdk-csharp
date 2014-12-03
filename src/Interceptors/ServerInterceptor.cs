@@ -68,6 +68,14 @@ namespace tecgraf.openbus.interceptors {
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }
+        if ((!conn.Legacy) && (anyCredential.IsLegacy)) {
+          Logger.Error(
+            String.Format(
+              "Chamada negada devido a suporte legado inativo: login {0} operação {1} requestId {2}",
+              anyCredential.LegacyCredential.identifier, interceptedOperation,
+              ri.request_id));
+          throw new NO_PERMISSION(0, CompletionStatus.Completed_No);
+        }
         Context.SetCurrentConnection(conn, ri);
         conn.ReceiveRequest(ri, anyCredential);
       }
