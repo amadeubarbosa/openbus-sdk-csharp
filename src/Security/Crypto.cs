@@ -102,10 +102,11 @@ namespace tecgraf.openbus.security {
       return PublicKeyFactory.CreateKey(key);
     }
 
-    internal static AsymmetricKeyParameter CreatePublicKeyFromCertificateBytes(byte[] key) {
+    internal static AsymmetricKeyParameter CreatePublicKeyFromCertificateBytes(byte[] certificate) {
       X509CertificateParser parser = new X509CertificateParser();
-      X509CertStoreSelector holder = new X509CertStoreSelector { Certificate = parser.ReadCertificate(key) };
-      return PublicKeyFactory.CreateKey(holder.SubjectPublicKey);
+      X509Certificate cert = parser.ReadCertificate(certificate);
+      cert.CheckValidity();
+      return cert.GetPublicKey();
     }
 
     private static AsymmetricKeyParameter CreatePrivateKeyFromBytes(byte[] key) {
