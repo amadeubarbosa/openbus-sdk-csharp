@@ -173,8 +173,8 @@ namespace tecgraf.openbus.interceptors {
       string busId;
       string loginId;
       //TODO implementar suporte legacy e remover duas linhas abaixo
-      busId = "";
-      loginId = "";
+      busId = credential.bus;
+      loginId = credential.login;
       /*
       if (credential.IsLegacy) {
         busId = credential.LegacyCredential.bus;

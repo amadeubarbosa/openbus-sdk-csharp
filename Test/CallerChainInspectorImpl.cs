@@ -6,16 +6,8 @@ using test;
 namespace tecgraf.openbus.test {
   public class CallerChainInspectorImpl : MarshalByRefObject,
     CallerChainInspector {
-    /**
-   * O Contexto.
-   */
+    
     private readonly OpenBusContext _context;
-
-    /**
-   * Construtor.
-   * 
-   * @param context o contexto.
-   */
 
     public CallerChainInspectorImpl() {
       ORBInitializer.InitORB();

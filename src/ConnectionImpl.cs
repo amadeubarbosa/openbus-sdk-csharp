@@ -175,7 +175,9 @@ namespace tecgraf.openbus {
         key = Crypto.CreatePublicKeyFromCertificateBytes(acs.certificate);
       }
       catch (Exception) {
-        throw new ServiceFailure { message = "O certificado do barramento é inválido." };
+        throw new ServiceFailure {
+          message = "O certificado do barramento é inválido."
+        };
       }
       return acs.busid;
     }

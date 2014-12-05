@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Reflection;
 using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -646,13 +647,19 @@ namespace tecgraf.openbus.Test {
         try {
           _context.ImportChain(bytes, "UnknownDomain");
         }
-        catch (UnknownDomain e) {
-          failed = true;
-          Assert.AreEqual(e.domain, "UnknownDomain");
-        }
         catch (Exception e) {
-          Assert.Fail(
-            "A exceção deveria ser UnknownDomain. Exceção recebida: " + e);
+          UnknownDomain ud = null;
+          if (e is TargetInvocationException) {
+            // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+            ud = e.InnerException as UnknownDomain;
+          }
+          if ((ud == null) && (!(e is UnknownDomain))) {
+            Assert.Fail(
+              "A exceção deveria ser UnknownDomain. Exceção recebida: " + e);
+          }
+          ud = ud ?? e as UnknownDomain;
+          failed = true;
+          Assert.AreEqual(ud.domain, "UnknownDomain");
         }
         finally {
           _context.SetCurrentConnection(null);
@@ -676,12 +683,17 @@ namespace tecgraf.openbus.Test {
         try {
           _context.ImportChain(bytes, _domain);
         }
-        catch (InvalidToken) {
-          failed = true;
-        }
         catch (Exception e) {
-          Assert.Fail(
-            "A exceção deveria ser InvalidToken. Exceção recebida: " + e);
+          InvalidToken it = null;
+          if (e is TargetInvocationException) {
+            // caso seja uma exceção lançada pelo SDK, será uma NO_PERMISSION
+            it = e.InnerException as InvalidToken;
+          }
+          if ((it == null) && (!(e is InvalidToken))) {
+            Assert.Fail(
+              "A exceção deveria ser InvalidToken. Exceção recebida: " + e);
+          }
+          failed = true;
         }
         finally {
           _context.SetCurrentConnection(null);
@@ -771,11 +783,11 @@ namespace tecgraf.openbus.Test {
           (context, busid, loginId, uri, operation) => conn;
 
         _context.SetCurrentConnection(conn1);
-        CallerChain chain1For2 = _context.MakeChainFor(conn2.Login.Value.id);
-        CallerChain chain1For3 = _context.MakeChainFor(conn3.Login.Value.id);
+        CallerChain chain1For2 = _context.MakeChainFor(conn2.Login.Value.entity);
+        CallerChain chain1For3 = _context.MakeChainFor(conn3.Login.Value.entity);
         _context.SetCurrentConnection(conn2);
         _context.JoinChain(chain1For2);
-        CallerChain chain1_2For3 = _context.MakeChainFor(conn3.Login.Value.id);
+        CallerChain chain1_2For3 = _context.MakeChainFor(conn3.Login.Value.entity);
         _context.ExitChain();
 
         _context.SetCurrentConnection(conn);
@@ -1018,7 +1030,7 @@ namespace tecgraf.openbus.Test {
     ///   Constrói um componente que oferece faceta de inspeção de cadeia de chamadas.
     /// </summary>
     private static ComponentContext BuildTestCallerChainInspectorComponent() {
-      ComponentId id = new ComponentId("TestComponent", 1, 0, 0, "java");
+      ComponentId id = new ComponentId("TestComponent", 1, 0, 0, "csharp");
       ComponentContext component = new DefaultComponentContext(id);
       component.AddFacet("CallerChainInspector",
         Repository.GetRepositoryID(

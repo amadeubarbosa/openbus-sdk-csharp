@@ -60,6 +60,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\OpenBus.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="OpenBus.Legacy.Idl">
+      <HintPath>lib\OpenBus.Legacy.Idl.dll</HintPath>
+    </Reference>
     <Reference Include="Scs.Core">
       <HintPath>lib\Scs.Core.dll</HintPath>
     </Reference>
