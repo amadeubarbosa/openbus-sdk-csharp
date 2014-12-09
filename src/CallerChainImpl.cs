@@ -1,31 +1,41 @@
-﻿using tecgraf.openbus.caches;
-using tecgraf.openbus.core.v2_1.services.access_control;
+﻿using System;
+using Ch.Elca.Iiop.Idl;
+using omg.org.CORBA;
+using tecgraf.openbus.caches;
+using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_1.credential;
+using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.interceptors;
+using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {
-    internal static readonly SignedData NullSignedCallChain = new SignedData(new byte[256], new byte[0]);
-
-    internal CallerChainImpl(string busId, LoginInfo caller,
-                             string target, LoginInfo[] originators,
-                             SignedData signed)
-      : this(busId, caller, target, originators) {
-      Signed = signed;
+    internal CallerChainImpl(AnyCredential anyCredential) {
+      Legacy = anyCredential.Legacy;
+      if (Legacy) {
+        core.v2_0.services.access_control.CallChain legacyChain = UnmarshalLegacyCallChain(anyCredential.LegacyChain);
+        Target = legacyChain.target;
+        Originators = new LoginInfo[legacyChain.originators.Length];
+        legacyChain.originators.CopyTo(Originators, 0);
+        Caller = new LoginInfo(legacyChain.caller.id, legacyChain.caller.entity);
+        Signed = new AnySignedChain { LegacyChain = anyCredential.LegacyChain };
+        Signed.Encoded = Signed.LegacyChain.encoded;
+        Signed.Signature = Signed.LegacyChain.signature;
+      }
+      else {
+        CallChain chain = UnmarshalCallChain(anyCredential.Chain);
+        BusId = chain.bus;
+        Target = chain.target;
+        Originators = chain.originators;
+        Caller = chain.caller;
+        Signed = new AnySignedChain { Chain = anyCredential.Chain };
+        Signed.Encoded = Signed.Chain.encoded;
+        Signed.Signature = Signed.Chain.signature;
+      }
+      Joined = new LRUConcurrentDictionaryCache<string, AnySignedChain>();
     }
 
-    internal CallerChainImpl(string busId, LoginInfo caller, string target,
-                             LoginInfo[] originators) {
-      BusId = busId;
-      Caller = caller;
-      Target = target;
-      Originators = originators;
-      Signed = NullSignedCallChain;
-      Joined = new LRUConcurrentDictionaryCache<string, SignedData>();
-    }
-
-    internal LRUConcurrentDictionaryCache<string, SignedData> Joined { get; private set; }
-
-    internal SignedData Signed { get; private set; }
+    #region Public Members
 
     public string BusId { get; private set; }
 
@@ -35,8 +45,39 @@ namespace tecgraf.openbus {
 
     public LoginInfo Caller { get; private set; }
 
-    public bool IsLegacyChain() {
-      return Signed.Equals(NullSignedCallChain);
+    #endregion
+
+    #region Internal Members
+
+    internal bool Legacy { get; private set; }
+
+    internal LRUConcurrentDictionaryCache<string, AnySignedChain> Joined { get; private set; }
+
+    internal AnySignedChain Signed { get; private set; }
+
+    internal static CallChain UnmarshalCallChain(SignedData signed) {
+      Type chainType = typeof(CallChain);
+      TypeCode chainTypeCode =
+        OrbServices.GetSingleton().create_interface_tc(Repository.GetRepositoryID(chainType),
+                                chainType.Name);
+      return (CallChain)InterceptorsInitializer.Codec.decode_value(signed.encoded, chainTypeCode);
     }
+
+    private static core.v2_0.services.access_control.CallChain UnmarshalLegacyCallChain(SignedCallChain signed) {
+      Type chainType = typeof(core.v2_0.services.access_control.CallChain);
+      TypeCode chainTypeCode =
+        OrbServices.GetSingleton().create_interface_tc(Repository.GetRepositoryID(chainType),
+                                chainType.Name);
+      return (core.v2_0.services.access_control.CallChain)InterceptorsInitializer.Codec.decode_value(signed.encoded, chainTypeCode);
+    }
+
+    #endregion
+  }
+
+  internal class AnySignedChain {
+    public SignedCallChain LegacyChain;
+    public SignedData Chain;
+    public byte[] Signature;
+    public byte[] Encoded;
   }
 }

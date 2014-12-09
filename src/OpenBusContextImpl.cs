@@ -13,6 +13,7 @@ using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
 using Org.BouncyCastle.Crypto;
 using scs.core;
+using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.data_export;
@@ -252,7 +253,7 @@ namespace tecgraf.openbus {
       AccessControl acs = conn.Acs;
       SignedData signedChain = acs.signChainFor(entity);
       try {
-        CallChain callChain = UnmarshalCallChain(signedChain);
+        CallChain callChain = CallerChainImpl.UnmarshalCallChain(signedChain);
         return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
           callChain.originators, signedChain);
       }
@@ -276,7 +277,7 @@ namespace tecgraf.openbus {
       byte[] encryptedToken = Crypto.Encrypt(busKey, token);
       SignedData signedChain = acs.signChainByToken(encryptedToken, domain);
       try {
-        CallChain callChain = UnmarshalCallChain(signedChain);
+        CallChain callChain = CallerChainImpl.UnmarshalCallChain(signedChain);
         return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
                                    callChain.originators, signedChain);
       }
@@ -292,7 +293,7 @@ namespace tecgraf.openbus {
         CallerChainImpl chainImpl = (CallerChainImpl)chain;
         int i = 0;
         ExportedVersion[] versions;
-        if (chain.IsLegacyChain()) {
+        if (chainImpl.Legacy) {
           versions = new ExportedVersion[1];
         }
         else {
@@ -329,7 +330,7 @@ namespace tecgraf.openbus {
               (SignedData)
                 _codec.decode_value(versions[i].encoded, signedDataTypeCode);
             //TODO vale a pena verificar assinatura???
-            CallChain chain = UnmarshalCallChain(exportedChain);
+            CallChain chain = CallerChainImpl.UnmarshalCallChain(exportedChain);
             return new CallerChainImpl(chain.bus, chain.caller,
               chain.target, chain.originators, exportedChain);
           }
@@ -475,14 +476,6 @@ namespace tecgraf.openbus {
         }
       }
       return accessKey;
-    }
-
-    internal CallChain UnmarshalCallChain(SignedData signed) {
-      Type chainType = typeof(CallChain);
-      TypeCode chainTypeCode =
-        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
-      return (CallChain)_codec.decode_value(signed.encoded, chainTypeCode);
     }
 
     internal void SetCurrentConnection(Connection conn, ServerRequestInfo ri) {

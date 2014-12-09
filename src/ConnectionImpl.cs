@@ -10,6 +10,7 @@ using omg.org.PortableInterceptor;
 using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.caches;
+using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services;
@@ -19,6 +20,9 @@ using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
 using tecgraf.openbus.lease;
 using tecgraf.openbus.security;
+using CredentialContextId = tecgraf.openbus.core.v2_1.credential.CredentialContextId;
+using CredentialData = tecgraf.openbus.core.v2_1.credential.CredentialData;
+using CredentialReset = tecgraf.openbus.core.v2_1.credential.CredentialReset;
 using Current = omg.org.PortableInterceptor.Current;
 using Encoding = System.Text.Encoding;
 using TypeCode = omg.org.CORBA.TypeCode;
@@ -35,6 +39,7 @@ namespace tecgraf.openbus {
     private string _busId;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
+    internal volatile bool Legacy;
 
     internal readonly OpenBusContextImpl Context;
 
@@ -71,9 +76,12 @@ namespace tecgraf.openbus {
     ///   para transporte de credenciais em requisições de serviço.
     /// </summary>
     private const int ContextId = CredentialContextId.ConstVal;
+    private const int LegacyContextId = core.v2_0.credential.CredentialContextId.ConstVal;
 
     private const byte MajorVersion = core.v2_1.MajorVersion.ConstVal;
     private const byte MinorVersion = core.v2_1.MinorVersion.ConstVal;
+    private const byte LegacyMajorVersion = core.v2_0.MajorVersion.ConstVal;
+    private const byte LegacyMinorVersion = core.v2_0.MinorVersion.ConstVal;
     private const int SecretSize = 16;
 
     private readonly Codec _codec;
@@ -762,7 +770,7 @@ namespace tecgraf.openbus {
     }
 
     internal void ReceiveRequest(ServerRequestInfo ri,
-      CredentialData credential) {
+      AnyCredential credential) {
       string interceptedOperation = ri.operation;
       LoginInfo myLogin;
       AsymmetricKeyParameter busKey;
@@ -781,20 +789,19 @@ namespace tecgraf.openbus {
       finally {
         _loginLock.ExitReadLock();
       }
-      if (!credential.bus.Equals(busId)) {
+      if (!credential.Bus.Equals(busId)) {
         Logger.Error(String.Format(
           "A identificação do barramento está errada. O valor recebido foi '{0}' e o esperado era '{1}'.",
-          credential.bus, busId));
+          credential.Bus, busId));
         throw new NO_PERMISSION(UnknownBusCode.ConstVal,
           CompletionStatus.Completed_No);
       }
 
-      string credentialLogin = credential.login;
-
+      string credentialLogin = credential.Login;
       LoginCache.LoginEntry clientLogin;
       try {
         Context.SetCurrentConnection(this);
-        clientLogin = _loginsCache.GetLoginEntry(credentialLogin);
+        clientLogin = GetLoginEntryFromCache(credentialLogin);
       }
       catch (Exception e) {
         NO_PERMISSION noPermission = e as NO_PERMISSION;
@@ -817,36 +824,32 @@ namespace tecgraf.openbus {
       }
 
       ServerSideSession session;
-      if (_sessionId2Session.TryGetValue(credential.session, out session)) {
+      if (_sessionId2Session.TryGetValue(credential.Session, out session)) {
         // login tem que ser o mesmo que originou essa sessão
-        if (credential.login.Equals(session.RemoteLogin)) {
+        if (credential.Login.Equals(session.RemoteLogin)) {
+          string legacy = session.Legacy ? "legada " : "";
           Logger.Debug(
             String.Format(
-              "Testando hash com operação {0}, ticket {1} e segredo {2}, pertencente à sessão {3} do login {4}.",
-              interceptedOperation, credential.ticket,
-              BitConverter.ToString(session.Secret), session.Id,
+              "Testando hash com operação {0}, ticket {1} e segredo {2}, pertencente à sessão {3}{4} do login {5}.",
+              interceptedOperation, credential.Ticket,
+              BitConverter.ToString(session.Secret), legacy, session.Id,
               session.RemoteLogin));
           byte[] hash = CreateCredentialHash(interceptedOperation,
-            credential.ticket,
-            session.Secret);
+            credential.Ticket, session.Secret, session.Legacy);
           Logger.Debug("Hash recriado: " + BitConverter.ToString(hash));
           IStructuralEquatable eqHash = hash;
-          if (eqHash.Equals(credential.hash,
+          if (eqHash.Equals(credential.Hash,
             StructuralComparisons.StructuralEqualityComparer)) {
             // credencial valida
             // CheckChain pode lançar exceção com InvalidChainCode
-            CallChain chain = CheckChain(credential.chain, credential.login,
-              myLogin.entity, busId, busKey);
+            CallerChainImpl chain = new CallerChainImpl(credential);
+            CheckChain(chain, myLogin.entity, busId, busKey);
             // CheckTicket já faz o lock no ticket history da sessão
-            if (session.CheckTicket(credential.ticket)) {
+            if (session.CheckTicket(credential.Ticket)) {
               // insere a cadeia no slot para a getCallerChain usar
               try {
                 // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
-                ri.set_slot(_chainSlotId,
-                  new CallerChainImpl(chain.bus, chain.caller,
-                    myLogin.entity,
-                    chain.originators,
-                    credential.chain));
+                ri.set_slot(_chainSlotId, chain);
               }
               catch (InvalidSlot e) {
                 Logger.Fatal(
@@ -856,7 +859,7 @@ namespace tecgraf.openbus {
               return;
             }
             Logger.Debug(String.Format("O ticket {0} não confere.",
-              credential.ticket));
+              credential.Ticket));
           }
           else {
             Logger.Debug("O hash não confere com o esperado.");
@@ -866,13 +869,13 @@ namespace tecgraf.openbus {
           Logger.Debug(
             String.Format(
               "O login associado a esta sessão é {0} e a credencial foi enviada com o login {1}.",
-              session.RemoteLogin, credential.login));
+              session.RemoteLogin, credential.Login));
         }
       }
       else {
         Logger.Debug(
           String.Format("Não foi encontrada a sessão {0} nesta conexão.",
-            credential.session));
+            credential.Session));
       }
 
       // credencial invalida por nao ter sessao conhecida, ticket inválido, hash errado ou login errado
@@ -884,12 +887,12 @@ namespace tecgraf.openbus {
     }
 
     internal void SendException(ServerRequestInfo ri,
-      CredentialData credential) {
+      AnyCredential anyCredential) {
       // CreateCredentialReset pode lançar exceção com UnverifiedLoginCode e InvalidPublicKeyCode
-      byte[] encodedReset =
-        CreateCredentialReset(credential.login);
-      ServiceContext replyServiceContext = new ServiceContext(ContextId,
-        encodedReset);
+      byte[] encodedReset = CreateCredentialReset(anyCredential);
+      ServiceContext replyServiceContext = anyCredential.Legacy
+        ? new ServiceContext(LegacyContextId, encodedReset)
+        : new ServiceContext(ContextId, encodedReset);
       ri.add_reply_service_context(replyServiceContext, false);
     }
 
@@ -1220,7 +1223,7 @@ namespace tecgraf.openbus {
       return requestReset;
     }
 
-    private byte[] CreateCredentialReset(string remoteLogin) {
+    private byte[] CreateCredentialReset(AnyCredential anyCredential) {
       string loginId;
       string entity;
       _loginLock.EnterReadLock();
@@ -1238,16 +1241,46 @@ namespace tecgraf.openbus {
       finally {
         _loginLock.ExitReadLock();
       }
+
+      string remoteLogin = anyCredential.Login;
+      if (anyCredential.Legacy) {
+        return CreateLegacyCredentialReset(remoteLogin, loginId);
+      }
+
       CredentialReset reset = new CredentialReset { target = loginId, entity = entity };
+      LoginCache.LoginEntry login;
+      reset.challenge = CreateChallengeForNewSession(remoteLogin, out login);
+      ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
+        reset.challenge, remoteLogin, false);
+      lock (session) {
+        _sessionId2Session.TryAdd(session.Id, session);
+        reset.session = session.Id;
+      }
+      return _codec.encode_value(reset);
+    }
+
+    private byte[] CreateLegacyCredentialReset(string remoteLogin, string loginId) {
+      core.v2_0.credential.CredentialReset reset = new core.v2_0.credential.CredentialReset { target = loginId };
+      LoginCache.LoginEntry login;
+      reset.challenge = CreateChallengeForNewSession(remoteLogin, out login);
+      ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
+        reset.challenge, remoteLogin, true);
+      lock (session) {
+        _sessionId2Session.TryAdd(session.Id, session);
+        reset.session = session.Id;
+      }
+      return _codec.encode_value(reset);
+    }
+
+    private byte[] CreateChallengeForNewSession(string remoteLogin, out LoginCache.LoginEntry loginEntry) {
       byte[] challenge = new byte[SecretSize];
       Random rand = new Random();
       rand.NextBytes(challenge);
 
-      LoginCache.LoginEntry login;
       try {
         Context.SetCurrentConnection(this);
-        login = _loginsCache.GetLoginEntry(remoteLogin);
-        if (login == null) {
+        loginEntry = GetLoginEntryFromCache(remoteLogin);
+        if (loginEntry == null) {
           Logger.Error(
             "Não foi encontrada uma entrada na cache de logins para o login " +
             remoteLogin);
@@ -1273,13 +1306,17 @@ namespace tecgraf.openbus {
       }
 
       try {
-        reset.challenge = Crypto.Encrypt(login.Publickey, challenge);
+        challenge = Crypto.Encrypt(loginEntry.Publickey, challenge);
       }
       catch (Exception) {
         throw new NO_PERMISSION(InvalidPublicKeyCode.ConstVal,
           CompletionStatus.Completed_No);
       }
 
+      return challenge;
+    }
+
+    private int CreateNewSessionId() {
       // lock para tornar esse trecho atomico
       int sessionId;
       _sessionIdLock.EnterWriteLock();
@@ -1290,42 +1327,39 @@ namespace tecgraf.openbus {
       finally {
         _sessionIdLock.ExitWriteLock();
       }
-      ServerSideSession session = new ServerSideSession(sessionId,
-        challenge,
-        remoteLogin);
-      lock (session) {
-        _sessionId2Session.TryAdd(session.Id, session);
-        reset.session = session.Id;
-      }
-      return _codec.encode_value(reset);
+      return sessionId;
     }
 
-    private CallChain CheckChain(SignedData signed, string callerId,
+    private void CheckChain(CallerChainImpl chain, string callerId, 
       string entity, string busId, AsymmetricKeyParameter busKey) {
-      CallChain chain = Context.UnmarshalCallChain(signed);
-      if (!chain.target.Equals(entity)) {
+      if (!chain.Target.Equals(entity)) {
         Logger.Error(
-          "O entity não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
+          "A entidade não é a mesma do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
         throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
-          CompletionStatus.Completed_No);
+                                CompletionStatus.Completed_No);
       }
-      if (!chain.caller.id.Equals(callerId) || (!chain.bus.Equals(busId)) ||
-          (!Crypto.VerifySignature(busKey, signed.encoded, signed.signature))) {
+      if (!chain.Caller.id.Equals(callerId) || (!chain.BusId.Equals(busId)) ||
+          (!Crypto.VerifySignature(busKey, chain.Signed.Encoded, chain.Signed.Signature))) {
         Logger.Error("Cadeia de credencial inválida.");
         throw new NO_PERMISSION(InvalidChainCode.ConstVal,
-          CompletionStatus.Completed_No);
+                                CompletionStatus.Completed_No);
       }
-      return chain;
     }
 
     private byte[] CreateCredentialHash(string operation, int ticket,
-      byte[] secret) {
+      byte[] secret, bool legacy) {
       Encoding enc = Crypto.TextEncoding;
       // 2 bytes para versao, 16 para o segredo, 4 para o ticket em little endian e X para a operacao.
       int size = 2 + secret.Length + 4 + enc.GetByteCount(operation);
       byte[] hash = new byte[size];
-      hash[0] = MajorVersion;
-      hash[1] = MinorVersion;
+      if (legacy) {
+        hash[0] = LegacyMajorVersion;
+        hash[1] = LegacyMinorVersion;
+      }
+      else {
+        hash[0] = MajorVersion;
+        hash[1] = MinorVersion;
+      }
       int index = 2;
       secret.CopyTo(hash, index);
       index += secret.Length;

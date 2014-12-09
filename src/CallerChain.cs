@@ -22,13 +22,6 @@ namespace tecgraf.openbus {
     /// Entidade para a qual a chamada estava destinada. Só é possível fazer chamadas
     /// dentro dessa cadeia (através do método joinChain da interface 
     /// OpenBusContext) se a entidade da conexão corrente for a mesma do target.
-    ///
-    /// No caso de conexões legadas, este campo conterá o nome da entidade da
-    /// conexão que atendeu (validou) a requisição. Todas as chamadas
-    /// feitas como parte de uma cadeia de uma chamada legada serão feitas
-    /// utilizando apenas o protocolo do OpenBus 1.5 (apenas com credenciais
-    /// legadas) e portanto serão recusadas por serviços que não aceitem chamadas
-    /// legadas (OpenBus 1.5).
     /// </summary>
     string Target { get; }
 
@@ -43,11 +36,5 @@ namespace tecgraf.openbus {
 	  /// Informação de login da entidade que realizou a última chamada da cadeia.
     /// </summary>
     LoginInfo Caller { get; }
-
-    /// <summary>
-    /// Informa se a cadeia é uma cadeia legada.
-    /// </summary>
-    /// <returns>True se for uma cadeia legada, false se for uma cadeia da versão atual.</returns>
-    bool IsLegacyChain();
   }
 }

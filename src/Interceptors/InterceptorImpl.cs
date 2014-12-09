@@ -24,6 +24,7 @@ namespace tecgraf.openbus.interceptors {
     /// para transporte de credenciais em requisições de serviço.
     /// </summary>
     protected const int ContextId = CredentialContextId.ConstVal;
+    protected const int LegacyContextId = core.v2_0.credential.CredentialContextId.ConstVal;
 
     #endregion
 

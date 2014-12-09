@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Text;
-using Ch.Elca.Iiop.Idl;
 using Ch.Elca.Iiop.Util;
 using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.PortableInterceptor;
-using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using Encoding = System.Text.Encoding;
-using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus.interceptors {
   internal class ServerInterceptor : InterceptorImpl,
@@ -49,23 +46,34 @@ namespace tecgraf.openbus.interceptors {
       Logger.Info(String.Format(
         "A operação '{0}' foi interceptada no servidor.", interceptedOperation));
 
-      ServiceContext serviceContext = GetContextFromRequestInfo(ri);
-      CredentialData credential = UnmarshalCredential(serviceContext);
+      bool legacyContext;
+      ServiceContext serviceContext = GetContextFromRequestInfo(ri, true,
+        out legacyContext);
+      AnyCredential anyCredential = new AnyCredential(serviceContext,
+        legacyContext);
       Logger.Debug(
-        String.Format("A operação '{0}' possui credencial.",
-          interceptedOperation));
+        String.Format("A operação '{0}' possui credencial. É legada? {1}.",
+                      interceptedOperation, anyCredential.Legacy));
 
       ConnectionImpl conn = null;
       try {
-        conn = GetDispatcherForRequest(ri, credential) as ConnectionImpl;
+        conn = GetDispatcherForRequest(ri, anyCredential) as ConnectionImpl;
         if (conn == null) {
           Logger.Error(
             "Sem conexão ao barramento, impossível receber a chamada remota.");
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
             CompletionStatus.Completed_No);
         }
+        if ((!conn.Legacy) && (anyCredential.Legacy)) {
+          Logger.Error(
+            String.Format(
+              "Chamada negada devido a suporte legado inativo: login {0} operação {1} requestId {2}",
+              anyCredential.Login, interceptedOperation,
+              ri.request_id));
+          throw new NO_PERMISSION(NoCredentialCode.ConstVal, CompletionStatus.Completed_No);
+        }
         Context.SetCurrentConnection(conn, ri);
-        conn.ReceiveRequest(ri, credential);
+        conn.ReceiveRequest(ri, anyCredential);
       }
       catch (InvalidSlot e) {
         Logger.Fatal("Falha ao inserir a credencial em seu slot.", e);
@@ -132,15 +140,17 @@ namespace tecgraf.openbus.interceptors {
             throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal,
               CompletionStatus.Completed_No);
           }
+          bool legacyContext;
           ServiceContext serviceContext =
-            GetContextFromRequestInfo(ri);
+            GetContextFromRequestInfo(ri, conn.Legacy, out legacyContext);
           // credencial é inválida
-          CredentialData credential = UnmarshalCredential(serviceContext);
+          AnyCredential anyCredential = new AnyCredential(serviceContext,
+                                                            legacyContext);
           Logger.Debug(String.Format(
-            "A operação '{0}' para a qual será lançada a exceção possui credencial.",
-            interceptedOperation));
+            "A operação '{0}' para a qual será lançada a exceção possui credencial. Legada? {1}.",
+            interceptedOperation, anyCredential.Legacy));
 
-          conn.SendException(ri, credential);
+          conn.SendException(ri, anyCredential);
         }
         catch (InvalidSlot e) {
           Logger.Fatal(
@@ -167,24 +177,11 @@ namespace tecgraf.openbus.interceptors {
 
     #endregion
 
-    private Connection GetDispatcherForRequest(ServerRequestInfo request,
-      CredentialData credential) {
+    private Connection GetDispatcherForRequest(ServerRequestInfo request, 
+      AnyCredential credential) {
       Connection dispatcher = null;
-      string busId;
-      string loginId;
-      //TODO implementar suporte legacy e remover duas linhas abaixo
-      busId = credential.bus;
-      loginId = credential.login;
-      /*
-      if (credential.IsLegacy) {
-        busId = credential.LegacyCredential.bus;
-        loginId = credential.LegacyCredential.login;
-      }
-      else {
-        busId = credential.Credential.bus;
-        loginId = credential.Credential.login;
-      }
-      */
+      string busId = credential.Bus;
+      string loginId = credential.Login;
       if (Context.OnCallDispatch != null) {
         dispatcher = Context.OnCallDispatch(Context, busId, loginId,
           GetObjectUriForObjectKey(
@@ -204,13 +201,18 @@ namespace tecgraf.openbus.interceptors {
       return dispatcher;
     }
 
-    private ServiceContext GetContextFromRequestInfo(RequestInfo ri) {
+    private ServiceContext GetContextFromRequestInfo(RequestInfo ri, bool legacy,
+                                                     out bool legacyContext) {
+      legacyContext = false;
       String interceptedOperation = ri.operation;
       ServiceContext serviceContext;
       try {
         serviceContext = ri.get_request_service_context(ContextId);
       }
       catch (BAD_PARAM) {
+        if (legacy) {
+          return GetLegacyContextFromRequestInfo(ri, out legacyContext);
+        }
         Logger.Error(String.Format(
           "A chamada à operação '{0}' não possui credencial.",
           interceptedOperation));
@@ -220,17 +222,23 @@ namespace tecgraf.openbus.interceptors {
       return serviceContext;
     }
 
-    private CredentialData UnmarshalCredential(ServiceContext serviceContext) {
-      OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof (CredentialData);
-      TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-          credentialType.Name);
-
-      byte[] data = serviceContext.context_data;
-      return
-        (CredentialData)
-          InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode);
+    private ServiceContext GetLegacyContextFromRequestInfo(RequestInfo ri,
+                                                           out bool
+                                                             legacyContext) {
+      String interceptedOperation = ri.operation;
+      ServiceContext serviceContext;
+      try {
+        serviceContext = ri.get_request_service_context(LegacyContextId);
+      }
+      catch (BAD_PARAM) {
+        Logger.Error(String.Format(
+          "A chamada à operação '{0}' não possui credencial.",
+          interceptedOperation));
+        throw new NO_PERMISSION(NoCredentialCode.ConstVal,
+                                CompletionStatus.Completed_No);
+      }
+      legacyContext = true;
+      return serviceContext;
     }
 
     #region Métodos copiados do IIOP.NET

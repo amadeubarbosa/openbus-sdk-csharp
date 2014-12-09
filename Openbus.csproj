@@ -72,6 +72,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\AnyCredential.cs" />
     <Compile Include="src\assistant\Assistant.cs" />
     <Compile Include="src\assistant\AssistantImpl.cs" />
     <Compile Include="src\assistant\Offeror.cs" />
