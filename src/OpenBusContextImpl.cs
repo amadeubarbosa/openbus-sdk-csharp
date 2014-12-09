@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting;
@@ -13,7 +14,6 @@ using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
 using Org.BouncyCastle.Crypto;
 using scs.core;
-using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.data_export;
@@ -146,7 +146,7 @@ namespace tecgraf.openbus {
         // RemotingServices.Connect não faz nenhuma chamada remota.
         IComponent busIC =
           (IComponent)RemotingServices.Connect(typeof(IComponent), corbaloc);
-        return new ConnectionImpl(busIC, this, GetPrivateKeyFromProps(props));
+        return new ConnectionImpl(busIC, this, !GetLegacyDisableFromProps(props), GetPrivateKeyFromProps(props));
       }
       finally {
         UnignoreCurrentThread();
@@ -160,7 +160,7 @@ namespace tecgraf.openbus {
       }
       IgnoreCurrentThread();
       try {
-        return new ConnectionImpl(reference, this, GetPrivateKeyFromProps(props));
+        return new ConnectionImpl(reference, this, !GetLegacyDisableFromProps(props), GetPrivateKeyFromProps(props));
       }
       finally {
         UnignoreCurrentThread();
@@ -476,6 +476,20 @@ namespace tecgraf.openbus {
         }
       }
       return accessKey;
+    }
+
+    private bool GetLegacyDisableFromProps(ConnectionProperties props) {
+      bool legacyDisable = false;
+      if (props != null) {
+        if (props.LegacyDisable !=
+            ConnectionPropertiesImpl.LegacyDisableDefault) {
+          legacyDisable = props.LegacyDisable;
+          LogPropertyChanged(ConnectionPropertiesImpl.LegacyDisableProperty,
+                             legacyDisable.ToString(
+                               CultureInfo.InvariantCulture));
+        }
+      }
+      return legacyDisable;
     }
 
     internal void SetCurrentConnection(Connection conn, ServerRequestInfo ri) {

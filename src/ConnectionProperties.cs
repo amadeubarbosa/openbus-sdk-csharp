@@ -6,6 +6,14 @@ namespace tecgraf.openbus {
   /// </summary>
   public interface ConnectionProperties {
     /// <summary>
+    /// Define o valor da propriedade 'legacy.disable'.
+    /// 
+    /// Desabilita o suporte a chamadas usando protocolo OpenBus 2.0.
+    /// Por padrão o suporte está habilitado.
+    /// </summary>
+    bool LegacyDisable { get; set; }
+
+    /// <summary>
     /// Define o valor da propriedade 'access.key'.
     /// 
     /// Chave de acesso a ser utiliza internamente para a geração de

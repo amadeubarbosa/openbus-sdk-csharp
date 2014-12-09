@@ -63,7 +63,7 @@ namespace tecgraf.openbus {
       return (CallChain)InterceptorsInitializer.Codec.decode_value(signed.encoded, chainTypeCode);
     }
 
-    private static core.v2_0.services.access_control.CallChain UnmarshalLegacyCallChain(SignedCallChain signed) {
+    internal static core.v2_0.services.access_control.CallChain UnmarshalLegacyCallChain(SignedCallChain signed) {
       Type chainType = typeof(core.v2_0.services.access_control.CallChain);
       TypeCode chainTypeCode =
         OrbServices.GetSingleton().create_interface_tc(Repository.GetRepositoryID(chainType),

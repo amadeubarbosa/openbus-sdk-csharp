@@ -36,9 +36,11 @@ namespace tecgraf.openbus {
 
     private readonly IComponent _busIC;
     private AccessControl _acs;
+    private core.v2_0.services.access_control.AccessControl _legacyAcs;
     private string _busId;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
+    private readonly bool _originalLegacy;
     internal volatile bool Legacy;
 
     internal readonly OpenBusContextImpl Context;
@@ -90,8 +92,12 @@ namespace tecgraf.openbus {
     private readonly int _loginSlotId;
     private readonly int _noInvalidLoginHandlingSlotId;
 
-    private readonly byte[] _nullHash = new byte[HashValueSize.ConstVal];
-    private readonly SignedData _invalidSignedData = new SignedData(new byte[EncryptedBlockSize.ConstVal], new byte[0]);
+    private static readonly byte[] NullHash = new byte[HashValueSize.ConstVal];
+    private static readonly byte[] InvalidSignature = new byte[EncryptedBlockSize.ConstVal];
+    private static readonly byte[] InvalidEncoded = new byte[0];
+    private static readonly SignedData InvalidSignedData = new SignedData(InvalidSignature, InvalidEncoded);
+    private static readonly SignedCallChain InvalidSignedCallChain = new SignedCallChain(InvalidSignature, InvalidEncoded);
+    private static readonly AnySignedChain InvalidSignedChain = new AnySignedChain { Chain = InvalidSignedData, LegacyChain = InvalidSignedCallChain };
 
     private const string BusPubKeyError =
       "Erro ao encriptar as informações de login com a chave pública do barramento.";
@@ -104,10 +110,12 @@ namespace tecgraf.openbus {
     #region Constructors
 
     internal ConnectionImpl(IComponent iComponent, OpenBusContextImpl context,
-      PrivateKeyImpl accessKey) {
+      bool legacy, PrivateKeyImpl accessKey) {
       _busIC = iComponent;
       ORB = OrbServices.GetSingleton();
       Context = context;
+      _originalLegacy = legacy;
+      Legacy = legacy;
       _codec = InterceptorsInitializer.Codec;
       _chainSlotId = ServerInterceptor.Instance.ChainSlotId;
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
@@ -144,6 +152,9 @@ namespace tecgraf.openbus {
         MarshalByRefObject lrObjRef = _busIC.getFacet(lrId);
         MarshalByRefObject orObjRef = _busIC.getFacet(orId);
 
+        bool maintainLegacy;
+        core.v2_0.services.access_control.AccessControl legacyACS = GetLegacyFacets(out maintainLegacy);
+
         AccessControl localAcs;
         _loginLock.EnterWriteLock();
         try {
@@ -156,6 +167,10 @@ namespace tecgraf.openbus {
             throw new ServiceFailure {message = msg};
           }
           _loginsCache = new LoginCache(this);
+          Legacy = maintainLegacy;
+          if (maintainLegacy) {
+            _legacyAcs = legacyACS;
+          }
         }
         finally {
           _loginLock.ExitWriteLock();
@@ -175,6 +190,31 @@ namespace tecgraf.openbus {
         Logger.Error(connErrorMessage, e);
         throw;
       }
+    }
+
+    private core.v2_0.services.access_control.AccessControl GetLegacyFacets(out bool maintainLegacy) {
+      if (_originalLegacy) {
+        try {
+          string legacyId =
+            Repository.GetRepositoryID(typeof(core.v2_0.services.access_control.AccessControl));
+          MarshalByRefObject legacyObjRef = _busIC.getFacet(legacyId);
+          core.v2_0.services.access_control.AccessControl legacyAccess =
+            legacyObjRef as core.v2_0.services.access_control.AccessControl;
+          if (legacyAccess != null) {
+            maintainLegacy = true;
+            return legacyAccess;
+          }
+          Logger.Warn(
+            "A faceta LegacySupport do controle de acesso 2.0 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
+        }
+        catch (Exception e) {
+          Logger.Warn(
+            "Erro ao tentar obter a faceta LegacySupport da versão 2.0. O suporte a conexões legadas foi desabilitado.",
+            e);
+        }
+      }
+      maintainLegacy = false;
+      return null;
     }
 
     private string GetBusIdAndKey(AccessControl acs,
@@ -683,24 +723,25 @@ namespace tecgraf.openbus {
 
       try {
         byte[] hash;
-        SignedData chain;
+        AnySignedChain chain;
         if (sessionId >= 0) {
           Logger.Debug(
             String.Format(
               "Criando hash com operação {0}, ticket {1} e segredo {2}",
               operation, ticket, BitConverter.ToString(secret)));
-          hash = CreateCredentialHash(operation, ticket, secret);
+          hash = CreateCredentialHash(operation, ticket, secret, session.Legacy);
           Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           // CreateCredentialSignedCallChain pode mudar o login
-          chain = CreateCredentialSignedCallChain(session.Entity);
+          chain = CreateCredentialSignedCallChain(session.Legacy, session.Entity);
           login = GetLoginOrThrowNoLogin(errMsg, null);
         }
         else {
+          //TODO tem q enviar credencial invalida 2.1 e 2.0
           // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
           sessionId = 0;
           // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
-          hash = _nullHash;
-          chain = _invalidSignedData;
+          hash = NullHash;
+          chain = InvalidSignedChain;
           Logger.Debug(
             String.Format(
               "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
@@ -1132,8 +1173,8 @@ namespace tecgraf.openbus {
       return login.Value;
     }
 
-    private SignedData CreateCredentialSignedCallChain(string remoteEntity) {
-      SignedData signed;
+    private AnySignedChain CreateCredentialSignedCallChain(bool legacySession, string remoteEntity) {
+      AnySignedChain signed;
       CallerChainImpl chain = Context.JoinedChain as CallerChainImpl;
       Logger.Debug(
         string.Format("Requisição para a entidade {0} tem joined chain? {1}.",
@@ -1142,7 +1183,7 @@ namespace tecgraf.openbus {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
           // na chamada a signChainFor vai criar uma nova chain e assinar
-          SignCallChain(remoteEntity, out signed);
+          signed = SignCallChain(legacySession, remoteEntity);
         }
         else {
           bool cacheHit;
@@ -1150,7 +1191,7 @@ namespace tecgraf.openbus {
             cacheHit = chain.Joined.TryGetValue(remoteEntity, out signed);
           }
           if (!cacheHit) {
-            SignCallChain(remoteEntity, out signed);
+            signed = SignCallChain(legacySession, remoteEntity);
             lock (chain) {
               chain.Joined.TryAdd(remoteEntity, signed);
             }
@@ -1159,29 +1200,40 @@ namespace tecgraf.openbus {
       }
       else {
         // requisição para o barramento
-        if (chain == null) {
-          return _invalidSignedData;
+        if (chain == null){
+          return InvalidSignedChain;
         }
-        signed = chain.Signed;
+        return chain.Signed;
       }
       return signed;
     }
 
-    private void SignCallChain(string remoteEntity, out SignedData signed) {
+    private AnySignedChain SignCallChain(bool legacySession, string remoteEntity) {
       // se o login mudar, tem que assinar de novo
       while (true) {
         AccessControl localAcs;
+        core.v2_0.services.access_control.AccessControl legacyAcs;
         string busId;
         _loginLock.EnterReadLock();
         try {
           localAcs = _acs;
+          legacyAcs = _legacyAcs;
           busId = _busId;
         }
         finally {
           _loginLock.ExitReadLock();
         }
+        AnySignedChain anySignedChain = new AnySignedChain();
         try {
-          signed = localAcs.signChainFor(remoteEntity);
+          if (legacySession) {
+            SignedCallChain signed = legacyAcs.signChainFor(remoteEntity);
+            anySignedChain.LegacyChain = signed;
+          }
+          else {
+            SignedData signed = localAcs.signChainFor(remoteEntity);
+            anySignedChain.Chain = signed;
+          }
+
         }
         catch (AbstractCORBASystemException e) {
           Logger.Error("Erro ao acessar o barramento " + busId + " para assinar uma cadeia.", e);
@@ -1192,9 +1244,18 @@ namespace tecgraf.openbus {
           GetLoginOrThrowNoLogin(
             "Impossível assinar cadeia para a chamada, pois o login foi perdido.",
             null);
-        CallChain newChain = Context.UnmarshalCallChain(signed);
-        if (actualLogin.id.Equals(newChain.caller.id)) {
-          break;
+        string callerLogin;
+        if (legacySession){
+          core.v2_0.services.access_control.CallChain newChain =
+            CallerChainImpl.UnmarshalLegacyCallChain(anySignedChain.LegacyChain);
+          callerLogin = newChain.caller.id;
+        }
+        else{
+          CallChain newChain = CallerChainImpl.UnmarshalCallChain(anySignedChain.Chain);
+          callerLogin = newChain.caller.id;
+        }
+        if (actualLogin.id.Equals(callerLogin)) {
+          return anySignedChain;
         }
       }
     }

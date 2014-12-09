@@ -4,8 +4,18 @@ using tecgraf.openbus.security;
 namespace tecgraf.openbus {
   /// <inheritdoc />
   public class ConnectionPropertiesImpl : ConnectionProperties {
+    internal const string LegacyDisableProperty = "legacy.disable";
+    internal const bool LegacyDisableDefault = false;
     internal const string AccessKeyProperty = "access.key";
     private PrivateKeyImpl _accessKey;
+
+    /// <inheritdoc />
+    public ConnectionPropertiesImpl() {
+      LegacyDisable = LegacyDisableDefault;
+    }
+
+    /// <inheritdoc />
+    public bool LegacyDisable { get; set; }
 
     /// <inheritdoc />
     public PrivateKey AccessKey {
