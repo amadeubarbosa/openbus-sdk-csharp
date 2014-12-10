@@ -541,6 +541,11 @@ namespace tecgraf.openbus {
       return current;
     }
 
+    internal bool IsJoinedToLegacyChain() {
+      CallerChainImpl joined = (CallerChainImpl)JoinedChain;
+      return ((joined != null) && (joined.Legacy));
+    }
+
     private void SetConnectionById(Object connectionId, Connection conn) {
       lock (_connections) {
         _connections.Remove(connectionId);

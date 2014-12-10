@@ -698,6 +698,14 @@ namespace tecgraf.openbus {
         throw;
       }
 
+      bool joinedToLegacy = Context.IsJoinedToLegacyChain();
+      if ((!Legacy) && (joinedToLegacy)) {
+        // se o legacy está desabilitado, não posso estar joined em uma cadeia legacy
+        const string message = "Impossível construir credencial: joined em cadeia 2.0 e sem suporte a legacy.";
+        Logger.Error(message);
+        throw new NO_PERMISSION(InvalidChainCode.ConstVal, CompletionStatus.Completed_No);
+      }
+
       int sessionId = -1;
       int ticket = 0;
       byte[] secret = new byte[0];
@@ -709,6 +717,8 @@ namespace tecgraf.openbus {
       }
 
       ClientSideSession session;
+      string sessionEntity = remoteLogin;
+      bool legacySession = false;
       if (_outgoingLogin2Session.TryGetValue(remoteLogin, out session)) {
         lock (session) {
           sessionId = session.Id;
@@ -718,6 +728,11 @@ namespace tecgraf.openbus {
           Logger.Debug(String.Format("Reutilizando sessão {0} com ticket {1}.",
             sessionId, ticket));
           session.Ticket++;
+          legacySession = session.Legacy;
+          // sessões legadas não têm o entity pois usavam o login
+          if (session.Entity != null) {
+            sessionEntity = session.Entity;
+          }
         }
       }
 
@@ -729,30 +744,48 @@ namespace tecgraf.openbus {
             String.Format(
               "Criando hash com operação {0}, ticket {1} e segredo {2}",
               operation, ticket, BitConverter.ToString(secret)));
-          hash = CreateCredentialHash(operation, ticket, secret, session.Legacy);
+          hash = CreateCredentialHash(operation, ticket, secret, legacySession);
           Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           // CreateCredentialSignedCallChain pode mudar o login
-          chain = CreateCredentialSignedCallChain(session.Legacy, session.Entity);
+          bool joinedToLegacyForBusCall;
+          chain = CreateCredentialSignedCallChain(legacySession, sessionEntity, out joinedToLegacyForBusCall);
           login = GetLoginOrThrowNoLogin(errMsg, null);
+          // envia somente a credencial da versão correta
+          ServiceContext serviceContext;
+          if ((legacySession) || (joinedToLegacyForBusCall)) {
+            core.v2_0.credential.CredentialData data = new core.v2_0.credential.CredentialData(BusId, login.id, sessionId,
+              ticket, hash, chain.LegacyChain);
+            serviceContext = new ServiceContext(LegacyContextId, _codec.encode_value(data));
+          }
+          else {
+            CredentialData data = new CredentialData(BusId, login.id, sessionId,
+              ticket, hash, chain.Chain);
+            serviceContext = new ServiceContext(ContextId, _codec.encode_value(data));
+          }
+          ri.add_request_service_context(serviceContext, false);
         }
         else {
-          //TODO tem q enviar credencial invalida 2.1 e 2.0
           // Não encontrou sessão, volta o sessionId para zero por ser o valor padrão para o credential reset
           sessionId = 0;
           // Cria credencial inválida para iniciar o handshake e obter uma nova sessão
           hash = NullHash;
           chain = InvalidSignedChain;
+          // envia ambas as credenciais
+          core.v2_0.credential.CredentialData legacyData =
+            new core.v2_0.credential.CredentialData(BusId, login.id, sessionId,
+              ticket, hash, chain.LegacyChain);
+          ServiceContext serviceContext = new ServiceContext(LegacyContextId,
+            _codec.encode_value(legacyData));
+          ri.add_request_service_context(serviceContext, false);
+          CredentialData data = new CredentialData(BusId, login.id, sessionId,
+            ticket, hash, chain.Chain);
+          serviceContext = new ServiceContext(ContextId, _codec.encode_value(data));
+          ri.add_request_service_context(serviceContext, false);
           Logger.Debug(
             String.Format(
               "Inicializando sessão de credencial para requisitar a operação {0} no login {1}.",
               operation, remoteLogin));
         }
-
-        CredentialData data = new CredentialData(BusId, login.id, sessionId,
-          ticket, hash, chain);
-        ServiceContext serviceContext =
-          new ServiceContext(ContextId, _codec.encode_value(data));
-        ri.add_request_service_context(serviceContext, false);
         Logger.Info(
           String.Format("Chamada à operação {0} no servidor de login {1}.",
             operation, remoteLogin));
@@ -884,7 +917,7 @@ namespace tecgraf.openbus {
             // credencial valida
             // CheckChain pode lançar exceção com InvalidChainCode
             CallerChainImpl chain = new CallerChainImpl(credential);
-            CheckChain(chain, myLogin.entity, busId, busKey);
+            CheckChain(chain, credential.Login, myLogin.entity, busId, busKey);
             // CheckTicket já faz o lock no ticket history da sessão
             if (session.CheckTicket(credential.Ticket)) {
               // insere a cadeia no slot para a getCallerChain usar
@@ -1138,22 +1171,22 @@ namespace tecgraf.openbus {
     }
 
     private void HandleInvalidCredential(ClientRequestInfo ri, NO_PERMISSION exception) {
-      CredentialReset requestReset = ReadCredentialReset(ri, exception);
-      string remoteLogin = requestReset.target;
+      AnyCredentialReset requestReset = ReadCredentialReset(ri, exception);
+      string remoteLogin = requestReset.Target;
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
       _profile2Login.TryAdd(profile, remoteLogin);
 
-      int sessionId = requestReset.session;
+      int sessionId = requestReset.Session;
       byte[] secret;
       try {
-        secret = Crypto.Decrypt(_internalKeyPair.Private, requestReset.challenge);
+        secret = Crypto.Decrypt(_internalKeyPair.Private, requestReset.Challenge);
       }
       catch (Exception) {
         throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
       }
       _outgoingLogin2Session.TryAdd(remoteLogin,
-                                    new ClientSideSession(sessionId, secret,
-                                                          remoteLogin, requestReset.entity));
+        new ClientSideSession(sessionId, secret, remoteLogin,
+          requestReset.Entity, requestReset.Legacy));
       Logger.Debug(
         String.Format(
           "Início de sessão de credencial {0} ao tentar requisitar a operação {1} ao login {2}.",
@@ -1173,7 +1206,8 @@ namespace tecgraf.openbus {
       return login.Value;
     }
 
-    private AnySignedChain CreateCredentialSignedCallChain(bool legacySession, string remoteEntity) {
+    private AnySignedChain CreateCredentialSignedCallChain(bool legacySession, string remoteEntity, out bool legacyChainForBusCall) {
+      legacyChainForBusCall = false;
       AnySignedChain signed;
       CallerChainImpl chain = Context.JoinedChain as CallerChainImpl;
       Logger.Debug(
@@ -1200,9 +1234,10 @@ namespace tecgraf.openbus {
       }
       else {
         // requisição para o barramento
-        if (chain == null){
+        if (chain == null) {
           return InvalidSignedChain;
         }
+        legacyChainForBusCall = chain.Legacy;
         return chain.Signed;
       }
       return signed;
@@ -1260,10 +1295,8 @@ namespace tecgraf.openbus {
       }
     }
 
-    private CredentialReset ReadCredentialReset(ClientRequestInfo ri,
-      NO_PERMISSION exception) {
-      CredentialReset requestReset;
-
+    private AnyCredentialReset ReadCredentialReset(ClientRequestInfo ri, NO_PERMISSION exception) {
+      AnyCredentialReset requestReset;
       try {
         ServiceContext serviceContext =
           ri.get_reply_service_context(ContextId);
@@ -1273,13 +1306,30 @@ namespace tecgraf.openbus {
           Repository.GetRepositoryID(resetType), resetType.Name);
 
         byte[] data = serviceContext.context_data;
-        requestReset =
-          (CredentialReset) _codec.decode_value(data, resetTypeCode);
+        CredentialReset reset = (CredentialReset) _codec.decode_value(data, resetTypeCode);
+        requestReset = new AnyCredentialReset(reset);
       }
-      catch (Exception e) {
-        Logger.Error(
-          "Erro na tentativa de extrair a informação de reset.", e);
-        throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, exception.Status);
+      catch (Exception) {
+        Logger.Info("Não foi possível extrair a informação de reset da versão atual. Verificando se há reset legado.");
+        try {
+          ServiceContext serviceContext =
+            ri.get_reply_service_context(LegacyContextId);
+
+          Type resetType = typeof(core.v2_0.credential.CredentialReset);
+          TypeCode resetTypeCode = ORB.create_interface_tc(
+            Repository.GetRepositoryID(resetType), resetType.Name);
+
+          byte[] data = serviceContext.context_data;
+          core.v2_0.credential.CredentialReset reset =
+            (core.v2_0.credential.CredentialReset)
+              _codec.decode_value(data, resetTypeCode);
+          requestReset = new AnyCredentialReset(reset);
+        }
+        catch (Exception ex) {
+          Logger.Error(
+            "Erro na tentativa de extrair a informação de reset.", ex);
+          throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, exception.Status);
+        }
       }
       return requestReset;
     }
@@ -1313,10 +1363,8 @@ namespace tecgraf.openbus {
       reset.challenge = CreateChallengeForNewSession(remoteLogin, out login);
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
         reset.challenge, remoteLogin, false);
-      lock (session) {
-        _sessionId2Session.TryAdd(session.Id, session);
-        reset.session = session.Id;
-      }
+      reset.session = session.Id;
+      _sessionId2Session.TryAdd(session.Id, session);
       return _codec.encode_value(reset);
     }
 
@@ -1326,10 +1374,8 @@ namespace tecgraf.openbus {
       reset.challenge = CreateChallengeForNewSession(remoteLogin, out login);
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
         reset.challenge, remoteLogin, true);
-      lock (session) {
-        _sessionId2Session.TryAdd(session.Id, session);
-        reset.session = session.Id;
-      }
+      reset.session = session.Id;
+      _sessionId2Session.TryAdd(session.Id, session);
       return _codec.encode_value(reset);
     }
 
@@ -1433,6 +1479,29 @@ namespace tecgraf.openbus {
       byte[] bOperation = enc.GetBytes(operation);
       bOperation.CopyTo(hash, index);
       return SHA256.Create().ComputeHash(hash);
+    }
+
+    private class AnyCredentialReset {
+      public readonly bool Legacy;
+      public readonly string Target;
+      public readonly string Entity;
+      public readonly int Session;
+      public readonly byte[] Challenge;
+
+      public AnyCredentialReset(CredentialReset reset) {
+        Legacy = false;
+        Target = reset.target;
+        Entity = reset.entity;
+        Session = reset.session;
+        Challenge = reset.challenge;
+      }
+
+      public AnyCredentialReset(core.v2_0.credential.CredentialReset reset) {
+        Legacy = true;
+        Target = reset.target;
+        Session = reset.session;
+        Challenge = reset.challenge;
+      }
     }
 
     #endregion
