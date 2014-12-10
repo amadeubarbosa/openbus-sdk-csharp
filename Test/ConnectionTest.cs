@@ -549,7 +549,7 @@ namespace tecgraf.openbus.Test {
           Connection conn2 = CreateConnection();
           _context.SetCurrentConnection(conn2);
           CallerChain dummyChain = new CallerChainImpl("", new LoginInfo(), "",
-                                                       new LoginInfo[0]);
+            new LoginInfo[0], ConnectionImpl.InvalidSignedData);
           _context.JoinChain(dummyChain);
           Assert.IsTrue(conn.Logout());
           Assert.IsNull(conn.BusId);

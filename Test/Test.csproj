@@ -53,6 +53,9 @@
     <Reference Include="Openbus.Interop.Hello.Idl">
       <HintPath>..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="OpenBus.Legacy.Idl">
+      <HintPath>..\lib\OpenBus.Legacy.Idl.dll</HintPath>
+    </Reference>
     <Reference Include="OpenBus.Test.Idl">
       <HintPath>..\lib\OpenBus.Test.Idl.dll</HintPath>
     </Reference>

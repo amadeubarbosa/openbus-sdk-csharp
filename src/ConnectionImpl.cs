@@ -95,9 +95,9 @@ namespace tecgraf.openbus {
     private static readonly byte[] NullHash = new byte[HashValueSize.ConstVal];
     private static readonly byte[] InvalidSignature = new byte[EncryptedBlockSize.ConstVal];
     private static readonly byte[] InvalidEncoded = new byte[0];
-    private static readonly SignedData InvalidSignedData = new SignedData(InvalidSignature, InvalidEncoded);
+    internal static readonly SignedData InvalidSignedData = new SignedData(InvalidSignature, InvalidEncoded);
     private static readonly SignedCallChain InvalidSignedCallChain = new SignedCallChain(InvalidSignature, InvalidEncoded);
-    private static readonly AnySignedChain InvalidSignedChain = new AnySignedChain { Chain = InvalidSignedData, LegacyChain = InvalidSignedCallChain };
+    private static readonly AnySignedChain InvalidSignedChain = new AnySignedChain(InvalidSignedData, InvalidSignedCallChain);
 
     private const string BusPubKeyError =
       "Erro ao encriptar as informações de login com a chave pública do barramento.";
@@ -313,9 +313,11 @@ namespace tecgraf.openbus {
         _leaseRenewer = null;
         Logger.Debug("Thread de renovação de lease desativada.");
       }
+      Legacy = _originalLegacy;
       _login = null;
       _loginsCache = null;
       _acs = null;
+      _legacyAcs = null;
       _loginRegistry = null;
       _offers = null;
       _busId = null;
@@ -366,6 +368,18 @@ namespace tecgraf.openbus {
         _loginLock.EnterReadLock();
         try {
           return _acs;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    internal core.v2_0.services.access_control.AccessControl LegacyAcs {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _legacyAcs;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -1258,15 +1272,15 @@ namespace tecgraf.openbus {
         finally {
           _loginLock.ExitReadLock();
         }
-        AnySignedChain anySignedChain = new AnySignedChain();
+        AnySignedChain anySignedChain;
         try {
           if (legacySession) {
             SignedCallChain signed = legacyAcs.signChainFor(remoteEntity);
-            anySignedChain.LegacyChain = signed;
+            anySignedChain = new AnySignedChain(signed);
           }
           else {
             SignedData signed = localAcs.signChainFor(remoteEntity);
-            anySignedChain.Chain = signed;
+            anySignedChain = new AnySignedChain(signed);
           }
 
         }

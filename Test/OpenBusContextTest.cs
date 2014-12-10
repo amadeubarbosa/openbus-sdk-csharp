@@ -8,6 +8,7 @@ using omg.org.CORBA;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1;
+using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
@@ -366,12 +367,12 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
-          conn.Login.Value.entity,
-          new LoginInfo[0]));
+          conn.Login.Value.entity, new LoginInfo[0], ConnectionImpl.InvalidSignedData));
         Assert.IsNotNull(_context.JoinedChain);
         Assert.AreEqual("mock", _context.JoinedChain.BusId);
         Assert.AreEqual("a", _context.JoinedChain.Caller.id);
         Assert.AreEqual("b", _context.JoinedChain.Caller.entity);
+        Assert.AreEqual(ConnectionImpl.InvalidSignedData, ((CallerChainImpl)_context.JoinedChain).Signed);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
         Assert.IsTrue(conn.Logout());
@@ -393,8 +394,8 @@ namespace tecgraf.openbus.Test {
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         _context.JoinChain(new CallerChainImpl("mock", new LoginInfo("a", "b"),
-          conn.Login.Value.entity,
-          new LoginInfo[0]));
+          conn.Login.Value.entity, new LoginInfo[0],
+          ConnectionImpl.InvalidSignedData));
         Assert.IsNotNull(_context.JoinedChain);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);

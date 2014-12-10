@@ -14,6 +14,7 @@ using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
 using Org.BouncyCastle.Crypto;
 using scs.core;
+using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.data_export;
@@ -247,15 +248,32 @@ namespace tecgraf.openbus {
     public CallerChain MakeChainFor(string entity) {
       ConnectionImpl conn = (ConnectionImpl) GetCurrentConnection();
       if (conn == null) {
+        Logger.Error("Não há conexão para executar a chamada MakeChainFor.");
+        throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
+      }
+      LoginInfo? myLogin = conn.Login;
+      if (!myLogin.HasValue) {
         Logger.Error("Não há login para executar a chamada MakeChainFor.");
         throw new NO_PERMISSION(NoLoginCode.ConstVal, CompletionStatus.Completed_No);
       }
-      AccessControl acs = conn.Acs;
-      SignedData signedChain = acs.signChainFor(entity);
+
       try {
-        CallChain callChain = CallerChainImpl.UnmarshalCallChain(signedChain);
-        return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
-          callChain.originators, signedChain);
+        if (IsJoinedToLegacyChain()) {
+          core.v2_0.services.access_control.AccessControl legacyAcs = conn.LegacyAcs;
+          String busId = conn.BusId;
+          SignedCallChain signedChain = legacyAcs.signChainFor(entity);
+          core.v2_0.services.access_control.CallChain callChain =
+            CallerChainImpl.UnmarshalLegacyCallChain(signedChain);
+          return new CallerChainImpl(busId, callChain.caller, callChain.target,
+            callChain.originators, signedChain);
+        }
+        else {
+          AccessControl acs = conn.Acs;
+          SignedData signedChain = acs.signChainFor(entity);
+          CallChain callChain = CallerChainImpl.UnmarshalCallChain(signedChain);
+          return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
+            callChain.originators, signedChain);
+        }
       }
       catch (GenericUserException e) {
         const string message = "Falha inesperada ao criar uma nova cadeia.";
@@ -556,8 +574,10 @@ namespace tecgraf.openbus {
     }
 
     private Connection GetConnectionById(Object connectionId) {
-      Connection conn;
-      return _connections.TryGetValue(connectionId, out conn) ? conn : null;
+      lock (_connections) {
+        Connection conn;
+        return _connections.TryGetValue(connectionId, out conn) ? conn : null;
+      }
     }
 
     internal void IgnoreCurrentThread() {

@@ -10,17 +10,45 @@ using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus {
   internal class CallerChainImpl : CallerChain {
-    internal CallerChainImpl(AnyCredential anyCredential) {
+    private CallerChainImpl() {
+      Joined = new LRUConcurrentDictionaryCache<string, AnySignedChain>();
+    }
+
+    private CallerChainImpl(string busId, string target) : this() {
+      BusId = busId;
+      Target = target;
+    }
+
+    internal CallerChainImpl(string busId,
+      core.v2_0.services.access_control.LoginInfo caller, string target,
+      core.v2_0.services.access_control.LoginInfo[] originators,
+      SignedCallChain signed)
+      : this(busId, target) {
+      Originators = new LoginInfo[originators.Length];
+      originators.CopyTo(Originators, 0);
+      Caller = new LoginInfo(caller.id, caller.entity);
+      Signed = new AnySignedChain(signed);
+    }
+
+    internal CallerChainImpl(string busId, LoginInfo caller, string target,
+      LoginInfo[] originators, SignedData signed)
+      : this(busId, target) {
+      Originators = originators;
+      Caller = caller;
+      Signed = new AnySignedChain(signed);
+    }
+
+    internal CallerChainImpl(AnyCredential anyCredential)
+      : this() {
       Legacy = anyCredential.Legacy;
       if (Legacy) {
         core.v2_0.services.access_control.CallChain legacyChain = UnmarshalLegacyCallChain(anyCredential.LegacyChain);
+        BusId = anyCredential.Bus;
         Target = legacyChain.target;
         Originators = new LoginInfo[legacyChain.originators.Length];
         legacyChain.originators.CopyTo(Originators, 0);
         Caller = new LoginInfo(legacyChain.caller.id, legacyChain.caller.entity);
-        Signed = new AnySignedChain { LegacyChain = anyCredential.LegacyChain };
-        Signed.Encoded = Signed.LegacyChain.encoded;
-        Signed.Signature = Signed.LegacyChain.signature;
+        Signed = new AnySignedChain(anyCredential.LegacyChain);
       }
       else {
         CallChain chain = UnmarshalCallChain(anyCredential.Chain);
@@ -28,11 +56,8 @@ namespace tecgraf.openbus {
         Target = chain.target;
         Originators = chain.originators;
         Caller = chain.caller;
-        Signed = new AnySignedChain { Chain = anyCredential.Chain };
-        Signed.Encoded = Signed.Chain.encoded;
-        Signed.Signature = Signed.Chain.signature;
+        Signed = new AnySignedChain(anyCredential.Chain);
       }
-      Joined = new LRUConcurrentDictionaryCache<string, AnySignedChain>();
     }
 
     #region Public Members
@@ -77,7 +102,24 @@ namespace tecgraf.openbus {
   internal class AnySignedChain {
     public SignedCallChain LegacyChain;
     public SignedData Chain;
-    public byte[] Signature;
-    public byte[] Encoded;
+    public readonly byte[] Signature;
+    public readonly byte[] Encoded;
+
+    public AnySignedChain(SignedData signed) {
+      Signature = signed.signature;
+      Encoded = signed.encoded;
+      Chain = signed;
+    }
+
+    public AnySignedChain(SignedCallChain signed) {
+      Signature = signed.signature;
+      Encoded = signed.encoded;
+      LegacyChain = signed;
+    }
+
+    public AnySignedChain(SignedData signed, SignedCallChain legacy)
+      : this(signed) {
+      LegacyChain = legacy;
+    }
   }
 }
