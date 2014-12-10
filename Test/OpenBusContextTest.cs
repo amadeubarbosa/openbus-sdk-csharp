@@ -372,7 +372,7 @@ namespace tecgraf.openbus.Test {
         Assert.AreEqual("mock", _context.JoinedChain.BusId);
         Assert.AreEqual("a", _context.JoinedChain.Caller.id);
         Assert.AreEqual("b", _context.JoinedChain.Caller.entity);
-        Assert.AreEqual(ConnectionImpl.InvalidSignedData, ((CallerChainImpl)_context.JoinedChain).Signed);
+        Assert.AreEqual(ConnectionImpl.InvalidSignedData, ((CallerChainImpl)_context.JoinedChain).Signed.Chain);
         _context.ExitChain();
         Assert.IsNull(_context.JoinedChain);
         Assert.IsTrue(conn.Logout());
