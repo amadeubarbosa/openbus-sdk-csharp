@@ -1367,25 +1367,29 @@ namespace tecgraf.openbus {
         _loginLock.ExitReadLock();
       }
 
+      byte[] challenge = new byte[SecretSize];
+      Random rand = new Random();
+      rand.NextBytes(challenge);
+
       string remoteLogin = anyCredential.Login;
       if (anyCredential.Legacy) {
-        return CreateLegacyCredentialReset(remoteLogin, loginId);
+        return CreateLegacyCredentialReset(challenge, remoteLogin, loginId);
       }
 
       CredentialReset reset = new CredentialReset { target = loginId, entity = entity };
       LoginCache.LoginEntry login;
-      reset.challenge = CreateChallengeForNewSession(remoteLogin, out login);
+      reset.challenge = EncryptChallengeForNewSession(challenge, remoteLogin, out login);
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
-        reset.challenge, remoteLogin, false);
+        challenge, remoteLogin, false);
       reset.session = session.Id;
       _sessionId2Session.TryAdd(session.Id, session);
       return _codec.encode_value(reset);
     }
 
-    private byte[] CreateLegacyCredentialReset(string remoteLogin, string loginId) {
+    private byte[] CreateLegacyCredentialReset(byte[] challenge, string remoteLogin, string loginId) {
       core.v2_0.credential.CredentialReset reset = new core.v2_0.credential.CredentialReset { target = loginId };
       LoginCache.LoginEntry login;
-      reset.challenge = CreateChallengeForNewSession(remoteLogin, out login);
+      reset.challenge = EncryptChallengeForNewSession(challenge, remoteLogin, out login);
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
         reset.challenge, remoteLogin, true);
       reset.session = session.Id;
@@ -1393,10 +1397,7 @@ namespace tecgraf.openbus {
       return _codec.encode_value(reset);
     }
 
-    private byte[] CreateChallengeForNewSession(string remoteLogin, out LoginCache.LoginEntry loginEntry) {
-      byte[] challenge = new byte[SecretSize];
-      Random rand = new Random();
-      rand.NextBytes(challenge);
+    private byte[] EncryptChallengeForNewSession(byte[] challenge, string remoteLogin, out LoginCache.LoginEntry loginEntry) {
 
       try {
         Context.SetCurrentConnection(this);
