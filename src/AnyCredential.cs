@@ -21,16 +21,6 @@ namespace tecgraf.openbus {
 
     public AnyCredential(ServiceContext serviceContext, bool legacyContext) {
       if (legacyContext) {
-        CredentialData credential = UnmarshalCredential(serviceContext);
-        Legacy = false;
-        Bus = credential.bus;
-        Login = credential.login;
-        Session = credential.session;
-        Ticket = credential.ticket;
-        Hash = credential.hash;
-        Chain = credential.chain;
-      }
-      else {
         core.v2_0.credential.CredentialData credential =
           UnmarshalLegacyCredential(serviceContext);
         Legacy = true;
@@ -40,6 +30,16 @@ namespace tecgraf.openbus {
         Ticket = credential.ticket;
         Hash = credential.hash;
         LegacyChain = credential.chain;
+      }
+      else {
+        CredentialData credential = UnmarshalCredential(serviceContext);
+        Legacy = false;
+        Bus = credential.bus;
+        Login = credential.login;
+        Session = credential.session;
+        Ticket = credential.ticket;
+        Hash = credential.hash;
+        Chain = credential.chain;
       }
     }
 
