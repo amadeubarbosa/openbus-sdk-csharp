@@ -15,6 +15,7 @@ using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services;
 using tecgraf.openbus.core.v2_1.services.access_control;
+using tecgraf.openbus.core.v2_1.services.legacy_support;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
@@ -37,6 +38,7 @@ namespace tecgraf.openbus {
     private readonly IComponent _busIC;
     private AccessControl _acs;
     private core.v2_0.services.access_control.AccessControl _legacyAcs;
+    private LegacyConverter _legacyConverter;
     private string _busId;
     private AsymmetricKeyParameter _busKey;
     private LeaseRenewer _leaseRenewer;
@@ -153,7 +155,9 @@ namespace tecgraf.openbus {
         MarshalByRefObject orObjRef = _busIC.getFacet(orId);
 
         bool maintainLegacy;
-        core.v2_0.services.access_control.AccessControl legacyACS = GetLegacyFacets(out maintainLegacy);
+        LegacyConverter legacyConverter;
+        core.v2_0.services.access_control.AccessControl legacyACS =
+          GetLegacyFacets(out maintainLegacy, out legacyConverter);
 
         AccessControl localAcs;
         _loginLock.EnterWriteLock();
@@ -170,6 +174,7 @@ namespace tecgraf.openbus {
           Legacy = maintainLegacy;
           if (maintainLegacy) {
             _legacyAcs = legacyACS;
+            _legacyConverter = legacyConverter;
           }
         }
         finally {
@@ -192,7 +197,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    private core.v2_0.services.access_control.AccessControl GetLegacyFacets(out bool maintainLegacy) {
+    private core.v2_0.services.access_control.AccessControl GetLegacyFacets(out bool maintainLegacy, out LegacyConverter converter) {
       if (_originalLegacy) {
         try {
           string legacyId =
@@ -202,6 +207,8 @@ namespace tecgraf.openbus {
             legacyObjRef as core.v2_0.services.access_control.AccessControl;
           if (legacyAccess != null) {
             maintainLegacy = true;
+            string lcId = Repository.GetRepositoryID(typeof(LegacyConverter));
+            converter = _busIC.getFacet(lcId) as LegacyConverter;
             return legacyAccess;
           }
           Logger.Warn(
@@ -214,6 +221,7 @@ namespace tecgraf.openbus {
         }
       }
       maintainLegacy = false;
+      converter = null;
       return null;
     }
 
@@ -230,7 +238,7 @@ namespace tecgraf.openbus {
       return acs.busid;
     }
 
-    private void LoginByObject(LoginProcess login, byte[] secret) {
+    private void LoginByObject(AnyLoginProcess login, byte[] secret) {
       bool loggedIn;
       AsymmetricKeyParameter busKey;
       _loginLock.EnterReadLock();
@@ -242,7 +250,7 @@ namespace tecgraf.openbus {
         _loginLock.ExitReadLock();
       }
       if (loggedIn) {
-        login.cancel();
+        login.Cancel();
         throw new AlreadyLoggedInException();
       }
 
@@ -256,12 +264,12 @@ namespace tecgraf.openbus {
         encrypted = Crypto.Encrypt(busKey, _codec.encode_value(info));
       }
       catch (InvalidCipherTextException) {
-        login.cancel();
+        login.Cancel();
         Logger.Error(BusPubKeyError);
         throw new ServiceFailure {message = BusPubKeyError};
       }
       catch (Exception) {
-        login.cancel();
+        login.Cancel();
         Logger.Error("Erro na codificação das informações de login.");
         throw;
       }
@@ -269,7 +277,7 @@ namespace tecgraf.openbus {
       int lease;
       LoginInfo l;
       try {
-        l = login.login(pubBytes, encrypted, out lease);
+        l = login.Login(pubBytes, encrypted, out lease);
       }
       catch (OBJECT_NOT_EXIST) {
         throw new InvalidLoginProcessException();
@@ -318,6 +326,7 @@ namespace tecgraf.openbus {
       _loginsCache = null;
       _acs = null;
       _legacyAcs = null;
+      _legacyConverter = null;
       _loginRegistry = null;
       _offers = null;
       _busId = null;
@@ -327,7 +336,7 @@ namespace tecgraf.openbus {
       _sessionId2Session.Clear();
     }
 
-    internal LoginCache.LoginEntry GetLoginEntryFromCache(string loginId) {
+    private LoginCache.LoginEntry GetLoginEntryFromCache(string loginId) {
       LoginCache cache;
       _loginLock.EnterReadLock();
       try {
@@ -380,6 +389,18 @@ namespace tecgraf.openbus {
         _loginLock.EnterReadLock();
         try {
           return _legacyAcs;
+        }
+        finally {
+          _loginLock.ExitReadLock();
+        }
+      }
+    }
+
+    internal LegacyConverter LegacyConverter {
+      get {
+        _loginLock.EnterReadLock();
+        try {
+          return _legacyConverter;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -531,7 +552,7 @@ namespace tecgraf.openbus {
             "Erro ao decodificar o desafio com a chave privada fornecida. O tamanho do dado é maior que a chave.");
           throw new AccessDenied();
         }
-        LoginByObject(login, answer);
+        LoginByObject(new AnyLoginProcess(login), answer);
       }
       finally {
         Context.UnignoreCurrentThread();
@@ -540,6 +561,7 @@ namespace tecgraf.openbus {
 
     public SharedAuthSecret StartSharedAuth() {
       LoginProcess login = null;
+      core.v2_0.services.access_control.LoginProcess legacyLogin = null;
       byte[] secret;
       Connection prev = Context.SetCurrentConnection(this);
       AccessControl localAcs;
@@ -559,6 +581,9 @@ namespace tecgraf.openbus {
         byte[] challenge;
         login = localAcs.startLoginBySharedAuth(out challenge);
         secret = Crypto.Decrypt(_internalKeyPair.Private, challenge);
+        if (Legacy) {
+          legacyLogin = _legacyConverter.convertSharedAuth(login);
+        }
       }
       catch (InvalidCipherTextException) {
         if (login != null) {
@@ -576,7 +601,7 @@ namespace tecgraf.openbus {
       finally {
         Context.SetCurrentConnection(prev);
       }
-      return new SharedAuthSecretImpl(busId, login, secret);
+      return new SharedAuthSecretImpl(busId, login, secret, legacyLogin);
     }
 
     public void LoginBySharedAuth(SharedAuthSecret secret) {
@@ -588,7 +613,7 @@ namespace tecgraf.openbus {
       Context.IgnoreCurrentThread();
       try {
         GetBusFacets();
-        LoginByObject(sharedAuth.Attempt, sharedAuth.Secret);
+        LoginByObject(new AnyLoginProcess(sharedAuth), sharedAuth.Secret);
       }
       finally {
         Context.UnignoreCurrentThread();
@@ -943,6 +968,20 @@ namespace tecgraf.openbus {
                 Logger.Fatal(
                   "Falha ao inserir o identificador de login em seu slot.", e);
                 throw;
+              }
+              if ((Legacy) && (!chain.Legacy)) {
+                // antes da chamada ser atendida, devemos obter a cadeia legada para caso precise ser exportada posteriormente
+                Context.JoinChain(chain);
+                SignedCallChain legacyChain;
+                try {
+                  legacyChain = _legacyConverter.convertSignedChain();
+                }
+                catch (Exception e) {
+                  //TODO generalizar exceção UnverifiedLogin para UnavailableBusRemotely qdo mudar na IDL.
+                  Logger.Error("Erro ao converter cadeia para cadeia legada.", e);
+                  throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal, CompletionStatus.Completed_No);
+                }
+                chain.Signed.LegacyChain = legacyChain;
               }
               return;
             }
@@ -1516,6 +1555,45 @@ namespace tecgraf.openbus {
         Target = reset.target;
         Session = reset.session;
         Challenge = reset.challenge;
+      }
+    }
+
+    private class AnyLoginProcess {
+      private readonly bool _legacy;
+      private readonly LoginProcess _loginProcess;
+      private readonly core.v2_0.services.access_control.LoginProcess _legacyLoginProcess;
+
+      public AnyLoginProcess(LoginProcess login) {
+        _legacy = false;
+        _loginProcess = login;
+      }
+
+      public AnyLoginProcess(SharedAuthSecretImpl secret) {
+        _legacy = secret.Legacy;
+        if (_legacy) {
+          _legacyLoginProcess = secret.LegacyAttempt;
+        }
+        else {
+          _loginProcess = secret.Attempt;
+        }
+      }
+
+      public void Cancel() {
+        if (_legacy) {
+          _legacyLoginProcess.cancel();
+        }
+        else {
+          _loginProcess.cancel();
+        }
+      }
+
+      public LoginInfo Login(byte[] publicKey, byte[] encryptedSecret, out int lease) {
+        if (_legacy) {
+          core.v2_0.services.access_control.LoginInfo info =
+            _legacyLoginProcess.login(publicKey, encryptedSecret, out lease);
+          return new LoginInfo(info.id, info.entity);
+        }
+        return _loginProcess.login(publicKey, encryptedSecret, out lease);
       }
     }
 

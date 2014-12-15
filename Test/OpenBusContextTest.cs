@@ -867,11 +867,9 @@ namespace tecgraf.openbus.Test {
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
           _domain);
-        String login3 = conn3.Login.Value.id;
 
         _context.SetCurrentConnection(conn1);
-        CallerChain chain1For2 = _context.MakeChainFor(login2);
-
+        CallerChain chain1For2 = _context.MakeChainFor(actor2);
         byte[] encodeChain = _context.EncodeChain(chain1For2);
         CallerChain decodedChain = _context.DecodeChain(encodeChain);
         Assert.AreEqual(conn1.BusId, decodedChain.BusId);
@@ -882,7 +880,7 @@ namespace tecgraf.openbus.Test {
 
         _context.SetCurrentConnection(conn2);
         _context.JoinChain(decodedChain);
-        CallerChain chain1_2For3 = _context.MakeChainFor(login3);
+        CallerChain chain1_2For3 = _context.MakeChainFor(actor3);
 
         encodeChain = _context.EncodeChain(chain1_2For3);
         decodedChain = _context.DecodeChain(encodeChain);

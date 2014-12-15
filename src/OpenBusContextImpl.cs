@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,6 +14,7 @@ using omg.org.PortableInterceptor;
 using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.core.v2_0.credential;
+using tecgraf.openbus.core.v2_0.data_export;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.data_export;
@@ -24,6 +24,7 @@ using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
 using tecgraf.openbus.security;
 using Current = omg.org.PortableInterceptor.Current;
+using ExportedSharedAuth = tecgraf.openbus.core.v2_1.data_export.ExportedSharedAuth;
 using TypeCode = omg.org.CORBA.TypeCode;
 
 namespace tecgraf.openbus {
@@ -258,27 +259,20 @@ namespace tecgraf.openbus {
       }
 
       try {
-        if (IsJoinedToLegacyChain()) {
-          core.v2_0.services.access_control.AccessControl legacyAcs = conn.LegacyAcs;
-          String busId = conn.BusId;
-          SignedCallChain signedChain = legacyAcs.signChainFor(entity);
-          core.v2_0.services.access_control.CallChain callChain =
-            CallerChainImpl.UnmarshalLegacyCallChain(signedChain);
-          return new CallerChainImpl(busId, callChain.caller, callChain.target,
-            callChain.originators, signedChain);
-        }
-        else {
-          AccessControl acs = conn.Acs;
-          SignedData signedChain = acs.signChainFor(entity);
-          CallChain callChain = CallerChainImpl.UnmarshalCallChain(signedChain);
+        AccessControl acs = conn.Acs;
+        SignedData signedChain = acs.signChainFor(entity);
+        CallChain callChain = CallerChainImpl.UnmarshalCallChain(signedChain);
+        if (conn.Legacy) {
+          SignedCallChain legacySigned = conn.LegacyConverter.signChainFor(entity);
           return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
-            callChain.originators, signedChain);
+            callChain.originators, signedChain, legacySigned);
         }
+        return new CallerChainImpl(callChain.bus, callChain.caller, callChain.target,
+          callChain.originators, signedChain);
       }
       catch (GenericUserException e) {
-        const string message = "Falha inesperada ao criar uma nova cadeia.";
-        Logger.Error(message, e);
-        throw new OpenBusInternalException(message, e);
+        Logger.Error("Falha inesperada ao criar uma nova cadeia.", e);
+        throw;
       }
     }
 
@@ -310,24 +304,34 @@ namespace tecgraf.openbus {
       try {
         CallerChainImpl chainImpl = (CallerChainImpl)chain;
         int i = 0;
-        VersionedData[] versions;
-        if (chainImpl.Legacy) {
-          versions = new VersionedData[1];
-        }
-        else {
-          // A ordem das versões exportadas IMPORTA. A 2.1 deve vir antes da 2.0.
-          versions = new VersionedData[2];
-          byte[] encoded = _codec.encode_value(chainImpl.Signed);
-          versions[i] = new VersionedData(ExportVersion.ConstVal, encoded);
+        VersionedData? actualVersion = null;
+        VersionedData? legacyVersion = null;
+        if (!chainImpl.Legacy) {
+          // se não é legacy, tem a versão atual. Pode ter a versão legacy ou não.
+          byte[] encoded = _codec.encode_value(chainImpl.Signed.Chain);
+          actualVersion = new VersionedData(ExportVersion.ConstVal, encoded);
           i++;
         }
-        //TODO implementar. Incluir versão anterior da cadeia.
-        throw new NotImplementedException();
-        //return EncodeExportedVersions(versions, _magicTagCallChain);
+        if (chainImpl.Signed.LegacyChain.encoded != null) {
+          ExportedCallChain exported = new ExportedCallChain(chainImpl.BusId,
+            chainImpl.Signed.LegacyChain);
+          byte[] legacyEncoded = _codec.encode_value(exported);
+          legacyVersion = new VersionedData(CurrentVersion.ConstVal, legacyEncoded);
+          i++;
+        }
+        VersionedData[] versions = new VersionedData[i];
+        // A ordem das versões exportadas IMPORTA. A 2.1 deve vir antes da 2.0.
+        if (legacyVersion != null) {
+          versions[--i] = legacyVersion.Value;
+        }
+        if (actualVersion != null) {
+          versions[--i] = actualVersion.Value;
+        }
+        return EncodeExportedVersions(versions, _magicTagCallChain);
       }
       catch (InvalidTypeForEncoding e) {
         const string message =
-          "Falha inesperada ao codificar uma cadeia para exportação";
+          "Falha inesperada ao codificar uma cadeia para exportação.";
         Logger.Error(message, e);
         throw new OpenBusInternalException(message, e);
       }
@@ -337,6 +341,7 @@ namespace tecgraf.openbus {
       try {
         VersionedData[] versions = DecodeExportedVersions(encoded,
           _magicTagCallChain);
+        CallerChainImpl decodedChain = null;
         for (int i = 0; i < versions.Length; i++) {
           // Se houver duas versões, a versão atual virá antes da versão legacy.
           if (versions[i].version == ExportVersion.ConstVal) {
@@ -347,36 +352,37 @@ namespace tecgraf.openbus {
             SignedData exportedChain =
               (SignedData)
                 _codec.decode_value(versions[i].encoded, signedDataTypeCode);
-            //TODO vale a pena verificar assinatura???
             CallChain chain = CallerChainImpl.UnmarshalCallChain(exportedChain);
-            return new CallerChainImpl(chain.bus, chain.caller,
-              chain.target, chain.originators, exportedChain);
-          }
-          //TODO implementar. Decodificar cadeia legada.
-          /*
-          if (versions[i].version == LegacyVersion.ConstVal) {
-            Type exportedCallChainType = typeof(LegacyExportedCallChain);
-            TypeCode exportedCallChainTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
-                exportedCallChainType.Name);
-            LegacyExportedCallChain exportedChain =
-              (LegacyExportedCallChain)
-                _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
-            LoginInfo[] originators;
-            if (!exportedChain._delegate.Equals("")) {
-              originators = new LoginInfo[1];
-              originators[0] = new LoginInfo(ConnectionImpl.LegacyOriginatorId, exportedChain._delegate);
+            if (decodedChain == null) {
+              decodedChain = new CallerChainImpl(chain.bus, chain.caller,
+                chain.target, chain.originators, exportedChain);
             }
             else {
-              originators = new LoginInfo[0];
+              decodedChain.Signed.Chain = exportedChain;
             }
-            CallChain chain = new CallChain(exportedChain.target, originators, exportedChain.caller);
-            return new CallerChainImpl(exportedChain.bus, chain.caller,
-              chain.target, chain.originators);
           }
-          */
+          if (versions[i].version == CurrentVersion.ConstVal) {
+            Type exportedChainType = typeof(ExportedCallChain);
+            TypeCode exportedChainTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedChainType),
+                exportedChainType.Name);
+            ExportedCallChain exportedChain =
+              (ExportedCallChain)
+                _codec.decode_value(versions[i].encoded, exportedChainTypeCode);
+            core.v2_0.services.access_control.CallChain chain =
+              CallerChainImpl.UnmarshalLegacyCallChain(exportedChain.signedChain);
+            if (decodedChain == null) {
+              decodedChain = new CallerChainImpl(exportedChain.bus, chain.caller,
+                chain.target, chain.originators, exportedChain.signedChain);
+            }
+            else {
+              decodedChain.Signed.LegacyChain = exportedChain.signedChain;
+            }
+          }
         }
-        throw new InvalidEncodedStreamException("Versão de cadeia incompatível.");
+        if (decodedChain != null) {
+          return decodedChain;
+        }
       }
       catch (GenericUserException e) {
         const string message =
@@ -384,19 +390,43 @@ namespace tecgraf.openbus {
         Logger.Error(message, e);
         throw new InvalidEncodedStreamException(message, e);
       }
+      throw new InvalidEncodedStreamException("Versão de cadeia incompatível.");
     }
 
     public byte[] EncodeSharedAuth(SharedAuthSecret secret) {
       try {
         SharedAuthSecretImpl sharedAuth = (SharedAuthSecretImpl)secret;
-        ExportedSharedAuth exportedAuth = new ExportedSharedAuth(sharedAuth.BusId, sharedAuth.Attempt, sharedAuth.Secret);
-        byte[] encodedAuth = _codec.encode_value(exportedAuth);
-        VersionedData[] versions = { new VersionedData(ExportVersion.ConstVal, encodedAuth) };
+        int i = 0;
+        VersionedData? actualVersion = null;
+        VersionedData? legacyVersion = null;
+        if (!sharedAuth.Legacy) {
+          // se não é legacy, tem a versão atual. Pode ter a versão legacy ou não.
+          ExportedSharedAuth exportedAuth = new ExportedSharedAuth(sharedAuth.BusId, sharedAuth.Attempt, sharedAuth.Secret);
+          byte[] encoded = _codec.encode_value(exportedAuth);
+          actualVersion = new VersionedData(ExportVersion.ConstVal, encoded);
+          i++;
+        }
+        if (sharedAuth.LegacyAttempt != null) {
+          core.v2_0.data_export.ExportedSharedAuth legacyAuth =
+            new core.v2_0.data_export.ExportedSharedAuth(sharedAuth.BusId,
+              sharedAuth.LegacyAttempt, sharedAuth.Secret);
+          byte[] legacyEncoded = _codec.encode_value(legacyAuth);
+          legacyVersion = new VersionedData(CurrentVersion.ConstVal, legacyEncoded);
+          i++;
+        }
+        VersionedData[] versions = new VersionedData[i];
+        // A ordem das versões exportadas IMPORTA. A 2.1 deve vir antes da 2.0.
+        if (legacyVersion != null) {
+          versions[--i] = legacyVersion.Value;
+        }
+        if (actualVersion != null) {
+          versions[--i] = actualVersion.Value;
+        }
         return EncodeExportedVersions(versions, _magicTagSharedAuth);
       }
       catch (InvalidTypeForEncoding e) {
         const string message =
-          "Falha inesperada ao codificar um segredo de autenticação compartilhada para exportação";
+          "Falha inesperada ao codificar uma autenticação compartilhada para exportação.";
         Logger.Error(message, e);
         throw new OpenBusInternalException(message, e);
       }
@@ -404,28 +434,53 @@ namespace tecgraf.openbus {
 
     public SharedAuthSecret DecodeSharedAuth(byte[] encoded) {
       try {
-        IEnumerable<VersionedData> versions = DecodeExportedVersions(encoded,
+        VersionedData[] versions = DecodeExportedVersions(encoded,
           _magicTagSharedAuth);
-        foreach (VersionedData version in versions) {
-          if (version.version == ExportVersion.ConstVal) {
-            Type exportedSharedAuthType = typeof(ExportedSharedAuth);
-            TypeCode exportedSharedAuthTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedSharedAuthType),
-                exportedSharedAuthType.Name);
-            ExportedSharedAuth secret =
+        SharedAuthSecretImpl sharedAuth = null;
+        for (int i = 0; i < versions.Length; i++) {
+          // Se houver duas versões, a versão atual virá antes da versão legacy.
+          if (versions[i].version == ExportVersion.ConstVal) {
+            Type exportedAuthType = typeof(ExportedSharedAuth);
+            TypeCode exportedAuthTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedAuthType),
+                exportedAuthType.Name);
+            ExportedSharedAuth exportedAuth =
               (ExportedSharedAuth)
-                _codec.decode_value(version.encoded, exportedSharedAuthTypeCode);
-            return new SharedAuthSecretImpl(secret.bus, secret.attempt, secret.secret);
+                _codec.decode_value(versions[i].encoded, exportedAuthTypeCode);
+            if (sharedAuth == null) {
+              sharedAuth = new SharedAuthSecretImpl(exportedAuth.bus, exportedAuth.attempt, exportedAuth.secret, null);
+            }
+            else {
+              sharedAuth.Attempt = exportedAuth.attempt;
+            }
+          }
+          if (versions[i].version == CurrentVersion.ConstVal) {
+            Type exportedAuthType = typeof(core.v2_0.data_export.ExportedSharedAuth);
+            TypeCode exportedAuthTypeCode =
+              ORB.create_interface_tc(Repository.GetRepositoryID(exportedAuthType),
+                exportedAuthType.Name);
+            core.v2_0.data_export.ExportedSharedAuth exportedAuth =
+              (core.v2_0.data_export.ExportedSharedAuth)
+                _codec.decode_value(versions[i].encoded, exportedAuthTypeCode);
+            if (sharedAuth == null) {
+              sharedAuth = new SharedAuthSecretImpl(exportedAuth.bus, null, exportedAuth.secret, exportedAuth.attempt);
+            }
+            else {
+              sharedAuth.LegacyAttempt = exportedAuth.attempt;
+            }
           }
         }
-        throw new InvalidEncodedStreamException("Versão de autenticação compartilhada incompatível.");
+        if (sharedAuth != null) {
+          return sharedAuth;
+        }
       }
       catch (GenericUserException e) {
         const string message =
           "Falha inesperada ao decodificar uma autenticação compartilhada exportada.";
         Logger.Error(message, e);
-        throw new OpenBusInternalException(message, e);
+        throw new InvalidEncodedStreamException(message, e);
       }
+      throw new InvalidEncodedStreamException("Versão de autenticação compartilhada incompatível.");
     }
 
     public LoginRegistry LoginRegistry {

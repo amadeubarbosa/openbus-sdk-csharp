@@ -28,6 +28,7 @@ namespace tecgraf.openbus {
       originators.CopyTo(Originators, 0);
       Caller = new LoginInfo(caller.id, caller.entity);
       Signed = new AnySignedChain(signed);
+      Legacy = true;
     }
 
     internal CallerChainImpl(string busId, LoginInfo caller, string target,
@@ -36,6 +37,16 @@ namespace tecgraf.openbus {
       Originators = originators;
       Caller = caller;
       Signed = new AnySignedChain(signed);
+      Legacy = false;
+    }
+
+    internal CallerChainImpl(string busId, LoginInfo caller, string target,
+      LoginInfo[] originators, SignedData signed, SignedCallChain legacySigned)
+      : this(busId, target) {
+      Originators = originators;
+      Caller = caller;
+      Signed = new AnySignedChain(signed, legacySigned);
+      Legacy = false;
     }
 
     internal CallerChainImpl(AnyCredential anyCredential)
