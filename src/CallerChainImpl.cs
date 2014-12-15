@@ -25,7 +25,9 @@ namespace tecgraf.openbus {
       SignedCallChain signed)
       : this(busId, target) {
       Originators = new LoginInfo[originators.Length];
-      originators.CopyTo(Originators, 0);
+      for (int i = 0; i < originators.Length; i++) {
+        Originators[i] = new LoginInfo(originators[i].id, originators[i].entity);
+      }
       Caller = new LoginInfo(caller.id, caller.entity);
       Signed = new AnySignedChain(signed);
       Legacy = true;
@@ -85,7 +87,7 @@ namespace tecgraf.openbus {
 
     #region Internal Members
 
-    internal bool Legacy { get; private set; }
+    internal bool Legacy { get; set; }
 
     internal LRUConcurrentDictionaryCache<string, AnySignedChain> Joined { get; private set; }
 

@@ -37,7 +37,6 @@ namespace tecgraf.openbus {
 
     private readonly IComponent _busIC;
     private AccessControl _acs;
-    private core.v2_0.services.access_control.AccessControl _legacyAcs;
     private LegacyConverter _legacyConverter;
     private string _busId;
     private AsymmetricKeyParameter _busKey;
@@ -155,9 +154,7 @@ namespace tecgraf.openbus {
         MarshalByRefObject orObjRef = _busIC.getFacet(orId);
 
         bool maintainLegacy;
-        LegacyConverter legacyConverter;
-        core.v2_0.services.access_control.AccessControl legacyACS =
-          GetLegacyFacets(out maintainLegacy, out legacyConverter);
+        LegacyConverter legacyConverter = GetLegacyFacets(out maintainLegacy);
 
         AccessControl localAcs;
         _loginLock.EnterWriteLock();
@@ -173,7 +170,6 @@ namespace tecgraf.openbus {
           _loginsCache = new LoginCache(this);
           Legacy = maintainLegacy;
           if (maintainLegacy) {
-            _legacyAcs = legacyACS;
             _legacyConverter = legacyConverter;
           }
         }
@@ -197,31 +193,27 @@ namespace tecgraf.openbus {
       }
     }
 
-    private core.v2_0.services.access_control.AccessControl GetLegacyFacets(out bool maintainLegacy, out LegacyConverter converter) {
+    private LegacyConverter GetLegacyFacets(out bool maintainLegacy) {
       if (_originalLegacy) {
         try {
-          string legacyId =
-            Repository.GetRepositoryID(typeof(core.v2_0.services.access_control.AccessControl));
-          MarshalByRefObject legacyObjRef = _busIC.getFacet(legacyId);
-          core.v2_0.services.access_control.AccessControl legacyAccess =
-            legacyObjRef as core.v2_0.services.access_control.AccessControl;
-          if (legacyAccess != null) {
-            maintainLegacy = true;
-            string lcId = Repository.GetRepositoryID(typeof(LegacyConverter));
-            converter = _busIC.getFacet(lcId) as LegacyConverter;
-            return legacyAccess;
+          IComponent legacyIC = _busIC.getFacetByName("LegacySupport") as IComponent;
+          if (legacyIC != null) {
+            LegacyConverter converter = legacyIC.getFacetByName("LegacyConverter") as LegacyConverter;
+            if (converter != null) {
+              maintainLegacy = true;
+              return converter;
+            }
           }
           Logger.Warn(
-            "A faceta LegacySupport do controle de acesso 2.0 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
+            "A faceta LegacySupport do barramento para a versão 2.0 não foi encontrada. O suporte a conexões legadas foi desabilitado.");
         }
         catch (Exception e) {
           Logger.Warn(
-            "Erro ao tentar obter a faceta LegacySupport da versão 2.0. O suporte a conexões legadas foi desabilitado.",
+            "Erro ao tentar obter a faceta LegacySupport do barramento para a versão 2.0 . O suporte a conexões legadas foi desabilitado.",
             e);
         }
       }
       maintainLegacy = false;
-      converter = null;
       return null;
     }
 
@@ -325,7 +317,6 @@ namespace tecgraf.openbus {
       _login = null;
       _loginsCache = null;
       _acs = null;
-      _legacyAcs = null;
       _legacyConverter = null;
       _loginRegistry = null;
       _offers = null;
@@ -377,18 +368,6 @@ namespace tecgraf.openbus {
         _loginLock.EnterReadLock();
         try {
           return _acs;
-        }
-        finally {
-          _loginLock.ExitReadLock();
-        }
-      }
-    }
-
-    internal core.v2_0.services.access_control.AccessControl LegacyAcs {
-      get {
-        _loginLock.EnterReadLock();
-        try {
-          return _legacyAcs;
         }
         finally {
           _loginLock.ExitReadLock();
@@ -1300,12 +1279,12 @@ namespace tecgraf.openbus {
       // se o login mudar, tem que assinar de novo
       while (true) {
         AccessControl localAcs;
-        core.v2_0.services.access_control.AccessControl legacyAcs;
+        LegacyConverter legacyConverter;
         string busId;
         _loginLock.EnterReadLock();
         try {
           localAcs = _acs;
-          legacyAcs = _legacyAcs;
+          legacyConverter = _legacyConverter;
           busId = _busId;
         }
         finally {
@@ -1314,7 +1293,7 @@ namespace tecgraf.openbus {
         AnySignedChain anySignedChain;
         try {
           if (legacySession) {
-            SignedCallChain signed = legacyAcs.signChainFor(remoteEntity);
+            SignedCallChain signed = legacyConverter.signChainFor(remoteEntity);
             anySignedChain = new AnySignedChain(signed);
           }
           else {

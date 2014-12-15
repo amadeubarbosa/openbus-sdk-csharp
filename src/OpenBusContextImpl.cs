@@ -552,7 +552,7 @@ namespace tecgraf.openbus {
     }
 
     private bool GetLegacyDisableFromProps(ConnectionProperties props) {
-      bool legacyDisable = false;
+      bool legacyDisable = ConnectionPropertiesImpl.LegacyDisableDefault;
       if (props != null) {
         if (props.LegacyDisable !=
             ConnectionPropertiesImpl.LegacyDisableDefault) {
