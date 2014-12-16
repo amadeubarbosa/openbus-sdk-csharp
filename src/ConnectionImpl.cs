@@ -712,7 +712,7 @@ namespace tecgraf.openbus {
         current.set_slot(_loginSlotId, login);
       }
       catch (InvalidSlot e) {
-        Logger.Fatal("Falha inesperada ao acessar o slot do login corrente", e);
+        Logger.Fatal("Falha inesperada ao acessar o slot do login corrente.", e);
         throw;
       }
 
@@ -762,8 +762,6 @@ namespace tecgraf.openbus {
             String.Format(
               "Criando hash com operação {0}, ticket {1} e segredo {2}",
               operation, ticket, BitConverter.ToString(secret)));
-          hash = CreateCredentialHash(operation, ticket, secret, legacySession);
-          Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           // CreateCredentialSignedCallChain pode mudar o login
           bool joinedToLegacyForBusCall;
           chain = CreateCredentialSignedCallChain(legacySession, sessionEntity, out joinedToLegacyForBusCall);
@@ -771,15 +769,18 @@ namespace tecgraf.openbus {
           // envia somente a credencial da versão correta
           ServiceContext serviceContext;
           if ((legacySession) || (joinedToLegacyForBusCall)) {
+            hash = CreateCredentialHash(operation, ticket, secret, true);
             core.v2_0.credential.CredentialData data = new core.v2_0.credential.CredentialData(BusId, login.id, sessionId,
               ticket, hash, chain.LegacyChain);
             serviceContext = new ServiceContext(LegacyContextId, _codec.encode_value(data));
           }
           else {
+            hash = CreateCredentialHash(operation, ticket, secret, false);
             CredentialData data = new CredentialData(BusId, login.id, sessionId,
               ticket, hash, chain.Chain);
             serviceContext = new ServiceContext(ContextId, _codec.encode_value(data));
           }
+          Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           ri.add_request_service_context(serviceContext, false);
         }
         else {

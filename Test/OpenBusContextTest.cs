@@ -480,7 +480,7 @@ namespace tecgraf.openbus.Test {
     ///   Testes com join em cadeia atual com originator usando cadeia legada do método MakeChainFor
     /// </summary>
     [TestMethod]
-    public void MakeChainForJoinedInActualWithLegacyOriginatorTest() {
+    public void MakeChainForJoinedInCurrentChainWithLegacyOriginatorTest() {
       lock (Lock) {
         Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
         const string actor1 = "actor-1";
@@ -491,27 +491,22 @@ namespace tecgraf.openbus.Test {
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3), _domain);
 
-        _context.SetCurrentConnection(conn1);
-        // cadeia originator legada
-        const string originator = "user1";
-        CallerChainImpl legacyChain = (CallerChainImpl)_context.MakeChainFor(originator);
-        legacyChain.Legacy = true;
-        legacyChain.Signed.Chain = new SignedData();
-        // cadeia do meio sem alterações
-        _context.JoinChain(legacyChain);
-        CallerChainImpl chain = (CallerChainImpl)_context.MakeChainFor(_entity);
-        conn1.Logout();
         try {
+          _context.SetCurrentConnection(conn1);
+          // cadeia originator legada
+          CallerChainImpl legacyChain = (CallerChainImpl)_context.MakeChainFor(_entity);
+          legacyChain.Legacy = true;
+          legacyChain.Signed.Chain = new SignedData();
+          // cadeia do meio sem alterações
           _context.SetCurrentConnection(conn2);
-          _context.JoinChain(chain);
-          CallerChain joined2To3 = _context.MakeChainFor(actor3);
+          _context.JoinChain(legacyChain);
+          CallerChainImpl joined2To3 = (CallerChainImpl)_context.MakeChainFor(actor3);
           Assert.AreEqual(conn2.BusId, joined2To3.BusId);
           Assert.AreEqual(actor3, joined2To3.Target);
           Assert.AreEqual(_entity, joined2To3.Caller.entity);
           Assert.AreEqual(conn2.Login.Value.id, joined2To3.Caller.id);
-          Assert.IsTrue(joined2To3.Originators.Length == 2);
+          Assert.IsTrue(joined2To3.Originators.Length == 1);
           Assert.AreEqual(actor1, joined2To3.Originators[0].entity);
-          Assert.AreEqual(originator, joined2To3.Originators[1].entity);
         }
         finally {
           _context.ExitChain();
