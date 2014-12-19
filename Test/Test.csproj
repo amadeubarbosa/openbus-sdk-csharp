@@ -73,7 +73,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssistantTest.cs" />
     <Compile Include="CallDispatchCallbackImpl.cs" />
     <Compile Include="CallerChainInspectorImpl.cs" />
     <Compile Include="OpenBusContextTest.cs" />
