@@ -274,12 +274,6 @@ namespace tecgraf.openbus {
       catch (OBJECT_NOT_EXIST) {
         throw new InvalidLoginProcessException();
       }
-      catch (WrongEncoding) {
-        throw new ServiceFailure {
-          message =
-            "Erro na codificação da chave pública do barramento."
-        };
-      }
       catch (Exception e) {
         Logger.Error(e);
         throw;

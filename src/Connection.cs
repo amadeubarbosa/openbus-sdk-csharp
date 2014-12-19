@@ -70,6 +70,8 @@ namespace tecgraf.openbus {
     /// <exception cref="UnknownDomain">O domínio de autenticação não é conhecido.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do
     /// barramento que impediu a autenticação da conexão.</exception>
+    /// <exception cref="WrongEncoding">A autenticação falhou, pois a senha não foi
+   	/// codificada corretamente com a chave pública do barramento.</exception>
     void LoginByPassword(String entity, Byte[] password, String domain);
 
     /// <summary>
@@ -81,7 +83,8 @@ namespace tecgraf.openbus {
     /// <param name="entity"> Identificador da entidade a ser autenticada.</param>
     /// <param name="privateKey"> Chave privada correspondente ao certificado registrado
     /// a ser utilizada na autenticação, no formato esperado pelo OpenBus.</param>
-    /// <exception cref="ArgumentException">Caso a entidade seja nula ou a chave privada seja nula ou não tenha sido gerada pelo SDK do OpenBus.</exception>
+    /// <exception cref="ArgumentException">Caso a entidade seja nula ou a chave privada
+    /// seja nula ou não tenha sido gerada pelo SDK do OpenBus.</exception>
     /// <exception cref="AccessDenied"> A chave privada fornecida não corresponde ao
     /// certificado da entidade registrado no barramento indicado.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>
@@ -89,6 +92,8 @@ namespace tecgraf.openbus {
     /// registrado no barramento indicado.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a autenticação da conexão.</exception>
+    /// <exception cref="WrongEncoding">A autenticação falhou, pois a resposta ao desafio
+    /// não foi codificada corretamente com a chave pública do barramento.</exception>
     void LoginByCertificate(String entity, PrivateKey privateKey);
 
     /// <summary>
@@ -127,6 +132,8 @@ namespace tecgraf.openbus {
     /// segredo ser cancelado, ter expirado ou já ter sido utilizado.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a autenticação da conexão.</exception>
+    /// <exception cref="WrongEncoding">A autenticação falhou, pois a resposta ao desafio
+    /// não foi codificada corretamente com a chave pública do barramento.</exception>
     void LoginBySharedAuth(SharedAuthSecret secret);
 
     /// <summary>

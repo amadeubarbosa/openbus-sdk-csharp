@@ -264,6 +264,8 @@ namespace tecgraf.openbus {
     /// <exception cref="UnknownDomain">O domínio de autenticação não é conhecido.</exception>
     /// <exception cref="ServiceFailure">Ocorreu uma falha interna nos serviços do barramento
     ///         que impediu a criação da cadeia.</exception>
+    /// <exception cref="WrongEncoding">A autenticação falhou, pois o token não foi codificado
+    /// corretamente com a chave pública do barramento.</exception>
     CallerChain ImportChain(byte[] token, string domain);
 
     /// <summary>
