@@ -37,6 +37,7 @@ namespace demo {
       _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
       // Cria o componente que conterá as facetas do servidor
+      ORBInitializer.InitORB();
       ComponentContext component =
         new DefaultComponentContext(new ComponentId("dedicatedclock", 1, 0, 0, ".net"));
 
@@ -53,7 +54,7 @@ namespace demo {
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port);
+      _conn = context.ConnectByAddress(host, port);
       context.SetDefaultConnection(_conn);
 
       // Cria registrador e adiciona a callback de login inválido

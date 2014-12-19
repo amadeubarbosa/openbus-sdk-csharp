@@ -18,6 +18,7 @@ namespace demo {
       ushort port = Convert.ToUInt16(args[1]);
       string loginFile = args[2];
 
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
 
       // Lê o arquivo com o segredo. Talvez seja interessante para a aplicação
@@ -30,7 +31,7 @@ namespace demo {
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
-      Connection conn = context.CreateConnection(host, port);
+      Connection conn = context.ConnectByAddress(host, port);
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));

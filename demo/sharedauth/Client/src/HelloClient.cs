@@ -20,20 +20,22 @@ namespace demo {
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string loginFile = args[2];
-      string entity = args[3];
-      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 4 ? args[4] : entity);
+      string domain = args[3];
+      string entity = args[4];
+      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 5 ? args[5] : entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port);
+      Connection conn = context.ConnectByAddress(host, port);
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
       ServiceOfferDesc[] offers = null;
       try {
         // Faz o login
-        conn.LoginByPassword(entity, password);
+        conn.LoginByPassword(entity, password, domain);
 
         // Inicia o processo de autenticação compartilhada e serializa os dados
         SharedAuthSecret secret = conn.StartSharedAuth();

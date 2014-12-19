@@ -34,6 +34,7 @@ namespace demo {
       PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
 
       // Cria o componente que responde em inglês
+      ORBInitializer.InitORB();
       ComponentContext english =
         new DefaultComponentContext(new ComponentId("english", 1, 0, 0, ".net"));
       english.AddFacet("GoodMorning",
@@ -91,7 +92,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(host, port);
+      _conn = context.ConnectByAddress(host, port);
       context.SetDefaultConnection(_conn);
 
       bool failed = true;

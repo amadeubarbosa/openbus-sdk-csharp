@@ -50,8 +50,9 @@ Cliente
 1) host do barramento
 2) porta do barramento
 3) caminho para o arquivo onde serão escritos os dados da autenticação compartilhada
-4) nome de entidade
-5) senha (opcional - se não for fornecida, será usado o nome de entidade)
+4) domínio da entidade
+5) nome de entidade
+6) senha (opcional - se não for fornecida, será usado o nome de entidade)
 
 Cliente SharedAuth:
 1) host do barramento
@@ -77,5 +78,5 @@ A demo deve ser executada na seguinte ordem:
 -------------------------------
 
 1) Server.exe localhost 2089 demo_sharedauth_csharp_server DemoSharedAuth.key
-2) Client.exe localhost 2089 demo_sharedauth_csharp_client minhasenha demo_sharedauth_csharp_server login.bin
-3) SharedAuthClient.exe localhost 2089 demo_sharedauth_csharp_server login.bin
+2) Client.exe localhost 2089 login.bin meudominio demo_sharedauth_csharp_client minhasenha
+3) SharedAuthClient.exe localhost 2089 login.bin

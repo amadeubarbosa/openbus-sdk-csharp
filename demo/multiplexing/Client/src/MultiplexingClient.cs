@@ -17,6 +17,7 @@ namespace demo {
   internal static class MultiplexingClient {
     private static string _host;
     private static ushort _port;
+    private static string _domain;
     private static string _entity;
     private static byte[] _password;
     internal static volatile int Pending;
@@ -28,11 +29,13 @@ namespace demo {
       // Obtém dados através dos argumentos
       _host = args[0];
       _port = Convert.ToUInt16(args[1]);
-      _entity = args[2];
+      _domain = args[2];
+      _entity = args[3];
       _password =
-        new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : _entity);
+        new ASCIIEncoding().GetBytes(args.Length > 4 ? args[4] : _entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       context.SetDefaultConnection(NewLogin());
 
@@ -111,10 +114,10 @@ namespace demo {
     }
 
     private static Connection NewLogin() {
-      Connection conn = ORBInitializer.Context.CreateConnection(_host, _port);
+      Connection conn = ORBInitializer.Context.ConnectByAddress(_host, _port);
       try {
         // Faz o login
-        conn.LoginByPassword(_entity, _password);
+        conn.LoginByPassword(_entity, _password, _domain);
       }
       catch (AccessDenied) {
         Console.WriteLine(Resources.ClientAccessDenied + _entity + ".");

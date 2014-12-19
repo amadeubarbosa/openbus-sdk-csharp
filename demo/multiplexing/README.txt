@@ -41,8 +41,9 @@ Servidor
 Cliente
 1) host do barramento
 2) porta do barramento
-3) nome de entidade
-4) senha (opcional - se não for fornecida, será usado o nome de entidade)
+3) domínio da entidade
+4) nome de entidade
+5) senha (opcional - se não for fornecida, será usado o nome de entidade)
 
 
 ------------------------------
@@ -62,4 +63,4 @@ A demo deve ser executada na seguinte ordem:
 -------------------------------
 
 1) Server.exe localhost 2089 demo_multiplexing_csharp_server DemoMultiplexing.key
-2) Client.exe localhost 2089 demo_multiplexing_csharp_client minhasenha
+2) Client.exe localhost 2089 meudominio demo_multiplexing_csharp_client minhasenha

@@ -40,9 +40,10 @@ Servidor
 Cliente
 1) host do barramento
 2) porta do barramento
-3) nome de entidade
-4) senha
-5) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos e opcional - se não for fornecido, será 1)
+3) domínio da entidade
+4) nome de entidade
+5) senha
+6) tempo de espera entre cada tentativa de acesso ao barramento (em milisegundos e opcional - se não for fornecido, será 1)
 
 
 ------------------------------
@@ -62,4 +63,4 @@ A demo deve ser executada na seguinte ordem:
 -------------------------------
 
 1) Server.exe localhost 2089 demo_independentclock_csharp_server DemoIndependentClock.key 3000
-2) Client.exe localhost 2089 demo_independentclock_csharp_client minhasenha 3000
+2) Client.exe localhost 2089 meudominio demo_independentclock_csharp_client minhasenha 3000

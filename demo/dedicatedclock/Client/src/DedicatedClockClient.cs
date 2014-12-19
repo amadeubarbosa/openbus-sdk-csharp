@@ -18,6 +18,7 @@ namespace demo {
   internal static class DedicatedClockClient {
     private static string _entity;
     private static byte[] _password;
+    private static string _domain;
     private static int _retries;
     private static int _interval;
 
@@ -25,15 +26,17 @@ namespace demo {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      _entity = args[2];
-      _password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : _entity);
-      _interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
-      _retries = Convert.ToInt32(args.Length > 5 ? args[5] : "10");
+      _domain = args[2];
+      _entity = args[3];
+      _password = new ASCIIEncoding().GetBytes(args.Length > 4 ? args[4] : _entity);
+      _interval = Convert.ToInt32(args.Length > 5 ? args[5] : "1");
+      _retries = Convert.ToInt32(args.Length > 6 ? args[6] : "10");
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port);
+      Connection conn = context.ConnectByAddress(host, port);
       context.SetDefaultConnection(conn);
 
       // Define a callback de login inválido e faz o login
@@ -199,7 +202,7 @@ namespace demo {
       do {
         try {
           // Faz o login
-          conn.LoginByPassword(_entity, _password);
+          conn.LoginByPassword(_entity, _password, _domain);
           failed = false;
         }
         // Login

@@ -18,20 +18,22 @@ namespace demo {
       // Obtém dados através dos argumentos
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
-      string entity = args[2];
-      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 3 ? args[3] : entity);
+      string domain = args[2];
+      string entity = args[3];
+      byte[] password = new ASCIIEncoding().GetBytes(args.Length > 4 ? args[4] : entity);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(host, port);
+      Connection conn = context.ConnectByAddress(host, port);
       context.SetDefaultConnection(conn);
 
       string messengerIDLType = Repository.GetRepositoryID(typeof (Messenger));
       ServiceOfferDesc[] offers = null;
       try {
         // Faz o login
-        conn.LoginByPassword(entity, password);
+        conn.LoginByPassword(entity, password, domain);
         // Faz busca utilizando propriedades geradas automaticamente e propriedades definidas pelo serviço específico
         // propriedade gerada automaticamente
         ServiceProperty autoProp =

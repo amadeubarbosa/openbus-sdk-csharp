@@ -40,6 +40,7 @@ namespace demo {
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
 
       // Cria o componente que conterá as facetas do servidor
+      ORBInitializer.InitORB();
       _component =
         new DefaultComponentContext(new ComponentId("independentclock", 1, 0, 0,
                                                     ".net"));
@@ -72,7 +73,7 @@ namespace demo {
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(_host, _port);
+      _conn = context.ConnectByAddress(_host, _port);
       context.SetDefaultConnection(_conn);
 
       // Cria registrador e adiciona a callback de login inválido

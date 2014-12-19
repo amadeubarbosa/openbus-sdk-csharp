@@ -37,6 +37,7 @@ namespace demo {
       PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
 
       // Associa uma callback de escolha de conexão de despacho
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       context.OnCallDispatch = Dispatch;
 
@@ -59,7 +60,7 @@ namespace demo {
                                        };
 
         // Cria a conexão e a define como conexão corrente
-        Connection conn = context.CreateConnection(host, port);
+        Connection conn = context.ConnectByAddress(host, port);
         context.SetCurrentConnection(conn);
 
         // Associa a conexão à URI do servant para que a callback possa escolher
