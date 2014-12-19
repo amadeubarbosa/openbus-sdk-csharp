@@ -25,8 +25,9 @@ namespace tecgraf.openbus.interop.relloggedjoin.src {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
       conn.LoginByCertificate(Entity, _privateKey);

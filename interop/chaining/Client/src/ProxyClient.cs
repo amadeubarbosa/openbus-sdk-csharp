@@ -31,13 +31,13 @@ namespace tecgraf.openbus.interop.chaining {
       ConnectionProperties props = new ConnectionPropertiesImpl();
       ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_chaining_csharp_client";
       byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
 
-      conn.LoginByPassword(userLogin, userPassword);
+      conn.LoginByPassword(userLogin, userPassword, "testing");
 
       // propriedades geradas automaticamente
       ServiceProperty prop1 = new ServiceProperty("openbus.component.interface", Repository.GetRepositoryID(typeof(HelloProxy)));
@@ -75,9 +75,9 @@ namespace tecgraf.openbus.interop.chaining {
             continue;
           }
           foundOne = true;
-          String loginId = Utils.GetProperty(serviceOfferDesc.properties,
-            "openbus.offer.login");
-          CallerChain chain = context.MakeChainFor(loginId);
+          String loginEntity = Utils.GetProperty(serviceOfferDesc.properties,
+            "openbus.offer.entity");
+          CallerChain chain = context.MakeChainFor(loginEntity);
           byte[] encodedChain = context.EncodeChain(chain);
           const string expected = "Hello " + userLogin + "!";
           Assert.AreEqual(helloProxy.fetchHello(encodedChain), expected);

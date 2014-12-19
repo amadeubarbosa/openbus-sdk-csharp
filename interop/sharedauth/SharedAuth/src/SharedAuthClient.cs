@@ -7,7 +7,6 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.simple;
@@ -31,8 +30,9 @@ namespace tecgraf.openbus.interop.sharedauth {
       BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
       byte[] encoded = File.ReadAllBytes(loginFile);

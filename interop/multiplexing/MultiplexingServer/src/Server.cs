@@ -29,17 +29,18 @@ namespace tecgraf.openbus.interop.multiplexing {
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
       // setup and start the orb
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
 
       // connect to the bus
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
-      _conn1AtBus1 = context.CreateConnection(hostName, hostPort, props);
-      Connection conn2AtBus1 = context.CreateConnection(hostName, hostPort,
+      _conn1AtBus1 = context.ConnectByAddress(hostName, hostPort, props);
+      Connection conn2AtBus1 = context.ConnectByAddress(hostName, hostPort,
                                                         props);
-      Connection conn3AtBus1 = context.CreateConnection(hostName, hostPort,
+      Connection conn3AtBus1 = context.ConnectByAddress(hostName, hostPort,
                                                         props);
-      _connAtBus2 = context.CreateConnection(hostName, hostPort2, props);
+      _connAtBus2 = context.ConnectByAddress(hostName, hostPort2, props);
 
       // create service SCS component
       ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");

@@ -29,8 +29,9 @@ namespace tecgraf.openbus.interop.delegation {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.CreateConnection(hostName, hostPort, props);
+      _conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);
 
       _conn.LoginByCertificate(Entity, _privateKey);

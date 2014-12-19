@@ -18,13 +18,14 @@ namespace tecgraf.openbus.interop.multiplexing {
       ushort[] ports = {hostPort, hostPort2};
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
 
       foreach (ushort port in ports) {
-        Connection conn = context.CreateConnection(hostName, port, props);
+        Connection conn = context.ConnectByAddress(hostName, port, props);
         context.SetDefaultConnection(conn);
         const string login = "interop_multiplexing_csharp_client";
-        conn.LoginByPassword(login, encoding.GetBytes(login));
+        conn.LoginByPassword(login, encoding.GetBytes(login), "testing");
 
         ServiceProperty[] serviceProperties = new ServiceProperty[2];
         serviceProperties[0] =

@@ -45,33 +45,34 @@ namespace tecgraf.openbus.interop.delegation {
       ushort hostPort = DemoConfig.Default.busHostPort;
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_delegation_csharp_client";
       const string userPassword = userLogin;
       ASCIIEncoding encoding = new ASCIIEncoding();
-      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
+      conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword), "testing");
 
       GetServices();
 
       conn.Logout();
 
-      conn.LoginByPassword(Bill, encoding.GetBytes(Bill));
+      conn.LoginByPassword(Bill, encoding.GetBytes(Bill), "testing");
       _forwarder.setForward(William);
       _broadcaster.subscribe();
       conn.Logout();
 
-      conn.LoginByPassword(Paul, encoding.GetBytes(Paul));
+      conn.LoginByPassword(Paul, encoding.GetBytes(Paul), "testing");
       _broadcaster.subscribe();
       conn.Logout();
 
-      conn.LoginByPassword(Mary, encoding.GetBytes(Mary));
+      conn.LoginByPassword(Mary, encoding.GetBytes(Mary), "testing");
       _broadcaster.subscribe();
       conn.Logout();
 
-      conn.LoginByPassword(Steve, encoding.GetBytes(Steve));
+      conn.LoginByPassword(Steve, encoding.GetBytes(Steve), "testing");
       _broadcaster.subscribe();
       _broadcaster.post(TestMessage);
       conn.Logout();
@@ -84,14 +85,14 @@ namespace tecgraf.openbus.interop.delegation {
 
       string[] names = new[] {William, Bill, Paul, Mary, Steve};
       foreach (string name in names) {
-        conn.LoginByPassword(name, encoding.GetBytes(name));
+        conn.LoginByPassword(name, encoding.GetBytes(name), "testing");
         PostDesc[] descs = _messenger.receivePosts();
         Actual.Add(name, descs.Length > 0 ? descs : null);
         _broadcaster.unsubscribe();
         conn.Logout();
       }
 
-      conn.LoginByPassword(Bill, encoding.GetBytes(Bill));
+      conn.LoginByPassword(Bill, encoding.GetBytes(Bill), "testing");
       _forwarder.cancelForward(William);
       conn.Logout();
       CheckOutput();
@@ -145,7 +146,7 @@ namespace tecgraf.openbus.interop.delegation {
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {prop};
+      ServiceProperty[] properties = {prop};
       ServiceOfferDesc[] offers =
         ORBInitializer.Context.OfferRegistry.findServices(properties);
 

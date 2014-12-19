@@ -58,13 +58,13 @@ namespace tecgraf.openbus.interop.protocol {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_protocol_csharp_client";
       byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
 
-      conn.LoginByPassword(userLogin, userPassword);
+      conn.LoginByPassword(userLogin, userPassword, "testing");
 
       // propriedades geradas automaticamente
       ServiceProperty prop1 = new ServiceProperty("openbus.component.interface", Repository.GetRepositoryID(typeof(Server)));

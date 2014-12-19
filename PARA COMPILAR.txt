@@ -1,4 +1,4 @@
-IDLToCLSCompiler.exe -snk ..\Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll OpenBus.Idl tecgraf\openbus\core\v2_1\services\access_control.idl tecgraf\openbus\core\v2_1\core.idl tecgraf\openbus\core\v2_1\credential.idl tecgraf\openbus\core\v2_1\services\offer_registry.idl tecgraf\openbus\core\v2_1\data_export.idl
+IDLToCLSCompiler.exe -snk ..\Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll -r OpenBus.Legacy.Idl.dll OpenBus.Idl tecgraf\openbus\core\v2_1\services\access_control.idl tecgraf\openbus\core\v2_1\core.idl tecgraf\openbus\core\v2_1\credential.idl tecgraf\openbus\core\v2_1\services\offer_registry.idl tecgraf\openbus\core\v2_1\data_export.idl tecgraf\openbus\core\v2_1\services\legacy_support.idl
 
 IDLToCLSCompiler.exe -snk ..\Openbus.snk -asmVersion 2.0.4 -r Scs.Core.dll OpenBus.Legacy.Idl access_control.idl core.idl credential.idl offer_registry.idl data_export.idl
 

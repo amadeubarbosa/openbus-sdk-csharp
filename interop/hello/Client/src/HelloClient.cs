@@ -30,13 +30,13 @@ namespace tecgraf.openbus.interop.simple {
       ConnectionProperties props = new ConnectionPropertiesImpl();
       ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.CreateConnection(hostName, hostPort, props);
+      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_hello_csharp_client";
       byte[] userPassword = new ASCIIEncoding().GetBytes(userLogin);
 
-      conn.LoginByPassword(userLogin, userPassword);
+      conn.LoginByPassword(userLogin, userPassword, "testing");
 
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
