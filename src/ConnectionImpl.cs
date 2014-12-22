@@ -931,28 +931,30 @@ namespace tecgraf.openbus {
                               StructuralComparisons.StructuralEqualityComparer)) {
               // credencial valida
               // CheckChain pode lançar exceção com InvalidChainCode
-              CallChain chain = CheckChain(credential.chain, credential.login,
+              CallChain? chain = CheckChain(credential.chain, credential.login,
                                            myLogin.entity, busKey);
-              // CheckTicket já faz o lock no ticket history da sessão
-              if (session.CheckTicket(credential.ticket)) {
-                // insere a cadeia no slot para a getCallerChain usar
-                try {
-                  // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
-                  ri.set_slot(_chainSlotId,
-                              new CallerChainImpl(BusId, chain.caller,
-                                                  myLogin.entity,
-                                                  chain.originators,
-                                                  anyCredential.Credential.chain));
+              if (chain != null) {
+                // CheckTicket já faz o lock no ticket history da sessão
+                if (session.CheckTicket(credential.ticket)) {
+                  // insere a cadeia no slot para a getCallerChain usar
+                  try {
+                    // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
+                    ri.set_slot(_chainSlotId,
+                                new CallerChainImpl(BusId, chain.Value.caller,
+                                                    myLogin.entity,
+                                                    chain.Value.originators,
+                                                    anyCredential.Credential.chain));
+                  }
+                  catch (InvalidSlot e) {
+                    Logger.Fatal(
+                      "Falha ao inserir o identificador de login em seu slot.", e);
+                    throw;
+                  }
+                  return;
                 }
-                catch (InvalidSlot e) {
-                  Logger.Fatal(
-                    "Falha ao inserir o identificador de login em seu slot.", e);
-                  throw;
-                }
-                return;
+                Logger.Debug(String.Format("O ticket {0} não confere.",
+                                           credential.ticket));
               }
-              Logger.Debug(String.Format("O ticket {0} não confere.",
-                                         credential.ticket));
             }
             else {
               Logger.Debug("O hash não confere com o esperado.");
@@ -1458,14 +1460,13 @@ namespace tecgraf.openbus {
       return _codec.encode_value(reset);
     }
 
-    private CallChain CheckChain(SignedCallChain signed, string callerId,
+    private CallChain? CheckChain(SignedCallChain signed, string callerId,
                                  string entity, AsymmetricKeyParameter busKey) {
       CallChain chain = Context.UnmarshalCallChain(signed);
       if (!chain.target.Equals(entity)) {
         Logger.Error(
           "O entity não é o mesmo do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
-        throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
-                                CompletionStatus.Completed_No);
+        return null;
       }
       if (!chain.caller.id.Equals(callerId) ||
           (!Crypto.VerifySignature(busKey, signed.encoded, signed.signature))) {
