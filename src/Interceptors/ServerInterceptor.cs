@@ -121,7 +121,7 @@ namespace tecgraf.openbus.interceptors {
       String interceptedOperation = ri.operation;
       Logger.Info(String.Format(
         "O lançamento de uma exceção para a operação '{0}' foi interceptado no servidor.",
-        interceptedOperation));
+        interceptedOperation), (Exception)ri.sending_exception);
 
       NO_PERMISSION ex = ri.sending_exception as NO_PERMISSION;
       if (ex == null) {

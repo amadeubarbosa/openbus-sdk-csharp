@@ -1408,9 +1408,11 @@ namespace tecgraf.openbus {
         return CreateLegacyCredentialReset(challenge, remoteLogin, loginId);
       }
 
-      CredentialReset reset = new CredentialReset { target = loginId, entity = entity };
-      LoginCache.LoginEntry login;
-      reset.challenge = EncryptChallengeForNewSession(challenge, remoteLogin, out login);
+      CredentialReset reset = new CredentialReset {
+        target = loginId,
+        entity = entity,
+        challenge = EncryptChallengeForNewSession(challenge, remoteLogin)
+      };
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
         challenge, remoteLogin, false);
       reset.session = session.Id;
@@ -1419,18 +1421,20 @@ namespace tecgraf.openbus {
     }
 
     private byte[] CreateLegacyCredentialReset(byte[] challenge, string remoteLogin, string loginId) {
-      core.v2_0.credential.CredentialReset reset = new core.v2_0.credential.CredentialReset { target = loginId };
-      LoginCache.LoginEntry login;
-      reset.challenge = EncryptChallengeForNewSession(challenge, remoteLogin, out login);
+      core.v2_0.credential.CredentialReset reset =
+        new core.v2_0.credential.CredentialReset {
+          target = loginId,
+          challenge = EncryptChallengeForNewSession(challenge, remoteLogin)
+        };
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
-        reset.challenge, remoteLogin, true);
+        challenge, remoteLogin, true);
       reset.session = session.Id;
       _sessionId2Session.TryAdd(session.Id, session);
       return _codec.encode_value(reset);
     }
 
-    private byte[] EncryptChallengeForNewSession(byte[] challenge, string remoteLogin, out LoginCache.LoginEntry loginEntry) {
-
+    private byte[] EncryptChallengeForNewSession(byte[] challenge, string remoteLogin) {
+      LoginCache.LoginEntry loginEntry;
       try {
         Context.SetCurrentConnection(this);
         loginEntry = GetLoginEntryFromCache(remoteLogin);
