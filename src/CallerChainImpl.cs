@@ -59,7 +59,9 @@ namespace tecgraf.openbus {
         BusId = anyCredential.Bus;
         Target = legacyChain.target;
         Originators = new LoginInfo[legacyChain.originators.Length];
-        legacyChain.originators.CopyTo(Originators, 0);
+        for (int i = 0; i < legacyChain.originators.Length; i++) {
+          Originators[i] = new LoginInfo(legacyChain.originators[i].id, legacyChain.originators[i].entity);
+        }
         Caller = new LoginInfo(legacyChain.caller.id, legacyChain.caller.entity);
         Signed = new AnySignedChain(anyCredential.LegacyChain);
       }
