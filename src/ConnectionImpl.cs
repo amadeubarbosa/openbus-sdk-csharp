@@ -930,37 +930,39 @@ namespace tecgraf.openbus {
             // credencial valida
             // CheckChain pode lançar exceção com InvalidChainCode
             CallerChainImpl chain = new CallerChainImpl(credential);
-            CheckChain(chain, credential.Login, myLogin.entity, busId, busKey);
-            // CheckTicket já faz o lock no ticket history da sessão
-            if (session.CheckTicket(credential.Ticket)) {
-              // insere a cadeia no slot para a getCallerChain usar
-              try {
-                // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
-                ri.set_slot(_chainSlotId, chain);
-              }
-              catch (InvalidSlot e) {
-                Logger.Fatal(
-                  "Falha ao inserir o identificador de login em seu slot.", e);
-                throw;
-              }
-              if ((Legacy) && (!chain.Legacy)) {
-                // antes da chamada ser atendida, devemos obter a cadeia legada para caso precise ser exportada posteriormente
-                Context.JoinChain(chain);
-                SignedCallChain legacyChain;
+            bool chainOk = CheckChain(chain, credential.Login, myLogin.entity, busId, busKey);
+            if (chainOk) {
+              // CheckTicket já faz o lock no ticket history da sessão
+              if (session.CheckTicket(credential.Ticket)) {
+                // insere a cadeia no slot para a getCallerChain usar
                 try {
-                  legacyChain = _legacyConverter.convertSignedChain();
+                  // já foi testado que o entity é o mesmo que o target, portanto posso inserir meu entity como target
+                  ri.set_slot(_chainSlotId, chain);
                 }
-                catch (Exception e) {
-                  //TODO generalizar exceção UnverifiedLogin para UnavailableBusRemotely qdo mudar na IDL.
-                  Logger.Error("Erro ao converter cadeia para cadeia legada.", e);
-                  throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal, CompletionStatus.Completed_No);
+                catch (InvalidSlot e) {
+                  Logger.Fatal(
+                    "Falha ao inserir o identificador de login em seu slot.", e);
+                  throw;
                 }
-                chain.Signed.LegacyChain = legacyChain;
+                if ((Legacy) && (!chain.Legacy)) {
+                  // antes da chamada ser atendida, devemos obter a cadeia legada para caso precise ser exportada posteriormente
+                  Context.JoinChain(chain);
+                  SignedCallChain legacyChain;
+                  try {
+                    legacyChain = _legacyConverter.convertSignedChain();
+                  }
+                  catch (Exception e) {
+                    //TODO generalizar exceção UnverifiedLogin para UnavailableBusRemotely qdo mudar na IDL.
+                    Logger.Error("Erro ao converter cadeia para cadeia legada.", e);
+                    throw new NO_PERMISSION(UnverifiedLoginCode.ConstVal, CompletionStatus.Completed_No);
+                  }
+                  chain.Signed.LegacyChain = legacyChain;
+                }
+                return;
               }
-              return;
+              Logger.Debug(String.Format("O ticket {0} não confere.",
+                credential.Ticket));
             }
-            Logger.Debug(String.Format("O ticket {0} não confere.",
-              credential.Ticket));
           }
           else {
             Logger.Debug("O hash não confere com o esperado.");
@@ -1465,13 +1467,12 @@ namespace tecgraf.openbus {
       return sessionId;
     }
 
-    private void CheckChain(CallerChainImpl chain, string callerId, 
+    private bool CheckChain(CallerChainImpl chain, string callerId, 
       string entity, string busId, AsymmetricKeyParameter busKey) {
       if (!chain.Target.Equals(entity)) {
         Logger.Error(
           "A entidade não é a mesma do alvo da cadeia. É necessário refazer a sessão de credencial através de um reset.");
-        throw new NO_PERMISSION(InvalidCredentialCode.ConstVal,
-                                CompletionStatus.Completed_No);
+        return false;
       }
       if (!chain.Caller.id.Equals(callerId) || (!chain.BusId.Equals(busId)) ||
           (!Crypto.VerifySignature(busKey, chain.Signed.Encoded, chain.Signed.Signature))) {
@@ -1479,6 +1480,7 @@ namespace tecgraf.openbus {
         throw new NO_PERMISSION(InvalidChainCode.ConstVal,
                                 CompletionStatus.Completed_No);
       }
+      return true;
     }
 
     private byte[] CreateCredentialHash(string operation, int ticket,
