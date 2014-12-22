@@ -53,6 +53,15 @@ namespace tecgraf.openbus.security {
     }
 
     /// <summary>
+    /// Codifica uma chave privada do formato nativo .NET no formato esperado pelo OpenBus.
+    /// </summary>
+    /// <param name="privateKey">Chave privada do formato nativo .NET.</param>
+    /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
+    public static PrivateKey ReadKey(RSACryptoServiceProvider privateKey) {
+      return new PrivateKeyImpl(DotNetUtilities.GetKeyPair(privateKey));
+    }
+
+    /// <summary>
     /// Encripta uma informação utilizando uma chave digital.
     /// </summary>
     /// <param name="key">A chave a ser usada para criptografar os dados.</param>
