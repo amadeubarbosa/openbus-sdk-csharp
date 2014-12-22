@@ -745,6 +745,23 @@ namespace tecgraf.openbus {
           if (session.Entity != null) {
             sessionEntity = session.Entity;
           }
+          else {
+            bool success = false;
+            try {
+              LoginCache.LoginEntry entry = GetLoginEntryFromCache(remoteLogin);
+              if (entry != null) {
+                sessionEntity = entry.Entity;
+                success = true;
+              }
+            }
+            catch (Exception e) {
+              Logger.Error("Erro ao tentar obter a entidade de uma sessão legada.", e);
+            }
+            if (!success) {
+              Logger.Error("Não foi possível obter a entidade de uma sessão legada.");
+              throw new NO_PERMISSION(InvalidTargetCode.ConstVal, CompletionStatus.Completed_No);
+            }
+          }
         }
       }
 
