@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
@@ -9,7 +11,6 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
-using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -56,8 +57,9 @@ namespace tecgraf.openbus.interop.protocol {
       noPermissionCases[10] = new NoPermissionTest { Raised = InvalidTargetCode.ConstVal, Expected = InvalidRemoteCode.ConstVal };
       noPermissionCases[11] = new NoPermissionTest { Raised = InvalidLoginCode.ConstVal, Expected = InvalidRemoteCode.ConstVal };
 
-      ConnectionProperties props = new ConnectionPropertiesImpl();
+      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
+      ConnectionProperties props = new ConnectionPropertiesImpl();
       Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
 
@@ -86,7 +88,7 @@ namespace tecgraf.openbus.interop.protocol {
       bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          string found = Utils.GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
+          string found = GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
           Console.WriteLine("Entidade encontrada: " + found);
           MarshalByRefObject serverProxyObj =
             serviceOfferDesc.service_ref.getFacet(
@@ -163,6 +165,13 @@ namespace tecgraf.openbus.interop.protocol {
         array[i] = 121;
       }
       return array;
+    }
+
+    static string GetProperty(IEnumerable<ServiceProperty> properties,
+                                     string name) {
+      return (from property in properties
+              where property.name.Equals(name)
+              select property.value).FirstOrDefault();
     }
   }
 
