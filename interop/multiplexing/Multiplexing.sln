@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiplexingServer", "MultiplexingServer\MultiplexingServer.csproj", "{DDDC4E93-0735-40CF-8EBF-C3747310729D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{DDDC4E93-0735-40CF-8EBF-C3747310729D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiplexingClient", "MultiplexingClient\MultiplexingClient.csproj", "{B0FE7F52-B7FE-4741-991B-11D2940CF8DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{B0FE7F52-B7FE-4741-991B-11D2940CF8DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
