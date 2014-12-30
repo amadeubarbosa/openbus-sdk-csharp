@@ -75,7 +75,7 @@ namespace tecgraf.openbus.interop.delegation {
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {autoProp, prop};
+      ServiceProperty[] properties = {autoProp, prop};
       ServiceOfferDesc[] offers =
         ORBInitializer.Context.OfferRegistry.findServices(properties);
 
