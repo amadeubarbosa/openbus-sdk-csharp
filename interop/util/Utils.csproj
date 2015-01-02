@@ -8,7 +8,7 @@
     <ProjectGuid>{A91203F2-CFD5-47FD-A057-F3B0E6BA70F1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Utils</RootNamespace>
+    <RootNamespace>tecgraf.openbus.interop.utils</RootNamespace>
     <AssemblyName>Utils</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -36,6 +36,9 @@
     </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\lib\OpenBus.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Scs.Core">
+      <HintPath>..\..\lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

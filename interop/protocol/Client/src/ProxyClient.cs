@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
@@ -16,6 +14,7 @@ using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.protocol.Properties;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.protocol {
   /// <summary>
@@ -88,7 +87,7 @@ namespace tecgraf.openbus.interop.protocol {
       bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          string found = GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
+          string found = Utils.GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
           Console.WriteLine("Entidade encontrada: " + found);
           MarshalByRefObject serverProxyObj =
             serviceOfferDesc.service_ref.getFacet(
@@ -165,13 +164,6 @@ namespace tecgraf.openbus.interop.protocol {
         array[i] = 121;
       }
       return array;
-    }
-
-    static string GetProperty(IEnumerable<ServiceProperty> properties,
-                                     string name) {
-      return (from property in properties
-              where property.name.Equals(name)
-              select property.value).FirstOrDefault();
     }
   }
 

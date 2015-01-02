@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,6 +10,7 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.relloggedjoin.Properties;
 using tecgraf.openbus.interop.simple;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.relloggedjoin {
   /// <summary>
@@ -61,7 +60,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          string found = GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
+          string found = Utils.GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
           Console.WriteLine("Entidade encontrada: " + found);
           MarshalByRefObject helloObj =
             serviceOfferDesc.service_ref.getFacet(
@@ -87,13 +86,6 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       conn.Logout();
       Assert.IsTrue(foundOne);
       Console.WriteLine("Fim.");
-    }
-
-    static string GetProperty(IEnumerable<ServiceProperty> properties,
-                                     string name) {
-      return (from property in properties
-              where property.name.Equals(name)
-              select property.value).FirstOrDefault();
     }
   }
 }

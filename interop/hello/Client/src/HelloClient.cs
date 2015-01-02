@@ -46,7 +46,7 @@ namespace tecgraf.openbus.interop.simple {
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {autoProp, prop};
+      ServiceProperty[] properties = {autoProp, prop};
       ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
 
       if (offers.Length < 1) {

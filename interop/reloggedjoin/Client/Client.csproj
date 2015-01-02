@@ -66,7 +66,12 @@
     </Compile>
     <Compile Include="src\Client.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\util\Utils.csproj">
+      <Project>{A91203F2-CFD5-47FD-A057-F3B0E6BA70F1}</Project>
+      <Name>Utils</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Properties\DemoConfig.settings">

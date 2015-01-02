@@ -4,7 +4,7 @@ using System.Linq;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 
-namespace tecgraf.openbus.assistant {
+namespace tecgraf.openbus.interop.utils {
   /// <summary>
   /// Classe estática com métodos utilitários para facilitar o uso do assistente.
   /// </summary>

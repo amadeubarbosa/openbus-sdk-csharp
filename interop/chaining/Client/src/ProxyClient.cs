@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,6 +9,7 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.chaining.Properties;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.chaining {
   /// <summary>
@@ -60,7 +59,7 @@ namespace tecgraf.openbus.interop.chaining {
       bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
-          string found = GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
+          string found = Utils.GetProperty(serviceOfferDesc.properties, "openbus.offer.entity");
           Console.WriteLine("Entidade encontrada: " + found);
           MarshalByRefObject helloProxyObj =
             serviceOfferDesc.service_ref.getFacet(
@@ -76,7 +75,7 @@ namespace tecgraf.openbus.interop.chaining {
             continue;
           }
           foundOne = true;
-          String loginEntity = GetProperty(serviceOfferDesc.properties,
+          String loginEntity = Utils.GetProperty(serviceOfferDesc.properties,
             "openbus.offer.entity");
           CallerChain chain = context.MakeChainFor(loginEntity);
           byte[] encodedChain = context.EncodeChain(chain);
@@ -91,13 +90,6 @@ namespace tecgraf.openbus.interop.chaining {
       conn.Logout();
       Assert.IsTrue(foundOne);
       Console.WriteLine("Fim.");
-    }
-
-    static string GetProperty(IEnumerable<ServiceProperty> properties,
-                                     string name) {
-      return (from property in properties
-              where property.name.Equals(name)
-              select property.value).FirstOrDefault();
     }
   }
 }
