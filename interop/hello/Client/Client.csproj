@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tecgraf.openbus.interop.simple</RootNamespace>
-    <AssemblyName>HelloClient</AssemblyName>
+    <AssemblyName>Client</AssemblyName>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>

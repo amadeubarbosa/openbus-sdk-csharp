@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
