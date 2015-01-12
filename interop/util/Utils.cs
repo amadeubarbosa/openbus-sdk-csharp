@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 
 namespace tecgraf.openbus.interop.utils {
   /// <summary>
-  /// Classe estática com métodos utilitários para facilitar o uso do assistente.
+  ///   Classe estática com métodos utilitários para facilitar o uso do assistente.
   /// </summary>
   public static class Utils {
     /// <summary>
-    /// Constrói sequencia de propriedades para determinada faceta e entidade.
+    ///   Constrói sequencia de propriedades para determinada faceta e entidade.
     /// </summary>
     /// <param name="entity">Nome da entidade criadora da oferta.</param>
     /// <param name="facet">Nome da faceta que a oferta deve possuir.</param>
@@ -19,29 +21,29 @@ namespace tecgraf.openbus.interop.utils {
       string entity,
       string facet) {
       return new[] {
-                     new ServiceProperty("openbus.offer.entity", entity),
-                     new ServiceProperty("openbus.component.facet", facet)
-                   };
+        new ServiceProperty("openbus.offer.entity", entity),
+        new ServiceProperty("openbus.component.facet", facet)
+      };
     }
 
     /// <summary>
-    /// Obtém uma propriedade específica de um conjunto de propriedades de oferta.
+    ///   Obtém uma propriedade específica de um conjunto de propriedades de oferta.
     /// </summary>
     /// <param name="properties">Conjunto de propriedades de oferta.</param>
     /// <param name="name">Nome da propriedade a ser encontrada.</param>
     /// <returns>Propriedade encontrada ou null.</returns>
     public static string GetProperty(IEnumerable<ServiceProperty> properties,
-                                     string name) {
+      string name) {
       return (from property in properties
-              where property.name.Equals(name)
-              select property.value).FirstOrDefault();
+        where property.name.Equals(name)
+        select property.value).FirstOrDefault();
     }
 
     /// <summary>
-    /// Filtra ofertas e retorna somente as que se encontram responsivas.
-    /// Qualquer erro encontrado ao tentar acessar uma oferta faz com que não
-    /// seja inclusa no conjunto retornado, inclusive erros NO_PERMISSION com
-    /// minor code NoLogin.
+    ///   Filtra ofertas e retorna somente as que se encontram responsivas.
+    ///   Qualquer erro encontrado ao tentar acessar uma oferta faz com que não
+    ///   seja inclusa no conjunto retornado, inclusive erros NO_PERMISSION com
+    ///   minor code NoLogin.
     /// </summary>
     /// <param name="offers">Ofertas a ser verificadas por responsividade.</param>
     /// <returns>Conjunto de ofertas responsivas no momento do teste.</returns>
@@ -55,13 +57,49 @@ namespace tecgraf.openbus.interop.utils {
             working.Add(offerDesc);
           }
         }
-// ReSharper disable EmptyGeneralCatchClause
         catch (Exception) {
-// ReSharper restore EmptyGeneralCatchClause
           // não adiciona essa oferta
         }
       }
       return working.ToArray();
+    }
+
+    public static List<ServiceOfferDesc> FindOffer(OfferRegistry offers,
+      ServiceProperty[] search, int count, int tries, int interval) {
+      OrbServices orb = OrbServices.GetSingleton();
+      List<ServiceOfferDesc> found = new List<ServiceOfferDesc>();
+      for (int i = 0; i < tries; i++) {
+        found.Clear();
+        Thread.Sleep(interval * 1000);
+        ServiceOfferDesc[] services = offers.findServices(search);
+        if (services.Length > 0) {
+          foreach (ServiceOfferDesc offerDesc in services) {
+            try {
+              if (!orb.non_existent(offerDesc.service_ref)) {
+                found.Add(offerDesc);
+              }
+            }
+            catch (Exception) {
+              // não adiciona essa oferta
+            }
+          }
+        }
+        if (found.Count >= count) {
+          return found;
+        }
+      }
+      StringBuilder buffer = new StringBuilder();
+      foreach (ServiceOfferDesc desc in found) {
+        String name = GetProperty(desc.properties, "openbus.offer.entity");
+        String login = GetProperty(desc.properties, "openbus.offer.login");
+        buffer.AppendFormat("\n - {0} ({1})", name, login);
+      }
+      String msg =
+        String
+          .Format(
+            "Não foi possível encontrar ofertas: found ({0}) expected({1}) tries ({2}) time ({3}){4}",
+            found.Count, count, tries, tries * interval, buffer);
+      throw new InvalidOperationException(msg);
     }
   }
 }

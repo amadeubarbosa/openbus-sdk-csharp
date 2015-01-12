@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{AD45B9B5-3440-400E-A5CE-4EEA48813127}</ProjectGuid>
+    <ProjectGuid>{860C8DE2-356E-4162-A918-B2E3BCDAB1B3}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>tecgraf.openbus.interop.sharedauth</RootNamespace>
-    <AssemblyName>SharedAuthClient</AssemblyName>
+    <AssemblyName>consuming</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -42,8 +42,7 @@
       <HintPath>..\..\..\lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Openbus, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Openbus">
       <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
@@ -65,7 +64,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>DemoConfig.settings</DependentUpon>
     </Compile>
-    <Compile Include="src\HelloClient.cs" />
+    <Compile Include="src\Consuming.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

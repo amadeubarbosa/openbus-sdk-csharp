@@ -29,8 +29,8 @@ namespace tecgraf.openbus.interop.chaining {
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
-      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
-      XmlConfigurator.ConfigureAndWatch(logFileInfo);
+      //FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
+      //XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -6,6 +7,7 @@ using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.multiplexing {
   [TestClass]
@@ -27,20 +29,20 @@ namespace tecgraf.openbus.interop.multiplexing {
         const string login = "interop_multiplexing_csharp_client";
         conn.LoginByPassword(login, encoding.GetBytes(login), "testing");
 
-        ServiceProperty[] serviceProperties = new ServiceProperty[2];
-        serviceProperties[0] =
+        ServiceProperty[] properties = new ServiceProperty[2];
+        properties[0] =
           new ServiceProperty("openbus.component.interface",
                               Repository.GetRepositoryID(typeof (Hello)));
-        serviceProperties[1] = new ServiceProperty("offer.domain",
+        properties[1] = new ServiceProperty("offer.domain",
                                                    "Interoperability Tests");
-        ServiceOfferDesc[] services =
-          context.OfferRegistry.findServices(serviceProperties);
-        foreach (ServiceOfferDesc offer in services) {
-          foreach (ServiceProperty prop in offer.properties) {
-            if (prop.name.Equals("openbus.offer.entity")) {
-              Console.WriteLine("found offer from " + prop.value +
-                                " on bus at port " + port);
-            }
+        List<ServiceOfferDesc> offers =
+          Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
+
+        foreach (ServiceOfferDesc offer in offers) {
+          string entity = Utils.GetProperty(offer.properties, "openbus.offer.entity");
+          if (entity != null) {
+            Console.WriteLine("found offer from " + entity + " on bus at port " +
+                              port);
           }
           try {
             MarshalByRefObject obj =

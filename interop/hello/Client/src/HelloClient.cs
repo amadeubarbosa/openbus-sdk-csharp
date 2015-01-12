@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,6 +10,7 @@ using log4net.Layout;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.simple.Properties;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.simple {
   /// <summary>
@@ -47,15 +49,8 @@ namespace tecgraf.openbus.interop.simple {
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = {autoProp, prop};
-      ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
-
-      if (offers.Length < 1) {
-        Console.WriteLine("O serviço Hello não se encontra no barramento.");
-        Environment.Exit(1);
-      }
-      if (offers.Length > 1) {
-        Console.WriteLine("Existe mais de um serviço Hello no barramento.");
-      }
+      List<ServiceOfferDesc> offers =
+        Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
 
       bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {

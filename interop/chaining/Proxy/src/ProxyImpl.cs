@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
-using tecgraf.openbus.core.v2_1.services;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.simple;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.chaining {
   /// <summary>
@@ -31,21 +32,10 @@ namespace tecgraf.openbus.interop.chaining {
           Repository.GetRepositoryID(typeof (Hello))),
         new ServiceProperty("openbus.component.name", "RestrictedHello")
       };
-      ServiceOfferDesc[] descs;
-      try {
-        OfferRegistry offers = context.OfferRegistry;
-        descs = offers.findServices(properties);
-      }
-      catch (ServiceFailure) {
-        Console.WriteLine("ServiceFailure ao realizar busca");
-        throw new INTERNAL();
-      }
-      if (descs.Length <= 0) {
-        Console.WriteLine("oferta não encontrada");
-        throw new INTERNAL();
-      }
+      List<ServiceOfferDesc> offers =
+        Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
 
-      foreach (ServiceOfferDesc desc in descs) {
+      foreach (ServiceOfferDesc desc in offers) {
         try {
           if (OrbServices.GetSingleton().non_existent(desc.service_ref)) {
             continue;

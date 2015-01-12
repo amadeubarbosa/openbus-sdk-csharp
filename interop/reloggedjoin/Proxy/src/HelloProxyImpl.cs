@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.interop.utils;
@@ -34,10 +35,9 @@ namespace tecgraf.openbus.interop.relloggedjoin {
         _context.JoinChain(chain);
 
         Console.WriteLine("Buscando servidor Hello relogged join");
-        ServiceOfferDesc[] services =
-          Utils.FilterWorkingOffers(
-            _context.OfferRegistry.findServices(properties));
-        foreach (ServiceOfferDesc desc in services) {
+        List<ServiceOfferDesc> offers =
+          Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
+        foreach (ServiceOfferDesc desc in offers) {
           string found = Utils.GetProperty(desc.properties,
                                            "openbus.offer.entity");
           Console.WriteLine("Serviço encontrado da entidade " + found);
