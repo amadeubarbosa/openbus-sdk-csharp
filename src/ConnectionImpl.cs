@@ -188,7 +188,7 @@ namespace tecgraf.openbus {
         }
       }
       catch (Exception e) {
-        Logger.Error(connErrorMessage, e);
+        Logger.Error(e.Message ?? connErrorMessage, e);
         throw;
       }
     }
