@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Configuration;
+using System.IO;
 using System.Reflection;
-using System.Runtime.Remoting;
+using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
+using Ch.Elca.Iiop.Security.Ssl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
 using Scs.Core;
 using scs.core;
-using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
@@ -26,13 +28,16 @@ namespace tecgraf.openbus.Test {
   public class OpenBusTest {
     #region Fields
 
-    private static String _hostName;
+    private static string _hostName;
     private static ushort _hostPort;
-    private static String _entity;
+    private static string _busIOR;
+    private static IComponent _busRef;
+    private static string _entity;
     private static string _login;
     private static byte[] _password;
     private static string _domain;
     private static PrivateKey _accessKey;
+    private static bool _useSSL;
     private static OpenBusContext _context;
     private static readonly Object Lock = new Object();
     private const string FakeEntity = "Fake Entity";
@@ -76,12 +81,17 @@ namespace tecgraf.openbus.Test {
     [ClassInitialize]
     public static void MyClassInitialize(TestContext testContext) {
       _hostName = ConfigurationManager.AppSettings["hostName"];
-      if (String.IsNullOrEmpty(_hostName)) {
-        throw new ArgumentNullException("hostName");
-      }
 
       string port = ConfigurationManager.AppSettings["hostPort"];
-      _hostPort = ushort.Parse(port);
+      if (!String.IsNullOrEmpty(port)) {
+        _hostPort = ushort.Parse(port);
+      }
+
+      _busIOR = ConfigurationManager.AppSettings["busIOR"];
+      if (!String.IsNullOrEmpty(_busIOR)) {
+        string[] iors = File.ReadAllLines(_busIOR);
+        _busRef = (IComponent) OrbServices.GetSingleton().string_to_object(iors[0]);
+      }
 
       _entity = ConfigurationManager.AppSettings["entityName"];
       if (String.IsNullOrEmpty(_entity)) {
@@ -111,7 +121,38 @@ namespace tecgraf.openbus.Test {
       _accessKey = Crypto.ReadKeyFile(privateKey);
       Props.AccessKey = _accessKey;
 
-      ORBInitializer.InitORB();
+      string useSSL = ConfigurationManager.AppSettings["useSSL"];
+      if (String.IsNullOrEmpty(useSSL)) {
+        throw new ArgumentNullException("useSSL");
+      }
+      _useSSL = Boolean.Parse(useSSL);
+      
+      if ((!_useSSL) && (String.IsNullOrEmpty(_hostName))) {
+        throw new ArgumentNullException("hostName");
+      }
+
+      if (_useSSL) {
+        IDictionary props = new Hashtable();
+        props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
+        props[IiopChannel.TRANSPORT_FACTORY_KEY] =
+           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
+
+        props[SslTransportFactory.CLIENT_AUTHENTICATION] =
+            "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
+        // take certificates from the windows certificate store of the current user
+        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
+            "CurrentUser";
+        props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
+          "1eafd460fa5ed96992786e5e09772226f60c6748";
+        // the expected CN property of the server key
+        //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
+        //            "IIOP.NET demo Server";
+        //              "test-server.tecgraf.puc-rio.br";
+        ORBInitializer.InitORB(props);
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
       _context = ORBInitializer.Context;
     }
 
@@ -132,13 +173,7 @@ namespace tecgraf.openbus.Test {
     public void CreateConnectionTest() {
       lock (Lock) {
         // cria conexão válida
-        Assert.IsNotNull(_context.ConnectByAddress(_hostName, _hostPort, Props));
-        // cria conexão válida por referência
-        String corbaloc = "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
-                          BusObjectKey.ConstVal;
-        IComponent reference =
-          (IComponent) RemotingServices.Connect(typeof (IComponent), corbaloc);
-        Assert.IsNotNull(_context.ConnectByReference(reference, Props));
+        Assert.IsNotNull(ConnectToBus());
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
         try {
@@ -174,7 +209,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void OnCallDispatchCallbackTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         Assert.IsNull(_context.OnCallDispatch);
         CallDispatchCallbackImpl callback = new CallDispatchCallbackImpl(conn);
         _context.OnCallDispatch = callback.Dispatch;
@@ -191,7 +226,7 @@ namespace tecgraf.openbus.Test {
     public void DefaultConnectionTest() {
       lock (Lock) {
         _context.SetDefaultConnection(null);
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNull(_context.GetDefaultConnection());
         _context.SetCurrentConnection(conn);
@@ -256,7 +291,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void CurrentConnectionTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNull(_context.GetCurrentConnection());
         _context.SetDefaultConnection(conn);
@@ -318,7 +353,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void CallerChainTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         _context.SetDefaultConnection(conn);
         Assert.IsNull(_context.CallerChain);
         //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário comentar o catch genérico abaixo.
@@ -356,7 +391,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void JoinChainTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
         // adiciona a chain da getCallerChain
@@ -386,7 +421,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ExitChainTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         _context.SetCurrentConnection(conn);
         Assert.IsNull(_context.JoinedChain);
         _context.ExitChain();
@@ -410,11 +445,11 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
           _domain);
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn2 = ConnectToBus();
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
           _domain);
@@ -437,15 +472,15 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForJoinedTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
           _domain);
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn2 = ConnectToBus();
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
           _domain);
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn3 = ConnectToBus();
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
           _domain);
@@ -482,12 +517,12 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void MakeChainForJoinedInCurrentChainWithLegacyOriginatorTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1), _domain);
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn2 = ConnectToBus();
         conn2.LoginByCertificate(_entity, _accessKey);
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn3 = ConnectToBus();
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3), _domain);
 
@@ -525,7 +560,7 @@ namespace tecgraf.openbus.Test {
     public void MakeChainForInexistentEntityTest() {
       // deve funcionar mesmo que a entidade não exista.
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
           _domain);
@@ -636,7 +671,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ImportChainInvalidTokenTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         _context.SetCurrentConnection(conn);
         byte[] bytes = Crypto.TextEncoding.GetBytes("InvalidToken");
@@ -721,23 +756,23 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void SimulateCallTest() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
           _domain);
         String login1 = conn1.Login.Value.id;
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn2 = ConnectToBus();
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
           _domain);
         String login2 = conn2.Login.Value.id;
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn3 = ConnectToBus();
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
           _domain);
         String login3 = conn3.Login.Value.id;
 
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByCertificate(_entity, _accessKey);
 
         _context.OnCallDispatch =
@@ -813,17 +848,17 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void EncodeAndDecodeChain() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
           _domain);
         String login1 = conn1.Login.Value.id;
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn2 = ConnectToBus();
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
           _domain);
         String login2 = conn2.Login.Value.id;
-        Connection conn3 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn3 = ConnectToBus();
         const string actor3 = "actor-3";
         conn3.LoginByPassword(actor3, Crypto.TextEncoding.GetBytes(actor3),
           _domain);
@@ -871,7 +906,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void EncodeAndDecodeLegacyChain() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         LoginInfo login = conn.Login.Value;
         const string target = "target";
@@ -905,13 +940,13 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void EncodeAndDecodeSharedAuth() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         try {
           _context.SetCurrentConnection(conn);
           SharedAuthSecret secret = conn.StartSharedAuth();
           byte[] data = _context.EncodeSharedAuth(secret);
-          Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+          Connection conn2 = ConnectToBus();
           SharedAuthSecret secret2 = _context.DecodeSharedAuth(data);
           conn2.LoginBySharedAuth(secret2);
           Assert.IsNotNull(conn2.Login);
@@ -931,7 +966,7 @@ namespace tecgraf.openbus.Test {
     [ExpectedException(typeof (InvalidEncodedStreamException))]
     public void DecodeSharedAuthAsChain() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         _context.SetCurrentConnection(conn);
         SharedAuthSecret secret = conn.StartSharedAuth();
@@ -954,11 +989,11 @@ namespace tecgraf.openbus.Test {
     [ExpectedException(typeof (InvalidEncodedStreamException))]
     public void DecodeChainAsSharedAuth() {
       lock (Lock) {
-        Connection conn1 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn1 = ConnectToBus();
         const string actor1 = "actor-1";
         conn1.LoginByPassword(actor1, Crypto.TextEncoding.GetBytes(actor1),
           _domain);
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort, Props);
+        Connection conn2 = ConnectToBus();
         const string actor2 = "actor-2";
         conn2.LoginByPassword(actor2, Crypto.TextEncoding.GetBytes(actor2),
           _domain);
@@ -988,6 +1023,12 @@ namespace tecgraf.openbus.Test {
           typeof (CallerChainInspector)),
         new CallerChainInspectorImpl());
       return component;
+    }
+
+    private static Connection ConnectToBus() {
+      return _useSSL
+        ? _context.ConnectByReference(_busRef, Props)
+        : _context.ConnectByAddress(_hostName, _hostPort, Props);
     }
   }
 }

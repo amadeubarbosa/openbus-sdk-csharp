@@ -6,6 +6,10 @@ using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
+using System.IO;
+using Ch.Elca.Iiop;
+using Ch.Elca.Iiop.Security.Ssl;
 using scs.core;
 using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_1;
@@ -26,6 +30,8 @@ namespace tecgraf.openbus.Test {
 
     private static String _hostName;
     private static ushort _hostPort;
+    private static string _busIOR;
+    private static IComponent _busRef;
     private static String _entity;
     private static String _entityNoCert;
     private static string _login;
@@ -33,6 +39,7 @@ namespace tecgraf.openbus.Test {
     private static string _domain;
     private static PrivateKey _privKey;
     private static PrivateKey _wrongKey;
+    private static bool _useSSL;
     private static OpenBusContext _context;
     private static readonly ConnectionProperties Props = new ConnectionPropertiesImpl();
 
@@ -72,12 +79,17 @@ namespace tecgraf.openbus.Test {
     [ClassInitialize]
     public static void MyClassInitialize(TestContext testContext) {
       _hostName = ConfigurationManager.AppSettings["hostName"];
-      if (String.IsNullOrEmpty(_hostName)) {
-        throw new ArgumentNullException("hostName");
-      }
 
       string port = ConfigurationManager.AppSettings["hostPort"];
-      _hostPort = ushort.Parse(port);
+      if (!String.IsNullOrEmpty(port)) {
+        _hostPort = ushort.Parse(port);
+      }
+
+      _busIOR = ConfigurationManager.AppSettings["busIOR"];
+      if (!String.IsNullOrEmpty(_busIOR)) {
+        string[] iors = File.ReadAllLines(_busIOR);
+        _busRef = (IComponent)OrbServices.GetSingleton().string_to_object(iors[0]);
+      }
 
       _entity = ConfigurationManager.AppSettings["entityName"];
       if (String.IsNullOrEmpty(_entity)) {
@@ -118,13 +130,39 @@ namespace tecgraf.openbus.Test {
       }
       _wrongKey = Crypto.ReadKeyFile(wrongKey);
 
-      ORBInitializer.InitORB();
-      _context = ORBInitializer.Context;
-    }
+      string useSSL = ConfigurationManager.AppSettings["useSSL"];
+      if (String.IsNullOrEmpty(useSSL)) {
+        throw new ArgumentNullException("useSSL");
+      }
+      _useSSL = Boolean.Parse(useSSL);
 
-    private static Connection CreateConnection() {
-      Connection conn = _context.ConnectByAddress(_hostName, _hostPort, Props);
-      return conn;
+      if ((!_useSSL) && (String.IsNullOrEmpty(_hostName))) {
+        throw new ArgumentNullException("hostName");
+      }
+
+      if (_useSSL) {
+        IDictionary props = new Hashtable();
+        props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
+        props[IiopChannel.TRANSPORT_FACTORY_KEY] =
+           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
+
+        props[SslTransportFactory.CLIENT_AUTHENTICATION] =
+            "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
+        // take certificates from the windows certificate store of the current user
+        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
+            "CurrentUser";
+        props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
+          "1eafd460fa5ed96992786e5e09772226f60c6748";
+        // the expected CN property of the server key
+        //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
+        //            "IIOP.NET demo Server";
+        //              "test-server.tecgraf.puc-rio.br";
+        ORBInitializer.InitORB(props);
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
+      _context = ORBInitializer.Context;
     }
 
     /// <summary>
@@ -133,7 +171,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ORBTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         Assert.IsNotNull(conn.ORB);
         Assert.AreEqual(conn.ORB, _context.ORB);
       }
@@ -145,7 +183,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void OfferRegistryTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         _context.SetCurrentConnection(conn);
         try {
           _context.OfferRegistry.findServices(new[] {new ServiceProperty("a", "b")});
@@ -168,7 +206,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void BusIdTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         Assert.IsNull(conn.BusId);
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.BusId);
@@ -183,7 +221,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void LoginTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         Assert.IsNull(conn.Login);
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
@@ -198,7 +236,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void LoginByPasswordTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         bool failed = false;
         // login nulo
         try {
@@ -297,7 +335,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void LoginByCertificateTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         bool failed = false;
         // login nulo
         try {
@@ -401,8 +439,8 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void SharedAuthTest() {
       lock (this) {
-        Connection conn = CreateConnection();
-        Connection conn2 = CreateConnection();
+        Connection conn = ConnectToBus();
+        Connection conn2 = ConnectToBus();
         bool failed = false;
         SharedAuthSecretImpl secret;
         // sem login
@@ -508,7 +546,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void LogoutTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         CallDispatchCallbackImpl dispatchCallback = new CallDispatchCallbackImpl(conn);
         Assert.IsFalse(conn.Logout());
         conn.LoginByPassword(_login, _password, _domain);
@@ -546,7 +584,7 @@ namespace tecgraf.openbus.Test {
         // testa se o logout usa a conexão correta (sem cadeia) pelo objeto no qual é chamado e não altera a conexão corrente nem a cadeia
         try {
           conn.LoginByPassword(_login, _password, _domain);
-          Connection conn2 = CreateConnection();
+          Connection conn2 = ConnectToBus();
           _context.SetCurrentConnection(conn2);
           CallerChain dummyChain = new CallerChainImpl("", new LoginInfo(), "",
             new LoginInfo[0], ConnectionImpl.InvalidSignedData);
@@ -583,7 +621,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void OnInvalidLoginCallbackTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         Assert.IsNull(conn.OnInvalidLogin);
         InvalidLoginCallback callback = InvalidLogin;
         conn.OnInvalidLogin = callback;
@@ -598,7 +636,7 @@ namespace tecgraf.openbus.Test {
     [Timeout(LeaseTime * 1000)]
     public void LoginRemovedAndCallbackTest() {
       lock (this) {
-        Connection conn = CreateConnection();
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         Assert.IsNotNull(conn.Login);
         LoginInfo firstLogin = new LoginInfo(conn.Login.Value.id,
@@ -669,6 +707,12 @@ namespace tecgraf.openbus.Test {
       LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;
       Assert.IsNotNull(lr);
       lr.invalidateLogin(conn.Login.Value.id);
+    }
+
+    private static Connection ConnectToBus() {
+      return _useSSL
+        ? _context.ConnectByReference(_busRef, Props)
+        : _context.ConnectByAddress(_hostName, _hostPort, Props);
     }
   }
 }
