@@ -1,9 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
-using log4net.Config;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
@@ -29,8 +27,8 @@ namespace tecgraf.openbus.interop.chaining {
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
 
-      FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
-      XmlConfigurator.ConfigureAndWatch(logFileInfo);
+      //FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
+      //XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
@@ -75,16 +77,8 @@ namespace tecgraf.openbus.interop.delegation {
                                                  "Interoperability Tests");
 
       ServiceProperty[] properties = {autoProp, prop};
-      ServiceOfferDesc[] offers =
-        ORBInitializer.Context.OfferRegistry.findServices(properties);
-
-      if (offers.Length < 1) {
-        Console.WriteLine("O serviço Messenger não se encontra no barramento.");
-        Environment.Exit(1);
-      }
-      if (offers.Length > 1) {
-        Console.WriteLine("Existe mais de um serviço Messenger no barramento.");
-      }
+      List<ServiceOfferDesc> offers =
+        Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
 
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {

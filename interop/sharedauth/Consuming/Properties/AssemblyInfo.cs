@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SharedAuthClient")]
+[assembly: AssemblyTitle("Consuming")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("SharedAuthClient")]
+[assembly: AssemblyProduct("SharedAuth")]
 [assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("25336b41-bd12-49b6-bc80-e1a804f02a4b")]
+[assembly: Guid("5399ab27-9c45-4749-ab76-6fe57218eec9")]
 
 // Version information for an assembly consists of the following four values:
 //

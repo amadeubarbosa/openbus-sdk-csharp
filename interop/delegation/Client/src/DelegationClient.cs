@@ -4,19 +4,14 @@ using System.Text;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using omg.org.CORBA;
+using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.delegation.Properties;
 
 namespace tecgraf.openbus.interop.delegation {
   [TestClass]
   internal static class DelegationClient {
-    private enum ServerType {
-      Unknown,
-      Messenger,
-      Forwarder,
-      Broadcaster
-    }
-
     private static Messenger _messenger;
     private static Broadcaster _broadcaster;
     private static Forwarder _forwarder;
@@ -34,11 +29,9 @@ namespace tecgraf.openbus.interop.delegation {
     private const string Steve = "steve";
     private const string TestMessage = "Testing the list!";
 
-    private static string _broadcasterName =
-      "interop_delegation_csharp_broadcaster";
+    private const string BroadcasterName = "interop_delegation_csharp_broadcaster";
 
-    private static string _forwarderName =
-      "interop_delegation_csharp_forwarder";
+    private const string ForwarderName = "interop_delegation_csharp_forwarder";
 
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
@@ -54,7 +47,9 @@ namespace tecgraf.openbus.interop.delegation {
       ASCIIEncoding encoding = new ASCIIEncoding();
       conn.LoginByPassword(userLogin, encoding.GetBytes(userPassword));
 
-      GetServices();
+      GetService(typeof(Messenger));
+      GetService(typeof(Forwarder));
+      GetService(typeof(Broadcaster));
 
       conn.Logout();
 
@@ -82,7 +77,7 @@ namespace tecgraf.openbus.interop.delegation {
 
       FillExpected();
 
-      string[] names = new[] {William, Bill, Paul, Mary, Steve};
+      string[] names = {William, Bill, Paul, Mary, Steve};
       foreach (string name in names) {
         conn.LoginByPassword(name, encoding.GetBytes(name));
         PostDesc[] descs = _messenger.receivePosts();
@@ -119,13 +114,13 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void FillExpected() {
       PostDesc[] descs = new PostDesc[1];
-      descs[0].from = _forwarderName;
+      descs[0].from = ForwarderName;
       descs[0].message = "forwarded message by " + Steve + "->" +
-                         _broadcasterName + ": " + TestMessage;
+                         BroadcasterName + ": " + TestMessage;
       Expected.Add(William, descs);
       Expected.Add(Bill, null);
       descs = new PostDesc[1];
-      descs[0].from = Steve + "->" + _broadcasterName;
+      descs[0].from = Steve + "->" + BroadcasterName;
       descs[0].message = TestMessage;
       Expected.Add(Paul, descs);
       Expected.Add(Mary, descs);
@@ -140,78 +135,58 @@ namespace tecgraf.openbus.interop.delegation {
       Console.WriteLine();
     }
 
-    private static void GetServices() {
-      // propriedade definida pelos servidores
+    private static void GetService(Type type) {
+      // propriedades geradas automaticamente
+      ServiceProperty autoProp =
+        new ServiceProperty("openbus.component.interface",
+                            Repository.GetRepositoryID(type));
+      // propriedade definida pelo servidor hello
       ServiceProperty prop = new ServiceProperty("offer.domain",
                                                  "Interoperability Tests");
 
-      ServiceProperty[] properties = new[] {prop};
-      ServiceOfferDesc[] offers =
-        ORBInitializer.Context.OfferRegistry.findServices(properties);
-
-      if (offers.Length != 3) {
-        Console.WriteLine("Há mais serviços do que o esperado no barramento.");
-        Console.Read();
-        Environment.Exit(1);
-      }
+      ServiceProperty[] properties = { autoProp, prop };
+      List<ServiceOfferDesc> offers =
+        Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
 
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
-        ServerType serverType = ServerType.Unknown;
-        string repId = String.Empty;
-        ServiceProperty[] props = serviceOfferDesc.properties;
-        foreach (ServiceProperty serviceProperty in props) {
-          if (serviceProperty.name.Equals("openbus.component.interface")) {
-            repId = serviceProperty.value;
-            if (repId.Equals(Repository.GetRepositoryID(typeof (Messenger)))) {
-              serverType = ServerType.Messenger;
-              break;
+        try {
+          MarshalByRefObject obj =
+            serviceOfferDesc.service_ref.getFacet(
+              Repository.GetRepositoryID(type));
+          if (obj == null) {
+            Console.WriteLine(
+              "Não foi possível encontrar uma faceta com esse nome.");
+            continue;
+          }
+
+          if (type == typeof(Messenger)) {
+            Messenger facet = obj as Messenger;
+            if (facet != null) {
+              _messenger = facet;
+              return;
             }
-            if (repId.Equals(Repository.GetRepositoryID(typeof (Forwarder)))) {
-              serverType = ServerType.Forwarder;
-              break;
+          }
+          if (type == typeof(Forwarder)) {
+            Forwarder facet = obj as Forwarder;
+            if (facet != null) {
+              _forwarder = facet;
+              return;
             }
-            if (repId.Equals(Repository.GetRepositoryID(typeof (Broadcaster)))) {
-              serverType = ServerType.Broadcaster;
-              break;
+          }
+          if (type == typeof(Broadcaster)) {
+            Broadcaster facet = obj as Broadcaster;
+            if (facet != null) {
+              _broadcaster = facet;
+              return;
             }
           }
         }
-
-        if (serverType.Equals(ServerType.Unknown)) {
+        catch (TRANSIENT) {
           Console.WriteLine(
-            "Uma das ofertas encontradas não é Messenger, Forwarder nem Broadcaster!");
-          continue;
-        }
-
-        MarshalByRefObject obj = serviceOfferDesc.service_ref.getFacet(repId);
-        if (obj == null) {
-          Console.WriteLine("Não foi possível encontrar a faceta do tipo " +
-                            repId);
-          return;
-        }
-
-        switch (serverType) {
-          case ServerType.Messenger:
-            _messenger = obj as Messenger;
-            break;
-          case ServerType.Broadcaster:
-            _broadcaster = obj as Broadcaster;
-            foreach (ServiceProperty serviceProperty in props) {
-              if (serviceProperty.name.Equals("openbus.offer.entity")) {
-                _broadcasterName = serviceProperty.value;
-              }
-            }
-            break;
-          case ServerType.Forwarder:
-            _forwarder = obj as Forwarder;
-            foreach (ServiceProperty serviceProperty in props) {
-              if (serviceProperty.name.Equals("openbus.offer.entity")) {
-                _forwarderName = serviceProperty.value;
-              }
-            }
-            break;
+            "Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
         }
       }
+      Assert.Fail("Um servidor do tipo " + type + " não foi encontrado.");
     }
   }
 }

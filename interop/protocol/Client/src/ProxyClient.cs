@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -75,15 +76,8 @@ namespace tecgraf.openbus.interop.protocol {
                                                   "Interoperability Tests");
 
       ServiceProperty[] properties = { prop1, prop2 };
-      ServiceOfferDesc[] offers = context.OfferRegistry.findServices(properties);
-
-      if (offers.Length < 1) {
-        Console.WriteLine("O serviço Server não se encontra no barramento.");
-        Environment.Exit(1);
-      }
-      if (offers.Length > 1) {
-        Console.WriteLine("Existe mais de um serviço Server no barramento.");
-      }
+      List<ServiceOfferDesc> offers =
+        Utils.FindOffer(ORBInitializer.Context.OfferRegistry, properties, 1, 10, 1);
 
       bool foundOne = false;
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {

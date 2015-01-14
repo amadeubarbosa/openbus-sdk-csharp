@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 
@@ -62,6 +64,44 @@ namespace tecgraf.openbus.assistant {
         }
       }
       return working.ToArray();
+    }
+
+    public static List<ServiceOfferDesc> FindOffer(OfferRegistry offers,
+      ServiceProperty[] search, int count, int tries, int interval) {
+      OrbServices orb = OrbServices.GetSingleton();
+      List<ServiceOfferDesc> found = new List<ServiceOfferDesc>();
+      for (int i = 0; i < tries; i++) {
+        found.Clear();
+        Thread.Sleep(interval * 1000);
+        ServiceOfferDesc[] services = offers.findServices(search);
+        if (services.Length > 0) {
+          foreach (ServiceOfferDesc offerDesc in services) {
+            try {
+              if (!orb.non_existent(offerDesc.service_ref)) {
+                found.Add(offerDesc);
+              }
+            }
+            catch (Exception) {
+              // não adiciona essa oferta
+            }
+          }
+        }
+        if (found.Count >= count) {
+          return found;
+        }
+      }
+      StringBuilder buffer = new StringBuilder();
+      foreach (ServiceOfferDesc desc in found) {
+        String name = GetProperty(desc.properties, "openbus.offer.entity");
+        String login = GetProperty(desc.properties, "openbus.offer.login");
+        buffer.AppendFormat("\n - {0} ({1})", name, login);
+      }
+      String msg =
+        String
+          .Format(
+            "Não foi possível encontrar ofertas: found ({0}) expected({1}) tries ({2}) time ({3}){4}",
+            found.Count, count, tries, tries * interval, buffer);
+      throw new InvalidOperationException(msg);
     }
   }
 }

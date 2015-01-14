@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{AD45B9B5-3440-400E-A5CE-4EEA48813127}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharing", "Sharing\Sharing.csproj", "{AD45B9B5-3440-400E-A5CE-4EEA48813127}"
 	ProjectSection(ProjectDependencies) = postProject
 		{860C8DE2-356E-4162-A918-B2E3BCDAB1B3} = {860C8DE2-356E-4162-A918-B2E3BCDAB1B3}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedAuth", "SharedAuth\SharedAuth.csproj", "{860C8DE2-356E-4162-A918-B2E3BCDAB1B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Consuming", "Consuming\Consuming.csproj", "{860C8DE2-356E-4162-A918-B2E3BCDAB1B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
