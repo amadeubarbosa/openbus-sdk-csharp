@@ -34,11 +34,17 @@
     <Reference Include="IIOPChannel">
       <HintPath>..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
+    <Reference Include="OpenBus">
+      <HintPath>..\..\lib\OpenBus.dll</HintPath>
+    </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
       <HintPath>..\..\lib\Scs.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SslPlugin">
+      <HintPath>..\..\lib\SslPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

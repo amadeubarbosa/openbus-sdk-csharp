@@ -18,9 +18,15 @@ namespace tecgraf.openbus.interop.multiplexing {
       ushort hostPort2 = DemoConfig.Default.bus2HostPort;
       ASCIIEncoding encoding = new ASCIIEncoding();
       ushort[] ports = {hostPort, hostPort2};
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
 
       foreach (ushort port in ports) {

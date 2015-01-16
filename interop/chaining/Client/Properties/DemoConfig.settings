@@ -8,5 +8,8 @@
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">2089</Value>
     </Setting>
+    <Setting Name="useSSL" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

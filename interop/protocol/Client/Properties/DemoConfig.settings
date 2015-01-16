@@ -11,5 +11,8 @@
     <Setting Name="openbusLogFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\..\..\Resources\Openbus.config</Value>
     </Setting>
+    <Setting Name="useSSL" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

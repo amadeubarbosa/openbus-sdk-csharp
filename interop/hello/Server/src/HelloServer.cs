@@ -28,13 +28,19 @@ namespace tecgraf.openbus.interop.simple {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
       //FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       //XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       _conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);

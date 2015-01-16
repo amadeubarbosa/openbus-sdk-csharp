@@ -26,6 +26,13 @@ namespace tecgraf.openbus.interop.protocol {
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
       FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       XmlConfigurator.ConfigureAndWatch(logFileInfo);

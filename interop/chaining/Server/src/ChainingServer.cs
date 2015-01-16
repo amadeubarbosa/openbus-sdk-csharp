@@ -1,15 +1,14 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
-using log4net.Config;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.chaining.Properties;
 using tecgraf.openbus.interop.simple;
+using tecgraf.openbus.interop.utils;
 using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.chaining {
@@ -29,13 +28,19 @@ namespace tecgraf.openbus.interop.chaining {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
       //FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       //XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       _conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(_conn);

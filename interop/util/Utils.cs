@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Ch.Elca.Iiop;
+using Ch.Elca.Iiop.Security.Ssl;
 using omg.org.CORBA;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 
@@ -100,6 +103,26 @@ namespace tecgraf.openbus.interop.utils {
             "Não foi possível encontrar ofertas: found ({0}) expected({1}) tries ({2}) time ({3}){4}",
             found.Count, count, tries, tries * interval, buffer);
       throw new InvalidOperationException(msg);
+    }
+
+    public static OrbServices InitSSLORB() {
+      IDictionary props = new Hashtable();
+      props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
+      props[IiopChannel.TRANSPORT_FACTORY_KEY] =
+          "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
+
+      props[SslTransportFactory.CLIENT_AUTHENTICATION] =
+          "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
+      // take certificates from the windows certificate store of the current user
+      props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
+          "CurrentUser";
+      props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
+        "1eafd460fa5ed96992786e5e09772226f60c6748";
+      // the expected CN property of the server key
+      //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
+      //            "IIOP.NET demo Server";
+      //              "test-server.tecgraf.puc-rio.br";
+      return ORBInitializer.InitORB(props);
     }
   }
 }

@@ -27,9 +27,14 @@ namespace tecgraf.openbus.interop.multiplexing {
       ushort hostPort = DemoConfig.Default.busHostPort;
       ushort hostPort2 = DemoConfig.Default.bus2HostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
-      // setup and start the orb
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
 
       // connect to the bus

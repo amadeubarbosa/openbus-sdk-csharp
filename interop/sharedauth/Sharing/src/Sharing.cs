@@ -7,6 +7,7 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using tecgraf.openbus.interop.sharedauth.Properties;
+using tecgraf.openbus.interop.utils;
 
 namespace tecgraf.openbus.interop.sharedauth {
   /// <summary>
@@ -17,6 +18,13 @@ namespace tecgraf.openbus.interop.sharedauth {
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
       ConsoleAppender appender = new ConsoleAppender {
                                                        Threshold = Level.Fatal,
@@ -26,7 +34,6 @@ namespace tecgraf.openbus.interop.sharedauth {
       BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);

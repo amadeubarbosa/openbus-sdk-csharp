@@ -11,5 +11,8 @@
     <Setting Name="privateKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">..\..\..\admin\InteropDelegation.key</Value>
     </Setting>
+    <Setting Name="useSSL" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

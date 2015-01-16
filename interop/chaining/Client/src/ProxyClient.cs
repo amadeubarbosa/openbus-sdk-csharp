@@ -21,6 +21,13 @@ namespace tecgraf.openbus.interop.chaining {
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
+      bool useSSL = DemoConfig.Default.useSSL;
+      if (useSSL) {
+        Utils.InitSSLORB();
+      }
+      else {
+        ORBInitializer.InitORB();
+      }
 
       ConsoleAppender appender = new ConsoleAppender {
         Threshold = Level.Fatal,
@@ -30,7 +37,6 @@ namespace tecgraf.openbus.interop.chaining {
       BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
-      ORBInitializer.InitORB();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn = context.ConnectByAddress(hostName, hostPort, props);
       context.SetDefaultConnection(conn);
