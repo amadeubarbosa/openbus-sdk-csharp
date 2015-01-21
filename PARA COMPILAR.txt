@@ -1,17 +1,18 @@
-IDLToCLSCompiler.exe -snk ..\Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll -r OpenBus.Legacy.Idl.dll OpenBus.Idl tecgraf\openbus\core\v2_1\services\access_control.idl tecgraf\openbus\core\v2_1\core.idl tecgraf\openbus\core\v2_1\credential.idl tecgraf\openbus\core\v2_1\services\offer_registry.idl tecgraf\openbus\core\v2_1\data_export.idl tecgraf\openbus\core\v2_1\services\legacy_support.idl
+"IDL TO CLS Compiler CS.exe" -snk ..\Openbus.snk -asmVersion 2.1.0 -r Scs.Core.dll -r OpenBus.Legacy.Idl.dll OpenBus.Idl tecgraf\openbus\core\v2_1\services\access_control.idl tecgraf\openbus\core\v2_1\core.idl tecgraf\openbus\core\v2_1\credential.idl tecgraf\openbus\core\v2_1\services\offer_registry.idl tecgraf\openbus\core\v2_1\data_export.idl tecgraf\openbus\core\v2_1\services\legacy_support.idl
 
-IDLToCLSCompiler.exe -snk ..\Openbus.snk -asmVersion 2.0.4 -r Scs.Core.dll OpenBus.Legacy.Idl access_control.idl core.idl credential.idl offer_registry.idl data_export.idl
+"IDL TO CLS Compiler CS.exe" -snk ..\Openbus.snk -asmVersion 2.0.4 -r Scs.Core.dll OpenBus.Legacy.Idl access_control.idl core.idl credential.idl offer_registry.idl data_export.idl
 
-IDLToCLSCompiler.exe -snk ..\Openbus.snk -asmVersion 2.1.0 OpenBus.Demo.Hello.Idl hello.idl
+"IDL TO CLS Compiler CS.exe" -snk ..\Openbus.snk -asmVersion 2.1.0 OpenBus.Demo.Hello.Idl hello.idl
 
-IDLToCLSCompiler.exe -snk ScsKey.snk -asmVersion 1.2.1.0 Scs.Core scs.idl auxiliar.idl
+"IDL TO CLS Compiler CS.exe" -snk ScsKey.snk -asmVersion 1.2.1.0 Scs.Core scs.idl auxiliar.idl
 
 
 #####################
 para compilar com uma nova versão do IIOP.NET:
-- copiar as novas versões do IIOPChannel.dll (assinada - strong name), IDLPreprocessor.dll e IDLToCLSCompiler.exe
+- copiar as novas versões do IIOPChannel.dll (assinada - strong name), IDLPreProcCSharp.dll e "IDL TO CLS Compiler CS.exe"
 - regerar Scs.Core.dll
 - regerar OpenBus.Idl.dll
+- regerar OpenBus.Legacy.Idl.dll
 - regerar OpenBus.Demo.Hello.Idl.dll
 - recompilar projeto SCS com a nova Scs.Core.dll
 - recompilar projeto OpenBus com as novas dlls do scs e do openbus

@@ -85,12 +85,6 @@ namespace tecgraf.openbus.Test {
         _hostPort = ushort.Parse(port);
       }
 
-      _busIOR = ConfigurationManager.AppSettings["busIOR"];
-      if (!String.IsNullOrEmpty(_busIOR)) {
-        string[] iors = File.ReadAllLines(_busIOR);
-        _busRef = (IComponent)OrbServices.GetSingleton().string_to_object(iors[0]);
-      }
-
       _entity = ConfigurationManager.AppSettings["entityName"];
       if (String.IsNullOrEmpty(_entity)) {
         throw new ArgumentNullException("entityName");
@@ -163,6 +157,13 @@ namespace tecgraf.openbus.Test {
         ORBInitializer.InitORB();
       }
       _context = ORBInitializer.Context;
+
+      _busIOR = ConfigurationManager.AppSettings["busIOR"];
+      if (!String.IsNullOrEmpty(_busIOR)) {
+        string[] iors = File.ReadAllLines(_busIOR);
+        _busRef = (IComponent)OrbServices.GetSingleton().string_to_object(iors[0]);
+      }
+
     }
 
     /// <summary>
