@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.Remoting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
+using scs.core;
 using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.utils;
 
@@ -19,8 +21,11 @@ namespace tecgraf.openbus.interop.sharedauth {
       ushort hostPort = DemoConfig.Default.busHostPort;
       string loginFile = DemoConfig.Default.loginFile;
       bool useSSL = DemoConfig.Default.useSSL;
+      string keyUser = DemoConfig.Default.keyUser;
+      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB();
+        Utils.InitSSLORB(keyUser, keyThumbprint);
       }
       else {
         ORBInitializer.InitORB();
@@ -35,7 +40,14 @@ namespace tecgraf.openbus.interop.sharedauth {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
+      Connection conn;
+      if (useSSL) {
+        string ior = File.ReadAllText(busIORFile);
+        conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+      }
+      else {
+        conn = context.ConnectByAddress(hostName, hostPort, props);
+      }
       context.SetDefaultConnection(conn);
 
       byte[] encoded = File.ReadAllBytes(loginFile);

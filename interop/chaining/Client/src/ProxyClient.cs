@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Remoting;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -8,6 +10,7 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
 using omg.org.CORBA;
+using scs.core;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.chaining.Properties;
 using tecgraf.openbus.interop.utils;
@@ -22,8 +25,11 @@ namespace tecgraf.openbus.interop.chaining {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       bool useSSL = DemoConfig.Default.useSSL;
+      string keyUser = DemoConfig.Default.keyUser;
+      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB();
+        Utils.InitSSLORB(keyUser, keyThumbprint);
       }
       else {
         ORBInitializer.InitORB();
@@ -38,7 +44,14 @@ namespace tecgraf.openbus.interop.chaining {
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.ConnectByAddress(hostName, hostPort, props);
+      Connection conn;
+      if (useSSL) {
+        string ior = File.ReadAllText(busIORFile);
+        conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+      }
+      else {
+        conn = context.ConnectByAddress(hostName, hostPort, props);
+      }
       context.SetDefaultConnection(conn);
 
       const string userLogin = "interop_chaining_csharp_client";

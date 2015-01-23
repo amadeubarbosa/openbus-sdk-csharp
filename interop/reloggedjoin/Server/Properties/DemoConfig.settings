@@ -17,5 +17,14 @@
     <Setting Name="useSSL" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="keyUser" Type="System.String" Scope="User">
+      <Value Profile="(Default)">CurrentUser</Value>
+    </Setting>
+    <Setting Name="keyThumbprint" Type="System.String" Scope="User">
+      <Value Profile="(Default)">c14566a2f94e24d576a9a02d706d8358e2462322</Value>
+    </Setting>
+    <Setting Name="busIORFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\\Users\\Cadu\\Dropbox\\Tecgraf\\core210x\\BUS01.ior</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Remoting;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
+using scs.core;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
@@ -17,20 +20,33 @@ namespace tecgraf.openbus.interop.multiplexing {
       ushort hostPort = DemoConfig.Default.busHostPort;
       ushort hostPort2 = DemoConfig.Default.bus2HostPort;
       ASCIIEncoding encoding = new ASCIIEncoding();
-      ushort[] ports = {hostPort, hostPort2};
+      object[] buses;
       bool useSSL = DemoConfig.Default.useSSL;
+      string keyUser = DemoConfig.Default.keyUser;
+      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string busIORFile = DemoConfig.Default.busIORFile;
+      string bus2IORFile = DemoConfig.Default.bus2IORFile;
       if (useSSL) {
-        Utils.InitSSLORB();
+        Utils.InitSSLORB(keyUser, keyThumbprint);
+        buses = new object[] { busIORFile, bus2IORFile };
       }
       else {
         ORBInitializer.InitORB();
+        buses = new object[] { hostPort, hostPort2 };
       }
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
 
-      foreach (ushort port in ports) {
-        Connection conn = context.ConnectByAddress(hostName, port, props);
+      for (int i = 0; i < buses.Length; i++) {
+        Connection conn;
+        if (useSSL) {
+          string ior = File.ReadAllText((string)buses[i]);
+          conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        }
+        else {
+          conn = context.ConnectByAddress(hostName, (ushort)buses[i], props);
+        }
         context.SetDefaultConnection(conn);
         const string login = "interop_multiplexing_csharp_client";
         conn.LoginByPassword(login, encoding.GetBytes(login), "testing");
@@ -47,8 +63,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         foreach (ServiceOfferDesc offer in offers) {
           string entity = Utils.GetProperty(offer.properties, "openbus.offer.entity");
           if (entity != null) {
-            Console.WriteLine("found offer from " + entity + " on bus at port " +
-                              port);
+            Console.WriteLine("found offer from " + entity + " on bus " + i);
           }
           try {
             MarshalByRefObject obj =

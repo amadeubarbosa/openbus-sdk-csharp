@@ -62,18 +62,20 @@
       <HintPath>..\..\..\lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Openbus, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+    <Reference Include="OpenBus, Version=2.1.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
+      <HintPath>..\..\..\lib\OpenBus.dll</HintPath>
     </Reference>
-    <Reference Include="OpenBus.Idl, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+    <Reference Include="OpenBus.Idl, Version=2.1.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus.Interop.Hello.Idl">
-      <HintPath>..\..\..\lib\Openbus.Interop.Hello.Idl.dll</HintPath>
+    <Reference Include="OpenBus.Interop.Hello.Idl, Version=2.1.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\lib\OpenBus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
-    <Reference Include="Scs.Core">
+    <Reference Include="Scs.Core, Version=1.2.1.2, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />

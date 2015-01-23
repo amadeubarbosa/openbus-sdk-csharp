@@ -58,11 +58,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Openbus">
-      <HintPath>..\..\..\bin\Debug\Openbus.dll</HintPath>
+    <Reference Include="OpenBus">
+      <HintPath>..\..\..\lib\OpenBus.dll</HintPath>
     </Reference>
-    <Reference Include="OpenBus.Idl, Version=2.0.0.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="OpenBus.Idl">
       <HintPath>..\..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Openbus.Interop.Hello.Idl">
@@ -124,6 +123,12 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\util\Utils.csproj">
+      <Project>{A91203F2-CFD5-47FD-A057-F3B0E6BA70F1}</Project>
+      <Name>Utils</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

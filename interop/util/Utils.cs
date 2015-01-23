@@ -105,7 +105,7 @@ namespace tecgraf.openbus.interop.utils {
       throw new InvalidOperationException(msg);
     }
 
-    public static OrbServices InitSSLORB() {
+    public static OrbServices InitSSLORB(string keyUser, string keyThumbprint) {
       IDictionary props = new Hashtable();
       props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
       props[IiopChannel.TRANSPORT_FACTORY_KEY] =
@@ -114,10 +114,9 @@ namespace tecgraf.openbus.interop.utils {
       props[SslTransportFactory.CLIENT_AUTHENTICATION] =
           "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
       // take certificates from the windows certificate store of the current user
-      props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
-          "CurrentUser";
+      props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] = keyUser;
       props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
-        "1eafd460fa5ed96992786e5e09772226f60c6748";
+        keyThumbprint;
       // the expected CN property of the server key
       //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
       //            "IIOP.NET demo Server";

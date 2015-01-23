@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -29,8 +31,11 @@ namespace tecgraf.openbus.interop.chaining {
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
       bool useSSL = DemoConfig.Default.useSSL;
+      string keyUser = DemoConfig.Default.keyUser;
+      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB();
+        Utils.InitSSLORB(keyUser, keyThumbprint);
       }
       else {
         ORBInitializer.InitORB();
@@ -42,7 +47,13 @@ namespace tecgraf.openbus.interop.chaining {
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.ConnectByAddress(hostName, hostPort, props);
+      if (useSSL) {
+        string ior = File.ReadAllText(busIORFile);
+        _conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+      }
+      else {
+        _conn = context.ConnectByAddress(hostName, hostPort, props);
+      }
       context.SetDefaultConnection(_conn);
 
       ComponentContext component =

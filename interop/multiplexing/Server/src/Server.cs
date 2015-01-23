@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -8,6 +10,7 @@ using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
+using tecgraf.openbus.interop.utils;
 using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.multiplexing {
@@ -28,8 +31,12 @@ namespace tecgraf.openbus.interop.multiplexing {
       ushort hostPort2 = DemoConfig.Default.bus2HostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
       bool useSSL = DemoConfig.Default.useSSL;
+      string keyUser = DemoConfig.Default.keyUser;
+      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string busIORFile = DemoConfig.Default.busIORFile;
+      string bus2IORFile = DemoConfig.Default.bus2IORFile;
       if (useSSL) {
-        Utils.InitSSLORB();
+        Utils.InitSSLORB(keyUser, keyThumbprint);
       }
       else {
         ORBInitializer.InitORB();
@@ -40,12 +47,22 @@ namespace tecgraf.openbus.interop.multiplexing {
       // connect to the bus
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
-      _conn1AtBus1 = context.ConnectByAddress(hostName, hostPort, props);
-      Connection conn2AtBus1 = context.ConnectByAddress(hostName, hostPort,
-                                                        props);
-      Connection conn3AtBus1 = context.ConnectByAddress(hostName, hostPort,
-                                                        props);
-      _connAtBus2 = context.ConnectByAddress(hostName, hostPort2, props);
+      Connection conn2AtBus1;
+      Connection conn3AtBus1;
+      if (useSSL) {
+        string ior = File.ReadAllText(busIORFile);
+        string ior2 = File.ReadAllText(bus2IORFile);
+        _conn1AtBus1 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        conn2AtBus1 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        conn3AtBus1 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        _connAtBus2 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior2), props);
+      }
+      else {
+        _conn1AtBus1 = context.ConnectByAddress(hostName, hostPort, props);
+        conn2AtBus1 = context.ConnectByAddress(hostName, hostPort, props);
+        conn3AtBus1 = context.ConnectByAddress(hostName, hostPort, props);
+        _connAtBus2 = context.ConnectByAddress(hostName, hostPort2, props);
+      }
 
       // create service SCS component
       ComponentId id = new ComponentId("Hello", 1, 0, 0, ".net");
