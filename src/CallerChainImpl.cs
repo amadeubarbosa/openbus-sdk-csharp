@@ -96,18 +96,14 @@ namespace tecgraf.openbus {
     internal AnySignedChain Signed { get; private set; }
 
     internal static CallChain UnmarshalCallChain(SignedData signed) {
-      Type chainType = typeof(CallChain);
       TypeCode chainTypeCode =
-        OrbServices.GetSingleton().create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
+        OrbServices.GetSingleton().create_tc_for_type(typeof(CallChain));
       return (CallChain)InterceptorsInitializer.Codec.decode_value(signed.encoded, chainTypeCode);
     }
 
     internal static core.v2_0.services.access_control.CallChain UnmarshalLegacyCallChain(SignedCallChain signed) {
-      Type chainType = typeof(core.v2_0.services.access_control.CallChain);
       TypeCode chainTypeCode =
-        OrbServices.GetSingleton().create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
+        OrbServices.GetSingleton().create_tc_for_type(typeof(core.v2_0.services.access_control.CallChain));
       return (core.v2_0.services.access_control.CallChain)InterceptorsInitializer.Codec.decode_value(signed.encoded, chainTypeCode);
     }
 

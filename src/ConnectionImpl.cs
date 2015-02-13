@@ -253,7 +253,9 @@ namespace tecgraf.openbus {
         LoginAuthenticationInfo info =
           new LoginAuthenticationInfo
           {data = secret, hash = SHA256.Create().ComputeHash(pubBytes)};
-        encrypted = Crypto.Encrypt(busKey, _codec.encode_value(info));
+        TypeCode loginInfoTC = ORB.create_tc_for_type(typeof(LoginAuthenticationInfo));
+        Any any = new Any(info, loginInfoTC);
+        encrypted = Crypto.Encrypt(busKey, _codec.encode_value(any));
       }
       catch (InvalidCipherTextException) {
         login.Cancel();
@@ -453,7 +455,9 @@ namespace tecgraf.openbus {
           LoginAuthenticationInfo info =
             new LoginAuthenticationInfo
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
-          encrypted = Crypto.Encrypt(busKey, _codec.encode_value(info));
+          TypeCode loginInfoTC = ORB.create_tc_for_type(typeof(LoginAuthenticationInfo));
+          Any any = new Any(info, loginInfoTC);
+          encrypted = Crypto.Encrypt(busKey, _codec.encode_value(any));
         }
         catch (InvalidCipherTextException) {
           Logger.Error(BusPubKeyError);
@@ -579,7 +583,7 @@ namespace tecgraf.openbus {
 
     public void LoginBySharedAuth(SharedAuthSecret secret) {
       SharedAuthSecretImpl sharedAuth = secret as SharedAuthSecretImpl;
-      if (sharedAuth == null || sharedAuth.Attempt == null || sharedAuth.Secret == null) {
+      if (sharedAuth == null || (sharedAuth.Attempt == null && sharedAuth.LegacyAttempt == null) || sharedAuth.Secret == null) {
         throw new ArgumentException("O segredo fornecido é inválido.");
       }
 
@@ -768,6 +772,8 @@ namespace tecgraf.openbus {
       try {
         byte[] hash;
         AnySignedChain chain;
+        TypeCode credentialTC = ORB.create_tc_for_type(typeof(CredentialData));
+        TypeCode legacyCredentialTC = ORB.create_tc_for_type(typeof(core.v2_0.credential.CredentialData));
         if (sessionId >= 0) {
           Logger.Debug(
             String.Format(
@@ -783,13 +789,15 @@ namespace tecgraf.openbus {
             hash = CreateCredentialHash(operation, ticket, secret, true);
             core.v2_0.credential.CredentialData data = new core.v2_0.credential.CredentialData(BusId, login.id, sessionId,
               ticket, hash, chain.LegacyChain);
-            serviceContext = new ServiceContext(LegacyContextId, _codec.encode_value(data));
+            Any any = new Any(data, legacyCredentialTC);
+            serviceContext = new ServiceContext(LegacyContextId, _codec.encode_value(any));
           }
           else {
             hash = CreateCredentialHash(operation, ticket, secret, false);
             CredentialData data = new CredentialData(BusId, login.id, sessionId,
               ticket, hash, chain.Chain);
-            serviceContext = new ServiceContext(ContextId, _codec.encode_value(data));
+            Any any = new Any(data, credentialTC);
+            serviceContext = new ServiceContext(ContextId, _codec.encode_value(any));
           }
           Logger.Debug("Hash criado: " + BitConverter.ToString(hash));
           ri.add_request_service_context(serviceContext, false);
@@ -804,12 +812,14 @@ namespace tecgraf.openbus {
           core.v2_0.credential.CredentialData legacyData =
             new core.v2_0.credential.CredentialData(BusId, login.id, sessionId,
               ticket, hash, chain.LegacyChain);
+          Any legacyAny = new Any(legacyData, legacyCredentialTC);
           ServiceContext serviceContext = new ServiceContext(LegacyContextId,
-            _codec.encode_value(legacyData));
+            _codec.encode_value(legacyAny));
           ri.add_request_service_context(serviceContext, false);
           CredentialData data = new CredentialData(BusId, login.id, sessionId,
             ticket, hash, chain.Chain);
-          serviceContext = new ServiceContext(ContextId, _codec.encode_value(data));
+          Any any = new Any(data, credentialTC);
+          serviceContext = new ServiceContext(ContextId, _codec.encode_value(any));
           ri.add_request_service_context(serviceContext, false);
           Logger.Debug(
             String.Format(
@@ -1347,10 +1357,7 @@ namespace tecgraf.openbus {
         ServiceContext serviceContext =
           ri.get_reply_service_context(ContextId);
 
-        Type resetType = typeof (CredentialReset);
-        TypeCode resetTypeCode = ORB.create_interface_tc(
-          Repository.GetRepositoryID(resetType), resetType.Name);
-
+        TypeCode resetTypeCode = ORB.create_tc_for_type(typeof (CredentialReset));
         byte[] data = serviceContext.context_data;
         CredentialReset reset = (CredentialReset) _codec.decode_value(data, resetTypeCode);
         requestReset = new AnyCredentialReset(reset);
@@ -1361,10 +1368,7 @@ namespace tecgraf.openbus {
           ServiceContext serviceContext =
             ri.get_reply_service_context(LegacyContextId);
 
-          Type resetType = typeof(core.v2_0.credential.CredentialReset);
-          TypeCode resetTypeCode = ORB.create_interface_tc(
-            Repository.GetRepositoryID(resetType), resetType.Name);
-
+          TypeCode resetTypeCode = ORB.create_tc_for_type(typeof(core.v2_0.credential.CredentialReset));
           byte[] data = serviceContext.context_data;
           core.v2_0.credential.CredentialReset reset =
             (core.v2_0.credential.CredentialReset)
@@ -1417,7 +1421,9 @@ namespace tecgraf.openbus {
         challenge, remoteLogin, false);
       reset.session = session.Id;
       _sessionId2Session.TryAdd(session.Id, session);
-      return _codec.encode_value(reset);
+      TypeCode resetTC = ORB.create_tc_for_type(typeof(CredentialReset));
+      Any any = new Any(reset, resetTC);
+      return _codec.encode_value(any);
     }
 
     private byte[] CreateLegacyCredentialReset(byte[] challenge, string remoteLogin, string loginId) {
@@ -1430,7 +1436,9 @@ namespace tecgraf.openbus {
         challenge, remoteLogin, true);
       reset.session = session.Id;
       _sessionId2Session.TryAdd(session.Id, session);
-      return _codec.encode_value(reset);
+      TypeCode resetTC = ORB.create_tc_for_type(typeof(core.v2_0.credential.CredentialReset));
+      Any any = new Any(reset, resetTC);
+      return _codec.encode_value(any);
     }
 
     private byte[] EncryptChallengeForNewSession(byte[] challenge, string remoteLogin) {

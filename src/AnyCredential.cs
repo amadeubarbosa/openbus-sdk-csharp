@@ -45,10 +45,8 @@ namespace tecgraf.openbus {
 
     private static CredentialData UnmarshalCredential(ServiceContext serviceContext) {
       OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof(CredentialData);
       TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-          credentialType.Name);
+        orb.create_tc_for_type(typeof (CredentialData));
 
       byte[] data = serviceContext.context_data;
       return (CredentialData) InterceptorsInitializer.Codec.decode_value(data, credentialTypeCode);
@@ -57,11 +55,8 @@ namespace tecgraf.openbus {
     private static core.v2_0.credential.CredentialData UnmarshalLegacyCredential(
       ServiceContext serviceContext) {
       OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof(core.v2_0.credential.CredentialData);
       TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
-
+        orb.create_tc_for_type(typeof(core.v2_0.credential.CredentialData));
       byte[] data = serviceContext.context_data;
       return
         (core.v2_0.credential.CredentialData)

@@ -308,14 +308,18 @@ namespace tecgraf.openbus {
         VersionedData? legacyVersion = null;
         if (!chainImpl.Legacy) {
           // se não é legacy, tem a versão atual. Pode ter a versão legacy ou não.
-          byte[] encoded = _codec.encode_value(chainImpl.Signed.Chain);
+          TypeCode signedChainTC = _orb.create_tc_for_type(typeof (SignedData));
+          Any any = new Any(chainImpl.Signed.Chain, signedChainTC);
+          byte[] encoded = _codec.encode_value(any);
           actualVersion = new VersionedData(ExportVersion.ConstVal, encoded);
           i++;
         }
         if (chainImpl.Signed.LegacyChain.encoded != null) {
           ExportedCallChain exported = new ExportedCallChain(chainImpl.BusId,
             chainImpl.Signed.LegacyChain);
-          byte[] legacyEncoded = _codec.encode_value(exported);
+          TypeCode exportedChainTC = _orb.create_tc_for_type(typeof(ExportedCallChain));
+          Any any = new Any(exported, exportedChainTC);
+          byte[] legacyEncoded = _codec.encode_value(any);
           legacyVersion = new VersionedData(CurrentVersion.ConstVal, legacyEncoded);
           i++;
         }
@@ -345,10 +349,8 @@ namespace tecgraf.openbus {
         for (int i = 0; i < versions.Length; i++) {
           // Se houver duas versões, a versão atual virá antes da versão legacy.
           if (versions[i].version == ExportVersion.ConstVal) {
-            Type signedDataType = typeof(SignedData);
             TypeCode signedDataTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(signedDataType),
-                signedDataType.Name);
+              ORB.create_tc_for_type(typeof(SignedData));
             SignedData exportedChain =
               (SignedData)
                 _codec.decode_value(versions[i].encoded, signedDataTypeCode);
@@ -362,10 +364,8 @@ namespace tecgraf.openbus {
             }
           }
           if (versions[i].version == CurrentVersion.ConstVal) {
-            Type exportedChainType = typeof(ExportedCallChain);
             TypeCode exportedChainTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedChainType),
-                exportedChainType.Name);
+              ORB.create_tc_for_type(typeof(ExportedCallChain));
             ExportedCallChain exportedChain =
               (ExportedCallChain)
                 _codec.decode_value(versions[i].encoded, exportedChainTypeCode);
@@ -402,7 +402,9 @@ namespace tecgraf.openbus {
         if (!sharedAuth.Legacy) {
           // se não é legacy, tem a versão atual. Pode ter a versão legacy ou não.
           ExportedSharedAuth exportedAuth = new ExportedSharedAuth(sharedAuth.BusId, sharedAuth.Attempt, sharedAuth.Secret);
-          byte[] encoded = _codec.encode_value(exportedAuth);
+          TypeCode exportedAuthTC = _orb.create_tc_for_type(typeof(ExportedSharedAuth));
+          Any any = new Any(exportedAuth, exportedAuthTC);
+          byte[] encoded = _codec.encode_value(any);
           actualVersion = new VersionedData(ExportVersion.ConstVal, encoded);
           i++;
         }
@@ -410,7 +412,9 @@ namespace tecgraf.openbus {
           core.v2_0.data_export.ExportedSharedAuth legacyAuth =
             new core.v2_0.data_export.ExportedSharedAuth(sharedAuth.BusId,
               sharedAuth.LegacyAttempt, sharedAuth.Secret);
-          byte[] legacyEncoded = _codec.encode_value(legacyAuth);
+          TypeCode legacyExportedAuthTC = _orb.create_tc_for_type(typeof(core.v2_0.data_export.ExportedSharedAuth));
+          Any any = new Any(legacyAuth, legacyExportedAuthTC);
+          byte[] legacyEncoded = _codec.encode_value(any);
           legacyVersion = new VersionedData(CurrentVersion.ConstVal, legacyEncoded);
           i++;
         }
@@ -440,10 +444,8 @@ namespace tecgraf.openbus {
         for (int i = 0; i < versions.Length; i++) {
           // Se houver duas versões, a versão atual virá antes da versão legacy.
           if (versions[i].version == ExportVersion.ConstVal) {
-            Type exportedAuthType = typeof(ExportedSharedAuth);
             TypeCode exportedAuthTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedAuthType),
-                exportedAuthType.Name);
+              ORB.create_tc_for_type(typeof (ExportedSharedAuth));
             ExportedSharedAuth exportedAuth =
               (ExportedSharedAuth)
                 _codec.decode_value(versions[i].encoded, exportedAuthTypeCode);
@@ -455,10 +457,8 @@ namespace tecgraf.openbus {
             }
           }
           if (versions[i].version == CurrentVersion.ConstVal) {
-            Type exportedAuthType = typeof(core.v2_0.data_export.ExportedSharedAuth);
             TypeCode exportedAuthTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedAuthType),
-                exportedAuthType.Name);
+              ORB.create_tc_for_type(typeof(core.v2_0.data_export.ExportedSharedAuth));
             core.v2_0.data_export.ExportedSharedAuth exportedAuth =
               (core.v2_0.data_export.ExportedSharedAuth)
                 _codec.decode_value(versions[i].encoded, exportedAuthTypeCode);
@@ -510,7 +510,10 @@ namespace tecgraf.openbus {
     #region Internal Members
 
     private byte[] EncodeExportedVersions(VersionedData[] exports, byte[] tag) {
-      byte[] encodedVersions = _codec.encode_value(exports);
+      TypeCode versionedTypeCode = ORB.create_tc_for_type(typeof(VersionedData));
+      TypeCode sequenceTypeCode = ORB.create_sequence_tc(0, versionedTypeCode);
+      Any any = new Any(exports, sequenceTypeCode);
+      byte[] encodedVersions = _codec.encode_value(any);
       byte[] fullEnconding = new byte[encodedVersions.Length + MagicTagSize];
       Buffer.BlockCopy(tag, 0, fullEnconding, 0, MagicTagSize);
       Buffer.BlockCopy(encodedVersions, 0, fullEnconding, MagicTagSize, encodedVersions.Length);
@@ -530,11 +533,9 @@ namespace tecgraf.openbus {
       Buffer.BlockCopy(encoded, MagicTagSize, encodedVersions, 0,
                        encodedVersions.Length);
       if (tag.SequenceEqual(magicTag)) {
-        Type exportedVersionType = typeof(VersionedData[]);
-        TypeCode exportedVersionTypeCode =
-          ORB.create_interface_tc(Repository.GetRepositoryID(exportedVersionType),
-            exportedVersionType.Name);
-        return (VersionedData[])_codec.decode_value(encodedVersions, exportedVersionTypeCode);
+        TypeCode versionedTypeCode = ORB.create_tc_for_type(typeof(VersionedData));
+        TypeCode sequenceTypeCode = ORB.create_sequence_tc(0, versionedTypeCode);
+        return (VersionedData[])_codec.decode_value(encodedVersions, sequenceTypeCode);
       }
       throw new InvalidEncodedStreamException(msg);
     }
