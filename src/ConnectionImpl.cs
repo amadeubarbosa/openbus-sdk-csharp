@@ -261,7 +261,9 @@ namespace tecgraf.openbus {
         LoginAuthenticationInfo info =
           new LoginAuthenticationInfo
           {data = secret, hash = SHA256.Create().ComputeHash(pubBytes)};
-        encrypted = Crypto.Encrypt(busKey, _codec.encode_value(info));
+        TypeCode loginInfoTC = ORB.create_tc_for_type(typeof(LoginAuthenticationInfo));
+        Any any = new Any(info, loginInfoTC);
+        encrypted = Crypto.Encrypt(busKey, _codec.encode_value(any));
       }
       catch (InvalidCipherTextException) {
         login.cancel();
@@ -445,7 +447,9 @@ namespace tecgraf.openbus {
           LoginAuthenticationInfo info =
             new LoginAuthenticationInfo
             {data = password, hash = SHA256.Create().ComputeHash(pubBytes)};
-          encrypted = Crypto.Encrypt(busKey, _codec.encode_value(info));
+          TypeCode loginInfoTC = ORB.create_tc_for_type(typeof(LoginAuthenticationInfo));
+          Any any = new Any(info, loginInfoTC);
+          encrypted = Crypto.Encrypt(busKey, _codec.encode_value(any));
         }
         catch (InvalidCipherTextException) {
           Logger.Error(BusPubKeyError);
@@ -740,8 +744,10 @@ namespace tecgraf.openbus {
           }
           Credential legacyData = new Credential(login.id, login.entity,
             lastCaller);
+          TypeCode credentialTC = ORB.create_tc_for_type(typeof(Credential));
+          Any any = new Any(legacyData, credentialTC);
           ServiceContext legacyContext =
-            new ServiceContext(PrevContextId, _codec.encode_value(legacyData));
+            new ServiceContext(PrevContextId, _codec.encode_value(any));
           ri.add_request_service_context(legacyContext, false);
           if (isLegacyOnly){
             // não adiciona credencial 2.0
@@ -790,8 +796,10 @@ namespace tecgraf.openbus {
 
           CredentialData data = new CredentialData(BusId, login.id, sessionId,
                                                    ticket, hash, chain);
+          TypeCode credentialTC = ORB.create_tc_for_type(typeof(CredentialData));
+          Any any = new Any(data, credentialTC);
           ServiceContext serviceContext =
-            new ServiceContext(ContextId, _codec.encode_value(data));
+            new ServiceContext(ContextId, _codec.encode_value(any));
           ri.add_request_service_context(serviceContext, false);
           Logger.Info(
             String.Format("Chamada à operação {0} no servidor de login {1}.",
@@ -1366,10 +1374,7 @@ namespace tecgraf.openbus {
         ServiceContext serviceContext =
           ri.get_reply_service_context(ContextId);
 
-        Type resetType = typeof (CredentialReset);
-        TypeCode resetTypeCode = ORB.create_interface_tc(
-          Repository.GetRepositoryID(resetType), resetType.Name);
-
+        TypeCode resetTypeCode = ORB.create_tc_for_type(typeof (CredentialReset));
         byte[] data = serviceContext.context_data;
         requestReset =
           (CredentialReset) _codec.decode_value(data, resetTypeCode);
@@ -1457,7 +1462,9 @@ namespace tecgraf.openbus {
         _sessionId2Session.TryAdd(session.Id, session);
         reset.session = session.Id;
       }
-      return _codec.encode_value(reset);
+      TypeCode resetTC = ORB.create_tc_for_type(typeof(CredentialReset));
+      Any any = new Any(reset, resetTC);
+      return _codec.encode_value(any);
     }
 
     private CallChain? CheckChain(SignedCallChain signed, string callerId,

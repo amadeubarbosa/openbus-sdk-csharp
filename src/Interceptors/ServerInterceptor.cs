@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using Ch.Elca.Iiop.Idl;
 using Ch.Elca.Iiop.Util;
 using log4net;
 using omg.org.CORBA;
@@ -259,10 +258,7 @@ namespace tecgraf.openbus.interceptors {
       if (legacyContext) {
         return UnmarshalLegacyCredential(serviceContext);
       }
-      Type credentialType = typeof (CredentialData);
-      TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
+      TypeCode credentialTypeCode = orb.create_tc_for_type(typeof(CredentialData));
 
       byte[] data = serviceContext.context_data;
       return new AnyCredential(
@@ -272,10 +268,7 @@ namespace tecgraf.openbus.interceptors {
     private AnyCredential UnmarshalLegacyCredential(
       ServiceContext serviceContext) {
       OrbServices orb = OrbServices.GetSingleton();
-      Type credentialType = typeof (Credential);
-      TypeCode credentialTypeCode =
-        orb.create_interface_tc(Repository.GetRepositoryID(credentialType),
-                                credentialType.Name);
+      TypeCode credentialTypeCode = orb.create_tc_for_type(typeof(Credential));
 
       byte[] data = serviceContext.context_data;
       Credential cred =

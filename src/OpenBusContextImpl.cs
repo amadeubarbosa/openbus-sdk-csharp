@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Ch.Elca.Iiop;
-using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
@@ -302,7 +301,9 @@ namespace tecgraf.openbus {
           versions = new ExportedVersion[2];
           ExportedCallChain exported = new ExportedCallChain(chain.BusId,
                                                                   chainImpl.Signed);
-          byte[] encoded = _codec.encode_value(exported);
+          TypeCode exportedTypeCode = ORB.create_tc_for_type(typeof(ExportedCallChain));
+          Any any = new Any(exported, exportedTypeCode);
+          byte[] encoded = _codec.encode_value(any);
           versions[i] = new ExportedVersion(CurrentVersion.ConstVal, encoded);
           i++;
         }
@@ -311,7 +312,9 @@ namespace tecgraf.openbus {
           deleg = chain.Originators[0].entity;
         }
         LegacyExportedCallChain legacyExported = new LegacyExportedCallChain(chain.BusId, chain.Target, chain.Caller, deleg);
-        byte[] legacyEncoded = _codec.encode_value(legacyExported);
+        TypeCode legacyExportedTypeCode = ORB.create_tc_for_type(typeof(ExportedCallChain));
+        Any legacyAny = new Any(legacyExported, legacyExportedTypeCode);
+        byte[] legacyEncoded = _codec.encode_value(legacyAny);
         versions[i] = new ExportedVersion(LegacyVersion.ConstVal, legacyEncoded);
         return EncodeExportedVersions(versions, _magicTagCallChain);
       }
@@ -330,10 +333,8 @@ namespace tecgraf.openbus {
         for (int i = 0; i < versions.Length; i++) {
           // Se houver duas versões, a versão atual virá antes da versão legacy.
           if (versions[i].version == CurrentVersion.ConstVal) {
-            Type exportedCallChainType = typeof(ExportedCallChain);
             TypeCode exportedCallChainTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
-                exportedCallChainType.Name);
+              ORB.create_tc_for_type(typeof(ExportedCallChain));
             ExportedCallChain exportedChain =
               (ExportedCallChain)
                 _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
@@ -342,10 +343,8 @@ namespace tecgraf.openbus {
               chain.target, chain.originators, exportedChain.signedChain);
           }
           if (versions[i].version == LegacyVersion.ConstVal) {
-            Type exportedCallChainType = typeof(LegacyExportedCallChain);
             TypeCode exportedCallChainTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedCallChainType),
-                exportedCallChainType.Name);
+              ORB.create_tc_for_type(typeof(LegacyExportedCallChain));
             LegacyExportedCallChain exportedChain =
               (LegacyExportedCallChain)
                 _codec.decode_value(versions[i].encoded, exportedCallChainTypeCode);
@@ -376,7 +375,9 @@ namespace tecgraf.openbus {
       try {
         SharedAuthSecretImpl sharedAuth = (SharedAuthSecretImpl)secret;
         ExportedSharedAuth exportedAuth = new ExportedSharedAuth(sharedAuth.BusId, sharedAuth.Attempt, sharedAuth.Secret);
-        byte[] encodedAuth = _codec.encode_value(exportedAuth);
+        TypeCode exportedTypeCode = ORB.create_tc_for_type(typeof(ExportedSharedAuth));
+        Any any = new Any(exportedAuth, exportedTypeCode);
+        byte[] encodedAuth = _codec.encode_value(any);
         ExportedVersion[] versions = { new ExportedVersion(CurrentVersion.ConstVal, encodedAuth) };
         return EncodeExportedVersions(versions, _magicTagSharedAuth);
       }
@@ -394,10 +395,8 @@ namespace tecgraf.openbus {
           _magicTagSharedAuth);
         foreach (ExportedVersion version in versions) {
           if (version.version == CurrentVersion.ConstVal) {
-            Type exportedSharedAuthType = typeof(ExportedSharedAuth);
             TypeCode exportedSharedAuthTypeCode =
-              ORB.create_interface_tc(Repository.GetRepositoryID(exportedSharedAuthType),
-                exportedSharedAuthType.Name);
+              ORB.create_tc_for_type(typeof(ExportedSharedAuth));
             ExportedSharedAuth secret =
               (ExportedSharedAuth)
                 _codec.decode_value(version.encoded, exportedSharedAuthTypeCode);
@@ -441,7 +440,10 @@ namespace tecgraf.openbus {
     #region Internal Members
 
     private byte[] EncodeExportedVersions(ExportedVersion[] exports, byte[] tag) {
-      byte[] encodedVersions = _codec.encode_value(exports);
+      TypeCode exportedTypeCode = ORB.create_tc_for_type(typeof (ExportedVersion));
+      TypeCode sequenceTypeCode = ORB.create_sequence_tc(0, exportedTypeCode);
+      Any any = new Any(exports, sequenceTypeCode);
+      byte[] encodedVersions = _codec.encode_value(any);
       byte[] fullEnconding = new byte[encodedVersions.Length + MagicTagSize];
       Buffer.BlockCopy(tag, 0, fullEnconding, 0, MagicTagSize);
       Buffer.BlockCopy(encodedVersions, 0, fullEnconding, MagicTagSize, encodedVersions.Length);
@@ -461,20 +463,17 @@ namespace tecgraf.openbus {
       Buffer.BlockCopy(encoded, MagicTagSize, encodedVersions, 0,
                        encodedVersions.Length);
       if (tag.SequenceEqual(magicTag)) {
-        Type exportedVersionType = typeof(ExportedVersion[]);
         TypeCode exportedVersionTypeCode =
-          ORB.create_interface_tc(Repository.GetRepositoryID(exportedVersionType),
-            exportedVersionType.Name);
-        return (ExportedVersion[])_codec.decode_value(encodedVersions, exportedVersionTypeCode);
+          ORB.create_tc_for_type(typeof(ExportedVersion));
+        TypeCode sequenceTypeCode = ORB.create_sequence_tc(0, exportedVersionTypeCode);
+        return (ExportedVersion[])_codec.decode_value(encodedVersions, sequenceTypeCode);
       }
       throw new InvalidEncodedStreamException(msg);
     }
 
     internal CallChain UnmarshalCallChain(SignedCallChain signed) {
-      Type chainType = typeof(CallChain);
       TypeCode chainTypeCode =
-        ORB.create_interface_tc(Repository.GetRepositoryID(chainType),
-                                chainType.Name);
+        ORB.create_tc_for_type(typeof(CallChain));
       return (CallChain)_codec.decode_value(signed.encoded, chainTypeCode);
     }
 
@@ -542,8 +541,10 @@ namespace tecgraf.openbus {
     }
 
     private Connection GetConnectionById(Object connectionId) {
-      Connection conn;
-      return _connections.TryGetValue(connectionId, out conn) ? conn : null;
+      lock (_connections) {
+        Connection conn;
+        return _connections.TryGetValue(connectionId, out conn) ? conn : null;
+      }
     }
 
     internal void IgnoreCurrentThread() {
