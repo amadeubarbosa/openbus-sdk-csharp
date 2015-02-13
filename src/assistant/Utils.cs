@@ -66,6 +66,15 @@ namespace tecgraf.openbus.assistant {
       return working.ToArray();
     }
 
+    /// <summary>
+    /// Busca uma oferta no barramento, de acordo com critérios de busca. Pode-se definir um número máximo de tentativas e um intervalo entre elas.
+    /// </summary>
+    /// <param name="offers">Faceta do barramento que oferece a busca de ofertas.</param>
+    /// <param name="search">Conjunto de propriedades que define a busca a ser realizada.</param>
+    /// <param name="count">Quantidade mínima de ofertas que se deseja encontrar.</param>
+    /// <param name="tries">Número de tentativas.</param>
+    /// <param name="interval">Intervalo entre tentativas sem sucesso.</param>
+    /// <returns>Conjunto de ofertas de serviço relacionadas à busca.</returns>
     public static List<ServiceOfferDesc> FindOffer(OfferRegistry offers,
       ServiceProperty[] search, int count, int tries, int interval) {
       OrbServices orb = OrbServices.GetSingleton();
