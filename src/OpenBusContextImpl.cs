@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop;
-using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
 using omg.org.IOP;
