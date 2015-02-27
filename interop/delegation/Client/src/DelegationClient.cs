@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,9 +30,9 @@ namespace tecgraf.openbus.interop.delegation {
     private const string Steve = "steve";
     private const string TestMessage = "Testing the list!";
 
-    private const string BroadcasterName = "interop_delegation_csharp_broadcaster";
+    private const string BroadcasterName = "interop_delegation_(cpp|java|lua|csharp)_broadcaster";
 
-    private const string ForwarderName = "interop_delegation_csharp_forwarder";
+    private const string ForwarderName = "interop_delegation_(cpp|java|lua|csharp)_forwarder";
 
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
@@ -105,8 +106,8 @@ namespace tecgraf.openbus.interop.delegation {
           Assert.AreEqual(pair.Value.Length, Actual[pair.Key].Length);
           // for abaixo depende de ordem estar correta, mas para o exemplo atual funciona.
           for (int i = 0; i < pair.Value.Length; i++) {
-            Assert.AreEqual(pair.Value[i].from, Actual[pair.Key][i].from);
-            Assert.AreEqual(pair.Value[i].message, Actual[pair.Key][i].message);
+            Assert.IsTrue(Regex.IsMatch(Actual[pair.Key][i].from, pair.Value[i].from));
+            Assert.IsTrue(Regex.IsMatch(Actual[pair.Key][i].message, pair.Value[i].message));
           }
         }
       }

@@ -9,7 +9,7 @@
       <Value Profile="(Default)">2089</Value>
     </Setting>
     <Setting Name="loginFile" Type="System.String" Scope="User">
-      <Value Profile="(Default)">../../../login.bin</Value>
+      <Value Profile="(Default)">D:\tecgraf\temp\login.bin</Value>
     </Setting>
   </Settings>
 </SettingsFile>

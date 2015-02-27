@@ -83,7 +83,7 @@ namespace tecgraf.openbus.interop.delegation {
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
           MarshalByRefObject messengerObj =
-            serviceOfferDesc.service_ref.getFacetByName("messenger");
+            serviceOfferDesc.service_ref.getFacet(Repository.GetRepositoryID(typeof(Messenger)));
           if (messengerObj == null) {
             Console.WriteLine(
               "Não foi possível encontrar uma faceta com esse nome.");

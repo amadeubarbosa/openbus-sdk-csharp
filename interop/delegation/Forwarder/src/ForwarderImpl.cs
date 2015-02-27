@@ -18,7 +18,7 @@ namespace tecgraf.openbus.interop.delegation {
     internal ForwarderImpl(Messenger messenger) {
       _messenger = messenger;
       _forwardsOf = new ConcurrentDictionary<string, Forward>();
-      Timer = new Timer(5000);
+      Timer = new Timer(500);
       Timer.Elapsed += OnTimedEvent;
       Timer.Enabled = true;
     }
