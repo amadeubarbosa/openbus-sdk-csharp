@@ -312,7 +312,7 @@ namespace tecgraf.openbus {
           deleg = chain.Originators[0].entity;
         }
         LegacyExportedCallChain legacyExported = new LegacyExportedCallChain(chain.BusId, chain.Target, chain.Caller, deleg);
-        TypeCode legacyExportedTypeCode = ORB.create_tc_for_type(typeof(ExportedCallChain));
+        TypeCode legacyExportedTypeCode = ORB.create_tc_for_type(typeof(LegacyExportedCallChain));
         Any legacyAny = new Any(legacyExported, legacyExportedTypeCode);
         byte[] legacyEncoded = _codec.encode_value(legacyAny);
         versions[i] = new ExportedVersion(LegacyVersion.ConstVal, legacyEncoded);
