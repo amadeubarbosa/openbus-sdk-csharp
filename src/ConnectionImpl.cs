@@ -44,7 +44,7 @@ namespace tecgraf.openbus {
     internal volatile bool Legacy;
     internal readonly OpenBusContextImpl Context;
 
-    private volatile int _sessionId;
+    private volatile int _sessionId = 1;
 
     private readonly ReaderWriterLockSlim _sessionIdLock =
       new ReaderWriterLockSlim();
