@@ -3,6 +3,11 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Layout;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -17,6 +22,9 @@ namespace tecgraf.openbus.interop.simple {
   /// Servidor do teste de interoperabilidade hello.
   /// </summary>
   internal static class HelloServer {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(HelloServer));
+
     private const string Entity = "interop_hello_csharp_server";
     private static Connection _conn;
     private static PrivateKey _privateKey;
@@ -25,21 +33,34 @@ namespace tecgraf.openbus.interop.simple {
     private static ServiceOffer _offer;
 
     private static void Main() {
+      //TextWriterTraceListener writer = new TextWriterTraceListener(Console.Out);
+      //Debug.Listeners.Add(writer);
+      //Trace.Listeners.Add(writer);
+
       AppDomain.CurrentDomain.ProcessExit += CurrentDomainProcessExit;
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
       }
 
+      ConsoleAppender appender = new ConsoleAppender {
+        Threshold = Level.Off,
+        Layout =
+          new SimpleLayout(),
+      };
+      BasicConfigurator.Configure(appender);
       //FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       //XmlConfigurator.ConfigureAndWatch(logFileInfo);
 
@@ -70,7 +91,7 @@ namespace tecgraf.openbus.interop.simple {
       _offer = context.OfferRegistry.registerService(_ic, _properties);
       _conn.OnInvalidLogin = InvalidLogin;
 
-      Console.WriteLine("Servidor no ar.");
+      Logger.Fatal("Servidor no ar.");
       Thread.Sleep(Timeout.Infinite);
     }
 
@@ -80,7 +101,7 @@ namespace tecgraf.openbus.interop.simple {
           _offer.remove();
         }
         catch (Exception exc) {
-          Console.WriteLine(
+          Logger.Fatal(
             "Erro ao remover a oferta antes de finalizar o processo: " + exc);
         }
       }
@@ -91,7 +112,7 @@ namespace tecgraf.openbus.interop.simple {
       OpenBusContext context = ORBInitializer.Context;
       context.SetCurrentConnection(conn);
       try {
-        Console.WriteLine(
+        Logger.Fatal(
           "Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(Entity, _privateKey);
         _offer = context.OfferRegistry.registerService(_ic, _properties);
@@ -100,7 +121,7 @@ namespace tecgraf.openbus.interop.simple {
         // outra thread reconectou
       }
       catch (Exception e) {
-        Console.WriteLine(e);
+        Logger.Fatal(e);
       }
     }
   }

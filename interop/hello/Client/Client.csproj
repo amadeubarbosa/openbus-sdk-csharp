@@ -44,6 +44,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -74,9 +75,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\OpenBus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="Org.Mentalis.Security">
+      <HintPath>..\..\..\lib\Org.Mentalis.Security.dll</HintPath>
+    </Reference>
     <Reference Include="Scs.Core, Version=1.2.1.2, Culture=neutral, PublicKeyToken=dfc497b8b7d0eb85, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SslPlugin">
+      <HintPath>..\..\..\lib\SslPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">

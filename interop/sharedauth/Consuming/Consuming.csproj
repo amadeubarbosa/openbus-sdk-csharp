@@ -51,8 +51,18 @@
     <Reference Include="OpenBus.Interop.Hello.Idl">
       <HintPath>..\..\..\lib\OpenBus.Interop.Hello.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="OpenBus.Legacy.Idl, Version=2.0.4.0, Culture=neutral, PublicKeyToken=85ac5d54272cfc39, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\lib\OpenBus.Legacy.Idl.dll</HintPath>
+    </Reference>
+    <Reference Include="Org.Mentalis.Security">
+      <HintPath>..\..\..\lib\Org.Mentalis.Security.dll</HintPath>
+    </Reference>
     <Reference Include="Scs.Core">
       <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SslPlugin">
+      <HintPath>..\..\..\lib\SslPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

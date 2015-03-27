@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
+using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
 using scs.core;
@@ -15,6 +16,9 @@ using tecgraf.openbus.interop.utils;
 namespace tecgraf.openbus.interop.multiplexing {
   [TestClass]
   internal static class Client {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(Client));
+
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
@@ -22,12 +26,15 @@ namespace tecgraf.openbus.interop.multiplexing {
       ASCIIEncoding encoding = new ASCIIEncoding();
       object[] buses;
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       string bus2IORFile = DemoConfig.Default.bus2IORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
         buses = new object[] { busIORFile, bus2IORFile };
       }
       else {
@@ -63,20 +70,20 @@ namespace tecgraf.openbus.interop.multiplexing {
         foreach (ServiceOfferDesc offer in offers) {
           string entity = Utils.GetProperty(offer.properties, "openbus.offer.entity");
           if (entity != null) {
-            Console.WriteLine("found offer from " + entity + " on bus " + i);
+            Logger.Info("found offer from " + entity + " on bus " + i);
           }
           try {
             MarshalByRefObject obj =
               offer.service_ref.getFacet(
                 Repository.GetRepositoryID(typeof (Hello)));
             if (obj == null) {
-              Console.WriteLine(
+              Logger.Info(
                 "Não foi possível encontrar uma faceta com esse nome.");
               continue;
             }
             Hello hello = obj as Hello;
             if (hello == null) {
-              Console.WriteLine("Faceta encontrada não implementa Hello.");
+              Logger.Info("Faceta encontrada não implementa Hello.");
               continue;
             }
             string expected = String.Format("Hello {0}@{1}!", login,
@@ -85,7 +92,7 @@ namespace tecgraf.openbus.interop.multiplexing {
             Assert.AreEqual(expected, ret);
           }
           catch (TRANSIENT) {
-            Console.WriteLine(
+            Logger.Info(
               "Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
           }
         }

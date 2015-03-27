@@ -4,6 +4,11 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Layout;
 using Scs.Core;
 using omg.org.CORBA;
 using scs.core;
@@ -19,6 +24,9 @@ namespace tecgraf.openbus.interop.delegation {
   /// Servidor broadcaster do teste de interoperabilidade delegation.
   /// </summary>
   internal static class BroadcasterServer {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(BroadcasterServer));
+
     private const string Entity = "interop_delegation_csharp_broadcaster";
     private static PrivateKey _privateKey;
     private static IComponent _ic;
@@ -32,15 +40,25 @@ namespace tecgraf.openbus.interop.delegation {
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
       }
+
+      ConsoleAppender appender = new ConsoleAppender {
+        Threshold = Level.Fatal,
+        Layout =
+          new SimpleLayout(),
+      };
+      BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
@@ -58,7 +76,7 @@ namespace tecgraf.openbus.interop.delegation {
 
       Messenger messenger = GetMessenger();
       if (messenger == null) {
-        Console.WriteLine(
+        Logger.Fatal(
           "Não foi possível encontrar um Messenger no barramento.");
         Console.Read();
         return;
@@ -80,7 +98,7 @@ namespace tecgraf.openbus.interop.delegation {
       _offer = context.OfferRegistry.registerService(_ic, _properties);
       _conn.OnInvalidLogin = InvalidLogin;
 
-      Console.WriteLine("Broadcaster no ar.");
+      Logger.Fatal("Broadcaster no ar.");
 
       Thread.Sleep(Timeout.Infinite);
     }
@@ -101,21 +119,21 @@ namespace tecgraf.openbus.interop.delegation {
       foreach (ServiceOfferDesc serviceOfferDesc in offers) {
         try {
           MarshalByRefObject messengerObj =
-            serviceOfferDesc.service_ref.getFacetByName("messenger");
+            serviceOfferDesc.service_ref.getFacet(Repository.GetRepositoryID(typeof(Messenger)));
           if (messengerObj == null) {
-            Console.WriteLine(
+            Logger.Fatal(
               "Não foi possível encontrar uma faceta com esse nome.");
             continue;
           }
           Messenger messenger = messengerObj as Messenger;
           if (messenger == null) {
-            Console.WriteLine("Faceta encontrada não implementa Messenger.");
+            Logger.Fatal("Faceta encontrada não implementa Messenger.");
             continue;
           }
           return messenger;
         }
         catch (TRANSIENT) {
-          Console.WriteLine(
+          Logger.Fatal(
             "Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
         }
       }
@@ -124,7 +142,7 @@ namespace tecgraf.openbus.interop.delegation {
 
     private static void InvalidLogin(Connection conn, LoginInfo login) {
       try {
-        Console.WriteLine(
+        Logger.Fatal(
           "Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(Entity, _privateKey);
         _offer = ORBInitializer.Context.OfferRegistry.registerService(_ic,
@@ -134,7 +152,7 @@ namespace tecgraf.openbus.interop.delegation {
         // outra thread reconectou
       }
       catch (Exception e) {
-        Console.WriteLine(e);
+        Logger.Fatal(e);
       }
     }
 
@@ -144,7 +162,7 @@ namespace tecgraf.openbus.interop.delegation {
           _offer.remove();
         }
         catch (Exception exc) {
-          Console.WriteLine(
+          Logger.Fatal(
             "Erro ao remover a oferta antes de finalizar o processo: " + exc);
         }
       }

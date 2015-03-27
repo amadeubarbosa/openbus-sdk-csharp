@@ -1,6 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using System.Reflection;
 using System.Runtime.Remoting;
+using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net.Appender;
 using log4net.Config;
@@ -16,23 +17,30 @@ namespace tecgraf.openbus.interop.sharedauth {
   /// </summary>
   [TestClass]
   internal static class Consuming {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(Consuming));
+
     private static void Main() {
+      Assembly.Load("OpenBus.Legacy.Idl");
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       string loginFile = DemoConfig.Default.loginFile;
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
       }
 
       ConsoleAppender appender = new ConsoleAppender {
-                                                       Threshold = Level.Info,
+                                                       Threshold = Level.Off,
                                                        Layout =
                                                          new SimpleLayout(),
                                                      };
@@ -59,7 +67,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       Assert.IsNotNull(conn.Login.Value.entity);
 
       conn.Logout();
-      Console.WriteLine("Fim.");
+      Logger.Info("Fim.");
     }
   }
 }

@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using log4net;
 
 namespace tecgraf.openbus.interop.delegation {
   public class BroadcasterImpl : MarshalByRefObject, Broadcaster {
     #region Fields
+
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(BroadcasterImpl));
 
     private readonly Messenger _messenger;
     private readonly List<string> _subscribers;
@@ -33,7 +37,7 @@ namespace tecgraf.openbus.interop.delegation {
     public void subscribe() {
       CallerChain chain = _context.CallerChain;
       string user = chain.Caller.entity;
-      Console.WriteLine("subscription by " + user);
+      Logger.Fatal("subscription by " + user);
       lock (_subscribers) {
         _subscribers.Add(user);
       }
@@ -42,7 +46,7 @@ namespace tecgraf.openbus.interop.delegation {
     public void unsubscribe() {
       CallerChain chain = _context.CallerChain;
       string user = chain.Caller.entity;
-      Console.WriteLine("unsubscription by " + user);
+      Logger.Fatal("unsubscription by " + user);
       lock (_subscribers) {
         _subscribers.Remove(user);
       }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using log4net;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -15,6 +16,9 @@ using tecgraf.openbus.security;
 
 namespace tecgraf.openbus.interop.relloggedjoin.src {
   internal static class Proxy {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(Proxy));
+
     private const string Entity = "interop_reloggedjoin_csharp_proxy";
     private static PrivateKey _privateKey;
     private static IComponent _ic;
@@ -26,11 +30,14 @@ namespace tecgraf.openbus.interop.relloggedjoin.src {
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
@@ -68,14 +75,14 @@ namespace tecgraf.openbus.interop.relloggedjoin.src {
       context.OfferRegistry.registerService(_ic, _properties);
       conn.OnInvalidLogin = InvalidLogin;
 
-      Console.WriteLine("Hello Proxy no ar.");
+      Logger.Info("Hello Proxy no ar.");
 
       Thread.Sleep(Timeout.Infinite);
     }
 
     private static void InvalidLogin(Connection conn, LoginInfo login) {
       try {
-        Console.WriteLine(
+        Logger.Info(
           "Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(Entity, _privateKey);
         ORBInitializer.Context.OfferRegistry.registerService(_ic, _properties);
@@ -84,7 +91,7 @@ namespace tecgraf.openbus.interop.relloggedjoin.src {
         // outra thread reconectou
       }
       catch (Exception e) {
-        Console.WriteLine(e);
+        Logger.Info(e);
       }
     }
 

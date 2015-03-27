@@ -56,11 +56,17 @@
     <Reference Include="OpenBus.Legacy.Idl">
       <HintPath>..\..\..\lib\OpenBus.Legacy.Idl.dll</HintPath>
     </Reference>
+    <Reference Include="Org.Mentalis.Security">
+      <HintPath>..\..\..\lib\Org.Mentalis.Security.dll</HintPath>
+    </Reference>
     <Reference Include="Scs">
       <HintPath>..\..\..\lib\Scs.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
       <HintPath>..\..\..\lib\Scs.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SslPlugin">
+      <HintPath>..\..\..\lib\SslPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

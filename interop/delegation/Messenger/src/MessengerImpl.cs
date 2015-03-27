@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using log4net;
 
 namespace tecgraf.openbus.interop.delegation {
   public class MessengerImpl : MarshalByRefObject, Messenger {
     #region Fields
+
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(MessengerImpl));
 
     private readonly ConcurrentDictionary<string, List<PostDesc>> _inboxOf;
 
@@ -21,7 +25,7 @@ namespace tecgraf.openbus.interop.delegation {
     public void post(string to, string message) {
       CallerChain chain = ORBInitializer.Context.CallerChain;
       string from = ChainToString(chain);
-      Console.WriteLine("post to " + to + " by " + from);
+      Logger.Fatal("post to " + to + " by " + from);
       List<PostDesc> inbox;
       if (!_inboxOf.TryGetValue(to, out inbox)) {
         inbox = new List<PostDesc>();
@@ -37,7 +41,7 @@ namespace tecgraf.openbus.interop.delegation {
       string owner = chain.Originators.Length > 0
                        ? chain.Originators[0].entity
                        : chain.Caller.entity;
-      Console.WriteLine("download of messages of " + owner + " by " +
+      Logger.Fatal("download of messages of " + owner + " by " +
                         ChainToString(chain));
       List<PostDesc> inbox;
       if (_inboxOf.TryRemove(owner, out inbox)) {

@@ -1,7 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Remoting;
 using System.Text;
+using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using log4net.Appender;
 using log4net.Config;
@@ -17,22 +17,28 @@ namespace tecgraf.openbus.interop.sharedauth {
   /// </summary>
   [TestClass]
   internal static class Sharing {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(Sharing));
+
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
       }
 
       ConsoleAppender appender = new ConsoleAppender {
-                                                       Threshold = Level.Fatal,
+                                                       Threshold = Level.Off,
                                                        Layout =
                                                          new SimpleLayout(),
                                                      };
@@ -60,8 +66,8 @@ namespace tecgraf.openbus.interop.sharedauth {
       File.WriteAllBytes(loginFile, sharedAuth);
 
       conn.Logout();
-      Console.WriteLine("Fim.");
-      Console.WriteLine(
+      Logger.Info("Fim.");
+      Logger.Info(
         "Execute o cliente que fará o login por autenticação compartilhada.");
     }
   }

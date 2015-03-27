@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Remoting;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using log4net;
+using log4net.Appender;
+using log4net.Config;
+using log4net.Core;
+using log4net.Layout;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
 using scs.core;
@@ -15,6 +21,9 @@ using tecgraf.openbus.interop.utils;
 namespace tecgraf.openbus.interop.delegation {
   [TestClass]
   internal static class DelegationClient {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(DelegationClient));
+
     private static Messenger _messenger;
     private static Broadcaster _broadcaster;
     private static Forwarder _forwarder;
@@ -32,23 +41,33 @@ namespace tecgraf.openbus.interop.delegation {
     private const string Steve = "steve";
     private const string TestMessage = "Testing the list!";
 
-    private const string BroadcasterName = "interop_delegation_csharp_broadcaster";
+    private const string BroadcasterName = "interop_delegation_(cpp|java|lua|csharp)_broadcaster";
 
-    private const string ForwarderName = "interop_delegation_csharp_forwarder";
+    private const string ForwarderName = "interop_delegation_(cpp|java|lua|csharp)_forwarder";
 
     private static void Main() {
       string hostName = DemoConfig.Default.busHostName;
       ushort hostPort = DemoConfig.Default.busHostPort;
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
       }
+
+      ConsoleAppender appender = new ConsoleAppender {
+        Threshold = Level.Fatal,
+        Layout =
+          new SimpleLayout(),
+      };
+      BasicConfigurator.Configure(appender);
 
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
@@ -91,9 +110,9 @@ namespace tecgraf.openbus.interop.delegation {
       _broadcaster.post(TestMessage);
       conn.Logout();
 
-      Console.WriteLine("Esperando as mensagens propagarem.");
+      Logger.Fatal("Esperando as mensagens propagarem.");
       Thread.Sleep(10000);
-      Console.WriteLine("Pronto!");
+      Logger.Fatal("Pronto!");
 
       FillExpected();
 
@@ -110,7 +129,7 @@ namespace tecgraf.openbus.interop.delegation {
       _forwarder.cancelForward(William);
       conn.Logout();
       CheckOutput();
-      Console.WriteLine(
+      Logger.Fatal(
         "Teste de interoperabilidade Delegation executado com êxito.");
     }
 
@@ -125,8 +144,8 @@ namespace tecgraf.openbus.interop.delegation {
           Assert.AreEqual(pair.Value.Length, Actual[pair.Key].Length);
           // for abaixo depende de ordem estar correta, mas para o exemplo atual funciona.
           for (int i = 0; i < pair.Value.Length; i++) {
-            Assert.AreEqual(pair.Value[i].from, Actual[pair.Key][i].from);
-            Assert.AreEqual(pair.Value[i].message, Actual[pair.Key][i].message);
+            Assert.IsTrue(Regex.IsMatch(Actual[pair.Key][i].from, pair.Value[i].from));
+            Assert.IsTrue(Regex.IsMatch(Actual[pair.Key][i].message, pair.Value[i].message));
           }
         }
       }
@@ -147,14 +166,15 @@ namespace tecgraf.openbus.interop.delegation {
       Expected.Add(Steve, descs);
     }
 
+/*
     private static void ShowPostsOf(string user, PostDesc[] posts) {
-      Console.WriteLine(user + " recebeu " + posts.Length + " mensagens:");
+      Logger.Fatal(user + " recebeu " + posts.Length + " mensagens:");
       for (int i = 0; i < posts.Length; i++) {
-        Console.WriteLine(i + ") " + posts[i].from + ": " + posts[i].message);
+        Logger.Fatal(i + ") " + posts[i].from + ": " + posts[i].message);
       }
-      Console.WriteLine();
+      Logger.Fatal("\n");
     }
-
+*/
     private static void GetService(Type type) {
       // propriedades geradas automaticamente
       ServiceProperty autoProp =
@@ -174,7 +194,7 @@ namespace tecgraf.openbus.interop.delegation {
             serviceOfferDesc.service_ref.getFacet(
               Repository.GetRepositoryID(type));
           if (obj == null) {
-            Console.WriteLine(
+            Logger.Fatal(
               "Não foi possível encontrar uma faceta com esse nome.");
             continue;
           }
@@ -202,7 +222,7 @@ namespace tecgraf.openbus.interop.delegation {
           }
         }
         catch (TRANSIENT) {
-          Console.WriteLine(
+          Logger.Fatal(
             "Uma das ofertas obtidas é de um cliente inativo. Tentando a próxima.");
         }
       }

@@ -105,22 +105,29 @@ namespace tecgraf.openbus.interop.utils {
       throw new InvalidOperationException(msg);
     }
 
-    public static OrbServices InitSSLORB(string keyUser, string keyThumbprint) {
+    public static OrbServices InitSSLORB(string clientUser, string clientThumbprint, string serverUser, string serverThumbprint, string serverSSLPort) {
       IDictionary props = new Hashtable();
-      props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
+      props[SslTransportFactory.CLIENT_AUTHENTICATION] =
+        "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
+      // take certificates from the windows certificate store of the current user
+      props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
+        clientUser;
+      props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
+        clientThumbprint;
+
+      props[IiopChannel.CHANNEL_NAME_KEY] = "securedServerIiopChannel";
       props[IiopChannel.TRANSPORT_FACTORY_KEY] =
           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
 
-      props[SslTransportFactory.CLIENT_AUTHENTICATION] =
-          "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
-      // take certificates from the windows certificate store of the current user
-      props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] = keyUser;
-      props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
-        keyThumbprint;
-      // the expected CN property of the server key
-      //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
-      //            "IIOP.NET demo Server";
-      //              "test-server.tecgraf.puc-rio.br";
+      props[IiopServerChannel.PORT_KEY] = serverSSLPort;
+      props[SslTransportFactory.SERVER_REQUIRED_OPTS] = "96";
+      props[SslTransportFactory.SERVER_SUPPORTED_OPTS] = "96";
+      props[SslTransportFactory.SERVER_AUTHENTICATION] =
+          "Ch.Elca.Iiop.Security.Ssl.DefaultServerAuthenticationImpl,SSLPlugin";
+      props[DefaultServerAuthenticationImpl.SERVER_CERTIFICATE] =
+          serverThumbprint;
+      props[DefaultServerAuthenticationImpl.STORE_LOCATION] = serverUser;
+
       return ORBInitializer.InitORB(props);
     }
   }

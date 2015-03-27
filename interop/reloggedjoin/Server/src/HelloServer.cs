@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using log4net;
 using Scs.Core;
 using log4net.Config;
 using scs.core;
@@ -19,6 +20,9 @@ namespace tecgraf.openbus.interop.relloggedjoin {
   ///   Servidor do teste de interoperabilidade reloggedjoin.
   /// </summary>
   internal static class HelloServer {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(HelloServer));
+
     private const string Entity = "interop_reloggedjoin_csharp_server";
     private static Connection _conn;
     private static PrivateKey _privateKey;
@@ -32,11 +36,14 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       ushort hostPort = DemoConfig.Default.busHostPort;
       _privateKey = Crypto.ReadKeyFile(DemoConfig.Default.privateKey);
       bool useSSL = DemoConfig.Default.useSSL;
-      string keyUser = DemoConfig.Default.keyUser;
-      string keyThumbprint = DemoConfig.Default.keyThumbprint;
+      string clientUser = DemoConfig.Default.clientUser;
+      string clientThumbprint = DemoConfig.Default.clientThumbprint;
+      string serverUser = DemoConfig.Default.serverUser;
+      string serverThumbprint = DemoConfig.Default.serverThumbprint;
+      string serverSSLPort = DemoConfig.Default.serverSSLPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(keyUser, keyThumbprint);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
       }
       else {
         ORBInitializer.InitORB();
@@ -74,7 +81,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       _offer = context.OfferRegistry.registerService(_ic, _properties);
       _conn.OnInvalidLogin = InvalidLogin;
 
-      Console.WriteLine("Servidor no ar.");
+      Logger.Info("Servidor no ar.");
       Thread.Sleep(Timeout.Infinite);
     }
 
@@ -84,7 +91,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
           _offer.remove();
         }
         catch (Exception exc) {
-          Console.WriteLine(
+          Logger.Info(
             "Erro ao remover a oferta antes de finalizar o processo: " + exc);
         }
       }
@@ -95,7 +102,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       OpenBusContext context = ORBInitializer.Context;
       context.SetCurrentConnection(conn);
       try {
-        Console.WriteLine(
+        Logger.Info(
           "Callback de InvalidLogin foi chamada, tentando logar novamente no barramento.");
         conn.LoginByCertificate(Entity, _privateKey);
         _offer = context.OfferRegistry.registerService(_ic, _properties);
@@ -104,7 +111,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
         // outra thread reconectou
       }
       catch (Exception e) {
-        Console.WriteLine(e);
+        Logger.Info(e);
       }
     }
   }

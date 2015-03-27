@@ -1,4 +1,5 @@
 ﻿using System;
+using log4net;
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.interop.multiplexing {
@@ -6,6 +7,9 @@ namespace tecgraf.openbus.interop.multiplexing {
   /// Implementação do servant Hello.
   /// </summary>  
   public class HelloImpl : MarshalByRefObject, Hello {
+    private static readonly ILog Logger =
+      LogManager.GetLogger(typeof(HelloImpl));
+
     #region Hello Members
 
     public string sayHello() {
@@ -16,12 +20,12 @@ namespace tecgraf.openbus.interop.multiplexing {
           String entity = callerChain.Caller.entity;
           ret = String.Format("Hello {0}@{1}!", entity,
                               callerChain.BusId);
-          Console.WriteLine(ret);
+          Logger.Info(ret);
           return ret;
         }
       }
       catch (Exception e) {
-        Console.WriteLine(e);
+        Logger.Info(e);
       }
       return ret;
     }
