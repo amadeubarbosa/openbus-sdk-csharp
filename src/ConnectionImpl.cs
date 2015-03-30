@@ -583,7 +583,7 @@ namespace tecgraf.openbus {
 
     public void LoginBySharedAuth(SharedAuthSecret secret) {
       SharedAuthSecretImpl sharedAuth = secret as SharedAuthSecretImpl;
-      if (sharedAuth == null || (sharedAuth.Attempt == null && sharedAuth.LegacyAttempt == null) || sharedAuth.Secret == null) {
+      if (sharedAuth == null || (!sharedAuth.Legacy && sharedAuth.Attempt == null) || (sharedAuth.Legacy && sharedAuth.LegacyAttempt == null) || sharedAuth.Secret == null) {
         throw new ArgumentException("O segredo fornecido é inválido.");
       }
 
