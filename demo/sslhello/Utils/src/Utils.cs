@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Security.Ssl;
 using tecgraf.openbus;
