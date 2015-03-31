@@ -134,36 +134,41 @@ namespace tecgraf.openbus.Test {
         throw new ArgumentNullException("hostName");
       }
 
+      // IMPORTANTE: para rodar os testes com SSL habilitado, usar a ferramenta de testes do resharper e configurar o teste como 32bit no menu options da ferramenta.
       if (_useSSL) {
         IDictionary props = new Hashtable();
-        props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
-        props[IiopChannel.TRANSPORT_FACTORY_KEY] =
-           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
-
         props[SslTransportFactory.CLIENT_AUTHENTICATION] =
-            "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
+          "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
         // take certificates from the windows certificate store of the current user
-        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
-            "CurrentUser";
+        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] = "CurrentUser";
         props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
-          "1eafd460fa5ed96992786e5e09772226f60c6748";
-        // the expected CN property of the server key
-        //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
-        //            "IIOP.NET demo Server";
-        //              "test-server.tecgraf.puc-rio.br";
+          "256a1ce837292a3c80b4e82b36741316f63fe46a";
+
+        props[IiopChannel.CHANNEL_NAME_KEY] = "securedServerIiopChannel";
+        props[IiopChannel.TRANSPORT_FACTORY_KEY] =
+            "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
+
+        props[IiopServerChannel.PORT_KEY] = 58000;
+        props[SslTransportFactory.SERVER_REQUIRED_OPTS] = "96";
+        props[SslTransportFactory.SERVER_SUPPORTED_OPTS] = "96";
+        props[SslTransportFactory.SERVER_AUTHENTICATION] =
+            "Ch.Elca.Iiop.Security.Ssl.DefaultServerAuthenticationImpl,SSLPlugin";
+        props[DefaultServerAuthenticationImpl.SERVER_CERTIFICATE] =
+            "256a1ce837292a3c80b4e82b36741316f63fe46a";
+        props[DefaultServerAuthenticationImpl.STORE_LOCATION] = "CurrentUser";
         ORBInitializer.InitORB(props);
+        _busIOR = ConfigurationManager.AppSettings["busIOR"];
+        if (String.IsNullOrEmpty(_busIOR)) {
+          throw new InvalidPropertyValueException(_busIOR);
+        }
+        string[] iors = File.ReadAllLines(_busIOR);
+        _busIOR = iors[0];
+        _busRef = (IComponent)RemotingServices.Connect(typeof(IComponent), _busIOR);
       }
       else {
         ORBInitializer.InitORB();
       }
       _context = ORBInitializer.Context;
-
-      _busIOR = ConfigurationManager.AppSettings["busIOR"];
-      if (!String.IsNullOrEmpty(_busIOR)) {
-        string[] iors = File.ReadAllLines(_busIOR);
-        _busRef = (IComponent)OrbServices.GetSingleton().string_to_object(iors[0]);
-      }
-
     }
 
     /// <summary>
@@ -698,11 +703,18 @@ namespace tecgraf.openbus.Test {
     }
 
     private void InvalidateLogin(Connection conn) {
-      IComponent busIC = RemotingServices.Connect(
-        typeof(IComponent),
-        "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
-        BusObjectKey.ConstVal)
-                         as IComponent;
+      IComponent busIC;
+      if (_useSSL) {
+        busIC =
+          (IComponent) RemotingServices.Connect(typeof (IComponent), _busIOR);
+      }
+      else {
+        busIC = RemotingServices.Connect(
+          typeof (IComponent),
+          "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
+          BusObjectKey.ConstVal)
+          as IComponent;
+      }
       Assert.IsNotNull(busIC);
       string lrId = Repository.GetRepositoryID(typeof(LoginRegistry));
       LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;

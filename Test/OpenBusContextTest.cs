@@ -3,6 +3,7 @@ using System.Collections;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Remoting;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
 using Ch.Elca.Iiop.Security.Ssl;
@@ -125,36 +126,41 @@ namespace tecgraf.openbus.Test {
         throw new ArgumentNullException("hostName");
       }
 
+      // IMPORTANTE: para rodar os testes com SSL habilitado, usar a ferramenta de testes do resharper e configurar o teste como 32bit no menu options da ferramenta.
       if (_useSSL) {
         IDictionary props = new Hashtable();
-        props[IiopChannel.CHANNEL_NAME_KEY] = "IiopClientChannelSsl";
-        props[IiopChannel.TRANSPORT_FACTORY_KEY] =
-           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
-
         props[SslTransportFactory.CLIENT_AUTHENTICATION] =
-            "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
+          "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
         // take certificates from the windows certificate store of the current user
-        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
-            "CurrentUser";
+        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] = "CurrentUser";
         props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
-          "1eafd460fa5ed96992786e5e09772226f60c6748";
-        // the expected CN property of the server key
-        //        props[DefaultClientAuthenticationImpl.EXPECTED_SERVER_CERTIFICATE_CName] =
-        //            "IIOP.NET demo Server";
-        //              "test-server.tecgraf.puc-rio.br";
+          "256a1ce837292a3c80b4e82b36741316f63fe46a";
+
+        props[IiopChannel.CHANNEL_NAME_KEY] = "securedServerIiopChannel";
+        props[IiopChannel.TRANSPORT_FACTORY_KEY] =
+            "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
+
+        props[IiopServerChannel.PORT_KEY] = 58000;
+        props[SslTransportFactory.SERVER_REQUIRED_OPTS] = "96";
+        props[SslTransportFactory.SERVER_SUPPORTED_OPTS] = "96";
+        props[SslTransportFactory.SERVER_AUTHENTICATION] =
+            "Ch.Elca.Iiop.Security.Ssl.DefaultServerAuthenticationImpl,SSLPlugin";
+        props[DefaultServerAuthenticationImpl.SERVER_CERTIFICATE] =
+            "256a1ce837292a3c80b4e82b36741316f63fe46a";
+        props[DefaultServerAuthenticationImpl.STORE_LOCATION] = "CurrentUser";
         ORBInitializer.InitORB(props);
+        _busIOR = ConfigurationManager.AppSettings["busIOR"];
+        if (String.IsNullOrEmpty(_busIOR)) {
+          throw new InvalidPropertyValueException(_busIOR);
+        }
+        string[] iors = File.ReadAllLines(_busIOR);
+        _busIOR = iors[0];
+        _busRef = (IComponent)RemotingServices.Connect(typeof(IComponent), _busIOR);
       }
       else {
         ORBInitializer.InitORB();
       }
       _context = ORBInitializer.Context;
-
-      _busIOR = ConfigurationManager.AppSettings["busIOR"];
-      if (!String.IsNullOrEmpty(_busIOR)) {
-        string[] iors = File.ReadAllLines(_busIOR);
-        _busRef = (IComponent)OrbServices.GetSingleton().string_to_object(iors[0]);
-      }
-
     }
 
     /// <summary>
@@ -177,29 +183,41 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(ConnectToBus());
         // tenta criar conexão com hosts inválidos
         Connection invalid = null;
-        try {
-          invalid = _context.ConnectByAddress(null, _hostPort, Props);
+        if (_useSSL) {
+          try {
+            invalid = ConnectToBus(null, 0, null, Props);
+          }
+          catch (ArgumentException) {
+          }
+          finally {
+            Assert.IsNull(invalid);
+          }
         }
-        catch (ArgumentException) {
-        }
-        finally {
-          Assert.IsNull(invalid);
-        }
-        try {
-          invalid = _context.ConnectByAddress("", _hostPort, Props);
-        }
-        catch (ArgumentException) {
-        }
-        finally {
-          Assert.IsNull(invalid);
-        }
-        try {
-          invalid = _context.ConnectByAddress(_hostName, 0, Props);
-        }
-        catch (ArgumentException) {
-        }
-        finally {
-          Assert.IsNull(invalid);
+        else {
+          try {
+            invalid = ConnectToBus(null, _hostPort, null, Props);
+          }
+          catch (ArgumentException) {
+          }
+          finally {
+            Assert.IsNull(invalid);
+          }
+          try {
+            invalid = ConnectToBus("", _hostPort, null, Props);
+          }
+          catch (ArgumentException) {
+          }
+          finally {
+            Assert.IsNull(invalid);
+          }
+          try {
+            invalid = ConnectToBus(_hostName, 0, null, Props);
+          }
+          catch (ArgumentException) {
+          }
+          finally {
+            Assert.IsNull(invalid);
+          }
         }
       }
     }
@@ -584,7 +602,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ImportChainTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         string busid = conn.BusId;
         string login = conn.Login.Value.id;
@@ -630,7 +648,7 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ImportChainUnknownDomainTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
+        Connection conn = ConnectToBus();
         conn.LoginByPassword(_login, _password, _domain);
         _context.SetCurrentConnection(conn);
         string login = conn.Login.Value.id;
@@ -706,8 +724,8 @@ namespace tecgraf.openbus.Test {
     [TestMethod]
     public void ImportChainJoinedTest() {
       lock (Lock) {
-        Connection conn = _context.ConnectByAddress(_hostName, _hostPort);
-        Connection conn2 = _context.ConnectByAddress(_hostName, _hostPort);
+        Connection conn = ConnectToBus();
+        Connection conn2 = ConnectToBus();
         const string service = "service";
         const string user1 = "external_1";
         const string user2 = "external_2";
@@ -1030,6 +1048,12 @@ namespace tecgraf.openbus.Test {
       return _useSSL
         ? _context.ConnectByReference(_busRef, Props)
         : _context.ConnectByAddress(_hostName, _hostPort, Props);
+    }
+
+    private static Connection ConnectToBus(string host, ushort port, IComponent busRef, ConnectionProperties props) {
+      return _useSSL
+        ? _context.ConnectByReference(busRef, props)
+        : _context.ConnectByAddress(host, port, props);
     }
   }
 }
