@@ -33,7 +33,7 @@ Scs.Core.dll
 ------------------------------
 
 Servidor
-1) IOR do barramento
+1) caminho para arquivo com o IOR do barramento
 2) nome de entidade
 3) caminho para a chave privada
 4) nome do usuário que contém a chave privada para realizar chamadas SSL
@@ -43,7 +43,7 @@ Servidor
 8) porta a ser utilizada para receber chamadas SSL
 
 Cliente
-1) IOR do barramento
+1) caminho para arquivo com o IOR do barramento
 2) domínio da entidade
 3) nome de entidade
 4) senha (opcional - se não for fornecida, será usado o nome de entidade)
