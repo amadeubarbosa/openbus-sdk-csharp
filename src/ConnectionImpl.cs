@@ -1253,7 +1253,7 @@ namespace tecgraf.openbus {
       CredentialReset requestReset = ReadCredentialReset(ri, exception);
       string remoteLogin = requestReset.target;
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
-      _profile2Login.TryAdd(profile, remoteLogin);
+      _profile2Login.Set(profile, remoteLogin);
 
       int sessionId = requestReset.session;
       byte[] secret;
@@ -1263,7 +1263,7 @@ namespace tecgraf.openbus {
       catch (Exception) {
         throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
       }
-      _outgoingLogin2Session.TryAdd(remoteLogin,
+      _outgoingLogin2Session.Set(remoteLogin,
                                     new ClientSideSession(sessionId, secret,
                                                           remoteLogin));
       Logger.Debug(
@@ -1309,7 +1309,7 @@ namespace tecgraf.openbus {
           if (!cacheHit) {
             SignCallChain(remoteLogin, out signed);
             lock (chain) {
-              chain.Joined.TryAdd(remoteLogin, signed);
+              chain.Joined.Set(remoteLogin, signed);
             }
           }
         }
@@ -1459,7 +1459,7 @@ namespace tecgraf.openbus {
                                                         challenge,
                                                         remoteLogin);
       lock (session) {
-        _sessionId2Session.TryAdd(session.Id, session);
+        _sessionId2Session.Set(session.Id, session);
         reset.session = session.Id;
       }
       TypeCode resetTC = ORB.create_tc_for_type(typeof(CredentialReset));

@@ -615,13 +615,13 @@ namespace tecgraf.openbus.Test {
       Object obj22 = new object();
       Object obj3 = new object();
       Object obj4 = new object();
-      cache.TryAdd(obj1, "1");
-      cache.TryAdd(obj12, "1");
-      cache.TryAdd(obj13, "1");
-      cache.TryAdd(obj2, "2");
-      cache.TryAdd(obj22, "2");
-      cache.TryAdd(obj3, "3");
-      cache.TryAdd(obj4, "4");
+      cache.Set(obj1, "1");
+      cache.Set(obj12, "1");
+      cache.Set(obj13, "1");
+      cache.Set(obj2, "2");
+      cache.Set(obj22, "2");
+      cache.Set(obj3, "3");
+      cache.Set(obj4, "4");
       IEnumerable<Object> keys = cache.RemoveEntriesWithValues(new[] { "1", "2", "5" });
       string temp;
       int size = cache.GetSize();
@@ -631,6 +631,22 @@ namespace tecgraf.openbus.Test {
       cache.RemoveEntriesWithKeys(new[] { obj3, obj4 });
       size = cache.GetSize();
       Assert.IsTrue(size == 0);
+    }
+
+    /// <summary>
+    /// Cache deve suportar adicionar ou atualizar valores.
+    /// </summary>
+    [TestMethod]
+    public void LRUCacheAddOrUpdate()
+    {
+      var cache = new LRUConcurrentDictionaryCache<string, int>();
+      cache.Set("test", 1);
+      cache.Set("test", 2);
+
+      Assert.IsTrue(cache.GetSize() == 1);
+      var v = 0;
+      Assert.IsTrue(cache.TryGetValue("test", out v));
+      Assert.IsTrue(v == 2);
     }
 
     private void InvalidLogin(Connection conn, LoginInfo login) {

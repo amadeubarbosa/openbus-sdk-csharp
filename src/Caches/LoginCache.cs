@@ -54,7 +54,7 @@ namespace tecgraf.openbus.caches {
                                      Entity = info.entity,
                                      DeadLine = DateTime.Now.Ticks
                                    };
-            _logins.TryAdd(loginId, entry);
+            _logins.Set(loginId, entry);
             Logger.Debug(String.Format(
               "Login {0} válido e adicionado à cache.", loginId));
             return entry.Clone();
