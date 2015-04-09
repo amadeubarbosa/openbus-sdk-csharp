@@ -47,6 +47,7 @@ namespace tecgraf.openbus.caches {
       value = default(TValue);
       return false;
     }
+
     /// <summary>
     /// Define o valor de uma entrada na cache LRU e marca como recentemente usado.
     /// Caso já exista uma entrada com a mesma chave na cache, o valor antigo será removido e o valor atualizado.
@@ -55,41 +56,22 @@ namespace tecgraf.openbus.caches {
     /// <param name="value">Valor a ser inserido ou atualizado</param>
     public void Set(TKey key, TValue value) {
       _lock.EnterWriteLock();
-      bool failed = false;
       try {
-        if (_dictionary.Count >= MaxSize) {
-          if (_dictionary.Count == MaxSize) {
-            TValue removed;
-            if (!TryRemoveOldest(out removed)) {
-              _logger.Fatal(
-                "Erro ao remover item mais antigo do dicionário LRU. Limpando a cache.");
-              failed = true;
-            }
-          }
-          else {
-            // erro de thread, não deveria entrar aqui.
-            _logger.Fatal(
-              "Erro de consistência no dicionário LRU. Limpando a cache.");
-            failed = true;
-          }
-        }
         _list.Remove(key);
         TValue old;
         _dictionary.TryRemove(key, out old);
-        if (_dictionary.TryAdd(key, value)) {
-          _list.AddLast(key);
+        if (_dictionary.Count == MaxSize) {
+          // remove entrada mais antiga do cache
+          TValue removed;
+          TKey firstKey = _list.First.Value;
+          _dictionary.TryRemove(firstKey, out removed);
+          _list.RemoveFirst();
         }
-        else {
-          _logger.Fatal(
-                "Erro ao atualizar item do dicionário LRU. Limpando a cache.");
-          failed = true;
-        }
+        _dictionary.TryAdd(key, value);
+        _list.AddLast(key);
       }
       finally {
         _lock.ExitWriteLock();
-        if (failed) {
-          Clear();
-        }
       }
     }
 
@@ -166,26 +148,6 @@ namespace tecgraf.openbus.caches {
       finally {
         _lock.ExitReadLock();
       }
-    }
-
-    /// <summary>
-    ///   Remove a entrada mais antiga da cache.
-    /// </summary>
-    /// <returns></returns>
-    private bool TryRemoveOldest(out TValue value) {
-      _lock.EnterWriteLock();
-      try {
-        TKey firstKey = _list.First.Value;
-        if (_dictionary.TryRemove(firstKey, out value)) {
-          _list.RemoveFirst();
-          return true;
-        }
-      }
-      finally {
-        _lock.ExitWriteLock();
-      }
-      value = default(TValue);
-      return false;
     }
   }
 }

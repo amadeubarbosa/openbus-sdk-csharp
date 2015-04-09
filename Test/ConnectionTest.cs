@@ -634,6 +634,22 @@ namespace tecgraf.openbus.Test {
     }
 
     /// <summary>
+    /// Cache deve suportar atualizar valor sem remover entradas antigas quando estiver cheia.
+    /// </summary>
+    [TestMethod]
+    public void LRUCacheUpdateValueMustNotRemoveOldest()
+    {
+      var cache = new LRUConcurrentDictionaryCache<string, int>(3);
+      cache.Set("a", 1);
+      cache.Set("b", 2);
+      cache.Set("c", 3);
+      cache.Set("c", 4);
+      var value = 0;
+      Assert.IsTrue(cache.TryGetValue("a", out value));
+      Assert.IsTrue(value == 1);
+    }
+
+    /// <summary>
     /// Cache deve suportar adicionar ou atualizar valores.
     /// </summary>
     [TestMethod]
