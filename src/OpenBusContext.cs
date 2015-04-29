@@ -236,11 +236,13 @@ namespace tecgraf.openbus {
     /// Cria uma nova cadeia de chamadas para a entidade especificada, onde o dono
     /// da cadeia é a conexão corrente ({@link #CurrentConnection}) e
     /// utiliza-se a cadeia atual ({@link #JoinedChain}) como a cadeia que se
-    /// deseja dar seguimento ao encadeamento. O identificador de login
-    /// especificado deve ser um login atualmente válido para que a operação tenha
-    /// sucesso.
+    /// deseja dar seguimento ao encadeamento. É permitido especificar qualquer
+    /// nome de entidade, tendo ela um login ativo no momento ou não. A cadeia
+    /// resultante só conseguirá ser utilizada (OpenBusContext.JoinChain) com
+    /// sucesso por uma conexão que possua a mesma identidade da entidade
+    /// especificada.
     /// </summary>
-    /// <param name="entity">Identificador da entidade para a qual deseja-se
+    /// <param name="entity">Nome da entidade para a qual deseja-se
     ///        enviar a cadeia.</param>
     /// <returns>A cadeia gerada para ser utilizada pela entidade com o login
     ///         especificado.</returns>
