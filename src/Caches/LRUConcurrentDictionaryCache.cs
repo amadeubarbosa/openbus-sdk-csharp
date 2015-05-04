@@ -1,16 +1,11 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using log4net;
 
 namespace tecgraf.openbus.caches {
   internal class LRUConcurrentDictionaryCache<TKey, TValue> {
-    private readonly ILog _logger =
-      LogManager.GetLogger(typeof (LRUConcurrentDictionaryCache<TKey, TValue>));
-
     private readonly LinkedList<TKey> _list;
-    private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
+    private readonly Dictionary<TKey, TValue> _dictionary;
     private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
     internal const int DefaultSize = 1024;
@@ -21,7 +16,7 @@ namespace tecgraf.openbus.caches {
     public LRUConcurrentDictionaryCache(int maxSize) {
       MaxSize = maxSize <= 0 ? DefaultSize : maxSize;
       _list = new LinkedList<TKey>();
-      _dictionary = new ConcurrentDictionary<TKey, TValue>();
+      _dictionary = new Dictionary<TKey, TValue>();
     }
 
     public int MaxSize { get; private set; }
@@ -48,29 +43,25 @@ namespace tecgraf.openbus.caches {
       return false;
     }
 
-    public bool TryAdd(TKey key, TValue value) {
+    /// <summary>
+    /// Define o valor de uma entrada na cache LRU e marca como recentemente usado.
+    /// Caso já exista uma entrada com a mesma chave na cache, o valor antigo será removido e o valor atualizado.
+    /// </summary>
+    /// <param name="key">Chave associada ao valor</param>
+    /// <param name="value">Valor a ser inserido ou atualizado</param>
+    public void Set(TKey key, TValue value) {
       _lock.EnterWriteLock();
       try {
-        if (_dictionary.Count >= MaxSize) {
-          if (_dictionary.Count == MaxSize) {
-            TValue removed;
-            if (!TryRemoveOldest(out removed)) {
-              return false;
-            }
-          }
-          else {
-            // erro de thread, não deveria entrar aqui.
-            _logger.Fatal(
-              "Erro de consistência no dicionário LRU. Limpando a cache.");
-            Clear();
-            return false;
-          }
+        _list.Remove(key);
+        _dictionary.Remove(key);
+        if (_dictionary.Count == MaxSize) {
+          // remove entrada mais antiga da cache
+          TKey firstKey = _list.First.Value;
+          _dictionary.Remove(firstKey);
+          _list.RemoveFirst();
         }
-        if (_dictionary.TryAdd(key, value)) {
-          _list.AddLast(key);
-          return true;
-        }
-        return false;
+        _dictionary.Add(key, value);
+        _list.AddLast(key);
       }
       finally {
         _lock.ExitWriteLock();
@@ -97,8 +88,7 @@ namespace tecgraf.openbus.caches {
       try {
         foreach (TKey key in keys) {
           _list.Remove(key);
-          TValue temp;
-          _dictionary.TryRemove(key, out temp);
+          _dictionary.Remove(key);
         }
       }
       finally {
@@ -132,8 +122,7 @@ namespace tecgraf.openbus.caches {
           .Select(item => item.Key).ToList();
       foreach (TKey key in removableKeys) {
         _list.Remove(key);
-        TValue temp;
-        _dictionary.TryRemove(key, out temp);
+        _dictionary.Remove(key);
       }
       return removableKeys;
     }
@@ -150,26 +139,6 @@ namespace tecgraf.openbus.caches {
       finally {
         _lock.ExitReadLock();
       }
-    }
-
-    /// <summary>
-    ///   Remove a entrada mais antiga da cache.
-    /// </summary>
-    /// <returns></returns>
-    private bool TryRemoveOldest(out TValue value) {
-      _lock.EnterWriteLock();
-      try {
-        TKey firstKey = _list.First.Value;
-        if (_dictionary.TryRemove(firstKey, out value)) {
-          _list.RemoveFirst();
-          return true;
-        }
-      }
-      finally {
-        _lock.ExitWriteLock();
-      }
-      value = default(TValue);
-      return false;
     }
   }
 }

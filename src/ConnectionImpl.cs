@@ -1230,7 +1230,7 @@ namespace tecgraf.openbus {
       AnyCredentialReset requestReset = ReadCredentialReset(ri, exception);
       string remoteLogin = requestReset.Target;
       EffectiveProfile profile = new EffectiveProfile(ri.effective_profile);
-      _profile2Login.TryAdd(profile, remoteLogin);
+      _profile2Login.Set(profile, remoteLogin);
 
       int sessionId = requestReset.Session;
       byte[] secret;
@@ -1240,7 +1240,7 @@ namespace tecgraf.openbus {
       catch (Exception) {
         throw new NO_PERMISSION(InvalidRemoteCode.ConstVal, CompletionStatus.Completed_No);
       }
-      _outgoingLogin2Session.TryAdd(remoteLogin,
+      _outgoingLogin2Session.Set(remoteLogin,
         new ClientSideSession(sessionId, secret, remoteLogin,
           requestReset.Entity, requestReset.Legacy));
       Logger.Debug(
@@ -1283,7 +1283,7 @@ namespace tecgraf.openbus {
           if (!cacheHit) {
             signed = SignCallChain(legacySession, remoteEntity);
             lock (chain) {
-              chain.Joined.TryAdd(remoteEntity, signed);
+              chain.Joined.Set(remoteEntity, signed);
             }
           }
         }
@@ -1420,7 +1420,7 @@ namespace tecgraf.openbus {
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
         challenge, remoteLogin, false);
       reset.session = session.Id;
-      _sessionId2Session.TryAdd(session.Id, session);
+      _sessionId2Session.Set(session.Id, session);
       TypeCode resetTC = ORB.create_tc_for_type(typeof(CredentialReset));
       Any any = new Any(reset, resetTC);
       return _codec.encode_value(any);
@@ -1435,7 +1435,7 @@ namespace tecgraf.openbus {
       ServerSideSession session = new ServerSideSession(CreateNewSessionId(),
         challenge, remoteLogin, true);
       reset.session = session.Id;
-      _sessionId2Session.TryAdd(session.Id, session);
+      _sessionId2Session.Set(session.Id, session);
       TypeCode resetTC = ORB.create_tc_for_type(typeof(core.v2_0.credential.CredentialReset));
       Any any = new Any(reset, resetTC);
       return _codec.encode_value(any);
