@@ -1,16 +1,11 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using log4net;
 
 namespace tecgraf.openbus.caches {
   internal class LRUConcurrentDictionaryCache<TKey, TValue> {
-    private readonly ILog _logger =
-      LogManager.GetLogger(typeof (LRUConcurrentDictionaryCache<TKey, TValue>));
-
     private readonly LinkedList<TKey> _list;
-    private readonly ConcurrentDictionary<TKey, TValue> _dictionary;
+    private readonly Dictionary<TKey, TValue> _dictionary;
     private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
     internal const int DefaultSize = 1024;
@@ -21,7 +16,7 @@ namespace tecgraf.openbus.caches {
     public LRUConcurrentDictionaryCache(int maxSize) {
       MaxSize = maxSize <= 0 ? DefaultSize : maxSize;
       _list = new LinkedList<TKey>();
-      _dictionary = new ConcurrentDictionary<TKey, TValue>();
+      _dictionary = new Dictionary<TKey, TValue>();
     }
 
     public int MaxSize { get; private set; }
@@ -58,16 +53,14 @@ namespace tecgraf.openbus.caches {
       _lock.EnterWriteLock();
       try {
         _list.Remove(key);
-        TValue old;
-        _dictionary.TryRemove(key, out old);
+        _dictionary.Remove(key);
         if (_dictionary.Count == MaxSize) {
           // remove entrada mais antiga do cache
-          TValue removed;
           TKey firstKey = _list.First.Value;
-          _dictionary.TryRemove(firstKey, out removed);
+          _dictionary.Remove(firstKey);
           _list.RemoveFirst();
         }
-        _dictionary.TryAdd(key, value);
+        _dictionary.Add(key, value);
         _list.AddLast(key);
       }
       finally {
@@ -95,8 +88,7 @@ namespace tecgraf.openbus.caches {
       try {
         foreach (TKey key in keys) {
           _list.Remove(key);
-          TValue temp;
-          _dictionary.TryRemove(key, out temp);
+          _dictionary.Remove(key);
         }
       }
       finally {
@@ -130,8 +122,7 @@ namespace tecgraf.openbus.caches {
           .Select(item => item.Key).ToList();
       foreach (TKey key in removableKeys) {
         _list.Remove(key);
-        TValue temp;
-        _dictionary.TryRemove(key, out temp);
+        _dictionary.Remove(key);
       }
       return removableKeys;
     }
