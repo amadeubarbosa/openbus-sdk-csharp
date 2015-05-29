@@ -23,7 +23,7 @@ namespace tecgraf.openbus.assistant {
 
     private readonly AutoResetEvent _autoEvent = new AutoResetEvent(false);
     private readonly ConcurrentDictionary<IComponent, IList<Offer>> _offers;
-    private static volatile bool _shutdown;
+    private volatile bool _shutdown;
 
     #endregion
 
@@ -81,7 +81,7 @@ namespace tecgraf.openbus.assistant {
       if (!_offers.ContainsKey(ic)) {
         _offers.TryAdd(ic, new List<Offer>());
       }
-      _offers[ic].Add(new Offer(_assistant, ic, properties));
+      _offers[ic].Add(new Offer(_assistant, ic, properties, this));
     }
 
     public void RemoveOffers(IComponent ic) {
@@ -110,6 +110,7 @@ namespace tecgraf.openbus.assistant {
 
     private class Offer {
       private readonly AssistantImpl _assistant;
+      private readonly Offeror _offeror;
       private readonly IComponent _ic;
       private readonly ServiceProperty[] _properties;
       private ServiceOffer _registeredOffer;
@@ -118,10 +119,11 @@ namespace tecgraf.openbus.assistant {
       private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
 
       public Offer(AssistantImpl assistant, IComponent ic,
-                      ServiceProperty[] properties) {
+                      ServiceProperty[] properties, Offeror offeror) {
         _assistant = assistant;
         _ic = ic;
         _properties = properties;
+        _offeror = offeror;
       }
 
       public void Reset() {
@@ -144,7 +146,7 @@ namespace tecgraf.openbus.assistant {
       }
 
       public bool Register() {
-        if (_shutdown) {
+        if (_offeror._shutdown) {
           return true;
         }
         bool register = false;
