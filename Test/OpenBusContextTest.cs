@@ -1367,7 +1367,8 @@ namespace tecgraf.openbus.Test {
       conn1.LoginByCertificate(_entity, _accessKey);
       conn2.LoginByCertificate(_entity, _accessKey);
       _context.OnCallDispatch =
-        (context, busid, loginId, uri, operation) => conn1;
+        (context, busid, loginId, uri, operation) =>
+          busid.Equals(conn1.BusId) ? conn1 : conn2;
       try {
         // registra serviço 1
         Thread thread1 = new Thread(MultiplexingServerThread);
