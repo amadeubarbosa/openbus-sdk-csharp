@@ -395,7 +395,6 @@ namespace tecgraf.openbus.Test {
       Connection conn = ConnectToBus();
       _context.SetDefaultConnection(conn);
       Assert.IsNull(_context.CallerChain);
-      //TODO: Daqui pra baixo não funciona realmente pois a chamada sayHello não passa por CORBA, mas isso é um problema do IIOP.NET especificamente e não ocorre nas outras linguagens. Não há muito problema pois os testes de interoperabilidade ja cobrem isso de forma suficiente. Para reativar esse teste é necessário comentar o catch genérico abaixo.
       try {
         const string facetName = "HelloMock";
         conn.LoginByPassword(_login, _password, _domain);
@@ -404,18 +403,15 @@ namespace tecgraf.openbus.Test {
         component.AddFacet(facetName,
           Repository.GetRepositoryID(typeof (Hello)),
           new HelloMock());
+        //TODO: o campo Reference abaixo é o objeto servant e não um stub devido a um bug do SCS. Após ser consertado, pode-se remover a transformação em IOR.
         Hello hello = component.GetFacetByName(facetName).Reference as Hello;
-        Assert.IsNotNull(hello);
-        hello.sayHello();
+        string temp = _context.ORB.object_to_string(hello);
+        Hello helloStub = (Hello) _context.ORB.string_to_object(temp);
+        Assert.IsNotNull(helloStub);
+        helloStub.sayHello();
       }
       catch (UNKNOWN) {
         Assert.Fail("A cadeia obtida é nula ou não é a esperada.");
-      }
-        //TODO remover para reativar o teste
-      catch (NullReferenceException) {
-      }
-        //TODO remover para reativar o teste
-      catch (InvalidOperationException) {
       }
       finally {
         _context.SetDefaultConnection(null);

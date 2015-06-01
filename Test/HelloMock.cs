@@ -2,7 +2,7 @@
 using tecgraf.openbus.interop.simple;
 
 namespace tecgraf.openbus.test {
-  internal class HelloMock : MarshalByRefObject, Hello {
+  public class HelloMock : MarshalByRefObject, Hello {
     public string sayHello() {
       CallerChain chain = ORBInitializer.Context.CallerChain;
       if (chain == null) {
