@@ -48,6 +48,8 @@ namespace tecgraf.openbus.Test {
     private const string FakeEntity = "Fake Entity";
     private const string Unknown = "<unknown>";
     private const int Timeout = 10;
+    private static Exception _threadRet;
+    private static readonly Object ThreadRetLock = new object();
 
     private static readonly ConnectionProperties Props =
       new ConnectionPropertiesImpl();
@@ -187,6 +189,9 @@ namespace tecgraf.openbus.Test {
       _context.SetCurrentConnection(null);
       _context.SetDefaultConnection(null);
       _context.OnCallDispatch = null;
+      lock (ThreadRetLock) {
+        _threadRet = null;
+      }
     }
 
     /// <summary>
@@ -1067,7 +1072,7 @@ namespace tecgraf.openbus.Test {
     public void MultipleServersSameBusMultithreaded() {
       Connection conn1 = ConnectToBus();
       Connection conn2 = ConnectToBus();
-      Assert.IsTrue(MultipleServers(conn1, conn2));
+      MultipleServers(conn1, conn2);
     }
 
     /// <summary>
@@ -1078,7 +1083,7 @@ namespace tecgraf.openbus.Test {
     public void MultipleServersDifferentBusMultithreaded() {
       Connection conn2;
       Connection conn1 = ConnectToBuses(out conn2);
-      Assert.IsTrue(MultipleServers(conn1, conn2));
+      MultipleServers(conn1, conn2);
     }
 
     /// <summary>
@@ -1106,7 +1111,12 @@ namespace tecgraf.openbus.Test {
         // aguarda o registro terminar
         if (!thread1.Join(TimeSpan.FromSeconds(Timeout))) {
           thread1.Abort();
-          Assert.Fail("Registro do servidor não ocorreu corretamente.");
+          Assert.Fail("Registro do servidor não ocorreu corretamente em " + Timeout + " segundos.");
+        }
+        lock (ThreadRetLock) {
+          if (_threadRet != null) {
+            Assert.Fail(_threadRet.ToString());
+          }
         }
         // busca serviço com conexões 2 e 3
         Thread thread2 = new Thread(MultiplexingClientThread);
@@ -1120,6 +1130,9 @@ namespace tecgraf.openbus.Test {
       finally {
         _context.SetCurrentConnection(null);
         _context.OnCallDispatch = null;
+        lock (ThreadRetLock) {
+          _threadRet = null;
+        }
         conn1.Logout();
         conn2.Logout();
         conn3.Logout();
@@ -1278,11 +1291,17 @@ namespace tecgraf.openbus.Test {
           thread1.Abort();
           ok = false;
         }
+        Assert.IsTrue(ok, "Registro do servidor " + 1 + " não ocorreu corretamente em " + Timeout + " segundos.");
         if (!thread2.Join(TimeSpan.FromSeconds(Timeout))) {
           thread2.Abort();
           ok = false;
         }
-        Assert.IsTrue(ok);
+        Assert.IsTrue(ok, "Registro do servidor " + 2 + " não ocorreu corretamente em " + Timeout + " segundos.");
+        lock (ThreadRetLock) {
+          if (_threadRet != null) {
+            Assert.Fail(_threadRet.ToString());
+          }
+        }
         // busca serviço 1 com conexões 1 e 3
         Thread thread3 = new Thread(MultiplexingClientThread);
         Thread thread4 = new Thread(MultiplexingClientThread);
@@ -1302,6 +1321,9 @@ namespace tecgraf.openbus.Test {
       finally {
         _context.SetCurrentConnection(null);
         _context.OnCallDispatch = null;
+        lock (ThreadRetLock) {
+          _threadRet = null;
+        }
         conn1.Logout();
         conn2.Logout();
         conn3.Logout();
@@ -1347,23 +1369,37 @@ namespace tecgraf.openbus.Test {
     }
 
     private static void MultiplexingServerThread(Object conn) {
-      _context.SetCurrentConnection((Connection)conn);
-      ComponentContext component = BuildTestCallerChainInspectorComponent();
-      _context.OfferRegistry.registerService(component.GetIComponent(),
-        new ServiceProperty[0]);
+      try {
+        _context.SetCurrentConnection((Connection)conn);
+        ComponentContext component = BuildTestCallerChainInspectorComponent();
+        _context.OfferRegistry.registerService(component.GetIComponent(),
+          new ServiceProperty[0]);
+      }
+      catch (Exception e) {
+        lock (ThreadRetLock) {
+          _threadRet = e;
+        }
+      }
     }
 
     private static void MultiplexingClientThread(Object conn) {
-      _context.SetCurrentConnection((Connection) conn);
-      ServiceProperty[] props = {
+      try {
+        _context.SetCurrentConnection((Connection)conn);
+        ServiceProperty[] props = {
         new ServiceProperty("openbus.component.interface",
           Repository.GetRepositoryID(typeof (CallerChainInspector)))
       };
-      ServiceOfferDesc[] offers = _context.OfferRegistry.findServices(props);
-      offers[0].service_ref.getComponentId();
+        ServiceOfferDesc[] offers = _context.OfferRegistry.findServices(props);
+        offers[0].service_ref.getComponentId();
+      }
+      catch (Exception e) {
+        lock (ThreadRetLock) {
+          _threadRet = e;
+        }
+      }
     }
 
-    private bool MultipleServers(Connection conn1, Connection conn2) {
+    private void MultipleServers(Connection conn1, Connection conn2) {
       conn1.LoginByCertificate(_entity, _accessKey);
       conn2.LoginByCertificate(_entity, _accessKey);
       _context.OnCallDispatch =
@@ -1381,15 +1417,24 @@ namespace tecgraf.openbus.Test {
           thread1.Abort();
           ok = false;
         }
+        Assert.IsTrue(ok, "Registro do servidor " + 1 + " não ocorreu corretamente em " + Timeout + " segundos.");
         if (!thread2.Join(TimeSpan.FromSeconds(Timeout))) {
           thread2.Abort();
           ok = false;
         }
-        return ok;
+        Assert.IsTrue(ok, "Registro do servidor " + 2 + " não ocorreu corretamente em " + Timeout + " segundos.");
+        lock (ThreadRetLock) {
+          if (_threadRet != null) {
+            Assert.Fail(_threadRet.ToString());
+          }
+        }
       }
       finally {
         _context.SetCurrentConnection(null);
         _context.OnCallDispatch = null;
+        lock (ThreadRetLock) {
+          _threadRet = null;
+        }
         conn1.Logout();
         conn2.Logout();
       }
