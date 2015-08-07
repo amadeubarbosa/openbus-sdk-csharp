@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Runtime.Remoting.Channels;
-using Ch.Elca.Iiop;
 using omg.org.CORBA;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
@@ -59,7 +57,12 @@ namespace tecgraf.openbus {
           InterceptorsInitializer initializer = new InterceptorsInitializer();
           ORB.RegisterPortableInterceptorInitalizer(initializer);
           ORB.CompleteInterceptorRegistration();
-          ChannelServices.RegisterChannel(properties != null ? new IiopChannel(properties) : new IiopChannel(0), false);
+          if (properties != null){
+            OrbServices.CreateAndRegisterIiopChannel(properties);
+          }
+          else{
+            OrbServices.CreateAndRegisterIiopChannel(0);
+          }
           Context = initializer.Context;
           _initialized = true;
         }

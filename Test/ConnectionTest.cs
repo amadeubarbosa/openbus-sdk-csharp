@@ -134,28 +134,34 @@ namespace tecgraf.openbus.Test {
         throw new ArgumentNullException("hostName");
       }
 
-      // IMPORTANTE: para rodar os testes com SSL habilitado, usar a ferramenta de testes do resharper e configurar o teste como 32bit no menu options da ferramenta.
       if (_useSSL) {
         IDictionary props = new Hashtable();
-        props[SslTransportFactory.CLIENT_AUTHENTICATION] =
-          "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
-        // take certificates from the windows certificate store of the current user
-        props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] = "CurrentUser";
-        props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
-          "256a1ce837292a3c80b4e82b36741316f63fe46a";
-
-        props[IiopChannel.CHANNEL_NAME_KEY] = "securedServerIiopChannel";
+        props[IiopChannel.CHANNEL_NAME_KEY] = "SecuredServerIiopChannel";
         props[IiopChannel.TRANSPORT_FACTORY_KEY] =
             "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
 
-        props[IiopServerChannel.PORT_KEY] = 58000;
-        props[SslTransportFactory.SERVER_REQUIRED_OPTS] = "96";
-        props[SslTransportFactory.SERVER_SUPPORTED_OPTS] = "96";
-        props[SslTransportFactory.SERVER_AUTHENTICATION] =
-            "Ch.Elca.Iiop.Security.Ssl.DefaultServerAuthenticationImpl,SSLPlugin";
-        props[DefaultServerAuthenticationImpl.SERVER_CERTIFICATE] =
-            "256a1ce837292a3c80b4e82b36741316f63fe46a";
-        props[DefaultServerAuthenticationImpl.STORE_LOCATION] = "CurrentUser";
+        props[Authentication.CheckCertificateRevocation] = false;
+
+        props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.Required;
+        props[SSLClient.ClientAuthentication] = SSLClient.ClientAuthenticationType.Supported;
+        props[SSLClient.ServerAuthentication] = SSLClient.ServerAuthenticationType.Required;
+        props[SSLClient.ClientAuthenticationClass] = typeof(ClientAuthenticationSpecificFromStore);
+        props[SSLClient.CheckServerName] = false;
+        props[ClientAuthenticationSpecificFromStore.StoreLocation] =
+          "CurrentUser";
+        props[ClientAuthenticationSpecificFromStore.ClientCertificate] =
+          "f838ccf3cdfa001ed860f94248dc8d603d06935f";
+
+        props[IiopServerChannel.PORT_KEY] = "58000";
+        props[SSLServer.SecurePort] = "58001";
+        props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.Required;
+        props[SSLServer.ClientAuthentication] = SSLServer.ClientAuthenticationType.Required;
+        props[SSLServer.ServerAuthentication] = SSLServer.ServerAuthenticationType.Supported;
+        props[SSLServer.ServerAuthenticationClass] = typeof(DefaultServerAuthenticationImpl);
+        props[DefaultServerAuthenticationImpl.ServerCertificate] =
+            "f838ccf3cdfa001ed860f94248dc8d603d06935f";
+        props[DefaultServerAuthenticationImpl.StoreLocation] = "CurrentUser";
+
         ORBInitializer.InitORB(props);
         _busIOR = ConfigurationManager.AppSettings["busIOR"];
         if (String.IsNullOrEmpty(_busIOR)) {
