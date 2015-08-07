@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop;
 using log4net;
@@ -146,7 +145,7 @@ namespace tecgraf.openbus {
                     BusObjectKey.ConstVal;
         // RemotingServices.Connect não faz nenhuma chamada remota.
         IComponent busIC =
-          (IComponent)RemotingServices.Connect(typeof(IComponent), corbaloc);
+          (IComponent)OrbServices.CreateProxy(typeof(IComponent), corbaloc);
         return new ConnectionImpl(busIC, this, !GetLegacyDisableFromProps(props), GetPrivateKeyFromProps(props));
       }
       finally {

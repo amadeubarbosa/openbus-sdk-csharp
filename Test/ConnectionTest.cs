@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -169,7 +168,7 @@ namespace tecgraf.openbus.Test {
         }
         string[] iors = File.ReadAllLines(_busIOR);
         _busIOR = iors[0];
-        _busRef = (IComponent)RemotingServices.Connect(typeof(IComponent), _busIOR);
+        _busRef = (IComponent)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
       }
       else {
         ORBInitializer.InitORB();
@@ -742,10 +741,10 @@ namespace tecgraf.openbus.Test {
       IComponent busIC;
       if (_useSSL) {
         busIC =
-          (IComponent) RemotingServices.Connect(typeof (IComponent), _busIOR);
+          (IComponent) OrbServices.CreateProxy(typeof (IComponent), _busIOR);
       }
       else {
-        busIC = RemotingServices.Connect(
+        busIC = OrbServices.CreateProxy(
           typeof (IComponent),
           "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
           BusObjectKey.ConstVal)

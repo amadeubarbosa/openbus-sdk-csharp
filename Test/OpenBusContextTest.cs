@@ -3,7 +3,6 @@ using System.Collections;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Idl;
@@ -176,11 +175,11 @@ namespace tecgraf.openbus.Test {
         string[] iors = File.ReadAllLines(_busIOR);
         _busIOR = iors[0];
         _busRef =
-          (IComponent) RemotingServices.Connect(typeof (IComponent), _busIOR);
+          (IComponent)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
         string[] iors2 = File.ReadAllLines(_busIOR2);
         _busIOR2 = iors2[0];
         _busRef2 =
-          (IComponent) RemotingServices.Connect(typeof (IComponent), _busIOR2);
+          (IComponent)OrbServices.CreateProxy(typeof(IComponent), _busIOR2);
       }
       else {
         ORBInitializer.InitORB();
