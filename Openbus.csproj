@@ -133,6 +133,12 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>copy $(SolutionDir)$(OutDir)scs.idl $(SolutionDir)$(OutDir)idl20\scs.idl
+copy $(SolutionDir)$(OutDir)idl20\*.idl $(SolutionDir)$(OutDir)idl21
+$(SolutionDir)$(OutDir)IDLToCLSCompiler.exe -snk $(SolutionDir)Openbus.snk -asmVersion 2.0.4 -r $(SolutionDir)$(OutDir)Scs.Core.dll OpenBus.Legacy.Idl idl20\access_control.idl idl20\core.idl idl20\credential.idl idl20\offer_registry.idl idl20\data_export.idl
+$(SolutionDir)$(OutDir)IDLToCLSCompiler.exe -snk $(SolutionDir)Openbus.snk -asmVersion 2.1.0 -r $(SolutionDir)$(OutDir)Scs.Core.dll -r $(SolutionDir)$(OutDir)OpenBus.Legacy.Idl.dll OpenBus.Idl idl21\openbus_access-2.1.idl idl21\openbus_core-2.1.idl idl21\openbus_creden-2.1.idl idl21\openbus_export-2.1.idl idl21\openbus_legacy-2.1.idl idl21\openbus_offers-2.1.idl</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
