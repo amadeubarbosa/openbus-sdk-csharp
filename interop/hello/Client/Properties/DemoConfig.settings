@@ -15,7 +15,7 @@
       <Value Profile="(Default)">CurrentUser</Value>
     </Setting>
     <Setting Name="clientThumbprint" Type="System.String" Scope="User">
-      <Value Profile="(Default)">256a1ce837292a3c80b4e82b36741316f63fe46a</Value>
+      <Value Profile="(Default)">f838ccf3cdfa001ed860f94248dc8d603d06935f</Value>
     </Setting>
     <Setting Name="busIORFile" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\\Users\\Cadu\\Dropbox\\Tecgraf\\core210x\\BUS01.ior</Value>
@@ -24,10 +24,13 @@
       <Value Profile="(Default)">CurrentUser</Value>
     </Setting>
     <Setting Name="serverThumbprint" Type="System.String" Scope="User">
-      <Value Profile="(Default)">256a1ce837292a3c80b4e82b36741316f63fe46a</Value>
+      <Value Profile="(Default)">f838ccf3cdfa001ed860f94248dc8d603d06935f</Value>
     </Setting>
     <Setting Name="serverSSLPort" Type="System.String" Scope="User">
-      <Value Profile="(Default)">58001</Value>
+      <Value Profile="(Default)">58003</Value>
+    </Setting>
+    <Setting Name="serverOpenPort" Type="System.String" Scope="User">
+      <Value Profile="(Default)">58002</Value>
     </Setting>
   </Settings>
 </SettingsFile>

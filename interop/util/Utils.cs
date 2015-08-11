@@ -105,28 +105,31 @@ namespace tecgraf.openbus.interop.utils {
       throw new InvalidOperationException(msg);
     }
 
-    public static OrbServices InitSSLORB(string clientUser, string clientThumbprint, string serverUser, string serverThumbprint, string serverSSLPort) {
-      IDictionary props = new Hashtable();
-      props[SslTransportFactory.CLIENT_AUTHENTICATION] =
-        "Ch.Elca.Iiop.Security.Ssl.ClientMutualAuthenticationSpecificFromStore,SSLPlugin";
-      // take certificates from the windows certificate store of the current user
-      props[ClientMutualAuthenticationSpecificFromStore.STORE_LOCATION] =
-        clientUser;
-      props[ClientMutualAuthenticationSpecificFromStore.CLIENT_CERTIFICATE] =
-        clientThumbprint;
-
-      props[IiopChannel.CHANNEL_NAME_KEY] = "securedServerIiopChannel";
+    public static OrbServices InitSSLORB(string clientUser, string clientThumbprint, string serverUser, string serverThumbprint, string serverSSLPort, string serverOpenPort){
+      Hashtable props = new Hashtable();
+      props[IiopChannel.CHANNEL_NAME_KEY] = "SecuredServerIiopChannel";
       props[IiopChannel.TRANSPORT_FACTORY_KEY] =
           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
+      props[Authentication.CheckCertificateRevocation] = false;
+      props[SSLClient.CheckServerName] = false;
+      props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.Required;
+      props[SSLClient.ClientAuthentication] = SSLClient.ClientAuthenticationType.Supported;
+      props[SSLClient.ServerAuthentication] = SSLClient.ServerAuthenticationType.Required;
+      props[SSLClient.ClientAuthenticationClass] = typeof(ClientAuthenticationSpecificFromStore);
+      props[ClientAuthenticationSpecificFromStore.StoreLocation] =
+        clientUser;
+      props[ClientAuthenticationSpecificFromStore.ClientCertificate] =
+        clientThumbprint;
 
-      props[IiopServerChannel.PORT_KEY] = serverSSLPort;
-      props[SslTransportFactory.SERVER_REQUIRED_OPTS] = "96";
-      props[SslTransportFactory.SERVER_SUPPORTED_OPTS] = "96";
-      props[SslTransportFactory.SERVER_AUTHENTICATION] =
-          "Ch.Elca.Iiop.Security.Ssl.DefaultServerAuthenticationImpl,SSLPlugin";
-      props[DefaultServerAuthenticationImpl.SERVER_CERTIFICATE] =
-          serverThumbprint;
-      props[DefaultServerAuthenticationImpl.STORE_LOCATION] = serverUser;
+      props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.Required;
+      props[SSLServer.ClientAuthentication] = SSLServer.ClientAuthenticationType.Required;
+      props[SSLServer.ServerAuthentication] = SSLServer.ServerAuthenticationType.Supported;
+      props[SSLServer.ServerAuthenticationClass] = typeof(DefaultServerAuthenticationImpl);
+      props[DefaultServerAuthenticationImpl.ServerCertificate] =
+        serverThumbprint;
+      props[DefaultServerAuthenticationImpl.StoreLocation] = serverUser;
+      props[SSLServer.SecurePort] = serverSSLPort;
+      props[IiopServerChannel.PORT_KEY] = serverOpenPort;
 
       return ORBInitializer.InitORB(props);
     }

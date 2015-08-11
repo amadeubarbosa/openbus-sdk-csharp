@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Remoting;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using log4net;
@@ -31,10 +30,11 @@ namespace tecgraf.openbus.interop.multiplexing {
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
       string serverSSLPort = DemoConfig.Default.serverSSLPort;
+      string serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       string bus2IORFile = DemoConfig.Default.bus2IORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
         buses = new object[] { busIORFile, bus2IORFile };
       }
       else {
@@ -49,7 +49,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         Connection conn;
         if (useSSL) {
           string ior = File.ReadAllText((string)buses[i]);
-          conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+          conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
         }
         else {
           conn = context.ConnectByAddress(hostName, (ushort)buses[i], props);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Remoting;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using log4net;
@@ -38,9 +37,10 @@ namespace tecgraf.openbus.interop.protocol {
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
       string serverSSLPort = DemoConfig.Default.serverSSLPort;
+      string serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
       }
       else {
         ORBInitializer.InitORB();
@@ -82,7 +82,7 @@ namespace tecgraf.openbus.interop.protocol {
       Connection conn;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
       }
       else {
         conn = context.ConnectByAddress(hostName, hostPort, props);
@@ -139,7 +139,7 @@ namespace tecgraf.openbus.interop.protocol {
               if ((npe == null) && (!(e is NO_PERMISSION))) {
                 throw;
               }
-              npe = npe ?? e as NO_PERMISSION;
+              npe = npe ?? (NO_PERMISSION) e;
               error = true;
               Assert.AreEqual(test.Expected, npe.Minor);
               Assert.AreEqual(CompletionStatus.Completed_No, npe.Status);
@@ -160,7 +160,7 @@ namespace tecgraf.openbus.interop.protocol {
               if ((npe == null) && (!(e is NO_PERMISSION))) {
                 throw;
               }
-              npe = npe ?? e as NO_PERMISSION;
+              npe = npe ?? (NO_PERMISSION) e;
               error = true;
               Assert.AreEqual(test.Expected, npe.Minor);
               Assert.AreEqual(CompletionStatus.Completed_No, npe.Status);

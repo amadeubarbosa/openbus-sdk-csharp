@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using log4net;
@@ -8,6 +7,7 @@ using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using log4net.Layout;
+using omg.org.CORBA;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -44,10 +44,11 @@ namespace tecgraf.openbus.interop.multiplexing {
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
       string serverSSLPort = DemoConfig.Default.serverSSLPort;
+      string serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       string bus2IORFile = DemoConfig.Default.bus2IORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
       }
       else {
         ORBInitializer.InitORB();
@@ -70,10 +71,10 @@ namespace tecgraf.openbus.interop.multiplexing {
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
         string ior2 = File.ReadAllText(bus2IORFile);
-        _conn1AtBus1 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
-        conn2AtBus1 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
-        conn3AtBus1 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
-        _connAtBus2 = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior2), props);
+        _conn1AtBus1 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        conn2AtBus1 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        conn3AtBus1 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        _connAtBus2 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior2), props);
       }
       else {
         _conn1AtBus1 = context.ConnectByAddress(hostName, hostPort, props);

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using omg.org.CORBA;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -36,9 +36,10 @@ namespace tecgraf.openbus.interop.chaining {
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
       string serverSSLPort = DemoConfig.Default.serverSSLPort;
+      string serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
       }
       else {
         ORBInitializer.InitORB();
@@ -52,7 +53,7 @@ namespace tecgraf.openbus.interop.chaining {
       OpenBusContext context = ORBInitializer.Context;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        _conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        _conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
       }
       else {
         _conn = context.ConnectByAddress(hostName, hostPort, props);

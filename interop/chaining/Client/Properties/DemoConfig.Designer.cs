@@ -73,7 +73,7 @@ namespace tecgraf.openbus.interop.chaining.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c14566a2f94e24d576a9a02d706d8358e2462322")]
+        [global::System.Configuration.DefaultSettingValueAttribute("f838ccf3cdfa001ed860f94248dc8d603d06935f")]
         public string clientThumbprint {
             get {
                 return ((string)(this["clientThumbprint"]));
@@ -109,7 +109,7 @@ namespace tecgraf.openbus.interop.chaining.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("256a1ce837292a3c80b4e82b36741316f63fe46a")]
+        [global::System.Configuration.DefaultSettingValueAttribute("f838ccf3cdfa001ed860f94248dc8d603d06935f")]
         public string serverThumbprint {
             get {
                 return ((string)(this["serverThumbprint"]));
@@ -121,13 +121,25 @@ namespace tecgraf.openbus.interop.chaining.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("58002")]
+        [global::System.Configuration.DefaultSettingValueAttribute("58005")]
         public string serverSSLPort {
             get {
                 return ((string)(this["serverSSLPort"]));
             }
             set {
                 this["serverSSLPort"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("58004")]
+        public string serverOpenPort {
+            get {
+                return ((string)(this["serverOpenPort"]));
+            }
+            set {
+                this["serverOpenPort"] = value;
             }
         }
     }
