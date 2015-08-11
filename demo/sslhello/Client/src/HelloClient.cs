@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Remoting;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
@@ -24,12 +23,12 @@ namespace demo {
       string domain = args[1];
       string entity = args[2];
       byte[] password = new ASCIIEncoding().GetBytes(args[3]);
-      SSLUtils.InitORBWithSSL(args[4], args[5], args[6], args[7], args[8]);
+      SSLUtils.InitORBWithSSL(args[4], args[5], args[6], args[7], args[8], args[9]);
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), busIOR));
+      Connection conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), busIOR));
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));
@@ -69,7 +68,7 @@ namespace demo {
           // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
           throw;
         }
-        npe = npe ?? e as NO_PERMISSION;
+        npe = npe ?? (NO_PERMISSION) e;
         if (npe.Minor == NoLoginCode.ConstVal) {
           Console.WriteLine(Resources.NoLoginCodeErrorMsg);
         }
@@ -124,7 +123,7 @@ namespace demo {
                 // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
                 throw;
               }
-              npe = npe ?? e as NO_PERMISSION;
+              npe = npe ?? (NO_PERMISSION) e;
               bool found = false;
               string message = String.Empty;
               switch (npe.Minor) {

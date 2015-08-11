@@ -37,9 +37,6 @@
     <Reference Include="OpenBus">
       <HintPath>..\..\..\lib\OpenBus.dll</HintPath>
     </Reference>
-    <Reference Include="Org.Mentalis.Security">
-      <HintPath>..\..\..\lib\Org.Mentalis.Security.dll</HintPath>
-    </Reference>
     <Reference Include="SslPlugin">
       <HintPath>..\..\..\lib\SslPlugin.dll</HintPath>
     </Reference>

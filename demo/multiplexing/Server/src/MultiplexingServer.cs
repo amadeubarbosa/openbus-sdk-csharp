@@ -64,7 +64,9 @@ namespace demo {
         context.SetCurrentConnection(conn);
 
         // Associa a conexão à URI do servant para que a callback possa escolher
-        Connections.Add(RemotingServices.GetObjectUri(timer), conn);
+        lock (Connections){
+          Connections.Add(RemotingServices.GetObjectUri(timer), conn);
+        }
 
         bool failed = true;
         try {
@@ -106,7 +108,7 @@ namespace demo {
             // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
             throw;
           }
-          npe = npe ?? e as NO_PERMISSION;
+          npe = npe ?? (NO_PERMISSION) e;
           if (npe.Minor == NoLoginCode.ConstVal) {
             Console.WriteLine(Resources.NoLoginCodeErrorMsg);
           }
@@ -157,7 +159,7 @@ namespace demo {
               // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
               throw;
             }
-            npe = npe ?? e as NO_PERMISSION;
+            npe = npe ?? (NO_PERMISSION) e;
             if (npe.Minor == NoLoginCode.ConstVal) {
               Console.WriteLine(Resources.NoLoginCodeErrorMsg);
             }

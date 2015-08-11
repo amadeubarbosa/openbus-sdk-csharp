@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Remoting;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
@@ -31,7 +30,7 @@ namespace demo {
       string busIOR = File.ReadAllText(args[0]);
       string entity = args[1];
       PrivateKey privateKey = Crypto.ReadKeyFile(args[2]);
-      SSLUtils.InitORBWithSSL(args[3], args[4], args[5], args[6], args[7]);
+      SSLUtils.InitORBWithSSL(args[3], args[4], args[5], args[6], args[7], args[8]);
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =
@@ -51,7 +50,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), busIOR));
+      _conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), busIOR));
       context.SetDefaultConnection(_conn);
 
       bool failed = true;
@@ -94,7 +93,7 @@ namespace demo {
           // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
           throw;
         }
-        npe = npe ?? e as NO_PERMISSION;
+        npe = npe ?? (NO_PERMISSION) e;
         if (npe.Minor == NoLoginCode.ConstVal) {
           Console.WriteLine(Resources.NoLoginCodeErrorMsg);
         }
@@ -143,7 +142,7 @@ namespace demo {
             // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
             throw;
           }
-          npe = npe ?? e as NO_PERMISSION;
+          npe = npe ?? (NO_PERMISSION) e;
           if (npe.Minor == NoLoginCode.ConstVal) {
             Console.WriteLine(Resources.NoLoginCodeErrorMsg);
           }

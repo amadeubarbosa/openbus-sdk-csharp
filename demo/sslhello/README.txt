@@ -41,6 +41,7 @@ Servidor
 6) nome do usuário que contém a chave privada para receber chamadas SSL
 7) identificador (thumbprint) da chave privada no espaço do usuário do Windows que a contém, para receber chamadas SSL
 8) porta a ser utilizada para receber chamadas SSL
+9) porta a ser utilizada para receber chamadas em aberto
 
 Cliente
 1) caminho para arquivo com o IOR do barramento
@@ -52,6 +53,7 @@ Cliente
 7) nome do usuário que contém a chave privada para receber chamadas SSL
 8) identificador (thumbprint) da chave privada no espaço do usuário do Windows que a contém, para receber chamadas SSL
 9) porta a ser utilizada para receber chamadas SSL
+10) porta a ser utilizada para receber chamadas em aberto
 
 
 ------------------------------

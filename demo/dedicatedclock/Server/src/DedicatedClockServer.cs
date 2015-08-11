@@ -109,7 +109,7 @@ namespace demo {
             // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
             throw;
           }
-          npe = npe ?? e as NO_PERMISSION;
+          npe = npe ?? (NO_PERMISSION) e;
           if (npe.Minor == NoLoginCode.ConstVal) {
             Console.WriteLine(Resources.NoLoginCodeErrorMsg);
           }
@@ -142,7 +142,7 @@ namespace demo {
             // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
             throw;
           }
-          npe = npe ?? e as NO_PERMISSION;
+          npe = npe ?? (NO_PERMISSION) e;
           if (npe.Minor == NoLoginCode.ConstVal) {
             Console.WriteLine(Resources.NoLoginCodeErrorMsg);
           }
@@ -193,7 +193,7 @@ namespace demo {
             // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
             throw;
           }
-          npe = npe ?? e as NO_PERMISSION;
+          npe = npe ?? (NO_PERMISSION) e;
           if (npe.Minor == NoLoginCode.ConstVal) {
             Console.WriteLine(Resources.NoLoginCodeErrorMsg);
           }
@@ -283,7 +283,7 @@ namespace demo {
               // caso não seja uma NO_PERMISSION não é uma exceção esperada então deixamos passar.
               throw;
             }
-            npe = npe ?? e as NO_PERMISSION;
+            npe = npe ?? (NO_PERMISSION) e;
             if (npe.Minor == NoLoginCode.ConstVal) {
               Console.WriteLine(Resources.NoLoginCodeErrorMsg);
             }
