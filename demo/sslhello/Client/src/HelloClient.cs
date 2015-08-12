@@ -23,7 +23,9 @@ namespace demo {
       string domain = args[1];
       string entity = args[2];
       byte[] password = new ASCIIEncoding().GetBytes(args[3]);
-      SSLUtils.InitORBWithSSL(args[4], args[5], args[6], args[7], args[8], args[9]);
+      SSLUtils.InitORBWithSSL(args[4], args[5], args[6], args[7],
+        Convert.ToUInt16(args[9]), Convert.ToUInt16(args[8]), Convert.ToBoolean(args[10]), Convert.ToBoolean(args[11]),
+        args[12], Convert.ToBoolean(args[13]), Convert.ToBoolean(args[14]));
 
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.

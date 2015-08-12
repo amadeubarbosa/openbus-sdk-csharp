@@ -10,7 +10,6 @@ Servidor:
 .NET 4.0
 IIOPChannel.dll
 SSLPlugin.dll
-Org.Mentalis.Security.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
 OpenBus.Idl
@@ -21,7 +20,6 @@ Cliente:
 .NET 4.0
 IIOPChannel.dll
 SSLPlugin.dll
-Org.Mentalis.Security.dll
 OpenBus.dll
 OpenBus.Demo.Hello.Idl.dll
 OpenBus.Idl
@@ -42,6 +40,11 @@ Servidor
 7) identificador (thumbprint) da chave privada no espaço do usuário do Windows que a contém, para receber chamadas SSL
 8) porta a ser utilizada para receber chamadas SSL
 9) porta a ser utilizada para receber chamadas em aberto
+10) true ou false indicando se a autenticação de clientes é requerida
+11) true ou false indicando se a autenticação de servidores é requerida
+12) o nível de encriptação desejado (notsupported, supported, required)
+13) true ou false indicando se listas de revogação de certificados devem ser checadas
+14) true ou false indicando se o suporte à verificação de nome do servidor deve ser habilitado
 
 Cliente
 1) caminho para arquivo com o IOR do barramento
@@ -54,6 +57,11 @@ Cliente
 8) identificador (thumbprint) da chave privada no espaço do usuário do Windows que a contém, para receber chamadas SSL
 9) porta a ser utilizada para receber chamadas SSL
 10) porta a ser utilizada para receber chamadas em aberto
+11) true ou false indicando se a autenticação de clientes é requerida
+12) true ou false indicando se a autenticação de servidores é requerida
+13) o nível de encriptação desejado (notsupported, supported, required)
+14) true ou false indicando se listas de revogação de certificados devem ser checadas
+15) true ou false indicando se o suporte à verificação de nome do servidor deve ser habilitado
 
 
 ------------------------------
@@ -72,5 +80,5 @@ A demo deve ser executada na seguinte ordem:
 ----------- EXEMPLO -----------
 -------------------------------
 
-1) Server.exe ior.txt demo_hello_csharp_server DemoHello.key CurrentUser <thumbprint> CurrentUser <thumbprint> 58000
-2) Client.exe ior.txt meudominio demo_hello_csharp_client minhasenha CurrentUser <thumbprint> CurrentUser <thumbprint> 58001
+1) Server.exe ior.txt demo_hello_csharp_server DemoHello.key CurrentUser <thumbprint> CurrentUser <thumbprint> 58000 58001 true true required false false
+2) Client.exe ior.txt meudominio demo_hello_csharp_client minhasenha CurrentUser <thumbprint> CurrentUser <thumbprint> 58002 58003 true true required false false

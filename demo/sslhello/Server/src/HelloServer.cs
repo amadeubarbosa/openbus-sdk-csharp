@@ -30,7 +30,9 @@ namespace demo {
       string busIOR = File.ReadAllText(args[0]);
       string entity = args[1];
       PrivateKey privateKey = Crypto.ReadKeyFile(args[2]);
-      SSLUtils.InitORBWithSSL(args[3], args[4], args[5], args[6], args[7], args[8]);
+      SSLUtils.InitORBWithSSL(args[3], args[4], args[5], args[6],
+        Convert.ToUInt16(args[8]), Convert.ToUInt16(args[7]), Convert.ToBoolean(args[9]), Convert.ToBoolean(args[10]),
+        args[11], Convert.ToBoolean(args[12]), Convert.ToBoolean(args[13]));
 
       // Cria o componente que conterá as facetas do servidor
       ComponentContext component =
