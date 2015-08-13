@@ -22,7 +22,9 @@ namespace Utils {
         props[SSLClient.ClientAuthentication] = SSLClient.ClientAuthenticationType.NotSupported;
         props[SSLClient.ClientAuthenticationClass] = typeof(DefaultClientAuthenticationImpl);
       }
-      props[SSLClient.ServerAuthentication] = serverAuthenticationRequirement;
+      if (serverAuthenticationRequirement) {
+        props[SSLClient.ServerAuthentication] = SSLClient.ServerAuthenticationType.Required;
+      }
 
       props[SSLServer.ServerAuthenticationClass] = typeof(DefaultServerAuthenticationImpl);
       props[IiopServerChannel.PORT_KEY] = serverOpenPort;
@@ -33,7 +35,9 @@ namespace Utils {
         props[DefaultServerAuthenticationImpl.StoreLocation] = serverUser;
         props[SSLServer.SecurePort] = serverSSLPort;
       }
-      props[SSLServer.ClientAuthentication] = clientAuthenticationRequirement;
+      if (clientAuthenticationRequirement) {
+        props[SSLServer.ClientAuthentication] = SSLServer.ClientAuthenticationType.Required;
+      }
 
       props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.NotSupported;
       props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.NotSupported;
