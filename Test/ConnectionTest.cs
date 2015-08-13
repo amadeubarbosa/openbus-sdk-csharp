@@ -100,10 +100,10 @@ namespace tecgraf.openbus.Test {
       }
 
       string password = ConfigurationManager.AppSettings["userPassword"];
-      if (String.IsNullOrEmpty(password)) {
+      if (password == null) {
         throw new ArgumentNullException("userPassword");
       }
-      _password = Crypto.TextEncoding.GetBytes(password);
+      _password = password.Equals("") ? new byte[0] : Crypto.TextEncoding.GetBytes(password);
 
       _domain = ConfigurationManager.AppSettings["userDomain"];
       if (String.IsNullOrEmpty(_domain)) {
