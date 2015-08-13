@@ -134,9 +134,9 @@ namespace tecgraf.openbus.interop.protocol.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("58001")]
-        public string serverSSLPort {
+        public ushort serverSSLPort {
             get {
-                return ((string)(this["serverSSLPort"]));
+                return ((ushort)(this["serverSSLPort"]));
             }
             set {
                 this["serverSSLPort"] = value;
@@ -146,9 +146,9 @@ namespace tecgraf.openbus.interop.protocol.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("58000")]
-        public string serverOpenPort {
+        public ushort serverOpenPort {
             get {
-                return ((string)(this["serverOpenPort"]));
+                return ((ushort)(this["serverOpenPort"]));
             }
             set {
                 this["serverOpenPort"] = value;

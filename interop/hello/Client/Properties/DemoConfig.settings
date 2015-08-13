@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="busHostName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">localhost</Value>
+      <Value Profile="(Default)">macumba</Value>
     </Setting>
     <Setting Name="busHostPort" Type="System.UInt16" Scope="User">
-      <Value Profile="(Default)">2089</Value>
+      <Value Profile="(Default)">21000</Value>
     </Setting>
     <Setting Name="useSSL" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
@@ -26,10 +26,10 @@
     <Setting Name="serverThumbprint" Type="System.String" Scope="User">
       <Value Profile="(Default)">f838ccf3cdfa001ed860f94248dc8d603d06935f</Value>
     </Setting>
-    <Setting Name="serverSSLPort" Type="System.String" Scope="User">
+    <Setting Name="serverSSLPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">58003</Value>
     </Setting>
-    <Setting Name="serverOpenPort" Type="System.String" Scope="User">
+    <Setting Name="serverOpenPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">58002</Value>
     </Setting>
   </Settings>

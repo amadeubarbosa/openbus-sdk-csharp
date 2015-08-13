@@ -29,10 +29,10 @@
     <Setting Name="serverThumbprint" Type="System.String" Scope="User">
       <Value Profile="(Default)">f838ccf3cdfa001ed860f94248dc8d603d06935f</Value>
     </Setting>
-    <Setting Name="serverSSLPort" Type="System.String" Scope="User">
+    <Setting Name="serverSSLPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">58003</Value>
     </Setting>
-    <Setting Name="serverOpenPort" Type="System.String" Scope="User">
+    <Setting Name="serverOpenPort" Type="System.UInt16" Scope="User">
       <Value Profile="(Default)">58002</Value>
     </Setting>
   </Settings>

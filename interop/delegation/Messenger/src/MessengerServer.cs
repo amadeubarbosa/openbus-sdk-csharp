@@ -3,10 +3,6 @@ using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using log4net;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Core;
-using log4net.Layout;
 using omg.org.CORBA;
 using Scs.Core;
 using scs.core;
@@ -42,23 +38,23 @@ namespace tecgraf.openbus.interop.delegation {
       string clientThumbprint = DemoConfig.Default.clientThumbprint;
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
-      string serverSSLPort = DemoConfig.Default.serverSSLPort;
-      string serverOpenPort = DemoConfig.Default.serverOpenPort;
+      ushort serverSSLPort = DemoConfig.Default.serverSSLPort;
+      ushort serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort, true, true, "required", false, false);
       }
       else {
         ORBInitializer.InitORB();
       }
-
+/*
       ConsoleAppender appender = new ConsoleAppender {
         Threshold = Level.Fatal,
         Layout =
           new SimpleLayout(),
       };
       BasicConfigurator.Configure(appender);
-
+*/
       ConnectionProperties props = new ConnectionPropertiesImpl();
       props.AccessKey = _privateKey;
       OpenBusContext context = ORBInitializer.Context;

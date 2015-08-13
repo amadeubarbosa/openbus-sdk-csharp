@@ -105,33 +105,57 @@ namespace tecgraf.openbus.interop.utils {
       throw new InvalidOperationException(msg);
     }
 
-    public static OrbServices InitSSLORB(string clientUser, string clientThumbprint, string serverUser, string serverThumbprint, string serverSSLPort, string serverOpenPort){
+    public static void InitSSLORB(string clientUser, string clientThumbprint, string serverUser, string serverThumbprint, ushort serverSSLPort, ushort serverOpenPort, bool clientAuthenticationRequirement, bool serverAuthenticationRequirement, string encryption, bool checkCertificateRevocation, bool checkServerName) {
       Hashtable props = new Hashtable();
-      props[IiopChannel.CHANNEL_NAME_KEY] = "SecuredServerIiopChannel";
+      props[IiopChannel.CHANNEL_NAME_KEY] = "SecuredIiopChannel";
       props[IiopChannel.TRANSPORT_FACTORY_KEY] =
           "Ch.Elca.Iiop.Security.Ssl.SslTransportFactory,SSLPlugin";
-      props[Authentication.CheckCertificateRevocation] = false;
-      props[SSLClient.CheckServerName] = false;
-      props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.Required;
-      props[SSLClient.ClientAuthentication] = SSLClient.ClientAuthenticationType.Supported;
-      props[SSLClient.ServerAuthentication] = SSLClient.ServerAuthenticationType.Required;
-      props[SSLClient.ClientAuthenticationClass] = typeof(ClientAuthenticationSpecificFromStore);
-      props[ClientAuthenticationSpecificFromStore.StoreLocation] =
-        clientUser;
-      props[ClientAuthenticationSpecificFromStore.ClientCertificate] =
-        clientThumbprint;
+      if (clientThumbprint != null) {
+        props[SSLClient.ClientAuthentication] = SSLClient.ClientAuthenticationType.Supported;
+        props[ClientAuthenticationSpecificFromStore.ClientCertificate] =
+          clientThumbprint;
+        props[SSLClient.ClientAuthenticationClass] = typeof(ClientAuthenticationSpecificFromStore);
+        props[ClientAuthenticationSpecificFromStore.StoreLocation] =
+          clientUser;
+      }
+      else {
+        props[SSLClient.ClientAuthentication] = SSLClient.ClientAuthenticationType.NotSupported;
+        props[SSLClient.ClientAuthenticationClass] = typeof(DefaultClientAuthenticationImpl);
+      }
+      if (serverAuthenticationRequirement) {
+        props[SSLClient.ServerAuthentication] = SSLClient.ServerAuthenticationType.Required;
+      }
 
-      props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.Required;
-      props[SSLServer.ClientAuthentication] = SSLServer.ClientAuthenticationType.Required;
-      props[SSLServer.ServerAuthentication] = SSLServer.ServerAuthenticationType.Supported;
       props[SSLServer.ServerAuthenticationClass] = typeof(DefaultServerAuthenticationImpl);
-      props[DefaultServerAuthenticationImpl.ServerCertificate] =
-        serverThumbprint;
-      props[DefaultServerAuthenticationImpl.StoreLocation] = serverUser;
-      props[SSLServer.SecurePort] = serverSSLPort;
       props[IiopServerChannel.PORT_KEY] = serverOpenPort;
+      if (serverThumbprint != null) {
+        props[SSLServer.ServerAuthentication] = SSLServer.ServerAuthenticationType.Supported;
+        props[DefaultServerAuthenticationImpl.ServerCertificate] =
+          serverThumbprint;
+        props[DefaultServerAuthenticationImpl.StoreLocation] = serverUser;
+        props[SSLServer.SecurePort] = serverSSLPort;
+      }
+      if (clientAuthenticationRequirement) {
+        props[SSLServer.ClientAuthentication] = SSLServer.ClientAuthenticationType.Required;
+      }
 
-      return ORBInitializer.InitORB(props);
+      props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.NotSupported;
+      props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.NotSupported;
+      switch (encryption.ToLower()) {
+        case "required":
+          props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.Required;
+          props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.Required;
+          break;
+        case "supported":
+          props[SSLClient.ClientEncryptionType] = Encryption.EncryptionType.Supported;
+          props[SSLServer.ServerEncryptionType] = Encryption.EncryptionType.Supported;
+          break;
+      }
+
+      props[Authentication.CheckCertificateRevocation] = checkCertificateRevocation;
+      props[SSLClient.CheckServerName] = checkServerName;
+
+      ORBInitializer.InitORB(props);
     }
   }
 }

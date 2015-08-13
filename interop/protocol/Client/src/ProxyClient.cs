@@ -6,10 +6,6 @@ using System.Text;
 using Ch.Elca.Iiop.Idl;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Core;
-using log4net.Layout;
 using omg.org.CORBA;
 using scs.core;
 using tecgraf.openbus.core.v2_1;
@@ -36,11 +32,11 @@ namespace tecgraf.openbus.interop.protocol {
       string clientThumbprint = DemoConfig.Default.clientThumbprint;
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
-      string serverSSLPort = DemoConfig.Default.serverSSLPort;
-      string serverOpenPort = DemoConfig.Default.serverOpenPort;
+      ushort serverSSLPort = DemoConfig.Default.serverSSLPort;
+      ushort serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort, true, true, "required", false, false);
       }
       else {
         ORBInitializer.InitORB();
@@ -48,14 +44,14 @@ namespace tecgraf.openbus.interop.protocol {
 
       //FileInfo logFileInfo = new FileInfo(DemoConfig.Default.openbusLogFile);
       //XmlConfigurator.ConfigureAndWatch(logFileInfo);
-
+/*
       ConsoleAppender appender = new ConsoleAppender {
         Threshold = Level.Fatal,
         Layout =
           new SimpleLayout(),
       };
       BasicConfigurator.Configure(appender);
-
+*/
       // credential reset tests
       CredentialResetTest[] resetCases = new CredentialResetTest[1];
       CredentialReset tempReset = new CredentialReset { session = 2^32 - 1, challenge = CreateSecret(EncryptedBlockSize.ConstVal) };

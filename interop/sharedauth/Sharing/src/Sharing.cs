@@ -3,10 +3,6 @@ using System.Runtime.Remoting;
 using System.Text;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using log4net.Appender;
-using log4net.Config;
-using log4net.Core;
-using log4net.Layout;
 using scs.core;
 using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.utils;
@@ -28,23 +24,23 @@ namespace tecgraf.openbus.interop.sharedauth {
       string clientThumbprint = DemoConfig.Default.clientThumbprint;
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
-      string serverSSLPort = DemoConfig.Default.serverSSLPort;
-      string serverOpenPort = DemoConfig.Default.serverOpenPort;
+      ushort serverSSLPort = DemoConfig.Default.serverSSLPort;
+      ushort serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort, true, true, "required", false, false);
       }
       else {
         ORBInitializer.InitORB();
       }
-
+/*
       ConsoleAppender appender = new ConsoleAppender {
                                                        Threshold = Level.Off,
                                                        Layout =
                                                          new SimpleLayout(),
                                                      };
       BasicConfigurator.Configure(appender);
-
+*/
       ConnectionProperties props = new ConnectionPropertiesImpl();
       OpenBusContext context = ORBInitializer.Context;
       Connection conn;

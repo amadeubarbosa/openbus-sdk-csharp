@@ -25,7 +25,7 @@ namespace tecgraf.openbus.interop.simple.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("localhost")]
+        [global::System.Configuration.DefaultSettingValueAttribute("macumba")]
         public string busHostName {
             get {
                 return ((string)(this["busHostName"]));
@@ -37,7 +37,7 @@ namespace tecgraf.openbus.interop.simple.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2089")]
+        [global::System.Configuration.DefaultSettingValueAttribute("21000")]
         public ushort busHostPort {
             get {
                 return ((ushort)(this["busHostPort"]));
@@ -122,9 +122,9 @@ namespace tecgraf.openbus.interop.simple.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("58003")]
-        public string serverSSLPort {
+        public ushort serverSSLPort {
             get {
-                return ((string)(this["serverSSLPort"]));
+                return ((ushort)(this["serverSSLPort"]));
             }
             set {
                 this["serverSSLPort"] = value;
@@ -134,9 +134,9 @@ namespace tecgraf.openbus.interop.simple.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("58002")]
-        public string serverOpenPort {
+        public ushort serverOpenPort {
             get {
-                return ((string)(this["serverOpenPort"]));
+                return ((ushort)(this["serverOpenPort"]));
             }
             set {
                 this["serverOpenPort"] = value;

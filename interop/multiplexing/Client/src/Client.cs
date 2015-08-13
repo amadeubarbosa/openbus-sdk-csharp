@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
+using Ch.Elca.Iiop.Security.Ssl;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
@@ -29,12 +30,12 @@ namespace tecgraf.openbus.interop.multiplexing {
       string clientThumbprint = DemoConfig.Default.clientThumbprint;
       string serverUser = DemoConfig.Default.serverUser;
       string serverThumbprint = DemoConfig.Default.serverThumbprint;
-      string serverSSLPort = DemoConfig.Default.serverSSLPort;
-      string serverOpenPort = DemoConfig.Default.serverOpenPort;
+      ushort serverSSLPort = DemoConfig.Default.serverSSLPort;
+      ushort serverOpenPort = DemoConfig.Default.serverOpenPort;
       string busIORFile = DemoConfig.Default.busIORFile;
       string bus2IORFile = DemoConfig.Default.bus2IORFile;
       if (useSSL) {
-        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort);
+        Utils.InitSSLORB(clientUser, clientThumbprint, serverUser, serverThumbprint, serverSSLPort, serverOpenPort, true, true, "required", false, false);
         buses = new object[] { busIORFile, bus2IORFile };
       }
       else {
