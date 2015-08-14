@@ -8,6 +8,7 @@ As dependências de software são fornecidas já compiladas, em conjunto com a demo
 
 Servidor:
 .NET 4.0
+BouncyCastle.Crypto.dll
 IIOPChannel.dll
 SSLPlugin.dll
 OpenBus.dll
