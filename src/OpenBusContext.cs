@@ -115,7 +115,7 @@ namespace tecgraf.openbus {
     /// <exception cref="ArgumentException">Caso o host seja null ou vazio, ou
     /// a porta seja 0.</exception>
     /// <returns>Conexão criada.</returns>
-    Connection ConnectByReference(IComponent reference,
+    Connection ConnectByReference(MarshalByRefObject reference,
                                   ConnectionProperties props = null);
 
     /// <summary>

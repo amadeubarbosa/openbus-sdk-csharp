@@ -153,14 +153,14 @@ namespace tecgraf.openbus {
       }
     }
 
-    public Connection ConnectByReference(IComponent reference,
+    public Connection ConnectByReference(MarshalByRefObject reference,
       ConnectionProperties props) {
       if (reference == null) {
         throw new ArgumentException("Referência para o barramento inválida.");
       }
       IgnoreCurrentThread();
       try {
-        return new ConnectionImpl(reference, this, !GetLegacyDisableFromProps(props), GetPrivateKeyFromProps(props));
+        return new ConnectionImpl((IComponent)reference, this, !GetLegacyDisableFromProps(props), GetPrivateKeyFromProps(props));
       }
       finally {
         UnignoreCurrentThread();

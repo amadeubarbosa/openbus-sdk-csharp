@@ -30,7 +30,7 @@ namespace tecgraf.openbus.Test {
     private static String _hostName;
     private static ushort _hostPort;
     private static string _busIOR;
-    private static IComponent _busRef;
+    private static MarshalByRefObject _busRef;
     private static String _entity;
     private static String _entityNoCert;
     private static string _login;
@@ -168,7 +168,7 @@ namespace tecgraf.openbus.Test {
         }
         string[] iors = File.ReadAllLines(_busIOR);
         _busIOR = iors[0];
-        _busRef = (IComponent)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
+        _busRef = (MarshalByRefObject)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
       }
       else {
         ORBInitializer.InitORB();

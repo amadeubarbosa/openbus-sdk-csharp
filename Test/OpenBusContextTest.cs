@@ -35,8 +35,8 @@ namespace tecgraf.openbus.Test {
     private static ushort _hostPort2;
     private static string _busIOR;
     private static string _busIOR2;
-    private static IComponent _busRef;
-    private static IComponent _busRef2;
+    private static MarshalByRefObject _busRef;
+    private static MarshalByRefObject _busRef2;
     private static string _entity;
     private static string _login;
     private static byte[] _password;
@@ -175,11 +175,11 @@ namespace tecgraf.openbus.Test {
         string[] iors = File.ReadAllLines(_busIOR);
         _busIOR = iors[0];
         _busRef =
-          (IComponent)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
+          (MarshalByRefObject)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
         string[] iors2 = File.ReadAllLines(_busIOR2);
         _busIOR2 = iors2[0];
         _busRef2 =
-          (IComponent)OrbServices.CreateProxy(typeof(IComponent), _busIOR2);
+          (MarshalByRefObject)OrbServices.CreateProxy(typeof(IComponent), _busIOR2);
       }
       else {
         ORBInitializer.InitORB();
@@ -1354,7 +1354,7 @@ namespace tecgraf.openbus.Test {
     }
 
     private static Connection ConnectToBus(string host, ushort port,
-      IComponent busRef, ConnectionProperties props) {
+      MarshalByRefObject busRef, ConnectionProperties props) {
       return _useSSL
         ? _context.ConnectByReference(busRef, props)
         : _context.ConnectByAddress(host, port, props);
