@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
-using tecgraf.openbus;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.security;
@@ -21,7 +21,7 @@ namespace demo {
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
+      AsymmetricCipherKeyPair privateKey = Crypto.ReadKeyFile(args[3]);
       int interval = Convert.ToInt32(args.Length > 4 ? args[4] : "1");
 
       // Registra handler para o caso do processo ser finalizado

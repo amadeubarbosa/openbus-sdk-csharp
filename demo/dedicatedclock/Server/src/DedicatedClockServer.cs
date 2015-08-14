@@ -5,6 +5,7 @@ using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using demo.Properties;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
@@ -19,7 +20,7 @@ namespace demo {
   /// </summary>
   internal static class DedicatedClockServer {
     private static string _entity;
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static int _interval;
     private static Registerer _registerer;
     private static Connection _conn;

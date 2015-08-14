@@ -58,7 +58,7 @@
 \newcommand{\orb}{\textsc{ORB}}
 \newcommand{\scs}{\textsc{SCS}}
 \newcommand{\assistant}{\textsc{Assistant}}
-\newcommand{\version}{2.0.2}
+\newcommand{\version}{2.0.3}
 
 
 %\newif\ifpdf
@@ -75,7 +75,7 @@
 \usepackage{graphicx}
 \fi
 
-\title{Tutorial do SDK C\# \version{} do \openbus{}}
+\title{Tutorial do Assistente do SDK C\# \version{} do \openbus{}}
 \author{Tecgraf}
 
 \date{\today}
@@ -292,7 +292,7 @@ Um exemplo do código necessário para a autenticação em um barramento pode ser vi
 string host = args[0];
 ushort port = Convert.ToUInt16(args[1]);
 string entity = args[2];
-PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
+AsymmetricCipherKeyPair privateKey = Crypto.ReadKeyFile(args[3]);
 
 Assistant assistant = new AssistantImpl(host, port, new PrivateKeyProperties(entity, privateKey));
 \end{samplelisting}
@@ -316,7 +316,7 @@ O construtor dessa classe espera dois parâmetros obrigatórios:
   \item privateKey: Chave privada associada ao certificado digital cadastrado no barramento.
 \end{itemize}
 
-Uma instância que implemente a interface "tecgraf.openbus.PrivateKey" deve ser construída através da classe utilitária "tecgraf.openbus.security.Crypto", que contém métodos para se obter uma chave privada através de uma sequência de \emph{bytes} ou de um arquivo.
+Uma chave privada do tipo "Org.BouncyCastle.Crypto.AsymmetricCipherKeyPair" deve ser construída através da classe utilitária "tecgraf.openbus.security.Crypto", que contém métodos para se obter uma chave privada através de uma sequência de \emph{bytes} ou de um arquivo.
 
 Como vimos anteriormente, após a construção de "tecgraf.openbus.assistant.AssistantImpl", a autenticação não necessariamente já
 terá ocorrido, pois a mesma é feita assincronamente e pode se repetir

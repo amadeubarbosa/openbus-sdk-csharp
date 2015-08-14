@@ -130,7 +130,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>$(SolutionDir)..\..\lib\IDLToCLSCompiler.exe -snk $(SolutionDir)..\..\Openbus.snk -asmVersion 2.1.0 -o $(SolutionDir)..\..\lib OpenBus.Interop.Hello.Idl $(SolutionDir)idl\hello.idl</PreBuildEvent>
+    <PreBuildEvent>$(SolutionDir)..\..\lib\IDLToCLSCompiler.exe -snk $(SolutionDir)..\..\Openbus.snk -asmVersion 2.0.0 -o $(SolutionDir)..\..\lib OpenBus.Interop.Hello.Idl $(SolutionDir)idl\hello.idl</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

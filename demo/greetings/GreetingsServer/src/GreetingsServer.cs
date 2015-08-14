@@ -6,6 +6,7 @@ using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using demo.Properties;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_0.services;
@@ -31,7 +32,7 @@ namespace demo {
       string host = args[0];
       ushort port = Convert.ToUInt16(args[1]);
       string entity = args[2];
-      PrivateKey privateKey = Crypto.ReadKeyFile(args[3]);
+      AsymmetricCipherKeyPair privateKey = Crypto.ReadKeyFile(args[3]);
 
       // Cria o componente que responde em inglês
       ComponentContext english =
