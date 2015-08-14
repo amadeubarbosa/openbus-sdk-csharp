@@ -4,6 +4,7 @@ using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -20,7 +21,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       LogManager.GetLogger(typeof(Proxy));
 
     private const string Entity = "interop_reloggedjoin_csharp_proxy";
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
     private static ServiceProperty[] _properties;
 
@@ -50,7 +51,7 @@ namespace tecgraf.openbus.interop.relloggedjoin {
       Connection conn;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
       }
       else {
         conn = context.ConnectByAddress(hostName, hostPort, props);

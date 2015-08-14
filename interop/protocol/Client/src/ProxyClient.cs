@@ -7,7 +7,6 @@ using Ch.Elca.Iiop.Idl;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
-using scs.core;
 using tecgraf.openbus.core.v2_1;
 using tecgraf.openbus.core.v2_1.credential;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -78,7 +77,7 @@ namespace tecgraf.openbus.interop.protocol {
       Connection conn;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
       }
       else {
         conn = context.ConnectByAddress(hostName, hostPort, props);

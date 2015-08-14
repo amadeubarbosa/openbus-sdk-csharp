@@ -42,7 +42,7 @@ namespace tecgraf.openbus.Test {
     private static string _login;
     private static byte[] _password;
     private static string _domain;
-    private static AsymmetricKeyParameter _accessKey;
+    private static AsymmetricCipherKeyPair _accessKey;
     private static bool _useSSL;
     private static OpenBusContext _context;
     private const string FakeEntity = "Fake Entity";
@@ -122,9 +122,8 @@ namespace tecgraf.openbus.Test {
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("testKeyFileName");
       }
-      AsymmetricCipherKeyPair pair = Crypto.ReadKeyFile(privateKey);
-      _accessKey = pair.Private;
-      Props.AccessKey = pair;
+      _accessKey = Crypto.ReadKeyFile(privateKey);
+      Props.AccessKey = _accessKey;
 
       string useSSL = ConfigurationManager.AppSettings["useSSL"];
       if (String.IsNullOrEmpty(useSSL)) {

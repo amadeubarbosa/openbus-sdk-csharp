@@ -5,7 +5,6 @@ using System.Text;
 using Ch.Elca.Iiop.Idl;
 using demo.Properties;
 using omg.org.CORBA;
-using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_1.services;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -30,7 +29,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      Connection conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), busIOR));
+      Connection conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), busIOR));
       context.SetDefaultConnection(conn);
 
       string helloIDLType = Repository.GetRepositoryID(typeof (Hello));

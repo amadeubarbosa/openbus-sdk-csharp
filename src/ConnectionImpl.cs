@@ -482,7 +482,7 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void LoginByCertificate(string entity, AsymmetricKeyParameter privateKey) {
+    public void LoginByCertificate(string entity, AsymmetricCipherKeyPair privateKey) {
       if (entity == null) {
         throw new ArgumentException("A entidade não pode ser nula.");
       }
@@ -513,7 +513,7 @@ namespace tecgraf.openbus {
             challenge);
         byte[] answer;
         try {
-          answer = Crypto.Decrypt(privateKey, challenge);
+          answer = Crypto.Decrypt(privateKey.Private, challenge);
         }
         catch (InvalidCipherTextException) {
           Logger.Error(

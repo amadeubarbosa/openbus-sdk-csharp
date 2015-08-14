@@ -1,9 +1,9 @@
-﻿using System.IO;
-using System.Runtime.Remoting;
+﻿using System;
+using System.IO;
 using System.Text;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using scs.core;
+using omg.org.CORBA;
 using tecgraf.openbus.interop.sharedauth.Properties;
 using tecgraf.openbus.interop.utils;
 
@@ -46,7 +46,7 @@ namespace tecgraf.openbus.interop.sharedauth {
       Connection conn;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        conn = context.ConnectByReference((IComponent)RemotingServices.Connect(typeof(IComponent), ior), props);
+        conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
       }
       else {
         conn = context.ConnectByAddress(hostName, hostPort, props);

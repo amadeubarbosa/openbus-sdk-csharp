@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using log4net;
+using Org.BouncyCastle.Crypto;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.simple;
 using tecgraf.openbus.interop.utils;
@@ -12,11 +13,11 @@ namespace tecgraf.openbus.interop.relloggedjoin {
 
     private readonly OpenBusContext _context;
     private readonly string _entity;
-    private readonly PrivateKey _key;
+    private readonly AsymmetricCipherKeyPair _key;
 
     #region Constructors
 
-    internal HelloProxyImpl(string entity, PrivateKey key) {
+    internal HelloProxyImpl(string entity, AsymmetricCipherKeyPair key) {
       _context = ORBInitializer.Context;
       _entity = entity;
       _key = key;

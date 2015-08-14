@@ -95,7 +95,7 @@ namespace tecgraf.openbus {
     /// do barramento que impediu a autenticação da conexão.</exception>
     /// <exception cref="WrongEncoding">A autenticação falhou, pois a resposta ao desafio
     /// não foi codificada corretamente com a chave pública do barramento.</exception>
-    void LoginByCertificate(String entity, AsymmetricKeyParameter privateKey);
+    void LoginByCertificate(String entity, AsymmetricCipherKeyPair privateKey);
 
     /// <summary>
     /// Inicia o processo de login por autenticação compartilhada.

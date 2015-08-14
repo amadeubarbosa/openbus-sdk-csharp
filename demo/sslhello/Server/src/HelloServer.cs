@@ -6,6 +6,7 @@ using Ch.Elca.Iiop.Idl;
 using Scs.Core;
 using demo.Properties;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus;
 using tecgraf.openbus.core.v2_1.services;
@@ -29,7 +30,7 @@ namespace demo {
       // Obtém dados através dos argumentos
       string busIOR = File.ReadAllText(args[0]);
       string entity = args[1];
-      PrivateKey privateKey = Crypto.ReadKeyFile(args[2]);
+      AsymmetricCipherKeyPair privateKey = Crypto.ReadKeyFile(args[2]);
       SSLUtils.InitORBWithSSL(args[3], args[4], args[5], args[6],
         Convert.ToUInt16(args[8]), Convert.ToUInt16(args[7]), Convert.ToBoolean(args[9]), Convert.ToBoolean(args[10]),
         args[11], Convert.ToBoolean(args[12]), Convert.ToBoolean(args[13]));
@@ -52,7 +53,7 @@ namespace demo {
       // Cria conexão e a define como conexão padrão tanto para entrada como saída.
       // O uso exclusivo da conexão padrão (sem uso de current e callback de despacho) só é recomendado para aplicações que criem apenas uma conexão e desejem utilizá-la em todos os casos. Para situações diferentes, consulte o manual do SDK OpenBus e/ou outras demos.
       OpenBusContext context = ORBInitializer.Context;
-      _conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), busIOR));
+      _conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), busIOR));
       context.SetDefaultConnection(_conn);
 
       bool failed = true;

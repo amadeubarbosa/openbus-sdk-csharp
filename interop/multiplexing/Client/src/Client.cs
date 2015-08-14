@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Ch.Elca.Iiop.Idl;
-using Ch.Elca.Iiop.Security.Ssl;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
-using scs.core;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
 using tecgraf.openbus.interop.multiplexing.Properties;
 using tecgraf.openbus.interop.simple;
@@ -50,7 +48,7 @@ namespace tecgraf.openbus.interop.multiplexing {
         Connection conn;
         if (useSSL) {
           string ior = File.ReadAllText((string)buses[i]);
-          conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+          conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
         }
         else {
           conn = context.ConnectByAddress(hostName, (ushort)buses[i], props);

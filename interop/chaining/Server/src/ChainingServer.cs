@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -20,7 +21,7 @@ namespace tecgraf.openbus.interop.chaining {
   internal static class ChainingServer {
     private const string Entity = "interop_chaining_csharp_server";
     private static Connection _conn;
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
     private static ServiceProperty[] _properties;
     private static ServiceOffer _offer;
@@ -53,7 +54,7 @@ namespace tecgraf.openbus.interop.chaining {
       OpenBusContext context = ORBInitializer.Context;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        _conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        _conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
       }
       else {
         _conn = context.ConnectByAddress(hostName, hostPort, props);

@@ -6,6 +6,7 @@ using Ch.Elca.Iiop.Idl;
 using log4net;
 using Scs.Core;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
 using tecgraf.openbus.core.v2_1.services.offer_registry;
@@ -23,7 +24,7 @@ namespace tecgraf.openbus.interop.delegation {
       LogManager.GetLogger(typeof(ForwarderServer));
 
     private const string Entity = "interop_delegation_csharp_forwarder";
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
     private static ServiceProperty[] _properties;
     private static Connection _conn;
@@ -62,7 +63,7 @@ namespace tecgraf.openbus.interop.delegation {
       OpenBusContext context = ORBInitializer.Context;
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
-        _conn = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
+        _conn = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
       }
       else {
         _conn = context.ConnectByAddress(hostName, hostPort, props);

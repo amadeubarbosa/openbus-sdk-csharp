@@ -4,6 +4,7 @@ using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using log4net;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_1.services.access_control;
@@ -20,7 +21,7 @@ namespace tecgraf.openbus.interop.multiplexing {
       LogManager.GetLogger(typeof(Server));
 
     private const string Entity = "interop_multiplexing_csharp_server";
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
 
     private static readonly ServiceProperty[] ServiceProperties =
@@ -67,10 +68,10 @@ namespace tecgraf.openbus.interop.multiplexing {
       if (useSSL) {
         string ior = File.ReadAllText(busIORFile);
         string ior2 = File.ReadAllText(bus2IORFile);
-        _conn1AtBus1 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
-        conn2AtBus1 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
-        conn3AtBus1 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior), props);
-        _connAtBus2 = context.ConnectByReference((IComponent)OrbServices.CreateProxy(typeof(IComponent), ior2), props);
+        _conn1AtBus1 = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
+        conn2AtBus1 = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
+        conn3AtBus1 = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior), props);
+        _connAtBus2 = context.ConnectByReference((MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), ior2), props);
       }
       else {
         _conn1AtBus1 = context.ConnectByAddress(hostName, hostPort, props);
