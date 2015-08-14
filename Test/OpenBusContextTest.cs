@@ -9,6 +9,7 @@ using Ch.Elca.Iiop.Idl;
 using Ch.Elca.Iiop.Security.Ssl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using Scs.Core;
 using tecgraf.openbus.core.v2_1.credential;
@@ -41,7 +42,7 @@ namespace tecgraf.openbus.Test {
     private static string _login;
     private static byte[] _password;
     private static string _domain;
-    private static PrivateKey _accessKey;
+    private static AsymmetricKeyParameter _accessKey;
     private static bool _useSSL;
     private static OpenBusContext _context;
     private const string FakeEntity = "Fake Entity";
@@ -121,8 +122,9 @@ namespace tecgraf.openbus.Test {
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("testKeyFileName");
       }
-      _accessKey = Crypto.ReadKeyFile(privateKey);
-      Props.AccessKey = _accessKey;
+      AsymmetricCipherKeyPair pair = Crypto.ReadKeyFile(privateKey);
+      _accessKey = pair.Private;
+      Props.AccessKey = pair;
 
       string useSSL = ConfigurationManager.AppSettings["useSSL"];
       if (String.IsNullOrEmpty(useSSL)) {
@@ -175,11 +177,11 @@ namespace tecgraf.openbus.Test {
         string[] iors = File.ReadAllLines(_busIOR);
         _busIOR = iors[0];
         _busRef =
-          (MarshalByRefObject)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
+          (MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), _busIOR);
         string[] iors2 = File.ReadAllLines(_busIOR2);
         _busIOR2 = iors2[0];
         _busRef2 =
-          (MarshalByRefObject)OrbServices.CreateProxy(typeof(IComponent), _busIOR2);
+          (MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), _busIOR2);
       }
       else {
         ORBInitializer.InitORB();

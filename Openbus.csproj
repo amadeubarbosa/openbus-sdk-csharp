@@ -30,21 +30,21 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>lib\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>lib\OpenBus.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\OpenBus.XML</DocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>lib\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>lib\Openbus.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Openbus.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BouncyCastle.Crypto">
@@ -111,9 +111,7 @@
     <Compile Include="src\lease\LeaseRenewer.cs" />
     <Compile Include="src\lease\RenewerTask.cs" />
     <Compile Include="src\ORBInitializer.cs" />
-    <Compile Include="src\PrivateKey.cs" />
     <Compile Include="src\security\Crypto.cs" />
-    <Compile Include="src\security\PrivateKeyImpl.cs" />
     <Compile Include="src\SharedAuthSecret.cs" />
     <Compile Include="src\SharedAuthSecretImpl.cs" />
   </ItemGroup>
@@ -134,10 +132,14 @@
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>copy $(SolutionDir)$(OutDir)scs.idl $(SolutionDir)$(OutDir)idl20\scs.idl
-copy $(SolutionDir)$(OutDir)idl20\*.idl $(SolutionDir)$(OutDir)idl21
-$(SolutionDir)$(OutDir)IDLToCLSCompiler.exe -snk $(SolutionDir)Openbus.snk -asmVersion 2.0.4 -r $(SolutionDir)$(OutDir)Scs.Core.dll OpenBus.Legacy.Idl idl20\access_control.idl idl20\core.idl idl20\credential.idl idl20\offer_registry.idl idl20\data_export.idl
-$(SolutionDir)$(OutDir)IDLToCLSCompiler.exe -snk $(SolutionDir)Openbus.snk -asmVersion 2.1.0 -r $(SolutionDir)$(OutDir)Scs.Core.dll -r $(SolutionDir)$(OutDir)OpenBus.Legacy.Idl.dll OpenBus.Idl idl21\openbus_access-2.1.idl idl21\openbus_core-2.1.idl idl21\openbus_creden-2.1.idl idl21\openbus_export-2.1.idl idl21\openbus_legacy-2.1.idl idl21\openbus_offers-2.1.idl</PreBuildEvent>
+    <PreBuildEvent>copy $(SolutionDir)lib\scs.idl $(SolutionDir)lib\idl20\scs.idl
+copy $(SolutionDir)lib\idl20\*.idl $(SolutionDir)lib\idl21
+$(SolutionDir)lib\IDLToCLSCompiler.exe -snk $(SolutionDir)Openbus.snk -asmVersion 2.0.4 -r $(SolutionDir)lib\Scs.Core.dll -o $(SolutionDir)lib OpenBus.Legacy.Idl $(SolutionDir)lib\idl20\access_control.idl $(SolutionDir)lib\idl20\core.idl $(SolutionDir)lib\idl20\credential.idl $(SolutionDir)lib\idl20\offer_registry.idl $(SolutionDir)lib\idl20\data_export.idl
+$(SolutionDir)lib\IDLToCLSCompiler.exe -snk $(SolutionDir)Openbus.snk -asmVersion 2.1.0 -r $(SolutionDir)lib\Scs.Core.dll -r $(SolutionDir)lib\OpenBus.Legacy.Idl.dll -o $(SolutionDir)lib OpenBus.Idl $(SolutionDir)lib\idl21\openbus_access-2.1.idl $(SolutionDir)lib\idl21\openbus_core-2.1.idl $(SolutionDir)lib\idl21\openbus_creden-2.1.idl $(SolutionDir)lib\idl21\openbus_export-2.1.idl $(SolutionDir)lib\idl21\openbus_legacy-2.1.idl $(SolutionDir)lib\idl21\openbus_offers-2.1.idl</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy /y $(SolutionDir)$(OutDir)$(TargetName).* $(SolutionDir)lib
+xcopy /s /e /i /k /y $(SolutionDir)$(OutDir)Resources $(SolutionDir)lib\Resources</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

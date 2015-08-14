@@ -9,6 +9,7 @@ using System.Collections;
 using System.IO;
 using Ch.Elca.Iiop;
 using Ch.Elca.Iiop.Security.Ssl;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_1;
@@ -36,8 +37,8 @@ namespace tecgraf.openbus.Test {
     private static string _login;
     private static byte[] _password;
     private static string _domain;
-    private static PrivateKey _privKey;
-    private static PrivateKey _wrongKey;
+    private static AsymmetricKeyParameter _privKey;
+    private static AsymmetricKeyParameter _wrongKey;
     private static bool _useSSL;
     private static OpenBusContext _context;
     private static readonly ConnectionProperties Props = new ConnectionPropertiesImpl();
@@ -114,14 +115,16 @@ namespace tecgraf.openbus.Test {
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("testKeyFileName");
       }
-      _privKey = Crypto.ReadKeyFile(privateKey);
-      Props.AccessKey = _privKey;
+      AsymmetricCipherKeyPair pair = Crypto.ReadKeyFile(privateKey);
+      _privKey = pair.Private;
+      Props.AccessKey = pair;
 
       string wrongKey = ConfigurationManager.AppSettings["wrongKeyFileName"];
       if (String.IsNullOrEmpty(password)) {
         throw new ArgumentNullException("wrongKeyFileName");
       }
-      _wrongKey = Crypto.ReadKeyFile(wrongKey);
+      pair = Crypto.ReadKeyFile(wrongKey);
+      _wrongKey = pair.Private;
 
       string useSSL = ConfigurationManager.AppSettings["useSSL"];
       if (String.IsNullOrEmpty(useSSL)) {
@@ -168,7 +171,7 @@ namespace tecgraf.openbus.Test {
         }
         string[] iors = File.ReadAllLines(_busIOR);
         _busIOR = iors[0];
-        _busRef = (MarshalByRefObject)OrbServices.CreateProxy(typeof(IComponent), _busIOR);
+        _busRef = (MarshalByRefObject)OrbServices.CreateProxy(typeof(MarshalByRefObject), _busIOR);
       }
       else {
         ORBInitializer.InitORB();
@@ -390,7 +393,7 @@ namespace tecgraf.openbus.Test {
         // chave privada corrompida
         failed = false;
         try {
-          conn.LoginByCertificate(_entity, Crypto.ReadKey(new byte[0]));
+          conn.LoginByCertificate(_entity, Crypto.ReadKey(new byte[0]).Private);
         }
         catch (InvalidPrivateKeyException) {
           failed = true;

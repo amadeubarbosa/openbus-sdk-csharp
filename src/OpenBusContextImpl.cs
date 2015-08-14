@@ -538,11 +538,11 @@ namespace tecgraf.openbus {
       throw new InvalidEncodedStreamException(msg);
     }
 
-    private PrivateKeyImpl GetPrivateKeyFromProps(ConnectionProperties props) {
-      PrivateKeyImpl accessKey = null;
+    private AsymmetricCipherKeyPair GetPrivateKeyFromProps(ConnectionProperties props) {
+      AsymmetricCipherKeyPair accessKey = null;
       if (props != null) {
         if (props.AccessKey != null) {
-          accessKey = (PrivateKeyImpl)props.AccessKey;
+          accessKey = props.AccessKey;
           LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
             "{AccessKey provida pelo usuário}");
         }

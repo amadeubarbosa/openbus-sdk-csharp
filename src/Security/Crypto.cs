@@ -30,8 +30,8 @@ namespace tecgraf.openbus.security {
     /// Gera uma nova chave privada do OpenBus.
     /// </summary>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static PrivateKey NewKey() {
-      return new PrivateKeyImpl(GenerateKeyPair());
+    public static AsymmetricCipherKeyPair NewKey() {
+      return GenerateKeyPair();
     }
 
     /// <summary>
@@ -39,8 +39,8 @@ namespace tecgraf.openbus.security {
     /// </summary>
     /// <param name="encoded">Chave privada em bytes.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static PrivateKey ReadKey(byte[] encoded) {
-      return new PrivateKeyImpl(CreatePairFromBytes(encoded));
+    public static AsymmetricCipherKeyPair ReadKey(byte[] encoded) {
+      return CreatePairFromBytes(encoded);
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ namespace tecgraf.openbus.security {
     /// </summary>
     /// <param name="filepath">Caminho para o arquivo com a chave privada.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static PrivateKey ReadKeyFile(string filepath) {
+    public static AsymmetricCipherKeyPair ReadKeyFile(string filepath) {
       return ReadKey(File.ReadAllBytes(filepath));
     }
 
@@ -57,8 +57,8 @@ namespace tecgraf.openbus.security {
     /// </summary>
     /// <param name="privateKey">Chave privada do formato nativo .NET.</param>
     /// <returns>A chave privada no formato esperado pelo OpenBus.</returns>
-    public static PrivateKey ReadKey(RSACryptoServiceProvider privateKey) {
-      return new PrivateKeyImpl(DotNetUtilities.GetKeyPair(privateKey));
+    public static AsymmetricCipherKeyPair ReadKey(RSACryptoServiceProvider privateKey) {
+      return DotNetUtilities.GetKeyPair(privateKey);
     }
 
     /// <summary>
