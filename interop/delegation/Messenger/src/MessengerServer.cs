@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -15,7 +16,7 @@ namespace tecgraf.openbus.interop.delegation {
   /// </summary>
   internal static class MessengerServer {
     private const string Entity = "interop_delegation_csharp_messenger";
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
     private static ServiceProperty[] _properties;
     private static Connection _conn;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Org.BouncyCastle.Crypto;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.interop.simple;
@@ -8,11 +9,11 @@ namespace tecgraf.openbus.interop.relloggedjoin {
   public class HelloProxyImpl : MarshalByRefObject, Hello {
     private readonly OpenBusContext _context;
     private readonly string _entity;
-    private readonly PrivateKey _key;
+    private readonly AsymmetricCipherKeyPair _key;
 
     #region Constructors
 
-    internal HelloProxyImpl(string entity, PrivateKey key) {
+    internal HelloProxyImpl(string entity, AsymmetricCipherKeyPair key) {
       _context = ORBInitializer.Context;
       _entity = entity;
       _key = key;

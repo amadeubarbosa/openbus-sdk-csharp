@@ -10,6 +10,7 @@ using omg.org.CORBA;
 using omg.org.IOP;
 using omg.org.IOP.Codec_package;
 using omg.org.PortableInterceptor;
+using Org.BouncyCastle.Crypto;
 using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.data_export;
@@ -17,7 +18,6 @@ using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.interceptors;
-using tecgraf.openbus.security;
 using Current = omg.org.PortableInterceptor.Current;
 using TypeCode = omg.org.CORBA.TypeCode;
 
@@ -139,7 +139,7 @@ namespace tecgraf.openbus {
       try {
         bool legacyDisable = false;
         bool originator = false;
-        PrivateKeyImpl accessKey = null;
+        AsymmetricCipherKeyPair accessKey = null;
         if (props != null) {
           if (props.LegacyDisable !=
               ConnectionPropertiesImpl.LegacyDisableDefault) {
@@ -159,7 +159,7 @@ namespace tecgraf.openbus {
             }
           }
           if (props.AccessKey != null) {
-            accessKey = (PrivateKeyImpl) props.AccessKey;
+            accessKey = props.AccessKey;
             LogPropertyChanged(ConnectionPropertiesImpl.AccessKeyProperty,
                                "{AccessKey provida pelo usuário}");
           }

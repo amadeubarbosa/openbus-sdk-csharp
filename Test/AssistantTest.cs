@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Org.BouncyCastle.Crypto;
 using tecgraf.openbus.assistant;
 using tecgraf.openbus.exceptions;
 using tecgraf.openbus.security;
@@ -21,8 +22,8 @@ namespace tecgraf.openbus.test {
     private static String _entityNoCert;
     private static string _login;
     private static byte[] _password;
-    private static PrivateKey _privKey;
-    private static PrivateKey _wrongKey;
+    private static AsymmetricCipherKeyPair _privKey;
+    private static AsymmetricCipherKeyPair _wrongKey;
     private static OpenBusContext _context;
     private static readonly ConnectionProperties Props = new ConnectionPropertiesImpl();
 

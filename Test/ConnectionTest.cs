@@ -6,6 +6,7 @@ using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_0;
@@ -30,8 +31,8 @@ namespace tecgraf.openbus.Test {
     private static String _entityNoCert;
     private static string _login;
     private static byte[] _password;
-    private static PrivateKey _privKey;
-    private static PrivateKey _wrongKey;
+    private static AsymmetricCipherKeyPair _privKey;
+    private static AsymmetricCipherKeyPair _wrongKey;
     private static OpenBusContext _context;
     private static readonly ConnectionProperties Props = new ConnectionPropertiesImpl();
 

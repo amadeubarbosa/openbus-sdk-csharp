@@ -1,5 +1,6 @@
 ﻿using System;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.exceptions;
@@ -76,8 +77,8 @@ namespace tecgraf.openbus {
     /// </summary>
     /// <param name="entity"> Identificador da entidade a ser autenticada.</param>
     /// <param name="privateKey"> Chave privada correspondente ao certificado registrado
-    /// a ser utilizada na autenticação, no formato esperado pelo OpenBus.</param>
-    /// <exception cref="ArgumentException">Caso a entidade seja nula ou a chave privada seja nula ou não tenha sido gerada pelo SDK do OpenBus.</exception>
+    /// a ser utilizada na autenticação.</param>
+    /// <exception cref="ArgumentException">Caso a entidade seja nula ou a chave privada seja nula.</exception>
     /// <exception cref="AccessDenied"> A chave privada fornecida não corresponde ao
     /// certificado da entidade registrado no barramento indicado.</exception>
     /// <exception cref="AlreadyLoggedInException"> A conexão já está autenticada.</exception>
@@ -85,7 +86,7 @@ namespace tecgraf.openbus {
     /// registrado no barramento indicado.</exception>
     /// <exception cref="ServiceFailure"> Ocorreu uma falha interna nos serviços
     /// do barramento que impediu a autenticação da conexão.</exception>
-    void LoginByCertificate(String entity, PrivateKey privateKey);
+    void LoginByCertificate(String entity, AsymmetricCipherKeyPair privateKey);
 
     /// <summary>
     /// Inicia o processo de login por autenticação compartilhada.

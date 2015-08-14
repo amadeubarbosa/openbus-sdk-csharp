@@ -5,8 +5,8 @@ using Ch.Elca.Iiop.Idl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Scs.Core;
 using omg.org.CORBA;
+using Org.BouncyCastle.Crypto;
 using scs.core;
-using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
 using tecgraf.openbus.exceptions;
@@ -29,7 +29,7 @@ namespace tecgraf.openbus.Test {
     private static String _entity;
     private static string _login;
     private static byte[] _password;
-    private static PrivateKey _accessKey;
+    private static AsymmetricCipherKeyPair _accessKey;
     private static OpenBusContext _context;
     private static readonly Object Lock = new Object();
 
@@ -168,21 +168,8 @@ namespace tecgraf.openbus.Test {
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
         props.LegacyDelegate = "originator";
         Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort, props));
-        failed = false;
-        try {
-          // cria conexão sem propriedades opcionais (inclui AccessKey nula)
-          Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort));
-          // tenta setar propriedade access.key inválida
-          props.AccessKey = new PrivateKeyMock();
-        }
-        catch (InvalidPropertyValueException e) {
-          Assert.AreEqual(e.Property, "access.key");
-          failed = true;
-        }
-        finally {
-          Assert.IsTrue(failed);
-          props.AccessKey = _accessKey;
-        }
+        // cria conexão sem propriedades opcionais
+        Assert.IsNotNull(_context.CreateConnection(_hostName, _hostPort));
       }
     }
 

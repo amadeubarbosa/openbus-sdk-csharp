@@ -1,4 +1,6 @@
-﻿namespace tecgraf.openbus.assistant {
+﻿using Org.BouncyCastle.Crypto;
+
+namespace tecgraf.openbus.assistant {
   /// <summary>
   /// Define que o assistente deve efetuar login no barramento utilizando
   /// autenticação por certificado.
@@ -16,7 +18,7 @@
     /// <param name="entity">Identificador da entidade a ser autenticada.</param>
     /// <param name="privateKey">Chave privada correspondente ao certificado 
     /// registrado a ser utilizada na autenticação.</param>
-    public PrivateKeyProperties(string entity, PrivateKey privateKey) {
+    public PrivateKeyProperties(string entity, AsymmetricCipherKeyPair privateKey) {
       Entity = entity;
       PrivateKey = privateKey;
       Type = LoginType.PrivateKey;
@@ -25,7 +27,7 @@
     /// <summary>
     /// Chave privada correspondente ao certificado registrado a ser utilizada na autenticação.
     /// </summary>
-    public PrivateKey PrivateKey { get; private set; }
+    public AsymmetricCipherKeyPair PrivateKey { get; private set; }
 
     /// <summary>
     /// Identificador da entidade a ser autenticada.

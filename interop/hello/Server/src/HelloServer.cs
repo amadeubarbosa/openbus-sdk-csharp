@@ -1,9 +1,8 @@
 using System;
-using System.IO;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
 using Scs.Core;
-using log4net.Config;
+using Org.BouncyCastle.Crypto;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
 using tecgraf.openbus.core.v2_0.services.offer_registry;
@@ -18,7 +17,7 @@ namespace tecgraf.openbus.interop.simple {
   internal static class HelloServer {
     private const string Entity = "interop_hello_csharp_server";
     private static Connection _conn;
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
     private static ServiceProperty[] _properties;
     private static ServiceOffer _offer;

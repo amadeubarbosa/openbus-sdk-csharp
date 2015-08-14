@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -13,7 +14,7 @@ using tecgraf.openbus.security;
 namespace tecgraf.openbus.interop.multiplexing {
   internal static class Server {
     private const string Entity = "interop_multiplexing_csharp_server";
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
 
     private static readonly ServiceProperty[] ServiceProperties =

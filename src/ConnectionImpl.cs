@@ -107,7 +107,7 @@ namespace tecgraf.openbus {
 
     internal ConnectionImpl(string host, ushort port, OpenBusContextImpl context,
                             bool legacy, bool delegateOriginator,
-                            PrivateKeyImpl accessKey) {
+                            AsymmetricCipherKeyPair accessKey) {
       _host = host;
       _port = port;
       _corbaloc = "corbaloc::1.0@" + _host + ":" + _port + "/" +
@@ -122,9 +122,7 @@ namespace tecgraf.openbus {
       _loginSlotId = ClientInterceptor.Instance.LoginSlotId;
       _noInvalidLoginHandlingSlotId = ClientInterceptor.Instance.NoInvalidLoginHandlingSlotId;
 
-      _internalKeyPair = accessKey != null
-                           ? accessKey.Pair
-                           : Crypto.GenerateKeyPair();
+      _internalKeyPair = accessKey ?? Crypto.GenerateKeyPair();
 
       _sessionId2Session =
         new LRUConcurrentDictionaryCache<int, ServerSideSession>();
@@ -476,16 +474,14 @@ namespace tecgraf.openbus {
       }
     }
 
-    public void LoginByCertificate(string entity, PrivateKey privateKey) {
+    public void LoginByCertificate(string entity, AsymmetricCipherKeyPair privateKey) {
       if (entity == null) {
         throw new ArgumentException("A entidade não pode ser nula.");
       }
-      PrivateKeyImpl temp = privateKey as PrivateKeyImpl;
-      if (temp == null) {
+      if (privateKey == null) {
         throw new ArgumentException(
-          "A chave privada fornecida deve ser gerada pela API do SDK do OpenBus.");
+          "A chave privada deve ser fornecida.");
       }
-      AsymmetricKeyParameter key = temp.Pair.Private;
 
       Context.IgnoreCurrentThread();
       try {
@@ -509,7 +505,7 @@ namespace tecgraf.openbus {
                                                                 challenge);
         byte[] answer;
         try {
-          answer = Crypto.Decrypt(key, challenge);
+          answer = Crypto.Decrypt(privateKey.Private, challenge);
         }
         catch (InvalidCipherTextException) {
           Logger.Error(
@@ -868,7 +864,7 @@ namespace tecgraf.openbus {
       _loginLock.EnterReadLock();
       try {
         if (!_login.HasValue) {
-          Logger.Error(String.Format("Esta conexão está deslogada."));
+          Logger.Error("Esta conexão está deslogada.");
           throw new NO_PERMISSION(UnknownBusCode.ConstVal,
                                   CompletionStatus.Completed_No);
         }

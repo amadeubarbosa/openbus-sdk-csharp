@@ -15,8 +15,6 @@ namespace tecgraf.openbus.assistant {
     private static readonly ILog Logger =
       LogManager.GetLogger(typeof (AssistantImpl));
 
-    private readonly string _host;
-    private readonly ushort _port;
     private readonly AssistantPropertiesImpl _properties;
     private readonly Connection _conn;
     private readonly Offeror _offeror;
@@ -43,21 +41,19 @@ namespace tecgraf.openbus.assistant {
     /// SharedAuthProperties.</exception>
     public AssistantImpl(string host, ushort port,
                          AssistantProperties properties) {
-      if ((properties as PasswordProperties == null) &&
-          (properties as PrivateKeyProperties == null) &&
-          (properties as SharedAuthProperties == null)) {
+      if ((!(properties is PasswordProperties)) &&
+          (!(properties is PrivateKeyProperties)) &&
+          (!(properties is SharedAuthProperties))) {
         throw new ArgumentException(
           "O parâmetro properties deve ser uma instância de PasswordProperties, PrivateKeyProperties ou SharedAuthProperties.");
       }
       OpenBusContext context = ORBInitializer.Context;
       ORB = context.ORB;
-      _host = host;
-      _port = port;
-      _properties = properties as AssistantPropertiesImpl;
+      _properties = (AssistantPropertiesImpl) properties;
       _active = true;
       _offeror = new Offeror(this);
       // cria conexão e seta como padrão
-      _conn = ORBInitializer.Context.CreateConnection(_host, _port,
+      _conn = ORBInitializer.Context.CreateConnection(host, port,
                                                       properties.
                                                         ConnectionProperties);
       context.SetDefaultConnection(_conn);

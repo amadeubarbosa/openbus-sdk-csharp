@@ -1,4 +1,5 @@
-﻿using tecgraf.openbus.exceptions;
+﻿using Org.BouncyCastle.Crypto;
+using tecgraf.openbus.exceptions;
 
 namespace tecgraf.openbus {
   /// <summary>
@@ -39,6 +40,6 @@ namespace tecgraf.openbus {
     /// automaticamente.
     /// </summary>
     /// <exception cref="InvalidPropertyValueException">A chave fornecida não contém dados da chave privada ou não foi gerada pelo SDK do OpenBus.</exception>
-    PrivateKey AccessKey { get; set; }
+    AsymmetricCipherKeyPair AccessKey { get; set; }
   }
 }

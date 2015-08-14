@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
+using Org.BouncyCastle.Crypto;
 using Scs.Core;
 using scs.core;
 using tecgraf.openbus.core.v2_0.services.access_control;
@@ -16,7 +17,7 @@ namespace tecgraf.openbus.interop.chaining {
   internal static class ChainingProxy {
     private const string Entity = "interop_chaining_csharp_proxy";
     private static Connection _conn;
-    private static PrivateKey _privateKey;
+    private static AsymmetricCipherKeyPair _privateKey;
     private static IComponent _ic;
     private static ServiceProperty[] _properties;
     private static ServiceOffer _offer;
