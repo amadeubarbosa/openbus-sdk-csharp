@@ -46,7 +46,6 @@ namespace tecgraf.openbus.Test {
     private static bool _useSSL;
     private static OpenBusContext _context;
     private const string FakeEntity = "Fake Entity";
-    private const string Unknown = "<unknown>";
     private const int Timeout = 10;
     private static Exception _threadRet;
     private static readonly Object ThreadRetLock = new object();
@@ -649,9 +648,10 @@ namespace tecgraf.openbus.Test {
         CallerChain imported = _context.ImportChain(bytes, _domain);
         Assert.AreEqual(imported.BusId, busid);
         Assert.AreEqual(imported.Target, entity);
-        Assert.AreEqual(imported.Caller.id, Unknown);
+        Guid received;
+        Assert.IsTrue(Guid.TryParse(imported.Caller.id, out received));
         Assert.AreEqual(imported.Caller.entity, extCaller);
-        Assert.AreEqual(imported.Originators[0].id, Unknown);
+        Assert.IsTrue(Guid.TryParse(imported.Originators[0].id, out received));
         Assert.AreEqual(imported.Originators[0].entity, extOrig);
         Assert.AreEqual(imported.Originators.Length, 1);
 
@@ -664,9 +664,9 @@ namespace tecgraf.openbus.Test {
         Assert.AreEqual(joined.Target, FakeEntity);
         Assert.AreEqual(joined.Caller.id, login);
         Assert.AreEqual(joined.Caller.entity, entity);
-        Assert.AreEqual(joined.Originators[1].id, Unknown);
+        Assert.IsTrue(Guid.TryParse(joined.Originators[1].id, out received));
         Assert.AreEqual(joined.Originators[1].entity, extCaller);
-        Assert.AreEqual(joined.Originators[0].id, Unknown);
+        Assert.IsTrue(Guid.TryParse(joined.Originators[0].id, out received));
         Assert.AreEqual(joined.Originators[0].entity, extOrig);
         Assert.AreEqual(joined.Originators.Length, 2);
       }
