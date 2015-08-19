@@ -57,6 +57,8 @@ namespace tecgraf.openbus {
     private LoginRegistry _loginRegistry;
     private IAccessControlService _legacyAccess;
 
+    private readonly CallerChainImpl _nullSignedChain = new CallerChainImpl("", new LoginInfo(), "", null);
+
     private readonly ReaderWriterLockSlim _loginLock =
       new ReaderWriterLockSlim();
 
@@ -1294,19 +1296,18 @@ namespace tecgraf.openbus {
       if (!remoteLogin.Equals(BusLogin.ConstVal)) {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
+          // se não está joined usa a cache "global" dentro da nullsignedchain
+          chain = _nullSignedChain;
+        }
+        bool cacheHit;
+        lock (chain) {
+          cacheHit = chain.Joined.TryGetValue(remoteLogin, out signed);
+        }
+        if (!cacheHit) {
           // na chamada a signChainFor vai criar uma nova chain e assinar
           SignCallChain(remoteLogin, out signed);
-        }
-        else {
-          bool cacheHit;
           lock (chain) {
-            cacheHit = chain.Joined.TryGetValue(remoteLogin, out signed);
-          }
-          if (!cacheHit) {
-            SignCallChain(remoteLogin, out signed);
-            lock (chain) {
-              chain.Joined.Set(remoteLogin, signed);
-            }
+            chain.Joined.Set(remoteLogin, signed);
           }
         }
       }

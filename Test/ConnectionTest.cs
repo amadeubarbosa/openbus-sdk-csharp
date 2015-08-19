@@ -85,7 +85,7 @@ namespace tecgraf.openbus.Test {
       }
 
       _entityNoCert = ConfigurationManager.AppSettings["entityWithoutCert"];
-      if (String.IsNullOrEmpty(_entity)) {
+      if (String.IsNullOrEmpty(_entityNoCert)) {
         throw new ArgumentNullException("entityWithoutCert");
       }
 
