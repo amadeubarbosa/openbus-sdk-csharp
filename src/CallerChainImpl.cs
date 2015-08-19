@@ -1,6 +1,4 @@
-﻿using System;
-using Ch.Elca.Iiop.Idl;
-using omg.org.CORBA;
+﻿using omg.org.CORBA;
 using tecgraf.openbus.caches;
 using tecgraf.openbus.core.v2_0.credential;
 using tecgraf.openbus.core.v2_1.credential;
@@ -14,7 +12,7 @@ namespace tecgraf.openbus {
       Joined = new LRUConcurrentDictionaryCache<string, AnySignedChain>();
     }
 
-    private CallerChainImpl(string busId, string target) : this() {
+    internal CallerChainImpl(string busId, string target) : this() {
       BusId = busId;
       Target = target;
     }

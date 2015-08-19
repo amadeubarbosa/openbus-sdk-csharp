@@ -100,6 +100,8 @@ namespace tecgraf.openbus {
     private static readonly SignedCallChain InvalidSignedCallChain = new SignedCallChain(InvalidSignature, InvalidEncoded);
     private static readonly AnySignedChain InvalidSignedChain = new AnySignedChain(InvalidSignedData, InvalidSignedCallChain);
 
+    private CallerChainImpl _nullSignedChain;
+    
     private const string BusPubKeyError =
       "Erro ao encriptar as informações de login com a chave pública do barramento.";
 
@@ -180,6 +182,7 @@ namespace tecgraf.openbus {
         try {
           _busId = busId;
           _busKey = busKey;
+          _nullSignedChain = new CallerChainImpl(_busId, "");
         }
         finally {
           _loginLock.ExitWriteLock();
@@ -316,6 +319,7 @@ namespace tecgraf.openbus {
       _offers = null;
       _busId = null;
       _busKey = null;
+      _nullSignedChain = null;
       _outgoingLogin2Session.Clear();
       _profile2Login.Clear();
       _sessionId2Session.Clear();
@@ -1274,19 +1278,23 @@ namespace tecgraf.openbus {
       if (!remoteEntity.Equals(BusEntity.ConstVal)) {
         // esta requisição não é para o barramento, então preciso assinar essa cadeia.
         if (chain == null) {
+          // se não está joined usa a cache "global" dentro da nullsignedchain
+          if (_nullSignedChain == null) {
+            // não deveria entrar aqui, só não tem a nullsignedchain caso não esteja logado.
+            throw new NO_PERMISSION(NoLoginCode.ConstVal,
+              CompletionStatus.Completed_No);
+          }
+          chain = _nullSignedChain;
+        }
+        bool cacheHit;
+        lock (chain) {
+          cacheHit = chain.Joined.TryGetValue(remoteEntity, out signed);
+        }
+        if (!cacheHit) {
           // na chamada a signChainFor vai criar uma nova chain e assinar
           signed = SignCallChain(legacySession, remoteEntity);
-        }
-        else {
-          bool cacheHit;
           lock (chain) {
-            cacheHit = chain.Joined.TryGetValue(remoteEntity, out signed);
-          }
-          if (!cacheHit) {
-            signed = SignCallChain(legacySession, remoteEntity);
-            lock (chain) {
-              chain.Joined.Set(remoteEntity, signed);
-            }
+            chain.Joined.Set(remoteEntity, signed);
           }
         }
       }
@@ -1326,7 +1334,6 @@ namespace tecgraf.openbus {
             SignedData signed = localAcs.signChainFor(remoteEntity);
             anySignedChain = new AnySignedChain(signed);
           }
-
         }
         catch (AbstractCORBASystemException e) {
           Logger.Error("Erro ao acessar o barramento " + busId + " para assinar uma cadeia.", e);
