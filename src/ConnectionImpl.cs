@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Runtime.Remoting;
 using System.Security.Cryptography;
 using System.Threading;
 using Ch.Elca.Iiop.Idl;
@@ -146,7 +145,7 @@ namespace tecgraf.openbus {
         "Não foi possível conectar ao barramento com o host e porta fornecidos.";
       try {
         IComponent busIC =
-          (IComponent) RemotingServices.Connect(typeof (IComponent), _corbaloc);
+          (IComponent) OrbServices.CreateProxy(typeof (IComponent), _corbaloc);
         string acsId = Repository.GetRepositoryID(typeof (AccessControl));
         string lrId = Repository.GetRepositoryID(typeof (LoginRegistry));
         string orId = Repository.GetRepositoryID(typeof (OfferRegistry));
@@ -198,10 +197,10 @@ namespace tecgraf.openbus {
     private IAccessControlService GetLegacyFacets(out bool maintainLegacy) {
       if (_originalLegacy) {
         try {
-          IComponent legacy = RemotingServices.Connect(
-            typeof (IComponent),
-            "corbaloc::1.0@" + _host + ":" + _port + "/" + "openbus_v1_05") as
-                              IComponent;
+          IComponent legacy =
+            OrbServices.CreateProxy(typeof (IComponent),
+              "corbaloc::1.0@" + _host + ":" + _port + "/" + "openbus_v1_05") as
+              IComponent;
           string legacyId =
             Repository.GetRepositoryID(typeof (IAccessControlService));
           if (legacy == null) {

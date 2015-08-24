@@ -1,4 +1,3 @@
-using System.Runtime.Remoting.Channels;
 using Ch.Elca.Iiop;
 using omg.org.CORBA;
 using tecgraf.openbus.interceptors;
@@ -52,14 +51,14 @@ namespace tecgraf.openbus {
 
     #endregion
 
-    private static OrbServices InitORB() {
+    private static OrbServices InitORB(ushort port = 0) {
       lock (Lock) {
         if (!_initialized) {
           // Adiciona interceptadores
           InterceptorsInitializer initializer = new InterceptorsInitializer();
           ORB.RegisterPortableInterceptorInitalizer(initializer);
           ORB.CompleteInterceptorRegistration();
-          ChannelServices.RegisterChannel(new IiopChannel(0), false);
+          OrbServices.CreateAndRegisterIiopChannel(port);
           Context = initializer.Context;
           _initialized = true;
         }

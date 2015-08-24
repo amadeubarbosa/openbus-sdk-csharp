@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Runtime.Remoting;
 using Ch.Elca.Iiop.Idl;
 using omg.org.CORBA;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -672,11 +671,10 @@ namespace tecgraf.openbus.Test {
     }
 
     private void InvalidateLogin(Connection conn) {
-      IComponent busIC = RemotingServices.Connect(
-        typeof(IComponent),
-        "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
-        BusObjectKey.ConstVal)
-                         as IComponent;
+      IComponent busIC =
+        OrbServices.CreateProxy(typeof (IComponent),
+          "corbaloc::1.0@" + _hostName + ":" + _hostPort + "/" +
+          BusObjectKey.ConstVal) as IComponent;
       Assert.IsNotNull(busIC);
       string lrId = Repository.GetRepositoryID(typeof(LoginRegistry));
       LoginRegistry lr = busIC.getFacet(lrId) as LoginRegistry;
