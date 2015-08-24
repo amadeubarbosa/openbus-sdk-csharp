@@ -1,4 +1,3 @@
-using Ch.Elca.Iiop;
 using omg.org.CORBA;
 using tecgraf.openbus.interceptors;
 
