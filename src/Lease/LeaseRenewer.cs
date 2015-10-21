@@ -48,10 +48,7 @@ namespace tecgraf.openbus.lease {
     /// </summary>
     public void Finish() {
       _renewer.Finish();
-      // Não devo dar join "em mim mesmo" para evitar deadlock
-      if (!Thread.CurrentThread.ManagedThreadId.Equals(_leaseThread.ManagedThreadId)) {
-        _leaseThread.Join();
-      }
+      // Decidimos remover o join pois a thread de renovação pode executar código do usuário, o que poderia levar a um deadlock.
       _renewer = null;
     }
 
