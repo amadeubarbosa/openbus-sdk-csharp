@@ -305,11 +305,6 @@ namespace tecgraf.openbus {
 
     // NÃO É THREAD-SAFE!! Tem que proteger ao chamar. Motivo: evitar ter de ativar a política de recursão de locks.
     private void LocalLogout() {
-      if (_leaseRenewer != null) {
-        _leaseRenewer.Finish();
-        _leaseRenewer = null;
-        Logger.Debug("Thread de renovação de lease desativada.");
-      }
       Legacy = _originalLegacy;
       _login = null;
       _loginsCache = null;
@@ -602,6 +597,14 @@ namespace tecgraf.openbus {
       string id;
       string entity;
       string busId;
+
+      // termina a thread de renovação de login
+      if (_leaseRenewer != null) {
+        _leaseRenewer.Finish();
+        _leaseRenewer = null;
+        Logger.Debug("Thread de renovação de lease desativada.");
+      }
+
       _loginLock.EnterWriteLock();
       try {
         if (!_login.HasValue) {
